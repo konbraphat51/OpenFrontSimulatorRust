@@ -32,6 +32,15 @@ pub struct Rules {
 /// Commit of the baseline build v0.34.22.
 pub const BASELINE_COMMIT: &str = "4e837520e886";
 
+/// Builds of class C000 (v0.34.19 to v0.34.23): identical simulation code, so the baseline rules apply.
+pub const BASELINE_CLASS_COMMITS: [&str; 5] = [
+    "a188868bc16c",
+    "feba4a51c334",
+    BASELINE_COMMIT,
+    "d7075bface21",
+    "71154c52c2a2",
+];
+
 impl Rules {
     /// Rules of the baseline build (every known change applied).
     pub fn baseline() -> Self {
@@ -44,7 +53,10 @@ impl Rules {
 
     /// Rules for a record's `gitCommit` (full hash or any prefix of at least 12 characters).
     pub fn for_commit(commit: &str) -> Result<Self, RulesError> {
-        if commit.len() >= BASELINE_COMMIT.len() && commit.starts_with(BASELINE_COMMIT) {
+        let is_baseline_class = BASELINE_CLASS_COMMITS
+            .iter()
+            .any(|known| commit.len() >= known.len() && commit.starts_with(known));
+        if is_baseline_class {
             return Ok(Self::baseline());
         }
         Err(RulesError::UnknownBuild(commit.to_string()))
@@ -65,6 +77,9 @@ mod tests {
         let r = Rules::for_commit("4e837520e886").unwrap();
         assert!(r.has(Change::DetMath5191) && r.has(Change::Sfc32PseudoRandom4233));
         assert!(Rules::for_commit("4e837520e886deadbeef").is_ok());
+        for commit in BASELINE_CLASS_COMMITS {
+            assert_eq!(Rules::for_commit(commit).unwrap(), Rules::baseline());
+        }
         assert_eq!(
             Rules::for_commit("abc"),
             Err(RulesError::UnknownBuild("abc".into()))
