@@ -29,7 +29,7 @@ impl Execution for MissileSiloExecution {
             return;
         }
 
-        if !silo.is_active() && game.config().rules().has(Change::SiloInactiveGuard3997) {
+        if !silo.is_active() && game.has(Change::SiloInactiveGuard3997) {
             self.active = false;
             return;
         }

@@ -5,7 +5,7 @@
 #   (no flags)       one verify line plus the class of the record's commit
 #   --trace          run Tools/TraceCompare.sh up to the first mismatching tick, print the first 20 lines of the diff
 #                    (needs OFSIM_WORKTREE = upstream worktree of the record's commit, with node_modules)
-#   --bisect-flags   rerun verify once per Change flag of the class's EDGES entry with OFSIM_TOGGLE=<flag>, one line each
+#   --bisect-flags   rerun verify once per Change flag of the class's Edges/<class>.toml with OFSIM_TOGGLE=<flag>, one line each
 #   --depth N        with --bisect-flags, also the flags of the N-1 ancestor edges (default 1: own edge only)
 #   --until T        stop each verify at tick T (faster bisect)    --verbose  print the raw verify lines
 # Builds nothing. Env: OFSIM_BIN (default target/verify/ofsim, else target/release/ofsim), OFSIM_MAPS (default <Cache>/Worktrees/4e837520e886/resources/maps),
@@ -20,7 +20,7 @@ if [ -z "$bin" ]; then bin="$here/target/verify/ofsim"; [ -x "$bin" ] || bin="$h
 maps="${OFSIM_MAPS:-$cache/Worktrees/4e837520e886/resources/maps}"
 upstream="${OFSIM_UPSTREAM:-$cache/OpenFrontIO}"
 toml="$here/Crates/Engine/src/Builds/BuildClasses.toml"
-rules="$here/Crates/Engine/src/Builds/Rules.rs"
+edges="$here/Crates/Engine/src/Builds/Edges"
 
 record=""; trace=0; bisect=0; depth=1; until=""; verbose=0
 while [ $# -gt 0 ]; do
@@ -70,13 +70,14 @@ fi
 
 if [ "$bisect" = 1 ]; then
   # Flags of the class edge and of up to depth-1 ancestor edges, with the class they come from.
-  flags="$(python3 - "$toml" "$rules" "$class" "$depth" <<'PY'
+  flags="$(python3 - "$toml" "$edges" "$class" "$depth" <<'PY'
 import re, sys
-toml, rules, cls, depth = open(sys.argv[1]).read(), open(sys.argv[2]).read(), sys.argv[3], int(sys.argv[4])
+import os
+toml, edges, cls, depth = open(sys.argv[1]).read(), sys.argv[2], sys.argv[3], int(sys.argv[4])
 for _ in range(depth):
-    m = re.search(r'class:\s*"%s",\s*add:\s*&\[(.*?)\],\s*remove:\s*&\[(.*?)\]' % cls, rules, re.S)
-    if m:
-        for f in re.findall(r"Change::(\w+)", m.group(1) + " " + m.group(2)):
+    path = os.path.join(edges, cls + ".toml")
+    if os.path.exists(path):
+        for f in re.findall(r'"(\w+)"', open(path).read()):
             print(cls, f)
     p = re.search(r'^\[class\.%s\]\n(?:.*\n)*?parent = "(\w*)"' % cls, toml, re.M)
     if not p or not p.group(1):
@@ -84,7 +85,7 @@ for _ in range(depth):
     cls = p.group(1)
 PY
 )"
-  if [ -z "$flags" ]; then echo "bisect: no Change flags in EDGES for ${class:-?} (class not ported or empty edge)"; fi
+  if [ -z "$flags" ]; then echo "bisect: no Change flags in Edges/ for ${class:-?} (class not ported or empty edge)"; fi
   while read -r from flag; do
     [ -z "$flag" ] && continue
     r="$(verify "$flag")"

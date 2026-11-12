@@ -9,6 +9,7 @@ use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
+use crate::Execution::Alliance::AllianceRequestReplyExecution::AllianceRequestReplyExecution;
 use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
@@ -20,6 +21,7 @@ use crate::Execution::EmbargoAllExecution::EmbargoAllExecution;
 use crate::Execution::EmbargoExecution::EmbargoExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
+use crate::Execution::FakeHumanExecutionV28::FakeHumanExecution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
 use crate::Execution::MoveWarshipExecution::MoveWarshipExecution;
 use crate::Execution::NationExecution::NationExecution;
@@ -32,7 +34,7 @@ use crate::Execution::TargetPlayerExecution::TargetPlayerExecution;
 use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
 use crate::Execution::UpgradeStructureExecution::UpgradeStructureExecution;
-use crate::Execution::Utils::PlayerSpawner::spawn_players;
+use crate::Execution::Utils::PlayerSpawner::{spawn_players, spawn_players_v28};
 use crate::Game::Game::{Cell, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use ofsim_record::Intents::{Intent, StampedIntent};
@@ -88,12 +90,24 @@ impl Executor {
                 true,
                 game.config().rules(),
             )),
-            Intent::Boat { troops, dst } => {
-                Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
+            Intent::Boat {
+                troops,
+                dst,
+                target_id,
+                src,
+            } => {
+                let mut exec = TransportShipExecution::new(player, *dst, Some(*troops));
+                if !game.has(Change::PathfindingRefinements2959) {
+                    exec = exec.with_intent_target(target_id.clone(), *src);
+                }
+                Box::new(exec)
             }
             Intent::AllianceRequest { recipient } => {
                 Box::new(AllianceRequestExecution::new(player, recipient.clone()))
             }
+            Intent::AllianceRequestReply { requestor, accept } => Box::new(
+                AllianceRequestReplyExecution::new(requestor.clone(), player, *accept),
+            ),
             Intent::AllianceReject { requestor } => {
                 Box::new(AllianceRejectExecution::new(requestor.clone(), player))
             }
@@ -134,7 +148,7 @@ impl Executor {
                 UnitType::from_str(unit).unwrap_or_else(|| panic!("unknown unit type {unit}")),
                 *tile,
                 *rocket_direction_up,
-                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
+                amount.filter(|_| game.has(Change::BulkPurchase4640)),
             )),
             Intent::AllianceExtension { recipient } => {
                 Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
@@ -144,7 +158,7 @@ impl Executor {
             } => Box::new(UpgradeStructureExecution::new(
                 player,
                 *unit_id,
-                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
+                amount.filter(|_| game.has(Change::BulkPurchase4640)),
             )),
             Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
@@ -160,6 +174,9 @@ impl Executor {
 
     /// `spawnTribes(numTribes)`.
     pub fn spawn_tribes(&self, game: &GameImpl, num_tribes: usize) -> Vec<SpawnExecution> {
+        if game.has(Change::SpawnByTile28) {
+            return TribeSpawner::new(game, &self.game_id, &[]).spawn_bots_v28(num_tribes);
+        }
         let nation_cells: Vec<Cell> = game.nations().iter().filter_map(|n| n.spawn_cell).collect();
         TribeSpawner::new(game, &self.game_id, &nation_cells)
             .spawn_tribes(num_tribes, &self.purchased_tribe_names)
@@ -167,11 +184,27 @@ impl Executor {
 
     /// `spawnPlayers()`.
     pub fn spawn_players(&self, game: &GameImpl) -> Vec<SpawnExecution> {
+        if game.has(Change::SpawnByTile28) {
+            return spawn_players_v28(game, &self.game_id);
+        }
         spawn_players(game, &self.game_id)
     }
 
     /// `nationExecutions()`: one `NationExecution` per nation.
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
+        if game.has(Change::FakeHumanNations28) {
+            return game
+                .nations()
+                .iter()
+                .map(|n| {
+                    Box::new(FakeHumanExecution::new(
+                        &self.game_id,
+                        n.clone(),
+                        game.config().rules(),
+                    )) as Box<dyn Execution>
+                })
+                .collect();
+        }
         game.nations()
             .iter()
             .map(|n| {

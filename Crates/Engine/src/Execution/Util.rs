@@ -5,6 +5,7 @@
 //! `isTileSetLike`'s plain-iterable fallback of `nearestTileDistCapped` is test-only upstream and
 //! not ported (callers pass a [`TileSet`]).
 
+use crate::Builds::Rules::Change;
 use crate::Configuration::Config::NukeMagnitude;
 use crate::Game::Game::{STRUCTURES, SmallId};
 use crate::Game::GameImpl::GameImpl;
@@ -201,14 +202,15 @@ pub fn would_nuke_break_alliance(
     if ally_small_ids.is_empty() {
         return false;
     }
-    let would_destroy_allied_structure = game.any_unit_nearby(
-        target_tile,
-        magnitude.outer,
-        STRUCTURES,
-        |unit| unit.owner_id() != 0 && ally_small_ids.contains(&unit.owner_id()),
-        None,
-        false,
-    );
+    let would_destroy_allied_structure = game.has(Change::NukeBreakAlliedStructures2878)
+        && game.any_unit_nearby(
+            target_tile,
+            magnitude.outer,
+            STRUCTURES,
+            |unit| unit.owner_id() != 0 && ally_small_ids.contains(&unit.owner_id()),
+            None,
+            false,
+        );
     if would_destroy_allied_structure {
         return true;
     }

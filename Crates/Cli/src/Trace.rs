@@ -24,7 +24,33 @@ pub fn trace(record: &Path, maps: &Path, out: &Path, until: Option<u32>) -> Resu
             out.display()
         ))?))
     };
+    // Optional tile owner dumps (`OFSIM_OWNERS_AT=t1,t2`), in the shape of the reference `--full-at` owners.
+    let owner_ticks: Vec<u32> = std::env::var("OFSIM_OWNERS_AT")
+        .map(|v| v.split(',').filter_map(|x| x.trim().parse().ok()).collect())
+        .unwrap_or_default();
+    let mut owners_file = if owner_ticks.is_empty() {
+        None
+    } else {
+        Some(std::io::BufWriter::new(std::fs::File::create(format!(
+            "{}.owners.ndjson",
+            out.display()
+        ))?))
+    };
     let outcome = replay(record, maps, until, &mut |runner, info| {
+        if let Some(f) = owners_file.as_mut()
+            && owner_ticks.contains(&info.tick)
+        {
+            let game = &runner.game;
+            let owners: Vec<String> = (0..game.width() * game.height())
+                .map(|t| game.owner_id(t).to_string())
+                .collect();
+            let _ = writeln!(
+                f,
+                "{{\"tick\":{},\"owners\":[{}]}}",
+                info.tick,
+                owners.join(",")
+            );
+        }
         if let Some(f) = units_file.as_mut()
             && unit_ticks.contains(&info.tick)
         {

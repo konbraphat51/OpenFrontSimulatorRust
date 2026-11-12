@@ -1,0 +1,15 @@
+# Changes class C088 adds to / removes from its parent (parent: BuildClasses.toml).
+add = [
+  "RailNetworkHash36",
+  "BfsFifoOrder36",
+  "PlayerClusterRewrite36",
+  "PortSpawnFirstShore36",
+  "NationHomeTroops36",
+  "NationOverseasBots36",
+  "AbstractGraphWideSearch36",
+  "TrainSpawnOffRail36",
+  "MirvTargetGrid36",
+  "TribeMapData36",
+  "NationWarshipSpareGold36",
+]
+remove = []

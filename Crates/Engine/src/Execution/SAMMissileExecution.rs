@@ -3,10 +3,12 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use crate::Builds::Rules::Change;
+use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
+use crate::Pathfinding::Legacy28::PathFinding::AirPathFinder as LegacyAirPathFinder;
 use crate::Pathfinding::PathFinder::AirStepperEnv;
 use crate::Pathfinding::PathFinderAir::AirPathFinder;
 use crate::Pathfinding::PathFinderStepper::PathFinderStepper;
@@ -17,6 +19,7 @@ pub struct SAMMissileExecution {
     active: bool,
     stepper: PathFinderStepper<TileRef>,
     air: AirPathFinder,
+    legacy_air: Option<LegacyAirPathFinder>,
     sam_missile: Option<UnitId>,
     speed: f64,
     spawn: TileRef,
@@ -39,6 +42,7 @@ impl SAMMissileExecution {
             active: true,
             stepper: PathFinderStepper::new(),
             air: AirPathFinder::new(0),
+            legacy_air: None,
             sam_missile: None,
             speed: 0.0,
             spawn,
@@ -53,8 +57,14 @@ impl SAMMissileExecution {
 impl Execution for SAMMissileExecution {
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
         self.air = AirPathFinder::new_for(game.ticks(), game.config().rules());
+        if game.has(Change::LegacyProjectiles28) {
+            self.legacy_air = Some(LegacyAirPathFinder::new(PseudoRandom::for_rules(
+                game.config().rules(),
+                game.ticks() as f64,
+            )));
+        }
         self.speed = game.config().default_sam_missile_speed();
-        if game.config().rules().has(Change::SamTargetingFixes4770) {
+        if game.has(Change::SamTargetingFixes4770) {
             self.tick(game, ticks);
         }
     }
@@ -83,7 +93,7 @@ impl Execution for SAMMissileExecution {
             let t = game.unit_any(self.target);
             (t.is_active(), t.owner_id(), t.unit_type)
         };
-        let warheads_allowed = game.config().rules().has(Change::MirvWarheadsStandard4706);
+        let warheads_allowed = game.has(Change::MirvWarheadsStandard4706);
         let nukes_whitelist = [
             UnitType::AtomBomb,
             UnitType::HydrogenBomb,
@@ -96,7 +106,7 @@ impl Execution for SAMMissileExecution {
             || target_owner == game.unit_any(missile).owner_id()
             || !listed
         {
-            if target_active {
+            if target_active && game.has(Change::SamTargetingFix3223) {
                 game.unit_mut(self.target).set_targeted_by_sam(false);
             }
             game.unit_mut(missile).delete(Some(false), None);
@@ -106,15 +116,22 @@ impl Execution for SAMMissileExecution {
         let mut i = 0.0;
         while i < self.speed {
             let from = game.unit_any(missile).tile();
-            let result = self.stepper.next(
-                &mut AirStepperEnv {
-                    finder: &self.air,
-                    map: &game.map,
-                },
-                from,
-                self.target_tile,
-                None,
-            );
+            let result = if let Some(air) = self.legacy_air.as_mut() {
+                match air.next_tile(&game.map, from, self.target_tile) {
+                    None => PathResult::Complete(from),
+                    Some(t) => PathResult::Next(t),
+                }
+            } else {
+                self.stepper.next(
+                    &mut AirStepperEnv {
+                        finder: &self.air,
+                        map: &game.map,
+                    },
+                    from,
+                    self.target_tile,
+                    None,
+                )
+            };
             match result {
                 PathResult::Complete(_) => {
                     self.active = false;

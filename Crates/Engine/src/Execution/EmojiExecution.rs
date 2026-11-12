@@ -5,6 +5,7 @@
 //! Sending an emoji records it for the cooldown checks and, when the recipient is a nation, lets
 //! it respond (relation changes and follow-up emojis), which is why this is ported fully.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::FLATTENED_EMOJI_TABLE;
 use crate::Execution::Execution::Execution;
@@ -77,8 +78,18 @@ impl Execution for EmojiExecution {
         {
             game.player_mut(self.requestor)
                 .send_emoji(recipient, emoji_string);
-            let random = self.random.as_mut().expect("random set in init");
-            respond_to_emoji(game, random, self.requestor, recipient, emoji_string);
+            if game.has(Change::RelationPenalties28) {
+                // Nations only take offence at the middle finger
+                if let EmojiRecipient::Player(r) = recipient
+                    && emoji_string == "\u{1f595}"
+                    && game.player(r).player_type() == PlayerType::Nation
+                {
+                    game.player_mut(r).update_relation(self.requestor, -100.0);
+                }
+            } else {
+                let random = self.random.as_mut().expect("random set in init");
+                respond_to_emoji(game, random, self.requestor, recipient, emoji_string);
+            }
         }
         self.active = false;
     }

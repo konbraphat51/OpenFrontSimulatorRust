@@ -1,0 +1,6 @@
+# Changes class C043 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "NoPublicDonation3437",
+  "RandomSpawnShortPhase3433",
+]

@@ -90,6 +90,17 @@ English version: [Plan.md](Plan.md)
 | C046 | v0.30.22 | 核の 6 発に 1 発は目標を越えて跳ね返る (`BouncingParabolaPathFinder`、起爆は跳ね返り先); マップ 5 つ追加 | 9/9 (長尺 5 件) |
 | C047 | v0.30.0-beta2 | SAM クールダウン 75、攻撃側損失の配合 0.5/0.5、定額の列車収入、列車の出現 25、`disableAlliances` オプションなし | 1/1 (短尺 279 ターン) |
 | C048 | v0.30.0-beta1 | `nations` ではなく `disableNations` (どのコンパクトマップでも国家 25%)、列車の出現 18、ボットはゲームのシードで生成、170 分制限なし、スポーン中の同盟要求を拒否しない | 4/4 (短尺、ハッシュはスポーン期間のみ) |
+| C049 | v0.29.11〜v0.29.14 | v0.29ブランチ (上記PR群より前): 単純な攻撃側損失、旧Nation難易度表、港数ボーナス交易金、Nationスポーン免疫なし、核の逐次損失、旧SAM標的選択、`allianceRequestReply`インテント、スナップなし鉄道クラスタ、インライン建築順 (`NationUnitsV29.rs`)、ゲームランナーでの名前検閲 (`Core/Obscenity.rs` が obscenity を移植)、BotNames、N,S,W,E順の境界更新 | 長尺16件・短尺41件が一致 |
+| C050 | v0.29.15〜v0.29.21 | PR 3167: 核がSAMミサイルを破壊しない | サンプル全一致 |
+| C051 | v0.29.7, v0.29.10 | PR 3072: Easy Nation 18,750 兵、上限0.75、成長0.95 | サンプル全一致 |
+| C052 | v0.29.5 | ユーザー名スキーマのみ | サンプル全一致 |
+| C053 | v0.29.3, v0.29.4 | PR 2984: Nationの兵寄付なし、船数上限チェックなし、距離順の島敵選択、HvN攻撃ゲートなし | サンプル全一致 (短尺) |
+| C054 | v0.29.1, v0.29.2 | PR 2971: チーム同盟拒否 0/20/40/60% | サンプル全一致 (短尺) |
+| C055 | v0.29.0-beta4 | 目標・出発タイル付き boat インテント、最初の隣接水への補正、LOS 1段階、短経路140、ランダムスポーン固定なし、駅隣接8 | 6/6 |
+| C056 | v0.29.0-beta3 | ロビー金設定なし、バケットキュー、短経路探索なし、最終平滑化なし | 1/1 (短尺) |
+| C057 | v0.29.0-beta2 | 国境タイルが未所有地(水含む)に接するとBotが拡張 | 1/1 (短尺) |
+| C058 | v0.29.0-beta1 | 部分: 水上経路探索の書き換えは未移植 | 2/2 (短尺) |
+| C059 | v0.28.4 | `FakeHumanNations28` (国家はマニフェストのセルに置く `FakeHumanExecution`、部族は `BotBehaviorV28` 上の `BotExecutionV28`、同盟は `AllianceBehaviorV28`、`NationCreation` なし)、`NationDifficultyEconomy28` (難易度ごとの初期兵力・上限・増加)、`ImmunityByConfig28` (全プレイヤーにスポーン期間 + 5 秒の免疫、`canAttackPlayer` なしの `canAttack`)、`SpawnByTile28` (Execution 作成時にスポーンタイルを抽選、ボットは 30 離れた陸地を再試行)、`LegacyAStar28` (`Pathfinding/Legacy28/`: ボート・交易船・軍艦・鉄道・駅にミニマップ上の双方向 `SerialAStar`、`TransportShipUtilsV28`、水グラフなし)、`LegacyProjectiles28` (砲弾と SAM ミサイルはファインダーごとに 1 つの PRNG、核と MIRV は制御点ベジェ、爆風タイルは発射時に確定、タイル数による同盟破棄、MIRV は `nextInt` で散布)、`RelationPenalties28` (攻撃 -80、裏切り -200 と -40、中指、寄付に絵文字返信なし)、`WarshipLegacy28` | 20/20 (公開 12 件、最大 7,200 ターン) |
 
 世代 F の数学: PR 5191 より前のビルドはホストの `Math.exp/log/pow/atan2` を呼ぶ。`Compat/HostMath.rs` は `exp`、`log`、`atan2` に V8 の fdlibm 移植を使い、`Math.pow` は V8 の fdlibm 移植とプラットフォームの `powf` から `Config` が選ぶ (`OFSIM_POW=fdlibm|platform`、既定はプラットフォーム)。C013 から C022 のサンプルは pow がどちらでも全て一致するため、レコードでは区別できない。既定は [BuildPlan.ja.md](BuildPlan.ja.md) の V8 13.3 以降の `std::pow` の調査に従う。ネーション (Hard、Impossible)、大きな初期ゴールド、水核、Duos/Quads チームを有効にするよう書き換えたレコードをアップストリームのエンジン (Node 22、fdlibm pow) と照合した差分実行 (1,500 から 3,700 tick を約 25 回) は tick 単位で完全一致。ただし C013 での初期ゴールド 9 億と水核のストレス実行は tick 2224 で分岐した。原因は水域探索器の世代管理 (下記) で、修正済み。`OFSIM_TOGGLE=<Change>,...` は全ルールセットの指定した変更を反転し、二分探索に使う。C080 (C013 とベースラインの間のテストリリース) は未移植: 唯一のサンプルにハッシュがない。C025 から C027 の Doomsday Clock の各版は未移植 (クロックが有効だと panic し、サンプルに有効なものはない)。
 

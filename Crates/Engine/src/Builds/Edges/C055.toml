@@ -1,0 +1,8 @@
+# Changes class C055 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "PathfindingRefinements2959",
+  "ShoreCoerceBestNeighbor2937",
+  "RandomSpawnLock2958",
+  "RailPathfindingFix2950",
+]

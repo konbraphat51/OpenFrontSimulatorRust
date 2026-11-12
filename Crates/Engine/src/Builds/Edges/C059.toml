@@ -1,0 +1,12 @@
+# Changes class C059 adds to / removes from its parent (parent: BuildClasses.toml).
+add = [
+  "FakeHumanNations28",
+  "NationDifficultyEconomy28",
+  "ImmunityByConfig28",
+  "SpawnByTile28",
+  "LegacyAStar28",
+  "LegacyProjectiles28",
+  "RelationPenalties28",
+  "WarshipLegacy28",
+]
+remove = []

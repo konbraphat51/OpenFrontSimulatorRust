@@ -36,9 +36,7 @@ impl Execution for EmbargoAllExecution {
             if game.player(me).is_on_same_team(p) {
                 continue;
             }
-            if game.config().rules().has(Change::EmbargoAllSkipsAllies5919)
-                && game.player(me).is_allied_with(p)
-            {
+            if game.has(Change::EmbargoAllSkipsAllies5919) && game.player(me).is_allied_with(p) {
                 continue;
             }
             let has = game.player(me).has_embargo_against(p);

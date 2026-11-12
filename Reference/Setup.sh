@@ -8,6 +8,8 @@ set -euo pipefail
 commit="${1:?usage: Setup.sh <commit> [repo-root]}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(cd "${2:-$here/..}" && pwd)"
+# A worktree under Cache/Wt/<name> shares the main checkout's Cache/.
+if [ -z "${2:-}" ] && [ "$(basename "$(dirname "$root")")" = "Wt" ]; then root="$(cd "$root/../../.." && pwd)"; fi
 clone="$root/Cache/OpenFrontIO"
 [ -d "$clone/.git" ] || git clone https://github.com/openfrontio/OpenFrontIO.git "$clone"
 full="$(git -C "$clone" rev-parse "$commit^{commit}" 2>/dev/null || { git -C "$clone" fetch --all --tags --quiet; git -C "$clone" rev-parse "$commit^{commit}"; })"

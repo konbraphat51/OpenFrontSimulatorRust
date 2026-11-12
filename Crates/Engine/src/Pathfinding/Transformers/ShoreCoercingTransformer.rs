@@ -9,12 +9,22 @@ use std::collections::HashMap;
 /// Wraps a finder so land (shore) endpoints path through their best water neighbour (on `ctx.mini_map`).
 pub struct ShoreCoercingTransformer<P> {
     inner: P,
+    first_neighbor: bool,
 }
 
 impl<P> ShoreCoercingTransformer<P> {
     /// Wraps `inner`.
     pub fn new(inner: P) -> Self {
-        Self { inner }
+        Self {
+            inner,
+            first_neighbor: false,
+        }
+    }
+
+    /// Builds before PR 2937 coerce to the first water neighbour instead of the best connected one.
+    pub fn with_first_neighbor(mut self, first_neighbor: bool) -> Self {
+        self.first_neighbor = first_neighbor;
+        self
     }
 
     /// The wrapped finder.
@@ -34,7 +44,7 @@ impl<P: PathFinder> PathFinder for ShoreCoercingTransformer<P> {
                 water_from.push(f);
                 // A raw water source overrides any earlier shore tile coerced to the same water tile
                 water_to_original.remove(&f);
-            } else if let Some(water) = best_water_neighbor(map, f) {
+            } else if let Some(water) = best_water_neighbor(map, f, self.first_neighbor) {
                 water_from.push(water);
                 water_to_original.insert(water, f);
             }
@@ -48,7 +58,7 @@ impl<P: PathFinder> PathFinder for ShoreCoercingTransformer<P> {
         let mut water_to = to;
         let mut original_to: Option<TileRef> = None;
         if !map.is_water(to) {
-            water_to = best_water_neighbor(map, to)?;
+            water_to = best_water_neighbor(map, to, self.first_neighbor)?;
             original_to = Some(to);
         }
 
@@ -80,7 +90,7 @@ impl<P: PathFinder> PathFinder for ShoreCoercingTransformer<P> {
 }
 
 /// Adjacent water neighbour with the most water neighbours (first wins ties).
-fn best_water_neighbor(map: &GameMapImpl, tile: TileRef) -> Option<TileRef> {
+fn best_water_neighbor(map: &GameMapImpl, tile: TileRef, first_only: bool) -> Option<TileRef> {
     let mut best = None;
     let mut max_score: i32 = -1;
 
@@ -89,6 +99,9 @@ fn best_water_neighbor(map: &GameMapImpl, tile: TileRef) -> Option<TileRef> {
     for &neighbor in &nbuf[..n] {
         if !map.is_water(neighbor) {
             continue;
+        }
+        if first_only {
+            return Some(neighbor);
         }
         let score = count_water_neighbors(map, neighbor);
         if score > max_score {

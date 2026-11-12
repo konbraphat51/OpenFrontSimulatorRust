@@ -2,6 +2,7 @@
 //! Port of src/core/execution/TrainStationExecution.ts: creates a structure's station and, for factories, spawns trains.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Execution::TrainExecution::TrainExecution;
@@ -65,6 +66,26 @@ impl TrainStationExecution {
             return;
         };
         let owner = game.unit_any(self.unit).owner_id();
+        if !game.has(Change::TrainDestinationReservoir3130) {
+            let available = game
+                .rail_network
+                .cluster_available_for_trade(game, cluster, owner);
+            if available.is_empty() || !self.should_spawn_train(game) {
+                return;
+            }
+            let random = self.random.as_mut().expect("initialised");
+            let destination = *random.rand_from_set(&available);
+            if destination != station {
+                game.add_execution(Box::new(TrainExecution::new(
+                    owner,
+                    station,
+                    destination,
+                    NUM_CARS,
+                )));
+                self.last_spawn_tick = current_tick;
+            }
+            return;
+        }
         if !game
             .rail_network
             .cluster_has_any_trade_destination(game, cluster, owner)

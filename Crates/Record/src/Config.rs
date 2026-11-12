@@ -88,7 +88,7 @@ pub struct PublicGameModifiers {
     /// Compact map.
     #[serde(default, rename = "isCompact", skip_serializing_if = "Option::is_none")]
     pub is_compact: Option<bool>,
-    /// Random spawn.
+    /// Random spawn (absent, so false, before v0.27).
     #[serde(
         default,
         rename = "isRandomSpawn",
@@ -217,11 +217,11 @@ pub struct GameConfig {
     pub game_map: String,
     /// Difficulty of nations and tribes.
     pub difficulty: Difficulty,
-    /// Donations of gold enabled.
-    #[serde(rename = "donateGold")]
+    /// Donations of gold enabled (absent, so false, before v0.26).
+    #[serde(default, rename = "donateGold")]
     pub donate_gold: bool,
     /// Donations of troops enabled.
-    #[serde(rename = "donateTroops")]
+    #[serde(default, rename = "donateTroops")]
     pub donate_troops: bool,
     /// Singleplayer, public or private.
     #[serde(rename = "gameType")]
@@ -236,8 +236,8 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub ranked_type: Option<RankedType>,
-    /// Normal or compact map.
-    #[serde(rename = "gameMapSize")]
+    /// Normal or compact map (absent, so normal, before v0.26).
+    #[serde(default = "normal_map_size", rename = "gameMapSize")]
     pub game_map_size: GameMapSize,
     /// Doomsday clock settings.
     #[serde(
@@ -266,6 +266,13 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub disable_nations: Option<bool>,
+    /// `disableNPCs` of builds before v0.30.0-beta1 (FakeHuman nations).
+    #[serde(
+        default,
+        rename = "disableNPCs",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub disable_npcs: Option<bool>,
     /// Number of tribes (bots).
     pub bots: u32,
     /// Infinite gold.
@@ -336,8 +343,8 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub water_nukes: Option<bool>,
-    /// Random spawn.
-    #[serde(rename = "randomSpawn")]
+    /// Random spawn (absent, so false, before v0.27).
+    #[serde(default, rename = "randomSpawn")]
     pub random_spawn: bool,
     /// Player cap.
     #[serde(
@@ -425,4 +432,9 @@ pub struct GameConfig {
     /// Unknown keys, so new builds still load.
     #[serde(flatten)]
     pub extra: Map<String, Value>,
+}
+
+/// Map size of records that predate `gameMapSize`.
+fn normal_map_size() -> GameMapSize {
+    GameMapSize::Normal
 }

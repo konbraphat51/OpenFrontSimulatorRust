@@ -97,7 +97,7 @@ impl AttackExecution {
         let deaths = game.attack(attack).troops() * (malus_percent / 100.0);
         if !self.remove_troops && self.source_tile.is_none() {
             let troops = game.attack(attack).troops() - self.start_troops.unwrap_or(0.0);
-            game.attack_mut(attack).set_troops(troops);
+            game.set_attack_troops(attack, troops);
         }
         let survivors = game.attack(attack).troops() - deaths;
         game.player_mut(self.owner).add_troops(survivors);
@@ -107,7 +107,7 @@ impl AttackExecution {
 
     /// Cardinal neighbours in the order the build's attack code walks them (`neighbors()` before PR 3820).
     fn neighbors_of(game: &GameImpl, tile: TileRef, out: &mut [TileRef; 4]) -> usize {
-        if game.config().rules().has(Change::AttackForEachNeighbor3820) {
+        if game.has(Change::AttackForEachNeighbor3820) {
             game.map.neighbors4(tile, out)
         } else {
             game.map.neighbors4_nswe(tile, out)
@@ -195,7 +195,7 @@ impl AttackExecution {
         let target = self.target;
         game.conquer_player(self.owner, target);
 
-        let converge = game.config().rules().has(Change::AnnexConvergeLoop4890);
+        let converge = game.has(Change::AnnexConvergeLoop4890);
         let max_passes: usize = if converge { 100 } else { 10 };
         for _pass in 0..max_passes {
             let mut progressed = false;
@@ -220,7 +220,11 @@ impl AttackExecution {
                             return;
                         }
                         let no = game.map.owner_id(neighbor);
-                        if no != 0 && no != target && !game.player(no).is_friendly(target, false) {
+                        if no != 0
+                            && no != target
+                            && (!game.has(Change::AttackFriendlyNeighbor2954)
+                                || !game.player(no).is_friendly(target, false))
+                        {
                             captured_by = Some(no);
                         }
                     });
@@ -275,7 +279,15 @@ impl Execution for AttackExecution {
             }
         }
 
-        if self.target != 0
+        if self.target != 0 && game.has(Change::ImmunityByConfig28) {
+            // Nobody may attack a player before the spawn phase and the fixed immunity are over
+            let immune_until =
+                game.config().num_spawn_phase_turns() + game.config().spawn_immunity_duration();
+            if immune_until > game.ticks() {
+                self.active = false;
+                return;
+            }
+        } else if self.target != 0
             && !game
                 .player(self.owner)
                 .can_attack_player(self.target, false)
@@ -295,7 +307,7 @@ impl Execution for AttackExecution {
         if self.remove_troops {
             start_troops = owner_troops.min(start_troops);
             let deducted = game.player_mut(self.owner).remove_troops(start_troops);
-            if game.config().rules().has(Change::AttackTroopsDeducted5111) {
+            if game.has(Change::AttackTroopsDeducted5111) {
                 start_troops = deducted;
             }
         }
@@ -322,13 +334,13 @@ impl Execution for AttackExecution {
                 // The target has an opposing attack: cancel them out.
                 if game.attack(incoming).troops() > game.attack(attack).troops() {
                     let left = game.attack(incoming).troops() - game.attack(attack).troops();
-                    game.attack_mut(incoming).set_troops(left);
+                    game.set_attack_troops(incoming, left);
                     game.delete_attack(attack);
                     self.active = false;
                     return;
                 } else {
                     let left = game.attack(attack).troops() - game.attack(incoming).troops();
-                    game.attack_mut(attack).set_troops(left);
+                    game.set_attack_troops(attack, left);
                     game.delete_attack(incoming);
                 }
             }
@@ -341,18 +353,13 @@ impl Execution for AttackExecution {
                 && game.attack(attack).source_tile().is_none()
             {
                 let sum = game.attack(attack).troops() + game.attack(outgoing).troops();
-                game.attack_mut(attack).set_troops(sum);
+                game.set_attack_troops(attack, sum);
                 game.delete_attack(outgoing);
             }
         }
 
         // Nothing to conquer: the attack does not happen.
-        if game
-            .config()
-            .rules()
-            .has(Change::AttackRetreatNoTargets5823)
-            && self.to_conquer.size() == 0
-        {
+        if game.has(Change::AttackRetreatNoTargets5823) && self.to_conquer.size() == 0 {
             self.retreat(game, 0.0);
             return;
         }
@@ -360,13 +367,14 @@ impl Execution for AttackExecution {
         if self.target != 0 {
             let difficulty = game.config().game_config().difficulty;
             // Hitting back at whoever just attacked us does not anger them, except on Easy.
-            if game.config().rules().has(Change::NationsLikeHumans5899)
+            if game.has(Change::NationsLikeHumans5899)
                 && difficulty != Difficulty::Easy
                 && game.player(self.owner).relation(self.target) == Relation::Hostile
             {
                 return;
             }
             let relation_change = match game.config().game_config().difficulty {
+                _ if game.has(Change::RelationPenalties28) => -80.0,
                 Difficulty::Easy => -60.0,
                 Difficulty::Medium => -70.0,
                 Difficulty::Hard => -80.0,
@@ -384,12 +392,7 @@ impl Execution for AttackExecution {
 
         // Must come before the retreat refund: another attack's init can absorb or cancel this one
         // on the tick its retreat completes.
-        if game
-            .config()
-            .rules()
-            .has(Change::AttackInactiveBeforeRetreat6089)
-            && !game.attack(attack).is_active()
-        {
+        if game.has(Change::AttackInactiveBeforeRetreat6089) && !game.attack(attack).is_active() {
             self.active = false;
             return;
         }
@@ -417,7 +420,7 @@ impl Execution for AttackExecution {
         }
 
         let border_size = game.attack(attack).border_size() + self.random.next_int(0.0, 5.0);
-        let rework = game.config().rules().has(Change::AttackLogicRework5173);
+        let rework = game.has(Change::AttackLogicRework5173);
         // Each tile consumes a fraction of the tick; conquer until it is spent.
         let mut tick_budget = if rework {
             1.0
@@ -454,8 +457,7 @@ impl Execution for AttackExecution {
             if game.map.owner_id(tile_to_conquer) != self.target || !on_border {
                 continue;
             }
-            if (!game.map.is_land(tile_to_conquer)
-                && game.config().rules().has(Change::AttackSkipsWater31))
+            if (!game.map.is_land(tile_to_conquer) && game.has(Change::AttackSkipsWater31))
                 || game.map.is_impassable(tile_to_conquer)
             {
                 continue;
@@ -479,7 +481,7 @@ impl Execution for AttackExecution {
             };
             tick_budget -= spent;
             troop_count -= attacker_loss;
-            game.attack_mut(attack).set_troops(troop_count);
+            game.set_attack_troops(attack, troop_count);
             if target_is_player {
                 game.player_mut(self.target).remove_troops(defender_loss);
             }

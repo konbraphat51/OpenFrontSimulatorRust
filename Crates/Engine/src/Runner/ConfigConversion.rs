@@ -27,7 +27,9 @@ pub fn game_config_from_record(c: &RecordConfig::GameConfig) -> Result<GameConfi
         ),
     };
     let nations = match &c.nations {
-        _ if c.disable_nations == Some(true) => NationsSetting::Disabled,
+        _ if c.disable_nations == Some(true) || c.disable_npcs == Some(true) => {
+            NationsSetting::Disabled
+        }
         RecordConfig::NationsConfig::Count(n) => NationsSetting::Count(*n),
         RecordConfig::NationsConfig::Mode(m) if m == "disabled" => NationsSetting::Disabled,
         RecordConfig::NationsConfig::Mode(m) if m == "default" => NationsSetting::Default,

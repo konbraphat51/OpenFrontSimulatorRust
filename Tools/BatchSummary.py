@@ -13,6 +13,7 @@ Reads stdin when no file is given or the file is "-". --verbose adds ticks and s
 import argparse
 import functools
 import json
+import os
 import re
 import sys
 from collections import defaultdict
@@ -95,4 +96,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # Reader closed the pipe (`| head`): exit quietly, no traceback or flush error at shutdown.
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        sys.exit(0)

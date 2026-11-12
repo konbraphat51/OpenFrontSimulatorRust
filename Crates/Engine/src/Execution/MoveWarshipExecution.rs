@@ -55,12 +55,7 @@ impl Execution for MoveWarshipExecution {
                 game.water_manager
                     .has_water_component(&game.map, unit.tile(), c)
             });
-            if !same_component
-                && game
-                    .config()
-                    .rules()
-                    .has(Change::WarshipPatrolComponent4151)
-            {
+            if !same_component && game.has(Change::WarshipPatrolComponent4151) {
                 continue;
             }
             let mut unit = game.unit_mut(warship);

@@ -1,0 +1,6 @@
+# Changes class C007 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "InternalBorderAnnexFix5545",
+  "SaturationMidpoints5587",
+]

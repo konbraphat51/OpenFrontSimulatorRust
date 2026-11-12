@@ -5,6 +5,7 @@
 //! Upstream builds a new finder per query, sized by the station count at that moment; so does this.
 
 use super::Algorithms::AStar::{AStar, AStarAdapter};
+use crate::Builds::Rules::Change;
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::RailNetwork::RailNetwork;
 use crate::Game::Railroad::StationId;
@@ -43,7 +44,11 @@ impl AStarAdapter for StationGraphAdapter<'_> {
     }
 
     fn max_neighbors(&self) -> usize {
-        32
+        if self.game.has(Change::RailPathfindingFix2950) {
+            32
+        } else {
+            8
+        }
     }
 
     fn max_priority(&self) -> usize {
