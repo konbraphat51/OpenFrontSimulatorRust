@@ -872,6 +872,15 @@ impl<'a> PlayerRef<'a> {
             if self.is_on_same_team(p) {
                 continue;
             }
+            if self
+                .game
+                .config()
+                .rules()
+                .has(Change::EmbargoAllSkipsAllies5919)
+                && self.is_allied_with(p)
+            {
+                continue;
+            }
             return true;
         }
         false

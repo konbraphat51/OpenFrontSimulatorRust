@@ -45,8 +45,19 @@ pub fn trace_line(game: &GameImpl, tick: u32, record_hash: Option<f64>) -> Strin
     for (i, id) in game.all_players().into_iter().enumerate() {
         let p = game.player(id);
         let mut unit_hash_sum = 0.0;
+        // Debug: `OFSIM_UNIT_LOG=<smallId>` prints that player's mobile units to stderr every tick.
+        let log_units = std::env::var("OFSIM_UNIT_LOG").is_ok_and(|v| v == id.to_string());
         for &u in p.units() {
             unit_hash_sum += game.unit_any(u).hash();
+            if log_units && !game.unit_any(u).unit_type().is_structure() {
+                eprintln!(
+                    "UNIT {} {} {:?} {}",
+                    tick,
+                    u,
+                    game.unit_any(u).unit_type(),
+                    game.unit_any(u).tile()
+                );
+            }
         }
         if i > 0 {
             line.push(',');

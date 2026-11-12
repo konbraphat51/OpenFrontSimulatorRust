@@ -42,6 +42,8 @@ pub enum Change {
     WaterGraphEdgeSort5805,
     /// PR 5955 and siblings: `PlayerExecution` judges clusters first and annexes severed land.
     SeveredLandAnnex5955,
+    /// PR 5919: "stop trading with enemies" (embargo all) skips allies.
+    EmbargoAllSkipsAllies5919,
     /// PR 5719: a train reconciles a split of the railroad it is on.
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
@@ -159,6 +161,7 @@ const EDGES: &[Edge] = &[
             Change::WaterGraphEdgeSort5805,
             Change::TrainSplitReconcile5719,
             Change::SeveredLandAnnex5955,
+            Change::EmbargoAllSkipsAllies5919,
         ],
         remove: &[],
     },
