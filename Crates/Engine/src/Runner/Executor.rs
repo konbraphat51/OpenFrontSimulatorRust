@@ -6,14 +6,17 @@
 //! `not ported: <Name>` the moment it is created. Replace the arm of the matching intent when an
 //! execution lands. `Executor.random` is seeded but never drawn from upstream, so it is not kept.
 
+use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
+use crate::Execution::MoveWarshipExecution::MoveWarshipExecution;
 use crate::Execution::NoOpExecution::NoOpExecution;
 use crate::Execution::NotPorted::NotPorted;
 use crate::Execution::PauseExecution::PauseExecution;
 use crate::Execution::QuickChatExecution::QuickChatExecution;
 use crate::Execution::SpawnExecution::SpawnExecution;
+use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
 use crate::Execution::Utils::PlayerSpawner::spawn_players;
 use crate::Game::Game::Cell;
@@ -52,15 +55,19 @@ impl Executor {
         match &intent.intent {
             Intent::Attack { .. } => NotPorted::at_creation("AttackExecution"),
             Intent::CancelAttack { .. } => NotPorted::at_creation("RetreatExecution"),
-            Intent::CancelBoat { .. } => NotPorted::at_creation("BoatRetreatExecution"),
-            Intent::MoveWarship { .. } => NotPorted::at_creation("MoveWarshipExecution"),
+            Intent::CancelBoat { unit_id } => Box::new(BoatRetreatExecution::new(player, *unit_id)),
+            Intent::MoveWarship { unit_ids, tile } => {
+                Box::new(MoveWarshipExecution::new(player, unit_ids.clone(), *tile))
+            }
             Intent::Spawn { tile } => Box::new(SpawnExecution::new(
                 &self.game_id,
                 game.player(player).info().clone(),
                 Some(*tile),
                 true,
             )),
-            Intent::Boat { .. } => NotPorted::at_creation("TransportShipExecution"),
+            Intent::Boat { troops, dst } => {
+                Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
+            }
             Intent::AllianceRequest { .. } => NotPorted::at_creation("AllianceRequestExecution"),
             Intent::AllianceReject { .. } => NotPorted::at_creation("AllianceRejectExecution"),
             Intent::BreakAlliance { .. } => NotPorted::at_creation("BreakAllianceExecution"),
