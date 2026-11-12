@@ -273,7 +273,8 @@ impl AiAttackBehavior {
             let matches_criteria = if high_interest_only {
                 owner == 0 || game.player(owner).player_type() == PlayerType::Bot
             } else {
-                owner == 0 || !self.is_friendly(game, owner)
+                // The owner is the receiver upstream, which matters for disconnected owners.
+                owner == 0 || !game.player(owner).is_friendly(self.player, false)
             };
             if !matches_criteria {
                 continue;

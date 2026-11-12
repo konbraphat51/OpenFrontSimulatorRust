@@ -313,6 +313,15 @@ pub struct Rules {
     changes: BTreeSet<Change>,
 }
 
+/// Builds of class C000 (v0.34.19 to v0.34.23): identical simulation code, so the baseline rules apply.
+pub const BASELINE_CLASS_COMMITS: [&str; 5] = [
+    "a188868bc16c",
+    "feba4a51c334",
+    BASELINE_COMMIT,
+    "d7075bface21",
+    "71154c52c2a2",
+];
+
 impl Rules {
     /// Rules of the baseline build (class C000).
     pub fn baseline() -> Self {
@@ -417,6 +426,9 @@ mod tests {
         assert!(r.has(Change::DetMath5191) && r.has(Change::Sfc32PseudoRandom4233));
         assert_eq!(r.class_id(), "C000");
         assert!(Rules::for_commit("4e837520e886deadbeef").is_ok());
+        for commit in BASELINE_CLASS_COMMITS {
+            assert_eq!(Rules::for_commit(commit).unwrap().class_id(), "C000");
+        }
         assert!(matches!(
             Rules::for_commit("abc"),
             Err(RulesError::UnknownBuild { .. })
