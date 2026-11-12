@@ -261,8 +261,7 @@ impl AbstractGraph {
 
     /// Renumbers edges by (node_a, node_b) so partial and full builds of the same water match.
     fn sort_edges(&mut self) {
-        self.edges
-            .sort_by(|a, b| (a.node_a, a.node_b).cmp(&(b.node_a, b.node_b)));
+        self.edges.sort_by_key(|e| (e.node_a, e.node_b));
         for ids in &mut self.node_edge_ids {
             ids.clear();
         }
