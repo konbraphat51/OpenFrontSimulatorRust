@@ -40,6 +40,8 @@ pub enum Change {
     SmallEconomyBoost5907,
     /// PR 5805 (package split): water graph edges are renumbered by node pair after the build.
     WaterGraphEdgeSort5805,
+    /// PR 5719: a train reconciles a split of the railroad it is on.
+    TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
     NationsLikeHumans5899,
     /// PR 5833: a human may send several emojis per window (nations still one).
@@ -153,6 +155,7 @@ const EDGES: &[Edge] = &[
             Change::EmojiBatch5833,
             Change::NationsLikeHumans5899,
             Change::WaterGraphEdgeSort5805,
+            Change::TrainSplitReconcile5719,
         ],
         remove: &[],
     },
