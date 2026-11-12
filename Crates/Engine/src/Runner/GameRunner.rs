@@ -28,8 +28,8 @@ use ofsim_record::Records::Turn;
 use ofsim_record::StartInfo::GameStartInfo;
 use std::path::Path;
 
-/// `getClanTag(name)` of builds before v0.31: the first `[TAG]` of 2 to 5 letters or digits, upper-cased.
-fn clan_tag_from_name(name: &str) -> Option<String> {
+/// `getClanTagOriginalCase(name)`: the first `[TAG]` of 2 to 5 letters or digits, as written.
+fn clan_tag_original_case(name: &str) -> Option<String> {
     let bytes: Vec<char> = name.chars().collect();
     let mut i = 0;
     while i < bytes.len() {
@@ -40,12 +40,27 @@ fn clan_tag_from_name(name: &str) -> Option<String> {
             }
             let len = j - i - 1;
             if (2..=5).contains(&len) && j < bytes.len() && bytes[j] == ']' {
-                return Some(bytes[i + 1..j].iter().collect::<String>().to_uppercase());
+                return Some(bytes[i + 1..j].iter().collect::<String>());
             }
         }
         i += 1;
     }
     None
+}
+
+/// `getClanTag(name)` of builds before v0.31: the first `[TAG]`, upper-cased.
+fn clan_tag_from_name(name: &str) -> Option<String> {
+    clan_tag_original_case(name).map(|t| t.to_uppercase())
+}
+
+/// `censorNameWithClanTag(username)`: a clan tag is upper-cased and separated by one space.
+/// Profane names are not detected (the obscenity word list is not ported).
+fn censor_name_with_clan_tag(username: &str) -> String {
+    let Some(tag) = clan_tag_original_case(username) else {
+        return username.to_string();
+    };
+    let without_clan = username.replacen(&format!("[{tag}]"), "", 1);
+    format!("[{}] {}", tag.to_uppercase(), without_clan.trim())
 }
 
 fn game_map_of(t: &TerrainMap, rules: &Rules) -> Result<GameMapImpl> {
@@ -83,8 +98,14 @@ pub fn create_game_runner(
         .players
         .iter()
         .map(|p| {
+            // Builds before PR 3122 censor every name in the game runner (the tracer passes no client id).
+            let name = if rules.has(Change::ServerUsernameCensoring3122) {
+                p.username.clone()
+            } else {
+                censor_name_with_clan_tag(&p.username)
+            };
             PlayerInfo::new(
-                p.username.clone(),
+                name.clone(),
                 PlayerType::Human,
                 Some(p.client_id.clone()),
                 random.next_id(),
@@ -92,7 +113,7 @@ pub fn create_game_runner(
                 if rules.has(Change::ClanTagField31) {
                     p.clan_tag.clone()
                 } else {
-                    clan_tag_from_name(&p.username)
+                    clan_tag_from_name(&name)
                 },
                 p.friends.clone().unwrap_or_default(),
                 p.team_index,
