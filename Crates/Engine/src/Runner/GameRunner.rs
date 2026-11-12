@@ -14,7 +14,7 @@ use crate::Builds::Rules::Rules;
 use crate::Configuration::Config::Config;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
-use crate::Execution::NotPorted::NotPorted;
+use crate::Execution::DoomsdayClockExecution::DoomsdayClockExecution;
 use crate::Execution::RecomputeRailClusterExecution::RecomputeRailClusterExecution;
 use crate::Execution::SpawnTimerExecution::SpawnTimerExecution;
 use crate::Execution::WinCheckExecution::WinCheckExecution;
@@ -129,7 +129,7 @@ impl GameRunner {
         self.game.add_execution(Box::new(WinCheckExecution::new()));
         if self.game.config().doomsday_clock_config().enabled {
             self.game
-                .add_execution(NotPorted::at_init("DoomsdayClockExecution", false));
+                .add_execution(Box::new(DoomsdayClockExecution::new()));
         }
         if !self.game.config().is_unit_disabled(UnitType::Factory) {
             self.game

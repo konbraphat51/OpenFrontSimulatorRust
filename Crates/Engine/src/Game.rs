@@ -4,6 +4,7 @@
 pub mod AllianceImpl;
 pub mod AllianceRequestImpl;
 pub mod AttackImpl;
+pub mod DoomsdayClock;
 #[allow(clippy::module_inception)]
 pub mod Game;
 pub mod GameImpl;
