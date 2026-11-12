@@ -259,6 +259,20 @@ impl AbstractGraph {
         }
     }
 
+    /// Renumbers edges by (node_a, node_b) so partial and full builds of the same water match.
+    fn sort_edges(&mut self) {
+        self.edges
+            .sort_by(|a, b| (a.node_a, a.node_b).cmp(&(b.node_a, b.node_b)));
+        for ids in &mut self.node_edge_ids {
+            ids.clear();
+        }
+        for (i, edge) in self.edges.iter_mut().enumerate() {
+            edge.id = i as u32;
+            self.node_edge_ids[edge.node_a as usize].push(i as u32);
+            self.node_edge_ids[edge.node_b as usize].push(i as u32);
+        }
+    }
+
     fn init_path_cache(&mut self) {
         *self.path_cache.borrow_mut() = vec![None; self.edges.len() * 2];
     }
@@ -288,6 +302,7 @@ pub struct AbstractGraphBuilder<'a> {
     edge_between: HashMap<(u32, u32), u32, FxBuildHasher>,
     clean_clusters: Option<HashSet<u32>>,
     old_edge_costs: Option<OldEdgeCosts>,
+    sort_edges: bool,
 }
 
 impl<'a> AbstractGraphBuilder<'a> {
@@ -332,7 +347,14 @@ impl<'a> AbstractGraphBuilder<'a> {
             edge_between: HashMap::default(),
             clean_clusters: None,
             old_edge_costs: None,
+            sort_edges: false,
         }
+    }
+
+    /// Renumbers edges by node pair after the build (v0.35.0 on).
+    pub fn with_sorted_edges(mut self, sort_edges: bool) -> Self {
+        self.sort_edges = sort_edges;
+        self
     }
 
     /// Builds the graph.
@@ -374,6 +396,9 @@ impl<'a> AbstractGraphBuilder<'a> {
             }
         }
 
+        if self.sort_edges {
+            self.graph.sort_edges();
+        }
         self.graph.init_path_cache();
         self.graph.water_components = Some(self.water_components);
         self.graph

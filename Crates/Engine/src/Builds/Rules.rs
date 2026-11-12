@@ -38,6 +38,10 @@ pub enum Change {
     NewMapThemes5547,
     /// PR 5907: per-player spawn boost for small trade and rail economies replaces the fleet-size boost.
     SmallEconomyBoost5907,
+    /// PR 5805 (package split): water graph edges are renumbered by node pair after the build.
+    WaterGraphEdgeSort5805,
+    /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
+    NationsLikeHumans5899,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
 }
@@ -144,7 +148,12 @@ const EDGES: &[Edge] = &[
     },
     Edge {
         class: "C081",
-        add: &[Change::SmallEconomyBoost5907, Change::EmojiBatch5833],
+        add: &[
+            Change::SmallEconomyBoost5907,
+            Change::EmojiBatch5833,
+            Change::NationsLikeHumans5899,
+            Change::WaterGraphEdgeSort5805,
+        ],
         remove: &[],
     },
     Edge {
