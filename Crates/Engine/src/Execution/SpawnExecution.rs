@@ -2,6 +2,7 @@
 //! Port of src/core/execution/SpawnExecution.ts: places a player on the map.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use super::PlayerExecution::PlayerExecution;
 use super::TribeExecution::TribeExecution;
 use super::Util::get_spawn_tiles;
@@ -67,7 +68,9 @@ impl SpawnExecution {
             if !game.is_land(center) || game.has_owner(center) || game.map.is_border(center) {
                 continue;
             }
-            if tries <= RELAX_MIN_DIST_AT {
+            if tries <= RELAX_MIN_DIST_AT
+                || !game.config().rules().has(Change::SpawnRelaxMinDist4921)
+            {
                 let min_dist = game.config().min_distance_between_players();
                 let near = game
                     .all_players()
@@ -125,7 +128,11 @@ impl Execution for SpawnExecution {
             None => game.add_player(self.player_info.clone(), None),
         };
 
-        if self.from_intent && !self.queued_during_spawn_phase {
+        if game.config().rules().has(Change::SpawnIntentGate4867) {
+            if self.from_intent && !self.queued_during_spawn_phase {
+                return;
+            }
+        } else if !game.in_spawn_phase() && game.player(player).has_spawned() {
             return;
         }
 
@@ -145,8 +152,10 @@ impl Execution for SpawnExecution {
         let spawn = self.get_spawn(game, requested);
 
         let Some(spawn) = spawn else {
-            for &t in &prev_tiles {
-                game.player_mut(player).conquer(t);
+            if game.config().rules().has(Change::SpawnRollback5321) {
+                for &t in &prev_tiles {
+                    game.player_mut(player).conquer(t);
+                }
             }
             return;
         };

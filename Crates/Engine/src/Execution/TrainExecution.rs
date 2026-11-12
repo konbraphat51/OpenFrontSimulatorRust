@@ -172,8 +172,15 @@ impl TrainExecution {
                 .as_ref()
                 .map_or(0, |r| r.tiles().len());
             self.stations.remove(0);
-            let rail_road = oriented_railroad(game, self.stations[0], self.stations[1])
-                .or_else(|| self.resolve_split_railroad(game));
+            let mut rail_road = oriented_railroad(game, self.stations[0], self.stations[1]);
+            if rail_road.is_none()
+                && game
+                    .config()
+                    .rules()
+                    .has(crate::Builds::Rules::Change::TrainSplitResolve5200)
+            {
+                rail_road = self.resolve_split_railroad(game);
+            }
             if let Some(rail_road) = rail_road {
                 self.current_railroad = Some(rail_road);
                 return true;
