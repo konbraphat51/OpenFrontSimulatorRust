@@ -137,6 +137,9 @@ impl GameImpl {
     ) -> Self {
         let unit_grid = UnitGrid::new(&map);
         let mut rail_network = RailNetwork::new();
+        rail_network.legacy_clusters = !config
+            .rules()
+            .has(crate::Builds::Rules::Change::RailSnapOverlap3003);
         rail_network.leave_same_cluster = !config
             .rules()
             .has(crate::Builds::Rules::Change::StationClusterSame5096);
@@ -470,6 +473,14 @@ impl GameImpl {
     /// An attack by handle for mutation.
     pub fn attack_mut(&mut self, id: AttackId) -> &mut AttackImpl {
         &mut self.attacks[id as usize]
+    }
+    /// `attack.setTroops(troops)`; builds before PR 3176 do not clamp at zero.
+    pub fn set_attack_troops(&mut self, id: AttackId, troops: f64) {
+        if self.config.rules().has(Change::NukeExplosionBulk3176) {
+            self.attacks[id as usize].set_troops(troops);
+        } else {
+            self.attacks[id as usize].set_troops_unclamped(troops);
+        }
     }
     /// An alliance by handle (the upstream alliance id).
     pub fn alliance(&self, id: AllianceId) -> &AllianceImpl {
@@ -831,6 +842,17 @@ impl GameImpl {
 
     /// `conquer(owner, tile)`.
     pub fn conquer(&mut self, owner: SmallId, tile: TileRef) {
+        if let Ok(v) = std::env::var("OFSIM_CONQUER_LOG")
+            && v.parse::<u32>().ok() == Some(tile)
+        {
+            eprintln!(
+                "CONQUER tick={} tile={} owner={}\n{}",
+                self.ticks,
+                tile,
+                owner,
+                std::backtrace::Backtrace::force_capture()
+            );
+        }
         assert!(self.map.is_land(tile), "cannot conquer water");
         assert!(
             !self.map.is_impassable(tile),
@@ -957,6 +979,15 @@ impl GameImpl {
         self.player_impl_mut(requestor)
             .past_outgoing_alliance_requests
             .push(request);
+        // Before PR 3155 the game itself ends the embargoes that were created automatically.
+        if !self.config.rules().has(Change::AllianceRadialAccept3155) {
+            if self.player(requestor).has_embargo_against(recipient) {
+                self.player_mut(requestor).end_temporary_embargo(recipient);
+            }
+            if self.player(recipient).has_embargo_against(requestor) {
+                self.player_mut(recipient).end_temporary_embargo(requestor);
+            }
+        }
     }
 
     /// `rejectAllianceRequest(request)`.
@@ -1045,8 +1076,9 @@ impl GameImpl {
             }
         }
         let attacks_sent = self.stats.attacks_sent(self.player(conquered).client_id());
-        let skip_gold_transfer =
-            attacks_sent == 0 && self.player(conquered).player_type() == PlayerType::Human;
+        let skip_gold_transfer = self.config.rules().has(Change::ConquerGoldSkipInactive3020)
+            && attacks_sent == 0
+            && self.player(conquered).player_type() == PlayerType::Human;
         let gold: Gold = if skip_gold_transfer {
             0
         } else {
@@ -1076,9 +1108,12 @@ impl GameImpl {
     /// `isSpawnImmunityActive`.
     pub fn is_spawn_immunity_active(&self) -> bool {
         if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
-            return (self.config.num_spawn_phase_turns() as f64)
-                + (self.config.spawn_immunity_duration() as f64)
-                > self.ticks as f64;
+            let end = (self.config.num_spawn_phase_turns() as f64)
+                + (self.config.spawn_immunity_duration() as f64);
+            if !self.config.rules().has(Change::NationSpawnImmunity3222) {
+                return end >= self.ticks as f64;
+            }
+            return end > self.ticks as f64;
         }
         self.in_spawn_phase()
             || self.ticks_since_start() < self.config.spawn_immunity_duration() as f64
@@ -1131,6 +1166,9 @@ impl GameImpl {
 
     /// `teamSpawnArea(team)`.
     pub fn team_spawn_area(&self, team: &str) -> Option<SpawnArea> {
+        if !self.config.rules().has(Change::TeamSpawnAreas3263) {
+            return None;
+        }
         let areas_map = self.team_game_spawn_areas.as_ref()?;
         let num_teams = self.player_teams.len();
         let areas = areas_map.get(&num_teams.to_string())?;

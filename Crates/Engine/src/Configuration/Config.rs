@@ -725,6 +725,43 @@ impl Config {
         v as i64
     }
 
+    /// Gold of a trade ship delivery before PR 3232: a port-count bonus on a doubled base.
+    pub fn trade_ship_gold_with_ports(
+        &self,
+        dist: f64,
+        num_ports: f64,
+        is_lobby_creator: bool,
+    ) -> Gold {
+        let debuff = self.trade_ship_short_range_debuff();
+        let base_gold = 100_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + 100.0 * dist;
+        let num_port_bonus = num_ports - 1.0;
+        // Hyperbolic decay, midpoint at 5 ports, 3x bonus max.
+        let bonus = 1.0 + 2.0 * (num_port_bonus / (num_port_bonus + 5.0));
+        let multiplier = self.gold_multiplier_for(is_lobby_creator);
+        let v = (base_gold * bonus * multiplier).floor();
+        assert!(v.is_finite(), "BigInt of a non-finite value throws");
+        v as i64
+    }
+
+    /// Odds denominator of a trade ship spawn before PR 3232 (per-player port and ship counts).
+    pub fn trade_ship_spawn_rate_per_player(
+        &self,
+        num_trade_ships: f64,
+        num_player_ports: f64,
+        num_player_trade_ships: f64,
+    ) -> f64 {
+        let base_spawn = if num_player_trade_ships < 3.0 {
+            1.0
+        } else {
+            let decay_rate = std::f64::consts::LN_2 / 10.0;
+            1.0 - self.sigmoid(num_trade_ships, decay_rate, 55.0)
+        };
+        let decay_rate = 1.0 / 10.0;
+        let port_multiplier = 1.0 / (1.0 + decay_rate * num_player_ports);
+        let combined = (base_spawn * port_multiplier).sqrt();
+        (25.0 / combined).floor()
+    }
+
     /// Global trade ship spawn throttle.
     pub fn trade_ship_saturation(&self, num_trade_ships: f64) -> f64 {
         let boost = if self.rules.has(Change::SmallEconomyBoost5907) {
@@ -1043,7 +1080,9 @@ impl Config {
     }
     /// Maximum simultaneous transport boats.
     pub fn boat_max_number(&self) -> u32 {
-        if self.is_unit_disabled(UnitType::TransportShip) {
+        if self.rules.has(Change::TeamSpawnAreas3263)
+            && self.is_unit_disabled(UnitType::TransportShip)
+        {
             return 0;
         }
         3
@@ -1251,7 +1290,9 @@ impl Config {
             * large_attack_bonus
             * traitor_mod;
         let alt_attacker_loss = 1.3 * defender_troop_loss * (mag / 100.0) * traitor_mod;
-        let attacker_troop_loss = if self.rules.has(Change::AttackerLoss6040V31) {
+        let attacker_troop_loss = if !self.rules.has(Change::AttackerLossBlend3227) {
+            current_attacker_loss
+        } else if self.rules.has(Change::AttackerLoss6040V31) {
             0.6 * current_attacker_loss + 0.4 * alt_attacker_loss
         } else if self.rules.has(Change::AttackerLoss7030V30) {
             0.7 * current_attacker_loss + 0.3 * alt_attacker_loss
@@ -1325,10 +1366,13 @@ impl Config {
             return 10_000.0;
         }
         if player_type == PlayerType::Nation {
+            let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
             return match self.game_config.difficulty {
                 Difficulty::Easy => 12_500.0,
-                Difficulty::Medium => 18_750.0,
-                Difficulty::Hard => 25_000.0,
+                Difficulty::Medium if rebalanced => 18_750.0,
+                Difficulty::Medium => 25_000.0,
+                Difficulty::Hard if rebalanced => 25_000.0,
+                Difficulty::Hard => 28_125.0,
                 Difficulty::Impossible => 31_250.0,
             };
         }
@@ -1373,10 +1417,13 @@ impl Config {
         if p.player_type == PlayerType::Human {
             return max_troops;
         }
+        let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
         match self.game_config.difficulty {
             Difficulty::Easy => max_troops * 0.5,
-            Difficulty::Medium => max_troops * 0.75,
-            Difficulty::Hard => max_troops * 1.0,
+            Difficulty::Medium if rebalanced => max_troops * 0.75,
+            Difficulty::Medium => max_troops * 1.0,
+            Difficulty::Hard if rebalanced => max_troops * 1.0,
+            Difficulty::Hard => max_troops * 1.125,
             Difficulty::Impossible => max_troops * 1.25,
         }
     }
@@ -1395,10 +1442,13 @@ impl Config {
             };
         }
         if p.player_type == PlayerType::Nation {
+            let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
             match self.game_config.difficulty {
                 Difficulty::Easy => to_add *= 0.9,
-                Difficulty::Medium => to_add *= 0.95,
-                Difficulty::Hard => to_add *= 1.0,
+                Difficulty::Medium if rebalanced => to_add *= 0.95,
+                Difficulty::Medium => to_add *= 1.0,
+                Difficulty::Hard if rebalanced => to_add *= 1.0,
+                Difficulty::Hard => to_add *= 1.025,
                 Difficulty::Impossible => to_add *= 1.05,
             }
         }

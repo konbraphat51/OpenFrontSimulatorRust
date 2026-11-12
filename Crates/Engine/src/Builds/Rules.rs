@@ -306,6 +306,52 @@ pub enum Change {
     NationCreationConfigurable30,
     /// v0.31: a transport ship order rejects the target's pending alliance request (older: only land attacks do).
     TransportRejectsAlliances31,
+    /// PR 3227: attacker troop loss blends the current loss with an alternative (older: the plain current loss).
+    AttackerLossBlend3227,
+    /// PR 3184: the Medium/Hard nation start troops, troop cap and growth tables moved one tier down.
+    NationDifficultyRebalance3184,
+    /// PR 3222: nations respect spawn immunity and the immunity test is strict (older: only humans, inclusive).
+    NationSpawnImmunity3222,
+    /// PR 3232: trade ship gold has no port bonus and spawning uses a rejection pity timer (older: port count bonus and per-player rates).
+    TradeShipMeta3232,
+    /// PR 3020: conquering a human that never attacked yields no gold.
+    ConquerGoldSkipInactive3020,
+    /// PR 3206: a MIRV also lowers the launcher's relation to its target.
+    MirvRelationBoth3206,
+    /// PR 2954: an attack does not hand a captured tile to a neighbour allied with the target.
+    AttackFriendlyNeighbor2954,
+    /// PR 3176: nuke explosions deal troop losses per player in bulk, unit and attack troops clamp at zero.
+    NukeExplosionBulk3176,
+    /// PR 2895: bots delete their structures, nations hit structure-owning bots first.
+    BotStructureFarming2895,
+    /// PR 3168: a dead player silently drops all alliances.
+    AllianceRemovedOnDeath3168,
+    /// PR 3155: accepting an alliance cancels nukes between the allies; the reply intent is reject only.
+    AllianceRadialAccept3155,
+    /// PR 3092: a player with an incoming request may always answer it with a request of its own.
+    AllianceIncomingBypass3092,
+    /// PR 3105: team games forbid nukes that would hit a teammate's structures.
+    NukeTeammateStructureGuard3105,
+    /// PR 2912: a nuke angers every owner of a structure in range, and incoming requests of angered players are rejected.
+    NukeBreakAllyList2912,
+    /// PR 3003: railroads split where a new structure overlaps them, clusters are recomputed lazily.
+    RailSnapOverlap3003,
+    /// PR 3130: a station picks its train destination by reservoir sampling over cached trade stations.
+    TrainDestinationReservoir3130,
+    /// PR 3223: SAM targeting picks one best target and flags nukes already targeted.
+    SamTargetingFix3223,
+    /// PR 3009 and 3278: random spawn needs a fully valid spawn area and a respawn frees old tiles first.
+    SpawnValidation3009,
+    /// PR 3122: usernames arrive censored from the server (older: the game runner censors them).
+    ServerUsernameCensoring3122,
+    /// v0.30.0-beta1: tribe names come from the revised `TribeNames` pools (older: the `BotNames.ts` lists, 180 prefixes and 71 suffixes).
+    TribeNamesRevised30,
+    /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
+    TeamSpawnAreas3263,
+    /// PR 3152: nations use the structure behaviour class (older: an inline build order).
+    NationStructureBehavior3152,
+    /// PR 3246 and 3206: later nation AI behaviours (SAM overwhelm, home defence, greetings, MIRV cooldown, alliance limits).
+    NationBehaviorUpdate3246,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -752,6 +798,7 @@ const EDGES: &[Edge] = &[
             Change::AttackerLoss7030V30,
             Change::TrainDistanceGold30Beta,
             Change::DisableAlliancesOption30,
+            Change::TribeNamesRevised30,
         ],
     },
     Edge {
@@ -763,6 +810,34 @@ const EDGES: &[Edge] = &[
             Change::AllianceSpawnReject30,
             Change::BotSpawnerOwnSeed30,
             Change::NationCreationConfigurable30,
+        ],
+    },
+    Edge {
+        class: "C049",
+        add: &[],
+        remove: &[
+            Change::AttackerLossBlend3227,
+            Change::NationDifficultyRebalance3184,
+            Change::NationSpawnImmunity3222,
+            Change::TradeShipMeta3232,
+            Change::ConquerGoldSkipInactive3020,
+            Change::MirvRelationBoth3206,
+            Change::AttackFriendlyNeighbor2954,
+            Change::NukeExplosionBulk3176,
+            Change::BotStructureFarming2895,
+            Change::AllianceRemovedOnDeath3168,
+            Change::AllianceRadialAccept3155,
+            Change::AllianceIncomingBypass3092,
+            Change::NukeBreakAllyList2912,
+            Change::ServerUsernameCensoring3122,
+            Change::NukeTeammateStructureGuard3105,
+            Change::RailSnapOverlap3003,
+            Change::TrainDestinationReservoir3130,
+            Change::SamTargetingFix3223,
+            Change::SpawnValidation3009,
+            Change::TeamSpawnAreas3263,
+            Change::NationStructureBehavior3152,
+            Change::NationBehaviorUpdate3246,
         ],
     },
     Edge {
@@ -896,6 +971,29 @@ const ROOT_CHANGES: &[Change] = &[
     Change::BotSpawnerOwnSeed30,
     Change::NationCreationConfigurable30,
     Change::TransportRejectsAlliances31,
+    Change::AttackerLossBlend3227,
+    Change::NationDifficultyRebalance3184,
+    Change::NationSpawnImmunity3222,
+    Change::TradeShipMeta3232,
+    Change::ConquerGoldSkipInactive3020,
+    Change::MirvRelationBoth3206,
+    Change::AttackFriendlyNeighbor2954,
+    Change::NukeExplosionBulk3176,
+    Change::BotStructureFarming2895,
+    Change::AllianceRemovedOnDeath3168,
+    Change::AllianceRadialAccept3155,
+    Change::AllianceIncomingBypass3092,
+    Change::NukeBreakAllyList2912,
+    Change::TribeNamesRevised30,
+    Change::ServerUsernameCensoring3122,
+    Change::NukeTeammateStructureGuard3105,
+    Change::RailSnapOverlap3003,
+    Change::TrainDestinationReservoir3130,
+    Change::SamTargetingFix3223,
+    Change::SpawnValidation3009,
+    Change::TeamSpawnAreas3263,
+    Change::NationStructureBehavior3152,
+    Change::NationBehaviorUpdate3246,
 ];
 
 /// Commit of the baseline build v0.34.22.
