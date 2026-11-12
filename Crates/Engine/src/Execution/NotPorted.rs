@@ -41,6 +41,13 @@ impl Execution for Inert {
 }
 
 impl NotPorted {
+    /// For stub constructors of executions owned by another agent: panics unless `OFSIM_INERT` is set.
+    pub fn require_inert(name: &'static str) {
+        if !inert_mode() {
+            panic!("not ported: {name}");
+        }
+    }
+
     /// Panics right away with `not ported: <name>`.
     pub fn at_creation(name: &'static str) -> Box<dyn Execution> {
         if inert_mode() {
