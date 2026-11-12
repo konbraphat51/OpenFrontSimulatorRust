@@ -6,5 +6,7 @@ pub mod Line;
 pub mod PathFinderAir;
 pub mod PathFinderParabola;
 pub mod PathFinderStepper;
+pub mod PathGameView;
+pub mod Spatial;
 pub mod Transformers;
 pub mod Types;
