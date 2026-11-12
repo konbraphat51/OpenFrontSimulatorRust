@@ -93,7 +93,7 @@ pub struct GameImpl {
     pub map: GameMapImpl,
     config: Config,
     stats: StatsImpl,
-    /// Rail network (stub until the train phase).
+    /// Rail network (`railNetwork()`).
     pub rail_network: RailNetwork,
     /// Water manager (stub until p2-path lands).
     pub water_manager: WaterManager,
@@ -519,8 +519,19 @@ impl GameImpl {
         self.unit_grid.remove_unit(&self.map, id, t, tile);
         self.units[id as usize - 1].in_unit_map = false;
         if has_station {
-            self.rail_network.remove_station(id);
+            self.with_rail_network(|rail, game| rail.remove_station(game, id));
         }
+    }
+
+    /// Runs `f` with the rail network taken out of the game, so it can borrow the game mutably.
+    pub fn with_rail_network<R>(
+        &mut self,
+        f: impl FnOnce(&mut RailNetwork, &mut GameImpl) -> R,
+    ) -> R {
+        let mut rail = std::mem::take(&mut self.rail_network);
+        let result = f(&mut rail, self);
+        self.rail_network = rail;
+        result
     }
     /// `updateUnitTile`.
     pub fn update_unit_tile(&mut self, id: UnitId) {

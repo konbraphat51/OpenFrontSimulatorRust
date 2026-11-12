@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/pathfinding/algorithms/AStar.ts: generic A* over an adapter (used by the rail finder, a later phase).
+//! Port of src/core/pathfinding/algorithms/AStar.ts: generic A* over an adapter (rail and station finders).
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::PriorityQueue::{BucketQueue, PriorityQueue};

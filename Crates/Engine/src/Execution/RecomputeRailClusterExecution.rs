@@ -6,13 +6,13 @@ use crate::Execution::Execution::Execution;
 use crate::Game::Game::Tick;
 use crate::Game::GameImpl::GameImpl;
 
-/// Calls `railNetwork.recomputeClusters()` every tick (a no-op until stations exist).
+/// Calls `railNetwork.recomputeClusters()` every tick .
 pub struct RecomputeRailClusterExecution;
 
 impl Execution for RecomputeRailClusterExecution {
     fn init(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        game.rail_network.recompute_clusters();
+        game.with_rail_network(|rail, game| rail.recompute_clusters(game));
     }
     fn is_active(&self) -> bool {
         true
