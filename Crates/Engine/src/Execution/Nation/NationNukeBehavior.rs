@@ -264,11 +264,12 @@ impl NationNukeBehavior {
                 best_value = value;
             }
         }
+        let overwhelms_sams = game.config().rules().has(Change::NationBehaviorUpdate3246);
         if let Some(tile) = best_tile
-            && (best_value > 0.0 || difficulty != Difficulty::Impossible)
+            && (!overwhelms_sams || best_value > 0.0 || difficulty != Difficulty::Impossible)
         {
             self.send_nuke(game, tile, nuke_type, nuke_target, 0.0);
-        } else if difficulty == Difficulty::Impossible {
+        } else if overwhelms_sams && difficulty == Difficulty::Impossible {
             self.maybe_destroy_enemy_sam(game, nuke_target);
         }
     }
@@ -280,7 +281,8 @@ impl NationNukeBehavior {
         }
         // On Hard & Impossible with only 2 players left, target the only other one.
         let diff = Self::difficulty(game);
-        if (diff == Difficulty::Hard || diff == Difficulty::Impossible)
+        if game.config().rules().has(Change::NationBehaviorUpdate3246)
+            && (diff == Difficulty::Hard || diff == Difficulty::Impossible)
             && game.players().len() == 2
             && let Some(other) = game.players().into_iter().find(|&p| p != self.player)
         {
@@ -584,7 +586,8 @@ impl NationNukeBehavior {
             return self.get_perceived_nuke_cost_v2(game, t);
         }
         // With only 2 players left, use the actual cost (no point saving for a MIRV).
-        if game.players().len() == 2 {
+        if game.config().rules().has(Change::NationBehaviorUpdate3246) && game.players().len() == 2
+        {
             return self.cost(game, t);
         }
 
@@ -905,7 +908,12 @@ impl NationNukeBehavior {
         if nuke_type == UnitType::AtomBomb {
             self.atom_bombs_launched += 1;
             // +50% each time to simulate saving up for a MIRV (more than hydro, so atom bombs lose appeal late).
-            self.atom_bomb_perceived_cost = (perceived * 150) / 100;
+            let percent = if game.config().rules().has(Change::NationBehaviorUpdate3246) {
+                150
+            } else {
+                135
+            };
+            self.atom_bomb_perceived_cost = (perceived * percent) / 100;
             self.atom_bomb_last_launch = Some(tick);
         } else if nuke_type == UnitType::HydrogenBomb {
             self.hydrogen_bombs_launched += 1;

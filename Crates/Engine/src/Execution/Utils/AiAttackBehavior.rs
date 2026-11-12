@@ -503,7 +503,10 @@ impl AiAttackBehavior {
         }
         // With high starting gold nations expand slowly and bots steal their structures:
         // attack bots before the ratio checks.
-        if self.has_neighboring_bot_with_structures(game) && self.attack_bots(game) {
+        if game.config().rules().has(Change::BotStructureFarming2895)
+            && self.has_neighboring_bot_with_structures(game)
+            && self.attack_bots(game)
+        {
             return;
         }
         // Save up troops until the reserve ratio is reached.
@@ -1189,9 +1192,10 @@ impl AiAttackBehavior {
             pl.troops() / pl.num_tiles_owned() as f64
         };
         let mut sorted_bots = bots;
+        let farming = game.config().rules().has(Change::BotStructureFarming2895);
         sorted_bots.sort_by(|&a, &b| {
-            let a_has = Self::owns_structures(game, a);
-            let b_has = Self::owns_structures(game, b);
+            let a_has = farming && Self::owns_structures(game, a);
+            let b_has = farming && Self::owns_structures(game, b);
             if a_has != b_has {
                 return if a_has {
                     Ordering::Less
@@ -1509,6 +1513,9 @@ impl AiAttackBehavior {
                 continue;
             };
             if can_build_truthy(game, self.player, y) {
+                if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+                    return Some(p);
+                }
                 reachable_players.push(p);
                 // Up to two reachable candidates are enough.
                 if reachable_players.len() >= 2 {
@@ -1904,7 +1911,8 @@ impl AiAttackBehavior {
             game.player(self.player).max_troops()
         };
         let target_is_player = target != 0;
-        let bot_with_structures = target_is_player
+        let bot_with_structures = game.config().rules().has(Change::BotStructureFarming2895)
+            && target_is_player
             && game.player(target).player_type() == PlayerType::Bot
             && Self::owns_structures(game, target);
         // Attacking a bot with structures uses the expand ratio: they must be recaptured fast.

@@ -421,6 +421,9 @@ impl NationEmojiBehavior {
     }
 
     fn greet_nearby_players(&mut self, game: &mut GameImpl) {
+        if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+            return;
+        }
         // Only in the first minute.
         if game.ticks() > 600 {
             return;
