@@ -132,6 +132,8 @@ pub enum Change {
     NationHomeTroops36,
     /// v0.36.0: a nation without a land front attacks the nearest bots across the water.
     NationOverseasBots36,
+    /// v0.36.0: the water graph edge search is bounded by the squared cluster size.
+    AbstractGraphWideSearch36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -338,6 +340,7 @@ const EDGES: &[Edge] = &[
             Change::PortSpawnFirstShore36,
             Change::NationHomeTroops36,
             Change::NationOverseasBots36,
+            Change::AbstractGraphWideSearch36,
         ],
         remove: &[],
     },
