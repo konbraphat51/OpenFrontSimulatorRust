@@ -349,4 +349,31 @@ mod tests {
         }
         assert!(seen >= 100, "only {seen} builds found in Builds.md");
     }
+
+    #[test]
+    fn era_d_classes_are_ported_with_the_expected_changes() {
+        for n in 0..=12 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        assert!(!is_ported("C013"));
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
+        assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
+        let c006 = rules("7c27263390d8");
+        assert!(!c006.has(Change::ChannelIslandsTribes5564));
+        assert!(c006.has(Change::InternalBorderAnnexFix5545));
+        let c007 = rules("82e5fce9502b");
+        assert!(!c007.has(Change::InternalBorderAnnexFix5545));
+        assert!(!c007.has(Change::SaturationMidpoints5587));
+        assert!(c007.has(Change::TrainSaturation500Pr5462));
+        assert!(!rules("ece79bfd3348").has(Change::NukeFriendlyKillNoCredit5525));
+        assert!(!rules("222e4078982e").has(Change::TrainSaturation500Pr5462));
+        let c011 = rules("1e973bb534b8");
+        assert!(
+            !c011.has(Change::TeamCountMinTwo5436) && !c011.has(Change::AttackSpeedDivisor5425)
+        );
+        let c012 = rules("e910d727d2dd");
+        assert!(c012.has(Change::NewMapThemes5547) && c012.has(Change::ChannelIslandsTribes5564));
+        assert!(!rules("4e837520e886").has(Change::NewMapThemes5547));
+    }
 }
