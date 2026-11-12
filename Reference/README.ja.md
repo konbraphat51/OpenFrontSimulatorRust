@@ -51,7 +51,7 @@ npx tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-a
 
 ### Inert モードとシナリオ
 
-`--inert 1` (`InertPatch.ts`) は、Rust エンジンが未移植の Execution (`PORTED_INTENTS` 以外の intent、`NationExecution`、`TribeExecution`、`DoomsdayClockExecution`) をアップストリームのエンジンでも無効化する。`ofsim` は `OFSIM_INERT=1` で同じ動作になり、`Tools/TraceCompare.sh <record> <until> --inert` で比較する。このトレースはレコードのハッシュとは一致しない。`ScenarioDump.ts` はシード付きの領土ファズ (占領、放棄、囲い込み) を実行し、`ofsim scenario` と比較する。
+`--inert 1` (`InertPatch.ts`) は、Rust エンジンが未移植の Execution (`PORTED_INTENTS` 以外の intent、`NationExecution`、`TribeExecution`、`DoomsdayClockExecution`) をアップストリームのエンジンでも無効化する。`ofsim` は `OFSIM_INERT=1` で同じ動作になり、`Tools/TraceCompare.sh <record> <until> --inert` で比較する。このトレースはレコードのハッシュとは一致しない。`ScenarioDump.ts` はシード付きの領土ファズ (占領、放棄、囲い込み) を実行し、`ofsim scenario` と比較する。`NukeScenarioDump.ts` はプレイヤーに建造物と資金を与え、シード付きで原爆・水爆・MIRV を発射し (Doomsday Clock を強制有効にすることも可能)、トレースと並べて `<out>.digest` (tick ごとの放射性降下物タイル数、陸タイル数、タイル状態のハッシュ) を書く。`ofsim nuke-scenario` と `Tools/NukeScenarioCompare.sh` で比較する。
 
 作業中のブランチでは、追加で移植済みの intent 種別を `OFSIM_PORTED_INTENTS` (カンマ区切り、例 `attack,boat`)、有効のままにするエンジン生成の Execution を `OFSIM_PORTED_EXECS` (`Nation`、`Tribe`、`DoomsdayClock`) で指定する。これで共有ファイルを変更せずに済む。移植済み Execution の内部から生成される Execution (例: tribe が出す攻撃) は対象外なので、両側で移植済みにするか、最初の発生までだけを比較する。
 
