@@ -212,16 +212,6 @@ const EDGES: &[Edge] = &[
         remove: &[],
     },
     Edge {
-        class: "C088",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C089",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
         class: "C090",
         add: &[],
         remove: &[],
@@ -475,5 +465,23 @@ mod tests {
         let c012 = rules("e910d727d2dd");
         assert!(c012.has(Change::NewMapThemes5547) && c012.has(Change::ChannelIslandsTribes5564));
         assert!(!rules("4e837520e886").has(Change::NewMapThemes5547));
+    }
+
+    #[test]
+    fn v35_classes_are_ported_up_to_c087() {
+        for n in 81..=87 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        assert!(!is_ported("C088") && !is_ported("C089"));
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c081 = rules("dfd420fd7836");
+        assert!(c081.has(Change::NationsLikeHumans5899) && c081.has(Change::SeveredLandAnnex5955));
+        assert!(!c081.has(Change::NationAiSplit6087));
+        let c083 = rules("a2d20f8e5f32");
+        assert!(c083.has(Change::NationAiSplit6087) && c083.has(Change::NationsLikeHumans5899));
+        assert!(!rules("4e837520e886").has(Change::NationsLikeHumans5899));
+        assert!(rules("7ee96860c717").has(Change::TutorialSilo6242));
+        assert!(!rules("c144d134d150").has(Change::TutorialSilo6242));
+        assert!(rules("80bff198b68f").has(Change::TeamFriendGroups6259));
     }
 }

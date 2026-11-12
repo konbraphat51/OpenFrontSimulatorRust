@@ -172,7 +172,7 @@ fn build_harbor(game: &mut GameImpl, nation: SmallId, human: SmallId) {
 
 /// `tutorialWarship(game, nation, ticks)`: moves the empire's warship around its dock, a tile every other tick.
 pub fn tutorial_warship(game: &mut GameImpl, nation: SmallId, ticks: u32) {
-    if ticks % 2 != 0 {
+    if !ticks.is_multiple_of(2) {
         return;
     }
     let Some(ship) = game
