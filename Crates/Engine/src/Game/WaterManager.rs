@@ -70,6 +70,8 @@ pub struct WaterManager {
     mini_map: GameMapImpl,
     disable_nav_mesh: bool,
     sort_edges: bool,
+    /// v0.36.0 on: the abstract graph search bound is the squared cluster size.
+    wide_search: bool,
     /// v0.35.3 on: a water nuke converts a mini tile when any of its four tiles is water.
     pub mini_tile_any_water: bool,
     mini_water_graph: Option<Rc<AbstractGraph>>,
@@ -93,7 +95,7 @@ pub struct WaterManager {
 impl WaterManager {
     /// Creates the manager; with the nav mesh enabled it builds the initial graph and HPA* finder.
     pub fn new(mini_map: GameMapImpl, disable_nav_mesh: bool) -> Self {
-        Self::new_with(mini_map, disable_nav_mesh, false, false)
+        Self::new_with(mini_map, disable_nav_mesh, false, false, false)
     }
 
     /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on), `old_markers`
@@ -103,9 +105,11 @@ impl WaterManager {
         disable_nav_mesh: bool,
         sort_edges: bool,
         old_markers: bool,
+        wide_search: bool,
     ) -> Self {
         let mut manager = Self {
             sort_edges,
+            wide_search,
             mini_tile_any_water: false,
             mini_map,
             disable_nav_mesh,
@@ -141,6 +145,7 @@ impl WaterManager {
                     &mut bfs,
                 )
                 .with_sorted_edges(sort_edges)
+                .with_wide_search(wide_search)
                 .build(),
             );
             let mut hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
@@ -220,6 +225,7 @@ impl WaterManager {
                     self.builder_bfs.as_mut().expect("nav mesh enabled"),
                 )
                 .with_sorted_edges(self.sort_edges)
+                .with_wide_search(self.wide_search)
                 .with_old_markers(self.old_markers);
                 Rc::new(builder.build())
             };

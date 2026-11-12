@@ -49,6 +49,12 @@ struct MapInfo {
 struct Tables {
     themes: HashMap<String, Theme>,
     maps: HashMap<String, MapInfo>,
+    /// Maps that are new or changed as of v0.36.0 (full entries).
+    #[serde(rename = "mapsV36")]
+    maps_v36: HashMap<String, MapInfo>,
+    /// Maps changed again as of v0.36.1.
+    #[serde(rename = "mapsV361")]
+    maps_v361: HashMap<String, MapInfo>,
 }
 
 fn tables() -> &'static Tables {
@@ -76,7 +82,19 @@ fn map_entry(map: GameMapType, rules: &Rules) -> (Option<Vec<String>>, Option<Ve
             return (Some(vec![theme.to_string()]), None);
         }
     }
-    match tables().maps.get(name) {
+    let t = tables();
+    let newer = if rules.has(Change::TribeMapData361) {
+        t.maps_v361.get(name)
+    } else {
+        None
+    };
+    let newer = newer.or_else(|| {
+        rules
+            .has(Change::TribeMapData36)
+            .then(|| t.maps_v36.get(name))
+            .flatten()
+    });
+    match newer.or_else(|| t.maps.get(name)) {
         Some(info) => (info.themes.clone(), info.custom_tribes.clone()),
         None => (None, None),
     }

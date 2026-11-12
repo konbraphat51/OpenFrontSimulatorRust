@@ -303,6 +303,7 @@ pub struct AbstractGraphBuilder<'a> {
     clean_clusters: Option<HashSet<u32>>,
     old_edge_costs: Option<OldEdgeCosts>,
     sort_edges: bool,
+    wide_search: bool,
 }
 
 impl<'a> AbstractGraphBuilder<'a> {
@@ -349,10 +350,17 @@ impl<'a> AbstractGraphBuilder<'a> {
             clean_clusters: None,
             old_edge_costs: None,
             sort_edges: false,
+            wide_search: false,
         }
     }
 
-    /// Renumbers edges by node pair after the build (v0.35.0 on).
+    /// Bounds the edge search by the squared cluster size instead of four times the farthest node (v0.36.0 on).
+    pub fn with_wide_search(mut self, wide_search: bool) -> Self {
+        self.wide_search = wide_search;
+        self
+    }
+
+    /// Renumbers edges by node pair (v0.35.0 on).
     pub fn with_sorted_edges(mut self, sort_edges: bool) -> Self {
         self.sort_edges = sort_edges;
         self
@@ -629,7 +637,12 @@ impl<'a> AbstractGraphBuilder<'a> {
             max_manhattan_dist = max_manhattan_dist.max(dx + dy);
         }
 
-        let max_distance = (max_manhattan_dist * 4) as f64; // allow path deviation
+        let max_distance = if self.wide_search {
+            // The bounds check limits the search; a river can wind far inside a cluster.
+            (self.cluster_size * self.cluster_size) as f64
+        } else {
+            (max_manhattan_dist * 4) as f64 // allow path deviation
+        };
         let mut reachable: Vec<(u32, u32)> = Vec::new();
         let map = self.map;
 

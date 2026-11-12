@@ -19,7 +19,7 @@ pub struct TrainExecution {
     /// Cars stored back to front.
     cars: Vec<UnitId>,
     has_cargo: bool,
-    current_tile: usize,
+    current_tile: i64,
     usable_tiles: Vec<TileRef>,
     stations: Vec<StationId>,
     current_railroad: Option<OrientedRailroad>,
@@ -136,14 +136,19 @@ impl TrainExecution {
     }
 
     /// Save the tiles the train goes through so the cars can reuse them.
-    fn save_traversed_tiles(&mut self, from: usize, speed: usize) {
+    fn save_traversed_tiles(&mut self, from: i64, speed: usize) {
         let Some(railroad) = &self.current_railroad else {
             return;
         };
         let mut tile_to_save = from;
         let mut i = 0;
-        while i < speed && tile_to_save < railroad.tiles().len() {
-            let tile = railroad.tiles()[tile_to_save];
+        while i < speed && tile_to_save < railroad.tiles().len() as i64 {
+            // Before the first rail tile (a train spawned off the rail) the path holds the spawn tile.
+            let tile = if tile_to_save < 0 {
+                self.path_tiles[(tile_to_save + self.path_index as i64) as usize]
+            } else {
+                railroad.tiles()[tile_to_save as usize]
+            };
             self.usable_tiles.push(tile);
             if self.usable_tiles.len() > self.cars.len() * SPACING + 3 {
                 self.usable_tiles.remove(0);
@@ -262,14 +267,14 @@ impl TrainExecution {
         for i in 0..segments.len() - 1 {
             boundary += segments[i].tiles().len();
             let stop_index = self.stop_index_at_boundary(game, path[i + 1], &old_tiles, boundary);
-            if self.current_tile <= stop_index {
+            if self.current_tile <= stop_index as i64 {
                 break;
             }
             active_segment = i + 1;
             segment_start = boundary;
         }
         self.path_index += segment_start;
-        self.current_tile -= segment_start;
+        self.current_tile -= segment_start as i64;
         self.current_railroad = Some(segments.swap_remove(active_segment));
         self.stations
             .splice(0..2, path[active_segment..].iter().copied());
@@ -314,8 +319,8 @@ impl TrainExecution {
             return None;
         }
         self.save_traversed_tiles(self.current_tile, SPEED);
-        self.current_tile += SPEED;
-        let rail_len = self.current_railroad.as_ref()?.tiles().len();
+        self.current_tile += SPEED as i64;
+        let rail_len = self.current_railroad.as_ref()?.tiles().len() as i64;
         if self.current_tile >= rail_len {
             let left_over = self.current_tile - rail_len;
             // Station reached, pick the next station
@@ -324,12 +329,12 @@ impl TrainExecution {
                 return None; // Destination reached (or no valid connection)
             }
             self.current_tile = left_over;
-            self.save_traversed_tiles(0, left_over);
+            self.save_traversed_tiles(0, left_over as usize);
         }
         self.current_railroad
             .as_ref()?
             .tiles()
-            .get(self.current_tile)
+            .get(self.current_tile as usize)
             .copied()
     }
 
@@ -394,6 +399,9 @@ impl Execution for TrainExecution {
         if path_tiles.is_empty() || path_tiles[0] != start_tile {
             path_tiles.insert(0, start_tile);
             self.path_index = 1;
+            if game.config().rules().has(Change::TrainSpawnOffRail36) {
+                self.current_tile = -1;
+            }
         }
         self.path_tiles = path_tiles;
     }

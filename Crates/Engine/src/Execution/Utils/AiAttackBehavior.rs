@@ -12,6 +12,7 @@ use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::{bounding_box_center, calculate_bounding_box_center};
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::DonateTroopExecution::DonateTroopsExecution;
+use crate::Execution::Execution::Execution;
 use crate::Execution::Nation::BotAnnexation::{plan_bot_attacks, walled_in_bots};
 use crate::Execution::Nation::NationAllianceBehavior::NationAllianceBehavior;
 use crate::Execution::Nation::NationEmojiBehavior::NationEmojiBehavior;
@@ -73,6 +74,8 @@ pub struct AiAttackBehavior {
     land_neighbors: Option<Vec<SmallId>>,
     /// Only set during a `maybe_attack` call: each boat route planned, in planning order.
     boat_routes: Option<Vec<(SmallId, Option<BoatRoute>)>>,
+    /// Troops sent this tick (tick, troops): they only leave home when the executions init.
+    sent_this_tick: Option<(u32, f64)>,
 }
 
 /// A planned boat attack: where it lands, how many tiles it sails, what would sink it.
@@ -147,6 +150,7 @@ impl AiAttackBehavior {
             followed_landings: Vec::new(),
             land_neighbors: None,
             boat_routes: None,
+            sent_this_tick: None,
         }
     }
 
@@ -163,6 +167,44 @@ impl AiAttackBehavior {
         game.player(self.player).troops()
     }
 
+    fn home_troops_rule(game: &GameImpl) -> bool {
+        game.config().rules().has(Change::NationHomeTroops36)
+    }
+
+    /// `homeTroops()`: our troops once everything sent this tick has left (v0.36.0 on).
+    fn home_troops(&self, game: &GameImpl) -> f64 {
+        if !Self::home_troops_rule(game) {
+            return self.troops(game);
+        }
+        let troops = self.troops_at_init(game);
+        match self.sent_this_tick {
+            Some((tick, sent)) if tick == game.ticks() => f64::max(0.0, troops - sent),
+            _ => troops,
+        }
+    }
+
+    /// `troopsAtInit()`: nations are cut back to max troops by `PlayerExecution` before the executions init.
+    fn troops_at_init(&self, game: &GameImpl) -> f64 {
+        let troops = self.troops(game);
+        if game.player(self.player).player_type() == PlayerType::Nation {
+            f64::min(troops, game.player(self.player).max_troops())
+        } else {
+            troops
+        }
+    }
+
+    /// `send(exec, troops)`: adds the execution and books the troops it takes from home.
+    fn send(&mut self, game: &mut GameImpl, exec: Box<dyn Execution>, troops: f64) {
+        let tick = game.ticks();
+        let sent = match self.sent_this_tick {
+            Some((t, s)) if t == tick => s,
+            _ => 0.0,
+        };
+        let booked = f64::min(troops, self.home_troops(game));
+        self.sent_this_tick = Some((tick, sent + booked));
+        game.add_execution(exec);
+    }
+
     fn is_friendly(&self, game: &GameImpl, other: SmallId) -> bool {
         game.player(self.player).is_friendly(other, false)
     }
@@ -176,15 +218,18 @@ impl AiAttackBehavior {
         }
         self.boat_routes = Some(Vec::new());
         self.choose_attack(game);
-        let mut land_front = false;
-        for &neighbor in self.land_neighbors.iter().flatten() {
-            if !self.is_friendly(game, neighbor) {
-                land_front = true;
-            }
-        }
+        let land_front = self.has_land_front(game);
         self.land_neighbors = None;
         let routes = self.boat_routes.take().unwrap_or_default();
         self.clear_blocked_lane(game, &routes, land_front)
+    }
+
+    /// `hasLandFront()`: a land neighbour that is not friendly (only known during `maybe_attack`).
+    fn has_land_front(&self, game: &GameImpl) -> bool {
+        self.land_neighbors
+            .iter()
+            .flatten()
+            .any(|&neighbor| !self.is_friendly(game, neighbor))
     }
 
     /// `followUpLandings()`: every tick, Hard and Impossible boats are beachheads: once one lands,
@@ -339,7 +384,7 @@ impl AiAttackBehavior {
         } else {
             f64::INFINITY
         };
-        let troops = (self.troops(game) / 5.0).min(cap);
+        let troops = (self.home_troops(game) / 5.0).min(cap);
         if troops < 1.0 {
             return;
         }
@@ -347,11 +392,8 @@ impl AiAttackBehavior {
         if owner != 0 && self.is_attack_too_weak(game, troops, owner) {
             return;
         }
-        game.add_execution(Box::new(TransportShipExecution::new(
-            self.player,
-            dst,
-            Some(troops),
-        )));
+        let exec = Box::new(TransportShipExecution::new(self.player, dst, Some(troops)));
+        self.send(game, exec, troops);
     }
 
     fn find_random_boat_target(
@@ -835,12 +877,12 @@ impl AiAttackBehavior {
 
     fn has_reserve_ratio_troops(&self, game: &GameImpl) -> bool {
         let p = game.player(self.player);
-        p.troops() / p.max_troops() >= self.reserve_ratio
+        self.home_troops(game) / p.max_troops() >= self.reserve_ratio
     }
 
     fn has_trigger_ratio_troops(&self, game: &GameImpl, expansion: bool) -> bool {
         if Self::v2(game) {
-            return game.player(self.player).troops() / self.reserve_basis(game, expansion)
+            return self.home_troops(game) / self.reserve_basis(game, expansion)
                 >= self.trigger_ratio;
         }
         let p = game.player(self.player);
@@ -930,7 +972,7 @@ impl AiAttackBehavior {
                 pressing += game.attack(attack).troops();
             }
         }
-        let troops = self.troops(game);
+        let troops = self.home_troops(game);
         let max_troops = game.player(self.player).max_troops();
         let spare = f64::min(
             troops - max_troops * self.expand_ratio,
@@ -950,7 +992,7 @@ impl AiAttackBehavior {
     pub fn strike_troops(&self, game: &GameImpl, target: SmallId) -> f64 {
         let max_troops = game.player(self.player).max_troops();
         f64::min(
-            self.troops(game) - max_troops * self.reserve_ratio,
+            self.home_troops(game) - max_troops * self.reserve_ratio,
             self.troop_send_cap(game, Some(target)),
         )
     }
@@ -1002,6 +1044,40 @@ impl AiAttackBehavior {
             .collect()
     }
 
+    /// The 3 nearest bots within boat range (not on Easy), skipping those our boats already sail to.
+    fn overseas_bots(&self, game: &GameImpl) -> Vec<SmallId> {
+        if game.config().game_config().difficulty == Difficulty::Easy
+            || game.config().is_unit_disabled(UnitType::TransportShip)
+            || game.player(self.player).unit_count(UnitType::TransportShip)
+                >= game.config().boat_max_number() as i64
+        {
+            return Vec::new();
+        }
+        let mut boarded: Vec<SmallId> = Vec::new();
+        for boat in game.player(self.player).units_of(UnitType::TransportShip) {
+            if let Some(dst) = game.unit_any(boat).target_tile() {
+                boarded.push(game.owner_id(dst));
+            }
+        }
+        let range = self.max_boat_route(game);
+        let ours = game.player(self.player).largest_cluster_bounding_box;
+        let mut candidates: Vec<(SmallId, f64)> = Vec::new();
+        for p in game.players() {
+            if game.player(p).player_type() != PlayerType::Bot
+                || self.is_friendly(game, p)
+                || boarded.contains(&p)
+            {
+                continue;
+            }
+            let gap = box_gap(ours, game.player(p).largest_cluster_bounding_box);
+            if gap <= range {
+                candidates.push((p, gap));
+            }
+        }
+        candidates.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
+        candidates.into_iter().take(3).map(|(b, _)| b).collect()
+    }
+
     /// Hard and Impossible nations take bots in an order that walls others in, annexing them for free.
     fn annexes_bots(&self, game: &GameImpl) -> bool {
         let difficulty = game.config().game_config().difficulty;
@@ -1019,19 +1095,20 @@ impl AiAttackBehavior {
         if bots.is_empty() {
             return;
         }
-        let troops = (self.troops(game) / 100.0).floor();
+        let troops = (self.home_troops(game) / 100.0).floor();
         if troops < 1.0 {
             return;
         }
         for bot in walled_in_bots(game, self.player, &bots) {
             let target_id = Self::target_id(game, bot);
-            game.add_execution(Box::new(AttackExecution::new(
+            let exec = Box::new(AttackExecution::new(
                 Some(troops),
                 self.player,
                 target_id,
                 None,
                 true,
-            )));
+            ));
+            self.send(game, exec, troops);
         }
     }
 
@@ -1084,8 +1161,22 @@ impl AiAttackBehavior {
     }
 
     fn attack_bots_v2(&mut self, game: &mut GameImpl) -> bool {
+        let overseas = game.config().rules().has(Change::NationOverseasBots36);
+        if overseas {
+            self.bot_attack_troops_sent = 0.0;
+        }
         let bots = self.neighboring_bots(game);
         if bots.is_empty() {
+            if overseas {
+                if self.has_land_front(game) {
+                    return false;
+                }
+                for bot in self.overseas_bots(game) {
+                    if self.can_reach(game, bot) && self.send_attack(game, bot, false) {
+                        return true;
+                    }
+                }
+            }
             return false;
         }
         self.bot_attack_troops_sent = 0.0;
@@ -1579,18 +1670,15 @@ impl AiAttackBehavior {
                     continue;
                 }
                 let troops = if game.config().rules().has(Change::NationExpansionCap5290) {
-                    (self.troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game))
+                    (self.home_troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game))
                 } else {
-                    self.troops(game) / 5.0
+                    self.home_troops(game) / 5.0
                 };
                 if troops < 1.0 {
                     return false;
                 }
-                game.add_execution(Box::new(TransportShipExecution::new(
-                    self.player,
-                    tile,
-                    Some(troops),
-                )));
+                let exec = Box::new(TransportShipExecution::new(self.player, tile, Some(troops)));
+                self.send(game, exec, troops);
                 return true;
             }
             i += 10;
@@ -1685,7 +1773,7 @@ impl AiAttackBehavior {
             f64::INFINITY
         } else {
             let min_retained = (max_neighbor_troops * retain_fraction).ceil();
-            f64::max(0.0, me.troops() - min_retained)
+            f64::max(0.0, self.home_troops(game) - min_retained)
         };
         if v2 {
             return cap;
@@ -1707,7 +1795,7 @@ impl AiAttackBehavior {
         if cap > 0.0 {
             return cap;
         }
-        (self.troops(game) * 0.05).ceil()
+        (self.home_troops(game) * 0.05).ceil()
     }
 
     fn calculate_attack_troops(
@@ -1741,11 +1829,15 @@ impl AiAttackBehavior {
             && game.player(target).player_type() == PlayerType::Bot
             && game.player(self.player).player_type() != PlayerType::Bot;
         let mut troops = if is_bot_attack {
-            self.calculate_bot_attack_troops(
-                game,
-                target,
-                self.troops(game) - target_troops - self.bot_attack_troops_sent,
-            )
+            let available = if Self::home_troops_rule(game) {
+                f64::min(
+                    self.troops(game) - self.bot_attack_troops_sent,
+                    self.home_troops(game),
+                ) - target_troops
+            } else {
+                self.troops(game) - target_troops - self.bot_attack_troops_sent
+            };
+            self.calculate_bot_attack_troops(game, target, available)
         } else {
             non_bot_troops(self, game, target_troops)
         };
@@ -1789,19 +1881,22 @@ impl AiAttackBehavior {
         let Some(troops) = self.calculate_attack_troops(
             game,
             target,
-            |this, g, target_troops| fixed_troops.unwrap_or_else(|| this.troops(g) - target_troops),
+            |this, g, target_troops| {
+                fixed_troops.unwrap_or_else(|| this.home_troops(g) - target_troops)
+            },
             opponent,
         ) else {
             return false;
         };
         let target_id = Self::target_id(game, target);
-        game.add_execution(Box::new(AttackExecution::new(
+        let exec = Box::new(AttackExecution::new(
             Some(troops),
             self.player,
             target_id,
             None,
             true,
-        )));
+        ));
+        self.send(game, exec, troops);
         true
     }
 
@@ -1854,16 +1949,20 @@ impl AiAttackBehavior {
         if beachhead {
             return self.send_beachhead(game, target, route.landing);
         }
-        let Some(troops) =
-            self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0, None)
-        else {
+        let Some(troops) = self.calculate_attack_troops(
+            game,
+            target,
+            |this, g, _| this.home_troops(g) / 5.0,
+            None,
+        ) else {
             return false;
         };
-        game.add_execution(Box::new(TransportShipExecution::new(
+        let exec = Box::new(TransportShipExecution::new(
             self.player,
             route.landing,
             Some(troops),
-        )));
+        ));
+        self.send(game, exec, troops);
         true
     }
 
@@ -1879,21 +1978,22 @@ impl AiAttackBehavior {
         let Some(troops) = self.calculate_attack_troops(
             game,
             target,
-            |this, g, target_troops| this.troops(g) - target_troops,
+            |this, g, target_troops| this.home_troops(g) - target_troops,
             (target != 0).then_some(target),
         ) else {
             return false;
         };
-        let boat_troops = f64::max(1.0, (self.troops(game) / 100.0).floor());
+        let boat_troops = f64::max(1.0, (self.home_troops(game) / 100.0).floor());
         // Only the boat leaves now: the land attack is budgeted once it lands.
         if target != 0 && game.player(target).player_type() == PlayerType::Bot {
             self.bot_attack_troops_sent += boat_troops - troops;
         }
-        game.add_execution(Box::new(TransportShipExecution::new(
+        let exec = Box::new(TransportShipExecution::new(
             self.player,
             landing,
             Some(boat_troops),
-        )));
+        ));
+        self.send(game, exec, boat_troops);
         true
     }
 
@@ -2397,16 +2497,17 @@ impl AiAttackBehavior {
         // Donate a portion of our troops, keeping the reserve.
         let max_troops = game.player(self.player).max_troops();
         let troops_to_keep = max_troops * self.reserve_ratio;
-        let available_troops = self.troops(game) - troops_to_keep;
+        let available_troops = self.home_troops(game) - troops_to_keep;
         if available_troops < 1.0 {
             return false;
         }
         let selected_id = game.player(selected).id().to_string();
-        game.add_execution(Box::new(DonateTroopsExecution::new(
+        let exec = Box::new(DonateTroopsExecution::new(
             self.player,
             selected_id,
             Some(available_troops),
-        )));
+        ));
+        self.send(game, exec, available_troops);
         true
     }
 }

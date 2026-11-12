@@ -37,6 +37,10 @@ impl PlayerExecution {
     }
 
     fn remove_clusters(&mut self, game: &mut GameImpl) {
+        if game.config().rules().has(Change::PlayerClusterRewrite36) {
+            self.remove_clusters_v36(game);
+            return;
+        }
         let (clusters, boxes) = self.calculate_clusters(game);
         let player = self.player;
 
@@ -559,7 +563,7 @@ impl PlayerExecution {
         get_mode(&neighbors)
     }
 
-    fn calculate_clusters(&self, game: &mut GameImpl) -> (Vec<Vec<TileRef>>, Vec<i32>) {
+    pub(super) fn calculate_clusters(&self, game: &mut GameImpl) -> (Vec<Vec<TileRef>>, Vec<i32>) {
         let border_tiles: Vec<TileRef> = game.player(self.player).border_tiles().iter().collect();
         if border_tiles.is_empty() {
             return (vec![], vec![]);
@@ -617,7 +621,7 @@ impl PlayerExecution {
 /// `floodFillWithGen`: DFS over the tiles accepted by `include`, stamping `visited` with the
 /// generation; returns the tiles in mark order and optionally their bounding box.
 #[allow(clippy::too_many_arguments)]
-fn flood_fill_with_gen(
+pub(super) fn flood_fill_with_gen(
     map: &GameMapImpl,
     visited: &mut [u32],
     stack: &mut Vec<TileRef>,

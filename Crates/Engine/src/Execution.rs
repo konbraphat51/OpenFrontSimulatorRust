@@ -30,6 +30,7 @@ pub mod NukeAlliance;
 pub mod NukeExecution;
 pub mod PauseExecution;
 pub mod PlayerExecution;
+pub mod PlayerExecutionV36;
 pub mod PortExecution;
 pub mod QuickChatExecution;
 pub mod RecomputeRailClusterExecution;

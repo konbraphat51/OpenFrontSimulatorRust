@@ -1104,6 +1104,17 @@ impl<'a> PlayerRef<'a> {
     /// `portSpawn(tile, validTiles)`.
     pub fn port_spawn(&self, tile: TileRef, valid_tiles: Option<&[TileRef]>) -> Option<TileRef> {
         let mg = self.game;
+        if mg.config().rules().has(Change::PortSpawnFirstShore36) {
+            let computed;
+            let valid: &[TileRef] = match valid_tiles {
+                Some(v) => v,
+                None => {
+                    computed = self.valid_structure_spawn_tiles(tile);
+                    &computed
+                }
+            };
+            return valid.iter().copied().find(|&t| mg.map.is_shore(t));
+        }
         let filter = manhattan_dist_fn(tile, mg.config().radius_port_spawn(), false);
         let found = mg.map.bfs(tile, |gm, t| filter(gm, t));
         let mut spawns: Vec<TileRef> = found

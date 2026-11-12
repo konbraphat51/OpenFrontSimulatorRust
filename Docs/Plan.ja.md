@@ -16,7 +16,7 @@ English version: [Plan.md](Plan.md)
 | P3 | ユニット: 建設、構造物、港と交易船、輸送船、軍艦、鉄道と列車、核、MIRV、SAM、砲弾、水核、経路探索 | ネーションのないベースラインレコードがすべて `ofsim verify` を通る | |
 | P4 | ネーション AI (`NationExecution` と各 behaviour、`NationCreation`) | ベースラインレコードがすべて通る | `NationExecution`、emoji・alliance・warship の behaviour、`NationUtils` は移植済み (不活性トレース一致、乱数消費も一致)。structure・nuke・MIRV の behaviour (N2) と `AiAttackBehavior` (A2) は未了 |
 | P5 | `ofsim replay` のスナップショット、`batch`、プロファイリング | サンプルゲームでアップストリームのダンパーと出力が同一。スループットを計測済み | 完了 (3 レコードでバイト単位一致、[Output.ja.md](Output.ja.md) 参照。バッチは並列・再開可能。スループットは下表) |
-| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | 進行中: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`) と世代 D のクラス C001 から C012 は完了 (下記)。C013 以降と C088 以降は未着手。C081 から C087 (モノレポ構成) は完了 |
+| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | 進行中: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`) と世代 D のクラス C001 から C012 は完了 (下記)。C013 以降は未着手。C081 から C089 (モノレポ構成、v0.35.x と v0.36.x) は完了 |
 
 ## スループット (P5)
 
@@ -64,8 +64,8 @@ English version: [Plan.md](Plan.md)
 | C085 | v0.35.7 | チュートリアルモード (`tutorial` 設定: ネーションと部族は空き地にのみ拡大、勝利判定) | 8 / 8 (チュートリアルのレコードは 33〜44 ターン) |
 | C086 | v0.35.9 | チュートリアルのサイロ、崩壊、軍艦 (`TutorialNation.rs`)、初期兵力 60,000、小型の原爆 | 24 / 24 |
 | C087 | v0.35.11, v0.35.12, v0.35.14 | PR 6259 チーム割り当てで友人グループを連続して着席 (`NationCount` の選択は挙動を変えない) | 36 / 36 |
-| C088 | v0.36.0 | 未移植: `PlayerExecution` の書き直し (ピンチパス、領土面積による順位付け)、`RailNetworkImpl`、MIRV と核の変更 | tick 210 で不一致 |
-| C089 | v0.36.1 | 未移植 (C088 が前提) | |
+| C088 | v0.36.0 | `PlayerExecution` の書き直し (領土面積による順位付け、ピンチパス。`PlayerExecutionV36.rs`)、ゲームハッシュへの鉄道網ダイジェスト、FIFO の `GameMap.bfs` (スポーン地点、核のタイル順)、港は有効な最初の海岸タイルに建つ、ネーションの自宅兵力の計上と海外のボット攻撃、ネーションの軍艦の予備金、水グラフの辺探索の上限、線路外に出現する列車、MIRV の目標重なりグリッド、新マップの部族名データ | 12 / 12 (長いレコード 10 件) |
+| C089 | v0.36.1 | 4 マップの部族テーマ。単独クラスタの洪水のスキップ、走査線の洪水、海岸出発のキャッシュ、`everyLaunchBlocked` の近道は挙動を変えないので未移植 | 12 / 12 (長いレコード 8 件) |
 | C023 | v0.32.14 から v0.32.17 | 通行不能地形なし (4340)、4 近傍が W, E, N, S 順 (4495)、軍艦の熟練度なし (4433)、MIRV 弾頭は通常の核ではない (4706, 4707, 4756)、4770 以前の SAM 照準 (単一目標、弾頭除去、最終 tick の迎撃なし、ミサイルは次 tick から移動)、国家が小さな湖にも港を置く (4429)、到達可能な岸の選択なし (4577)、海賊行為はどの港でも可 (4458)、テーマなしの部族名 (4647)、0xFF マーカーの水域成分と成分によるノード探索 (4479)、交易船のモーションプランは実際の一回限り探索 (4654) | 93/93 (約 13,000 tick の長尺 9 件) |
 | C024 | v0.32.12, v0.32.13 | スポーンフェーズ後のスポーン意図も無視されない (4657) | 22/22 |
 | C025 から C027 | v0.32.10 と v0.32.11、v0.32.8 と v0.32.9、v0.32.7 | Doomsday Clock の各版 (人数比例のバー、兵力下限なし、再調整された波): 未移植。クロックが有効だと `DoomsdayClockExecution` が `not ported` で panic する | 9/9、29/30 (XApT743N はアップストリームのエンジンも tick 1160 からレコードと一致せず、本実装はアップストリームと一致)、26/26 |
@@ -82,4 +82,4 @@ English version: [Plan.md](Plan.md)
 
 水域探索器は、作成または更新された時点の水グラフ世代のチェーンを保持する (`PathFinder.rs` の `SharedWaterChain` ハンドル。アップストリームの船ごとの stepper と同じ)。以前は、水核によるグラフ再構築の直後に新しい経路を計算した、再構築待機中の交易船が新しいグラフを使って分岐していた (C023 の 9,000 tick の水核差分実行で発見)。初期ゴールド 3 億、Hard の国家、水核の差分実行は C000 と C026 でアップストリームと完全一致する。
 
-注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 から C087 (v0.35.x、ファイルは `packages/*/src/`) はネーション改修のルール集合 `NationsLikeHumans5899` を共有し、`AiAttackBehavior.rs`、`NationNukeBehavior.rs`、`NationStructureBehavior.rs`、`NationMIRVBehavior.rs`、`NationWarshipBehavior.rs`、`NationEmojiBehavior.rs`、`NationAllianceBehavior.rs` の中で分岐する (別ファイルの派生ではなくその場で)。新しいモジュール: `Nation/BotAnnexation.rs`、`Execution/SeveredLand.rs` (降灰で分断された土地の併合)、`Nation/TutorialNation.rs`。デバッグ補助: `Reference/RngLog.ts` と `OFSIM_RNG_LOG`、`OFSIM_RNG_STACK_AT` (乱数の呼び出しごとのログと、ある呼び出しのスタック)、`Reference/ExecLog.ts` (アップストリームが tick ごとに追加した実行)、`ofsim trace` の `OFSIM_UNIT_LOG=<smallId>`。C088 には新しい `PlayerExecution` のアルゴリズム (ピンチパス、`floodTerritoryAreas`、`executeSecondaryPass`、書き直された `removeCluster`)、書き直された `RailNetworkImpl`、MIRV、核、港、SAM の実行の変更が必要で、公開ゲームのレコードは tick 210 で最初に食い違う。
+注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 から C087 (v0.35.x、ファイルは `packages/*/src/`) はネーション改修のルール集合 `NationsLikeHumans5899` を共有し、`AiAttackBehavior.rs`、`NationNukeBehavior.rs`、`NationStructureBehavior.rs`、`NationMIRVBehavior.rs`、`NationWarshipBehavior.rs`、`NationEmojiBehavior.rs`、`NationAllianceBehavior.rs` の中で分岐する (別ファイルの派生ではなくその場で)。新しいモジュール: `Nation/BotAnnexation.rs`、`Execution/SeveredLand.rs` (降灰で分断された土地の併合)、`Nation/TutorialNation.rs`。デバッグ補助: `Reference/RngLog.ts` と `OFSIM_RNG_LOG`、`OFSIM_RNG_STACK_AT` (乱数の呼び出しごとのログと、ある呼び出しのスタック)、`Reference/ExecLog.ts` (アップストリームが tick ごとに追加した実行)、`ofsim trace` の `OFSIM_UNIT_LOG=<smallId>`。C088 と C089 (v0.36.x) は `Change::*36` フラグで選ぶ並置の変種: `Execution/PlayerExecutionV36.rs` (ゲームの世代スタンプ付きスクラッチをアップストリームと全く同じに共有する。あるパスが残したスタンプを次のパスが読むため)、`GameMap::bfs_fifo`、`MIRVExecution.rs` の重なりグリッド、`AiAttackBehavior.rs` の `home_troops` / `send` / `overseas_bots`。基準より後に追加されたマップの名前データは `data/TribeNames.json` (`mapsV36`、`mapsV361`)。`RailNetworkImpl` の書き直しは新しい `hash()` を除きクライアントのプレビュー用コード。核の弾道と港の重みの変更は挙動を変えない。v0.36.0 のトレーサとの差分実行 (壁で囲まれたプレイヤーを含む `ofsim scenario` の領土ファズ、MIRV を含む `ofsim nuke-scenario`) は、tick 200 未満に収めれば一致する (それ以降は部族とネーションが inert モードの対象外の実行を起動する)。

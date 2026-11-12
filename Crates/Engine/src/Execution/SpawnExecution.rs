@@ -53,8 +53,9 @@ impl SpawnExecution {
     }
 
     fn get_spawn(&mut self, game: &GameImpl, center: Option<TileRef>) -> Option<Spawn> {
+        let fifo = game.config().rules().has(Change::BfsFifoOrder36);
         if let Some(center) = center {
-            let tiles = get_spawn_tiles(&game.map, center, false).unwrap_or_default();
+            let tiles = get_spawn_tiles(&game.map, center, false, fifo).unwrap_or_default();
             if tiles.is_empty() {
                 return None;
             }
@@ -84,7 +85,7 @@ impl SpawnExecution {
                     continue;
                 }
             }
-            if let Some(tiles) = get_spawn_tiles(&game.map, center, true) {
+            if let Some(tiles) = get_spawn_tiles(&game.map, center, true, fifo) {
                 return Some(Spawn { center, tiles });
             }
         }

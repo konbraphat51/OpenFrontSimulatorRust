@@ -145,6 +145,7 @@ impl GameImpl {
             config.disable_nav_mesh(),
             config.rules().has(Change::WaterGraphEdgeSort5805),
             !config.rules().has(Change::WaterComponentMarkers4479),
+            config.rules().has(Change::AbstractGraphWideSearch36),
         );
         water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         if !config
@@ -715,6 +716,9 @@ impl GameImpl {
         let mut hash = 1.0;
         for p in &self.players {
             hash += self.player(p.small_id).hash();
+        }
+        if self.config.rules().has(Change::RailNetworkHash36) {
+            hash += self.rail_network.hash();
         }
         hash
     }

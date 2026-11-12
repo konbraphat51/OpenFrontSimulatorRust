@@ -120,6 +120,30 @@ pub enum Change {
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
     NationsLikeHumans5899,
+    /// v0.36.0: the game-state hash includes a digest of the rail network.
+    RailNetworkHash36,
+    /// v0.36.0: `GameMap.bfs` is a FIFO breadth-first search (tile order and filter call order change).
+    BfsFifoOrder36,
+    /// v0.36.0: `PlayerExecution` ranks clusters by 4-way territory area and has a pinch pass.
+    PlayerClusterRewrite36,
+    /// v0.36.0: a port spawns on the first shore tile of the valid structure tiles (no radius-20 search).
+    PortSpawnFirstShore36,
+    /// v0.36.0: nations book troops they send this tick so later decisions see what is left at home.
+    NationHomeTroops36,
+    /// v0.36.0: a nation without a land front attacks the nearest bots across the water.
+    NationOverseasBots36,
+    /// v0.36.0: the water graph edge search is bounded by the squared cluster size.
+    AbstractGraphWideSearch36,
+    /// v0.36.0: a train spawned off the rail starts one tile behind its first rail tile.
+    TrainSpawnOffRail36,
+    /// v0.36.0: MIRV warhead targets come from a clipped box with a spatial overlap grid and a saturation limit.
+    MirvTargetGrid36,
+    /// v0.36.0: tribe themes and custom tribes of the maps added or edited since the baseline.
+    TribeMapData36,
+    /// v0.36.1: tribe themes of four more maps (Ottoman Empire, Turkiye, World Inverted, Zealandia).
+    TribeMapData361,
+    /// v0.36.0: nation warships keep nuke gold, invasions may dip into it, and the enemy fleet must outnumber ours.
+    NationWarshipSpareGold36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -315,6 +339,28 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C087",
         add: &[Change::TeamFriendGroups6259],
+        remove: &[],
+    },
+    Edge {
+        class: "C088",
+        add: &[
+            Change::RailNetworkHash36,
+            Change::BfsFifoOrder36,
+            Change::PlayerClusterRewrite36,
+            Change::PortSpawnFirstShore36,
+            Change::NationHomeTroops36,
+            Change::NationOverseasBots36,
+            Change::AbstractGraphWideSearch36,
+            Change::TrainSpawnOffRail36,
+            Change::MirvTargetGrid36,
+            Change::TribeMapData36,
+            Change::NationWarshipSpareGold36,
+        ],
+        remove: &[],
+    },
+    Edge {
+        class: "C089",
+        add: &[Change::TribeMapData361],
         remove: &[],
     },
     Edge {
@@ -830,7 +876,6 @@ mod tests {
         for n in 81..=87 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C088") && !is_ported("C089"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         let c081 = rules("dfd420fd7836");
         assert!(c081.has(Change::NationsLikeHumans5899) && c081.has(Change::SeveredLandAnnex5955));
@@ -841,6 +886,18 @@ mod tests {
         assert!(rules("7ee96860c717").has(Change::TutorialSilo6242));
         assert!(!rules("c144d134d150").has(Change::TutorialSilo6242));
         assert!(rules("80bff198b68f").has(Change::TeamFriendGroups6259));
+    }
+
+    #[test]
+    fn v36_classes_add_their_changes() {
+        assert!(is_ported("C088") && is_ported("C089"));
+        let c087 = Rules::for_commit("09aa423bceb9").unwrap();
+        assert!(!c087.has(Change::PlayerClusterRewrite36) && !c087.has(Change::RailNetworkHash36));
+        let c088 = Rules::for_commit("0211f17b71ef").unwrap();
+        assert!(c088.has(Change::PlayerClusterRewrite36) && c088.has(Change::MirvTargetGrid36));
+        assert!(!c088.has(Change::TribeMapData361));
+        let c089 = Rules::for_commit("bc3e3334c573").unwrap();
+        assert!(c089.has(Change::PlayerClusterRewrite36) && c089.has(Change::TribeMapData361));
     }
 
     #[test]

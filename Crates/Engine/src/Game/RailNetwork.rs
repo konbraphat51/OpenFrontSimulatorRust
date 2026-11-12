@@ -95,6 +95,29 @@ impl RailNetwork {
             .collect()
     }
 
+    /// `RailNetworkImpl.hash()`: order-independent digest of every station and rail (v0.36.0 on).
+    pub fn hash(&self) -> f64 {
+        let mut hash: u64 = 0;
+        for &s in self.station_set.iter() {
+            let station = self.station(s);
+            hash = (hash + station.unit as u64 * 7919) & 0xffff_ffff;
+            for &r in station.railroads.iter() {
+                let rail = &self.rails[r as usize];
+                if rail.from != s {
+                    continue;
+                }
+                let tiles = &rail.tiles;
+                let ends = match (tiles.first(), tiles.last()) {
+                    (Some(&a), Some(&b)) => a as u64 * 3 + b as u64,
+                    _ => 0,
+                };
+                hash =
+                    (hash + (rail.id as u64 + 1) * (tiles.len() as u64 * 31 + ends)) & 0xffff_ffff;
+            }
+        }
+        hash as f64
+    }
+
     /// `stationManager().findStation(unit)`: the first registered station of the unit.
     pub fn find_station(&self, unit: UnitId) -> Option<StationId> {
         self.by_unit.get(&unit).and_then(|v| v.first().copied())
