@@ -140,7 +140,13 @@ impl GameImpl {
         rail_network.leave_same_cluster = !config
             .rules()
             .has(crate::Builds::Rules::Change::StationClusterSame5096);
-        let water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        let mut water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        if !config
+            .rules()
+            .has(crate::Builds::Rules::Change::WaterNukeMinimap4975)
+        {
+            water_manager.set_legacy();
+        }
         let tiles = map.width() as usize * map.height() as usize;
         let mut game = Self {
             ticks: 0,

@@ -199,10 +199,13 @@ impl RailNetwork {
             mini_map: game.water_manager.mini_map(),
         };
         MiniMapTransformer::new(AStarRail {
-            cross_impassable: !game.config().rules().has(crate::Builds::Rules::Change::RailNoImpassable4903),
+            cross_impassable: !game
+                .config()
+                .rules()
+                .has(crate::Builds::Rules::Change::RailNoImpassable4903),
         })
-            .find_path(&ctx, Source::Single(from), to)
-            .unwrap_or_default()
+        .find_path(&ctx, Source::Single(from), to)
+        .unwrap_or_default()
     }
 
     fn new_railroad(&mut self, from: StationId, to: StationId, tiles: Vec<TileRef>) -> RailId {

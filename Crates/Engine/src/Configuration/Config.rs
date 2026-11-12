@@ -8,8 +8,8 @@
 //! upstream message; the runner reports them as tick errors.
 
 use crate::Builds::Rules::{Change, Rules};
-use crate::Compat::JsNumber::{max as js_max, min as js_min};
 use crate::Compat::HostMath::{self, PowKind};
+use crate::Compat::JsNumber::{max as js_max, min as js_min};
 use crate::Core::{DetMath, Util};
 use crate::Game::Game::{
     Difficulty, DoomsdayClockSpeed, GameMapSize, GameMapType, GameMode, GameType, Gold, PlayerType,

@@ -5,6 +5,7 @@
 //! Every intent of the baseline build maps to a ported execution. `Executor.random` is seeded but
 //! never drawn from upstream, so it is not kept.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
@@ -132,14 +133,18 @@ impl Executor {
                 UnitType::from_str(unit).unwrap_or_else(|| panic!("unknown unit type {unit}")),
                 *tile,
                 *rocket_direction_up,
-                *amount,
+                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
             )),
             Intent::AllianceExtension { recipient } => {
                 Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
             }
             Intent::UpgradeStructure {
                 unit_id, amount, ..
-            } => Box::new(UpgradeStructureExecution::new(player, *unit_id, *amount)),
+            } => Box::new(UpgradeStructureExecution::new(
+                player,
+                *unit_id,
+                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
+            )),
             Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
                 Box::new(QuickChatExecution::new(player, recipient.clone()))

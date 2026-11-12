@@ -126,12 +126,7 @@ impl ParabolaUniversalPathFinder {
         }
     }
 
-    fn create_curve(
-        &self,
-        map: &GameMapImpl,
-        from: TileRef,
-        to: TileRef,
-    ) -> Curve {
+    fn create_curve(&self, map: &GameMapImpl, from: TileRef, to: TileRef) -> Curve {
         let increment = self.options.increment.unwrap_or(3.0);
         let [p0, p1, p2, p3] = get_parabola_control_points(map, from, to, &self.options);
         if self.options.legacy_curve {

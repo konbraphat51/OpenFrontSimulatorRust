@@ -25,7 +25,11 @@ pub struct AStarRail {
 impl PathFinder for AStarRail {
     fn find_path(&mut self, ctx: &PathCtx, from: Source, to: TileRef) -> Option<Vec<TileRef>> {
         let scratch = SCRATCH.with(|s| s.borrow_mut().take());
-        let mut a_star = AStar::with_scratch(RailAdapter::new(ctx.mini_map, self.cross_impassable), None, scratch);
+        let mut a_star = AStar::with_scratch(
+            RailAdapter::new(ctx.mini_map, self.cross_impassable),
+            None,
+            scratch,
+        );
         let path = a_star.find_path(from.as_slice(), to);
         SCRATCH.with(|s| *s.borrow_mut() = Some(a_star.into_scratch()));
         path

@@ -358,7 +358,9 @@ impl Execution for NukeExecution {
                 .units_of(UnitType::MissileSilo)
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
-            if let Some(silo) = silo {
+            if let Some(silo) = silo
+                && game.config().rules().has(Change::BulkPurchase4640)
+            {
                 let mut last_dep = 0.0;
                 for &launch_tick in game.unit_any(silo).missile_timer_queue() {
                     last_dep = f64::max(launch_tick + 1.0, last_dep + 1.0);

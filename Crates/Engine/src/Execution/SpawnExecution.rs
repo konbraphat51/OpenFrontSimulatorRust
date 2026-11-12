@@ -2,10 +2,10 @@
 //! Port of src/core/execution/SpawnExecution.ts: places a player on the map.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use crate::Builds::Rules::Change;
 use super::PlayerExecution::PlayerExecution;
 use super::TribeExecution::TribeExecution;
 use super::Util::get_spawn_tiles;
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;

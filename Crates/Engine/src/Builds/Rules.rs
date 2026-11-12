@@ -66,8 +66,6 @@ pub enum Change {
     AllianceCancelMirv5054,
     /// PR 5188 and 4927: fixed-point Bezier curve, normalised MIRV flight and staged warheads.
     MirvNormalize5188,
-    /// PR 5351: MIRV betrayal happens once the missile actually spawned.
-    MirvBetrayalOnSpawn5351,
     /// PR 5197 and 5040: cached SAM interception states and dynamic range on upgrade.
     SamTargeting5197,
     /// PR 5332: no teammate aftergame nuking in singleplayer.
@@ -84,8 +82,6 @@ pub enum Change {
     NationVictoryDenialPercent5223,
     /// PR 4758: duo/trio/quad team forming prefers the fullest team.
     TeamAssignDuos4758,
-    /// PR 5246: factory rail paths are searched from the city side.
-    RailFactoryDirection5246,
     /// PR 4903: rails cannot start on or cross impassable terrain.
     RailNoImpassable4903,
     /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
@@ -94,6 +90,12 @@ pub enum Change {
     StationClusterSame5096,
     /// PR 5062: overtime lowers the win bar late in a game.
     Overtime5062,
+    /// PR 4640: build and upgrade intents carry an amount (stacked purchases).
+    BulkPurchase4640,
+    /// PR 5030: team modes climb a higher Doomsday Clock ladder.
+    DoomsdayTeamLevels5030,
+    /// PR 5052: rotted territory becomes fallout wasteland.
+    DoomsdayRotWasteland5052,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -216,7 +218,6 @@ const EDGES: &[Edge] = &[
             Change::WinThresholdSame5223,
             Change::AllianceCancelMirv5054,
             Change::MirvNormalize5188,
-            Change::MirvBetrayalOnSpawn5351,
             Change::SamTargeting5197,
             Change::AftergameSingleplayer5332,
             Change::NationBetray5330,
@@ -225,7 +226,6 @@ const EDGES: &[Edge] = &[
             Change::NationCrowdedFirst5344,
             Change::NationVictoryDenialPercent5223,
             Change::TeamAssignDuos4758,
-            Change::RailFactoryDirection5246,
             Change::RailNoImpassable4903,
             Change::WaterNukeMinimap4975,
         ],
@@ -248,7 +248,10 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C017",
         add: &[],
-        remove: &[],
+        remove: &[
+            Change::DoomsdayTeamLevels5030,
+            Change::DoomsdayRotWasteland5052,
+        ],
     },
     Edge {
         class: "C018",
@@ -263,7 +266,7 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C020",
         add: &[],
-        remove: &[],
+        remove: &[Change::BulkPurchase4640],
     },
     Edge {
         class: "C021",
@@ -308,7 +311,6 @@ const ROOT_CHANGES: &[Change] = &[
     Change::WinThresholdSame5223,
     Change::AllianceCancelMirv5054,
     Change::MirvNormalize5188,
-    Change::MirvBetrayalOnSpawn5351,
     Change::SamTargeting5197,
     Change::AftergameSingleplayer5332,
     Change::NationBetray5330,
@@ -317,11 +319,13 @@ const ROOT_CHANGES: &[Change] = &[
     Change::NationCrowdedFirst5344,
     Change::NationVictoryDenialPercent5223,
     Change::TeamAssignDuos4758,
-    Change::RailFactoryDirection5246,
     Change::RailNoImpassable4903,
     Change::WaterNukeMinimap4975,
     Change::StationClusterSame5096,
     Change::Overtime5062,
+    Change::BulkPurchase4640,
+    Change::DoomsdayTeamLevels5030,
+    Change::DoomsdayRotWasteland5052,
 ];
 
 /// Commit of the baseline build v0.34.22.
@@ -408,6 +412,7 @@ impl Rules {
                 changes.remove(removed);
             }
         }
+        toggle_for_debugging(&mut changes);
         Some(Self {
             class: class.to_string(),
             changes,
@@ -451,6 +456,21 @@ impl Rules {
     /// True when the build contains `change`.
     pub fn has(&self, change: Change) -> bool {
         self.changes.contains(&change)
+    }
+}
+
+/// `OFSIM_TOGGLE=Name,Name` flips the named changes of every rule set (bisecting a failing record).
+fn toggle_for_debugging(changes: &mut BTreeSet<Change>) {
+    let Ok(names) = std::env::var("OFSIM_TOGGLE") else {
+        return;
+    };
+    let all: Vec<Change> = ROOT_CHANGES.to_vec();
+    for name in names.split(',') {
+        if let Some(&change) = all.iter().find(|c| format!("{c:?}") == name.trim())
+            && !changes.remove(&change)
+        {
+            changes.insert(change);
+        }
     }
 }
 
@@ -558,5 +578,21 @@ mod tests {
         let c012 = rules("e910d727d2dd");
         assert!(c012.has(Change::NewMapThemes5547) && c012.has(Change::ChannelIslandsTribes5564));
         assert!(!rules("4e837520e886").has(Change::NewMapThemes5547));
+    }
+
+    #[test]
+    fn era_f_classes_are_ported_without_detmath() {
+        for n in (13..=22).chain([80]) {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c013 = rules("8b45be57542f");
+        assert!(!c013.has(Change::DetMath5191) && c013.has(Change::Sfc32PseudoRandom4233));
+        assert!(!c013.has(Change::AttackLogicRework5173) && !c013.has(Change::SpawnPhase20s5347));
+        assert!(c013.has(Change::StationClusterSame5096) && c013.has(Change::Overtime5062));
+        assert!(!rules("0cb90ccb7478").has(Change::StationClusterSame5096));
+        assert!(!rules("2d5baafdd0cc").has(Change::Overtime5062));
+        assert!(!rules("e9e10703e818").has(Change::BulkPurchase4640));
+        assert!(rules("20c813f06a40").has(Change::BulkPurchase4640));
     }
 }

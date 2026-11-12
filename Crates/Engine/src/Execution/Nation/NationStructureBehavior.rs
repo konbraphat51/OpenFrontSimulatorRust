@@ -5,6 +5,7 @@
 use super::NationBehaviorPorts::{Decision, DecisionLog};
 use super::NationUtils::rand_territory_tile_array;
 use super::SharedRandom;
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Configuration::Config::TrainRelation;
 use crate::Core::PseudoRandom::PseudoRandom;
@@ -513,10 +514,13 @@ impl NationStructureBehavior {
         }
 
         // On crowded maps the first structure is a port (or factory if landlocked).
-        if !cities_disabled
-            && !self.built_crowded_map_first_structure
-            && self.is_high_nation_density(game)
-        {
+        let own_flag = game.config().rules().has(Change::NationCrowdedFirst5344);
+        let first_pending = if own_flag {
+            !self.built_crowded_map_first_structure
+        } else {
+            game.player(self.player).units_owned(UnitType::City) == 0
+        };
+        if !cities_disabled && first_pending && self.is_high_nation_density(game) {
             let preferred_first =
                 if has_coastal_tiles && !game.config().is_unit_disabled(UnitType::Port) {
                     UnitType::Port

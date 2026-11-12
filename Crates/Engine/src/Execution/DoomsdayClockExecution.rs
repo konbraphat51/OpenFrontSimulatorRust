@@ -235,7 +235,13 @@ impl DoomsdayClockExecution {
             return false;
         }
         game.player_mut(player).relinquish(tile);
-        game.set_fallout(tile, true);
+        if game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::DoomsdayRotWasteland5052)
+        {
+            game.set_fallout(tile, true);
+        }
         game.player_mut(player).mark_rotted();
         front.remove(&tile);
         for neighbour in game.map.neighbors(tile) {
@@ -285,11 +291,17 @@ impl Execution for DoomsdayClockExecution {
         let ffa = game.config().game_config().game_mode == GameMode::FFA;
         let sides = Self::sides(game, &contenders, ffa);
 
-        if game.winner().is_some() || sides.len() < 2 {
+        let winner_idle = game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::DoomsdayIdleOnWinner4953);
+        if (winner_idle && game.winner().is_some()) || sides.len() < 2 {
             for &p in &contenders {
                 game.player_mut(p).clear_doomsday_clock();
             }
-            self.active = false;
+            if winner_idle {
+                self.active = false;
+            }
             return;
         }
 
@@ -297,7 +309,11 @@ impl Execution for DoomsdayClockExecution {
         let required = doomsday_clock_required_tiles(
             &DoomsdayClockProfile {
                 speed: cfg.speed,
-                team_game: !ffa,
+                team_game: !ffa
+                    && game
+                        .config()
+                        .rules()
+                        .has(crate::Builds::Rules::Change::DoomsdayTeamLevels5030),
             },
             land,
             elapsed,

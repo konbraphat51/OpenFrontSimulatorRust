@@ -92,8 +92,16 @@ impl WinCheckExecution {
             return true;
         }
         let tiles_without_fallout = game.num_land_tiles() - game.num_tiles_with_fallout();
-        tiles_owned * 100.0
-            > tiles_without_fallout * game.config().percentage_tiles_owned_to_win(time_elapsed)
+        let bar = game.config().percentage_tiles_owned_to_win(time_elapsed);
+        if game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::WinThresholdSame5223)
+        {
+            tiles_owned * 100.0 > tiles_without_fallout * bar
+        } else {
+            (tiles_owned / tiles_without_fallout) * 100.0 > bar
+        }
     }
 
     fn check_winner_team(&mut self, game: &mut GameImpl) {

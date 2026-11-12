@@ -3,9 +3,9 @@
 
 pub mod Algorithms;
 pub mod Line;
+pub mod LineLegacy;
 pub mod PathFinder;
 pub mod PathFinderAir;
-pub mod LineLegacy;
 pub mod PathFinderParabola;
 pub mod PathFinderStation;
 pub mod PathFinderStepper;
