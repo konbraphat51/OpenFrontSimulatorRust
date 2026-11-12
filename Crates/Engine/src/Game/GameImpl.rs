@@ -28,8 +28,9 @@ use super::WaterManager::WaterManager;
 use crate::Configuration::Config::Config;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
+use crate::Execution::Nation::SharedWaterCache::{SharedWaterCache, SharedWaterView};
 use ofsim_map::SpawnArea;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Winner of a game: a player or a team.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -97,6 +98,7 @@ pub struct GameImpl {
     pub rail_network: RailNetwork,
     /// Water manager (stub until p2-path lands).
     pub water_manager: WaterManager,
+    shared_water_cache: SharedWaterCache,
     humans: Vec<PlayerInfo>,
     nations: Vec<Nation>,
     player_teams: Vec<Team>,
@@ -145,6 +147,7 @@ impl GameImpl {
             stats: StatsImpl::default(),
             rail_network: RailNetwork::new(),
             water_manager,
+            shared_water_cache: SharedWaterCache::new(),
             humans,
             nations,
             player_teams: Vec::new(),
@@ -591,6 +594,14 @@ impl GameImpl {
         )
     }
 
+    /// `sharedWaterComponents(player)`: water components shared with a trade partner (see `SharedWaterCache`).
+    pub fn shared_water_components(&mut self, player: SmallId) -> Option<HashSet<i64>> {
+        let mut cache = std::mem::take(&mut self.shared_water_cache);
+        let result = cache.get(&*self, self.ticks, player).cloned();
+        self.shared_water_cache = cache;
+        result
+    }
+
     // ---- executions -----------------------------------------------------------------------
 
     /// `addExecution`.
@@ -1032,5 +1043,29 @@ impl GameImpl {
         let areas = areas_map.get(&num_teams.to_string())?;
         let team_index = self.player_teams.iter().position(|t| t == team)?;
         areas.get(team_index).cloned()
+    }
+}
+
+impl SharedWaterView for GameImpl {
+    fn map(&self) -> &GameMapImpl {
+        &self.map
+    }
+    fn players(&self) -> Vec<SmallId> {
+        GameImpl::players(self)
+    }
+    fn is_bot(&self, player: SmallId) -> bool {
+        self.player(player).player_type() == PlayerType::Bot
+    }
+    fn tile_change_version(&self, player: SmallId) -> u32 {
+        self.player(player).tile_change_version()
+    }
+    fn for_each_border_tile(&self, player: SmallId, f: &mut dyn FnMut(TileRef)) {
+        self.player(player).border_tiles().for_each(f);
+    }
+    fn can_trade(&self, player: SmallId, other: SmallId) -> bool {
+        self.player(player).can_trade(other)
+    }
+    fn water_component(&self, tile: TileRef) -> Option<u32> {
+        self.water_manager.get_water_component(&self.map, tile)
     }
 }
