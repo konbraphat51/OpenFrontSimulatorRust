@@ -2,3 +2,4 @@
 
 pub mod Compat;
 pub mod Core;
+pub mod Game;
