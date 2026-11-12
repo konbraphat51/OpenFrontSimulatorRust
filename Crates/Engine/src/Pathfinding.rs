@@ -3,6 +3,7 @@
 
 pub mod Algorithms;
 pub mod Line;
+pub mod PathFinder;
 pub mod PathFinderAir;
 pub mod PathFinderParabola;
 pub mod PathFinderStepper;
