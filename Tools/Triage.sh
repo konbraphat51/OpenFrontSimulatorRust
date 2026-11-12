@@ -89,9 +89,10 @@ PY
     r="$(verify "$flag")"
     nt="$(echo "$r" | grep -o 'first_mismatch_tick=[0-9]*\|stop_tick=[0-9]*' | head -1 | cut -d= -f2)"
     nv="$(echo "$r" | awk '{print $2}')"
-    if [ "$(echo "$base" | awk '{print $2}')" = "OK" ]; then
-      if [ "$nv" = "OK" ]; then eff="no effect"; else eff="BREAKS at ${nt:-?}"; fi
-    elif [ "$nv" = "OK" ]; then eff="REMOVES mismatch"
+    bv="$(echo "$base" | awk '{print $2}')"
+    if [ "$bv" = "OK" ] || [ "$bv" = "PARTIAL" ]; then
+      if [ "$nv" = "OK" ] || [ "$nv" = "PARTIAL" ]; then eff="no effect"; else eff="BREAKS at ${nt:-?}"; fi
+    elif [ "$nv" = "OK" ] || [ "$nv" = "PARTIAL" ]; then eff="REMOVES mismatch"
     elif [ "$nt" != "$tick" ]; then eff="MOVES ${tick:-none} -> ${nt:-none}"
     else eff="no effect"; fi
     echo "  toggle $flag ($from): $eff | $(brief "$r")" | cut -c1-160
