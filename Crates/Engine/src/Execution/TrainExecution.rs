@@ -4,6 +4,7 @@
 //!
 //! The client motion plan (`recordMotionPlan`) is not ported; it does not touch the simulation.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, TrainType, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
@@ -212,6 +213,95 @@ impl TrainExecution {
         oriented_railroad(game, self.stations[0], self.stations[1])
     }
 
+    /// Accepts a split of the railroad the train occupies when the new segments match its path.
+    fn reconcile_current_railroad_split(&mut self, game: &GameImpl) {
+        if self.current_railroad.is_none() || self.stations.len() < 2 {
+            return;
+        }
+        let (station0, station1) = (self.stations[0], self.stations[1]);
+        if game
+            .rail_network
+            .station_railroad_to(station0, station1)
+            .is_some()
+        {
+            return;
+        }
+        let path = game
+            .rail_network
+            .find_stations_path(game, station0, station1);
+        if path.len() <= 2 {
+            return;
+        }
+        let mut segments: Vec<OrientedRailroad> = Vec::new();
+        let mut cursor = self.path_index;
+        for i in 0..path.len() - 1 {
+            let Some(segment) = oriented_railroad(game, path[i], path[i + 1]) else {
+                return;
+            };
+            for &tile in segment.tiles() {
+                let expected = self.path_tiles.get(cursor).copied();
+                cursor += 1;
+                if expected != Some(tile) {
+                    return;
+                }
+            }
+            segments.push(segment);
+        }
+        let old_tiles: Vec<TileRef> = self
+            .current_railroad
+            .as_ref()
+            .map(|r| r.tiles().to_vec())
+            .unwrap_or_default();
+        if cursor != self.path_index + old_tiles.len() {
+            return;
+        }
+        // Drop replacement stations whose stop boundary is already behind the engine.
+        let mut active_segment = 0usize;
+        let mut segment_start = 0usize;
+        let mut boundary = 0usize;
+        for i in 0..segments.len() - 1 {
+            boundary += segments[i].tiles().len();
+            let stop_index = self.stop_index_at_boundary(game, path[i + 1], &old_tiles, boundary);
+            if self.current_tile <= stop_index {
+                break;
+            }
+            active_segment = i + 1;
+            segment_start = boundary;
+        }
+        self.path_index += segment_start;
+        self.current_tile -= segment_start;
+        self.current_railroad = Some(segments.swap_remove(active_segment));
+        self.stations
+            .splice(0..2, path[active_segment..].iter().copied());
+    }
+
+    /// Engine index at which the stop at `boundary` is reached (the rail tile nearer the station).
+    fn stop_index_at_boundary(
+        &self,
+        game: &GameImpl,
+        station: StationId,
+        tiles: &[TileRef],
+        boundary: usize,
+    ) -> usize {
+        let before = boundary - 1;
+        let after = boundary;
+        let station_tile = game
+            .unit_any(game.rail_network.station(station).unit)
+            .tile();
+        let station_x = game.map.x(station_tile) as f64;
+        let station_y = game.map.y(station_tile) as f64;
+        let distance_squared = |index: usize| {
+            let dx = game.map.x(tiles[index]) as f64 - station_x;
+            let dy = game.map.y(tiles[index]) as f64 - station_y;
+            dx * dx + dy * dy
+        };
+        if distance_squared(before) <= distance_squared(after) {
+            before
+        } else {
+            after
+        }
+    }
+
     fn can_trade_with_destination(&self, game: &GameImpl) -> bool {
         self.stations.len() > 1
             && game
@@ -311,7 +401,17 @@ impl Execution for TrainExecution {
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         let train = self.train.expect("Not initialized");
 
-        if !game.unit_any(train).is_active() || !self.active_source_or_destination(game) {
+        if game.config().rules().has(Change::TrainSplitReconcile5719) {
+            if !game.unit_any(train).is_active() {
+                self.delete_train(game);
+                return;
+            }
+            self.reconcile_current_railroad_split(game);
+            if !self.active_source_or_destination(game) {
+                self.delete_train(game);
+                return;
+            }
+        } else if !game.unit_any(train).is_active() || !self.active_source_or_destination(game) {
             self.delete_train(game);
             return;
         }

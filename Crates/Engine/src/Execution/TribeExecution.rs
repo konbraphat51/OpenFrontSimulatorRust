@@ -2,6 +2,7 @@
 //! Port of src/core/execution/TribeExecution.ts: the AI of a tribe (bot) player.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
@@ -86,7 +87,10 @@ impl TribeExecution {
 
     fn maybe_attack(&mut self, game: &mut GameImpl) {
         let behavior = self.attack_behavior.as_mut().expect("not initialized");
-        if let Some(to_attack) = behavior.get_neighbor_traitor_to_attack(game) {
+        if let Some(to_attack) = behavior.get_neighbor_traitor_to_attack(
+            game,
+            game.config().rules().has(Change::NationAiSplit6087),
+        ) {
             let odds = if game.player(self.tribe).is_friendly(to_attack, false) {
                 6.0
             } else {
@@ -143,6 +147,14 @@ impl Execution for TribeExecution {
             // Send an attack on the first tick.
             behavior.send_attack(game, 0, false);
             self.attack_behavior = Some(behavior);
+            return;
+        }
+        // The tutorial's tribe only grows into free land and accepts no alliance.
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            self.attack_behavior
+                .as_mut()
+                .expect("set above")
+                .expand_into_free_land(game);
             return;
         }
         self.accept_all_alliance_requests(game);

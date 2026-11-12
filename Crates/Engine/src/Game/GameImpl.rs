@@ -140,7 +140,12 @@ impl GameImpl {
         rail_network.leave_same_cluster = !config
             .rules()
             .has(crate::Builds::Rules::Change::StationClusterSame5096);
-        let mut water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        let mut water_manager = WaterManager::with_sorted_edges(
+            mini_map,
+            config.disable_nav_mesh(),
+            config.rules().has(Change::WaterGraphEdgeSort5805),
+        );
+        water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         if !config
             .rules()
             .has(crate::Builds::Rules::Change::WaterNukeMinimap4975)
@@ -241,6 +246,7 @@ impl GameImpl {
             &self.player_teams.clone(),
             is_duos_trios_quads,
             None,
+            self.config.rules().has(Change::TeamFriendGroups6259),
         );
         for (i, team) in assignment {
             match team {

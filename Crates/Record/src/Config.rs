@@ -23,7 +23,7 @@ wire_enum!(
 );
 wire_enum!(
     /// Upstream `RankedType`.
-    RankedType { OneVOne = "1v1", TwoVTwo = "2v2" }
+    RankedType { OneVOne = "1v1", TwoVTwo = "2v2", FreeForAll = "ffa", ClanWars = "clanwars" }
 );
 
 /// `nations`: a count, or "default" / "disabled".
@@ -279,6 +279,9 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub disable_alliances: Option<bool>,
+    /// The onboarding tutorial (v0.35.7 on).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tutorial: Option<bool>,
     /// Disable clan tags.
     #[serde(
         default,

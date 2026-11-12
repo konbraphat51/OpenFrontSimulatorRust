@@ -3,7 +3,10 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::NationBehaviorPorts::{Decision, DecisionLog};
-use super::NationUtils::rand_territory_tile_array;
+use super::NationMIRVBehavior::is_mirv_worth_saving_for;
+use super::NationUtils::{
+    has_high_starting_gold, is_save_up_within_reach, rand_territory_tile_array,
+};
 use super::SharedRandom;
 use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
@@ -11,7 +14,7 @@ use crate::Configuration::Config::TrainRelation;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Util::{nearest_tile_dist, nearest_tile_dist_capped};
 use crate::Game::Game::{
-    Difficulty, GameMode, Gold, PlayerType, STRUCTURES, SmallId, Tick, UnitId, UnitType,
+    Difficulty, GameMode, Gold, PlayerType, Relation, STRUCTURES, SmallId, Tick, UnitId, UnitType,
 };
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
@@ -34,10 +37,23 @@ struct StructureRatioConfig {
 }
 
 /// `getStructureRatios(difficulty)[type]`.
-fn structure_ratio(difficulty: Difficulty, t: UnitType) -> Option<StructureRatioConfig> {
+fn structure_ratio(
+    difficulty: Difficulty,
+    game_mode: GameMode,
+    v2: bool,
+    t: UnitType,
+) -> Option<StructureRatioConfig> {
     match t {
         UnitType::Port | UnitType::Factory => Some(StructureRatioConfig {
-            ratio_per_city: 0.75,
+            ratio_per_city: if v2
+                && t == UnitType::Port
+                && game_mode == GameMode::Team
+                && difficulty != Difficulty::Easy
+            {
+                TEAM_PORT_RATIO
+            } else {
+                0.75
+            },
             perceived_cost_increase_per_owned: 1.0,
         }),
         UnitType::SAMLauncher => Some(StructureRatioConfig {
@@ -52,8 +68,93 @@ fn structure_ratio(difficulty: Difficulty, t: UnitType) -> Option<StructureRatio
     }
 }
 
+/// Port ratio per city in team games (not on Easy), where teammates are safe trade partners.
+const TEAM_PORT_RATIO: f64 = 1.0;
 const CITY_PERCEIVED_COST_INCREASE_PER_OWNED: f64 = 1.0;
 const FACTORY_COASTAL_RATIO_MULTIPLIER: f64 = 0.33;
+
+/// Cities owned before saving up for nukes inflates structure costs, by difficulty.
+fn cities_before_saving(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 0.0,
+        Difficulty::Medium => 3.0,
+        Difficulty::Hard => 4.0,
+        Difficulty::Impossible => 5.0,
+    }
+}
+
+/// Scales the perceived cost increase of cities, ports and factories while saving up, by difficulty.
+fn income_structure_saving_weight(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 1.0,
+        Difficulty::Medium => 0.8,
+        Difficulty::Hard => 0.6,
+        Difficulty::Impossible => 0.4,
+    }
+}
+
+/// Factory ratio multiplier when the nation has coastal tiles, by difficulty (v0.35.0 on).
+fn factory_coastal_ratio_multiplier(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 0.33,
+        Difficulty::Medium => 0.45,
+        Difficulty::Hard => 0.55,
+        Difficulty::Impossible => 0.6,
+    }
+}
+
+/// Structures a nation wants under SAM cover.
+const SAM_PROTECTED_TYPES: [UnitType; 4] = [
+    UnitType::City,
+    UnitType::Factory,
+    UnitType::MissileSilo,
+    UnitType::Port,
+];
+
+/// Percent chance to upgrade a SAM instead of building one when SAMs already cover every structure.
+fn sam_upgrade_when_covered_chance(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 0.0,
+        Difficulty::Medium => 50.0,
+        Difficulty::Hard | Difficulty::Impossible => 100.0,
+    }
+}
+
+/// Most levels bought in one upgrade, as far as the gold beyond the save-up target pays for them.
+fn max_upgrades_at_once(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 3.0,
+        Difficulty::Medium => 10.0,
+        Difficulty::Hard | Difficulty::Impossible => f64::INFINITY,
+    }
+}
+
+/// Starting gold below which high-starting-gold nations wait between their first structures.
+const PACED_STARTING_GOLD_LIMIT: Gold = 10_000_000;
+/// Closest a reactive defense post goes to the attack front, in post ranges, and per unit of incoming-to-own troop ratio.
+const DEFENSE_POST_FRONT_MIN_DIST: f64 = 2.0 / 3.0;
+const DEFENSE_POST_FRONT_DIST_PER_RATIO: f64 = 1.0 / 3.0;
+const DEFENSE_POST_FRONT_RATIO_CAP: f64 = 2.0;
+/// Depth of the band a reactive defense post may go in, in post ranges.
+const DEFENSE_POST_FRONT_BAND: f64 = 1.0 / 2.0;
+/// Distance band from a threatening neighbour's border for a defense post built before it attacks, in post ranges.
+const PROACTIVE_DEFENSE_POST_MIN_DIST: f64 = 1.0 / 2.0;
+const PROACTIVE_DEFENSE_POST_MAX_DIST: f64 = 1.0;
+/// Cities owned before Hard and Impossible nations fortify borders that are not under attack yet.
+const PROACTIVE_DEFENSE_POST_MIN_CITIES: f64 = 2.0;
+/// Defense posts owned per city above which nations stop fortifying borders that are not under attack.
+const PROACTIVE_DEFENSE_POSTS_PER_CITY: f64 = 0.5;
+/// Random tiles tried when looking for a defense post spot.
+const DEFENSE_POST_SAMPLE_ATTEMPTS: usize = 150;
+
+/// Share of our troops a hostile neighbour needs before we fortify against it (Hard and Impossible only).
+fn proactive_defense_post_hostile_troop_ratio(difficulty: Difficulty) -> Option<f64> {
+    match difficulty {
+        Difficulty::Hard => Some(1.0),
+        Difficulty::Impossible => Some(0.5),
+        _ => None,
+    }
+}
 const MAX_MISSILE_SILOS: i64 = 3;
 const FIRST_MISSILE_SILO_RATIO: f64 = 0.4;
 /// If there are more structures per tile than this, upgrading is preferred over building.
@@ -68,6 +169,15 @@ const HIGH_GOLD_STRUCTURE_COOLDOWN_TICKS: [u32; 5] = [0, 0, 250, 150, 100];
 const TEAM_POST_SAVE_UP_PHASE_TICKS: u32 = 150;
 const UNDER_ATTACK_THREAT_RATIO: f64 = 0.35;
 const DEFENSE_POST_RATIO_PER_POST: f64 = 0.4;
+
+/// Structures counted for density; cheap defense posts would push nations into upgrading early.
+const DENSITY_STRUCTURE_TYPES: [UnitType; 5] = [
+    UnitType::City,
+    UnitType::Factory,
+    UnitType::MissileSilo,
+    UnitType::Port,
+    UnitType::SAMLauncher,
+];
 
 /// One reachable train station: its tile, rail cluster (`None` when isolated) and trade weight.
 #[derive(Clone, Copy)]
@@ -133,6 +243,8 @@ pub struct NationStructureBehavior {
     built_crowded_map_first_structure: bool,
     has_high_starting_gold: Option<bool>,
     post_save_up_start_tick: Option<Tick>,
+    /// `isMirvWorthSavingFor` for the tick it was computed in.
+    mirv_worth_saving_memo: std::cell::Cell<Option<(Tick, bool)>>,
     /// Test hook: records the placements instead of queueing them.
     pub log: DecisionLog,
 }
@@ -150,6 +262,7 @@ impl NationStructureBehavior {
             built_crowded_map_first_structure: false,
             has_high_starting_gold: None,
             post_save_up_start_tick: None,
+            mirv_worth_saving_memo: std::cell::Cell::new(None),
             log: DecisionLog::default(),
         }
     }
@@ -190,11 +303,11 @@ impl NationStructureBehavior {
     }
 
     /// Land attacks (no source tile) on the nation: (attacker, troops) pairs.
-    fn incoming_land_attacks(&self, game: &GameImpl) -> Vec<(SmallId, f64)> {
+    fn incoming_land_attacks(&self, game: &GameImpl, all_attacks: bool) -> Vec<(SmallId, f64)> {
         game.player(self.player)
             .incoming_attacks()
             .into_iter()
-            .filter(|&a| game.attack(a).source_tile().is_none())
+            .filter(|&a| all_attacks || game.attack(a).source_tile().is_none())
             .map(|a| (game.attack(a).attacker(), game.attack(a).troops()))
             .collect()
     }
@@ -208,7 +321,8 @@ impl NationStructureBehavior {
             return false;
         }
 
-        let land_attacks = self.incoming_land_attacks(game);
+        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let land_attacks = self.incoming_land_attacks(game, v2);
         if land_attacks.is_empty() {
             return false;
         }
@@ -229,6 +343,25 @@ impl NationStructureBehavior {
         } else {
             (ratio / DEFENSE_POST_RATIO_PER_POST).ceil()
         };
+
+        if v2 {
+            let range = game.config().defense_post_range();
+            let scaled_ratio = if difficulty == Difficulty::Medium {
+                0.0
+            } else {
+                f64::min(ratio, DEFENSE_POST_FRONT_RATIO_CAP)
+            };
+            let min_dist = range
+                * (DEFENSE_POST_FRONT_MIN_DIST + DEFENSE_POST_FRONT_DIST_PER_RATIO * scaled_ratio);
+            let max_dist = min_dist + range * DEFENSE_POST_FRONT_BAND;
+            let front_tiles = self.get_attack_front_tiles_v2(game);
+            if self.count_defense_posts_near_front_v2(game, &front_tiles, max_dist, Some(allowed))
+                >= allowed
+            {
+                return false;
+            }
+            return self.build_defense_post_behind(game, &front_tiles, min_dist, max_dist);
+        }
 
         let front_tiles = self.get_attack_front_tiles(game, &land_attacks);
         if self.count_defense_posts_near_front(game, &front_tiles, Some(allowed)) >= allowed {
@@ -262,11 +395,257 @@ impl NationStructureBehavior {
         false
     }
 
+    /// Our border tiles adjacent to a land attacker's territory, plus the landing frontier of boat attacks.
+    fn get_attack_front_tiles_v2(&self, game: &GameImpl) -> Vec<TileRef> {
+        let attacks = game.player(self.player).incoming_attacks();
+        let mut land_attackers: Vec<SmallId> = Vec::new();
+        for &a in &attacks {
+            if game.attack(a).source_tile().is_none() {
+                let attacker = game.attack(a).attacker();
+                if !land_attackers.contains(&attacker) {
+                    land_attackers.push(attacker);
+                }
+            }
+        }
+        let mut front_tiles = self.border_tiles_facing(game, &land_attackers);
+        // A land attacker's beachheads are already in its adjacency front above.
+        for &a in &attacks {
+            let attack = game.attack(a);
+            if attack.source_tile().is_none() || land_attackers.contains(&attack.attacker()) {
+                continue;
+            }
+            for &t in attack.border().iter() {
+                if game.owner_id(t) == self.player {
+                    front_tiles.push(t);
+                }
+            }
+        }
+        front_tiles
+    }
+
+    /// Our border tiles adjacent to land owned by any of `players`.
+    fn border_tiles_facing(&self, game: &GameImpl, players: &[SmallId]) -> Vec<TileRef> {
+        let mut front_tiles = Vec::new();
+        if players.is_empty() {
+            return front_tiles;
+        }
+        let mut nbuf = [0; 4];
+        game.player(self.player)
+            .border_tiles()
+            .for_each(|border_tile| {
+                let n = game.map.neighbors4(border_tile, &mut nbuf);
+                for &neighbor in &nbuf[..n] {
+                    if players.contains(&game.owner_id(neighbor)) {
+                        front_tiles.push(border_tile);
+                        return;
+                    }
+                }
+            });
+        front_tiles
+    }
+
+    /// Counts defense posts within `range` of any front tile; `cap` stops the scan early.
+    fn count_defense_posts_near_front_v2(
+        &self,
+        game: &GameImpl,
+        front_tiles: &[TileRef],
+        range: f64,
+        cap: Option<f64>,
+    ) -> f64 {
+        if front_tiles.is_empty() {
+            return 0.0;
+        }
+        let range_squared = range * range;
+        let mut count = 0.0;
+        for dp in game.player(self.player).units_of(UnitType::DefensePost) {
+            let dp_tile = game.unit_any(dp).tile;
+            for &front_tile in front_tiles {
+                if game.map.euclidean_dist_squared(dp_tile, front_tile) as f64 <= range_squared {
+                    count += 1.0;
+                    if let Some(cap) = cap
+                        && count >= cap
+                    {
+                        return count;
+                    }
+                    break;
+                }
+            }
+        }
+        count
+    }
+
+    fn build_defense_post_behind(
+        &mut self,
+        game: &mut GameImpl,
+        front_tiles: &[TileRef],
+        min_dist: f64,
+        max_dist: f64,
+    ) -> bool {
+        if game.player(self.player).gold() < self.cost(game, UnitType::DefensePost) {
+            return false;
+        }
+        let Some(tile) = self.find_defense_post_tile(game, front_tiles, min_dist, max_dist) else {
+            return false;
+        };
+        self.log.queue(
+            game,
+            self.player,
+            Decision::Construct {
+                unit_type: UnitType::DefensePost,
+                tile,
+            },
+        );
+        true
+    }
+
+    /// Finds an own tile where a defense post can be built at a distance in [min, max] from the nearest front tile.
+    fn find_defense_post_tile(
+        &self,
+        game: &GameImpl,
+        front_tiles: &[TileRef],
+        min_dist: f64,
+        max_dist: f64,
+    ) -> Option<TileRef> {
+        if front_tiles.is_empty() {
+            return None;
+        }
+        let player = game.player(self.player);
+        let range = game.config().defense_post_range() * 1.5;
+        let spread_range_squared = range * range;
+        let existing_dp_tiles: Vec<TileRef> = player
+            .units_of(UnitType::DefensePost)
+            .iter()
+            .map(|&u| game.unit_any(u).tile)
+            .collect();
+        let near_existing_post = |t: TileRef| {
+            existing_dp_tiles
+                .iter()
+                .any(|&dp| (game.map.euclidean_dist_squared(t, dp) as f64) < spread_range_squared)
+        };
+        let anchors: Vec<TileRef> = front_tiles
+            .iter()
+            .copied()
+            .filter(|&ft| !near_existing_post(ft))
+            .collect();
+        if anchors.is_empty() {
+            return None;
+        }
+        let min_squared = min_dist * min_dist;
+        let max_squared = max_dist * max_dist;
+        let search_radius = max_dist.ceil() as i32;
+        for _ in 0..DEFENSE_POST_SAMPLE_ATTEMPTS {
+            let anchor = *self.rnd().rand_element(&anchors);
+            let ax = game.x(anchor) as i32;
+            let ay = game.y(anchor) as i32;
+            let x = self
+                .rnd()
+                .next_int((ax - search_radius) as f64, (ax + search_radius + 1) as f64)
+                as i32;
+            let y = self
+                .rnd()
+                .next_int((ay - search_radius) as f64, (ay + search_radius + 1) as f64)
+                as i32;
+            if !game.is_valid_coord(x, y) {
+                continue;
+            }
+            let t = game.tile_ref(x, y);
+            if game.owner_id(t) != self.player {
+                continue;
+            }
+            if near_existing_post(t) {
+                continue;
+            }
+            let mut nearest_squared = f64::INFINITY;
+            for &ft in front_tiles {
+                nearest_squared =
+                    nearest_squared.min(game.map.euclidean_dist_squared(t, ft) as f64);
+                if nearest_squared < min_squared {
+                    break;
+                }
+            }
+            if nearest_squared < min_squared || nearest_squared > max_squared {
+                continue;
+            }
+            if player.can_build(UnitType::DefensePost, t, None).is_none() {
+                continue;
+            }
+            return Some(t);
+        }
+        None
+    }
+
+    /// Hard and Impossible: covers the border with a hostile (recently attacking) neighbour before it attacks again.
+    fn maybe_build_proactive_defense_post(&mut self, game: &mut GameImpl) -> bool {
+        let config = game.config();
+        let difficulty = config.game_config().difficulty;
+        let Some(hostile_troop_ratio) = proactive_defense_post_hostile_troop_ratio(difficulty)
+        else {
+            return false;
+        };
+        if config.is_unit_disabled(UnitType::DefensePost) {
+            return false;
+        }
+        let city_count = self.city_count(game);
+        if city_count < PROACTIVE_DEFENSE_POST_MIN_CITIES {
+            return false;
+        }
+        let player = game.player(self.player);
+        if player.units_of(UnitType::DefensePost).len() as f64
+            >= city_count * PROACTIVE_DEFENSE_POSTS_PER_CITY
+        {
+            return false;
+        }
+        if player.gold() < self.cost(game, UnitType::DefensePost) {
+            return false;
+        }
+
+        let min_troops = player.troops() * hostile_troop_ratio;
+        let mut threats: Vec<SmallId> = Vec::new();
+        for neighbor in player.nearby() {
+            if neighbor == 0 || game.player(neighbor).player_type() == PlayerType::Bot {
+                continue;
+            }
+            if player.is_friendly(neighbor, false) {
+                continue;
+            }
+            if player.relation(neighbor) == Relation::Hostile
+                && game.player(neighbor).troops() >= min_troops
+                && !threats.contains(&neighbor)
+            {
+                threats.push(neighbor);
+            }
+        }
+        if threats.is_empty() {
+            return false;
+        }
+
+        let range = config.defense_post_range();
+        let front_tiles = self.border_tiles_facing(game, &threats);
+        if self.count_defense_posts_near_front_v2(
+            game,
+            &front_tiles,
+            range * 1.5,
+            Some(threats.len() as f64),
+        ) >= threats.len() as f64
+        {
+            return false;
+        }
+        self.build_defense_post_behind(
+            game,
+            &front_tiles,
+            range * PROACTIVE_DEFENSE_POST_MIN_DIST,
+            range * PROACTIVE_DEFENSE_POST_MAX_DIST,
+        )
+    }
+
     fn defense_post_needed(&self, game: &GameImpl) -> bool {
         if Self::difficulty(game) == Difficulty::Easy {
             return false;
         }
-        let land_attacks = self.incoming_land_attacks(game);
+        let land_attacks = self.incoming_land_attacks(
+            game,
+            game.config().rules().has(Change::NationsLikeHumans5899),
+        );
         if land_attacks.is_empty() {
             return false;
         }
@@ -458,6 +837,17 @@ impl NationStructureBehavior {
         if !self.has_high_starting_gold(game) {
             return false;
         }
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            let p = game.player(self.player);
+            let info = p.info();
+            if game
+                .config()
+                .starting_gold(info.player_type, info.is_lobby_creator)
+                >= PACED_STARTING_GOLD_LIMIT
+            {
+                return false;
+            }
+        }
         let required_gap = HIGH_GOLD_STRUCTURE_COOLDOWN_TICKS
             .get(self.placements_count)
             .copied()
@@ -480,6 +870,12 @@ impl NationStructureBehavior {
             }
             self.post_save_up_start_tick = Some(game.ticks());
         }
+        // Not while the gold covers the target twice, as bulk upgrades leave the target for nukes.
+        if game.config().rules().has(Change::NationsLikeHumans5899)
+            && game.player(self.player).gold() >= save_up_target * 2
+        {
+            return false;
+        }
         let elapsed = (game.ticks() as f64) - (self.post_save_up_start_tick.unwrap() as f64);
         elapsed % ((TEAM_POST_SAVE_UP_PHASE_TICKS * 2) as f64)
             >= TEAM_POST_SAVE_UP_PHASE_TICKS as f64
@@ -488,13 +884,7 @@ impl NationStructureBehavior {
     fn do_handle_structures(&mut self, game: &mut GameImpl) -> bool {
         self.reachable_stations_cache = None;
         let cities_disabled = game.config().is_unit_disabled(UnitType::City);
-        let city_count = if cities_disabled {
-            (game.player(self.player).num_tiles_owned() as f64 / TILES_PER_CITY_EQUIVALENT)
-                .floor()
-                .max(1.0)
-        } else {
-            game.player(self.player).units_owned(UnitType::City) as f64
-        };
+        let city_count = self.city_count(game);
         self.shared_water_components = game.shared_water_components(self.player);
         let has_coastal_tiles = self.shared_water_components.is_some();
 
@@ -520,7 +910,13 @@ impl NationStructureBehavior {
         } else {
             game.player(self.player).units_owned(UnitType::City) == 0
         };
-        if !cities_disabled && first_pending && self.is_high_nation_density(game) {
+        if !cities_disabled
+            && first_pending
+            && (self.is_high_nation_density(game)
+                || (game.config().rules().has(Change::NationsLikeHumans5899)
+                    && difficulty != Difficulty::Easy
+                    && self.starts_in_team_spawn_area(game)))
+        {
             let preferred_first =
                 if has_coastal_tiles && !game.config().is_unit_disabled(UnitType::Port) {
                     UnitType::Port
@@ -533,6 +929,12 @@ impl NationStructureBehavior {
                 self.built_crowded_map_first_structure = true;
                 return true;
             }
+        }
+
+        if game.config().rules().has(Change::NationsLikeHumans5899)
+            && self.maybe_build_proactive_defense_post(game)
+        {
+            return true;
         }
 
         // Build order for non-city structures (priority order).
@@ -583,10 +985,29 @@ impl NationStructureBehavior {
         if let Some(v) = self.has_high_starting_gold {
             return v;
         }
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            return has_high_starting_gold(game, self.player);
+        }
         let info = game.player(self.player).info().clone();
         game.config()
             .starting_gold(info.player_type, info.is_lobby_creator)
             >= HIGH_STARTING_GOLD_THRESHOLD
+    }
+
+    /// Cities owned, or a territory-based equivalent when cities are disabled.
+    fn city_count(&self, game: &GameImpl) -> f64 {
+        if game.config().is_unit_disabled(UnitType::City) {
+            return (game.player(self.player).num_tiles_owned() as f64 / TILES_PER_CITY_EQUIVALENT)
+                .floor()
+                .max(1.0);
+        }
+        game.player(self.player).units_owned(UnitType::City) as f64
+    }
+
+    fn starts_in_team_spawn_area(&self, game: &GameImpl) -> bool {
+        game.player(self.player)
+            .team()
+            .is_some_and(|team| game.team_spawn_area(team).is_some())
     }
 
     fn is_high_nation_density(&self, game: &GameImpl) -> bool {
@@ -606,7 +1027,10 @@ impl NationStructureBehavior {
         has_coastal_tiles: bool,
     ) -> bool {
         let difficulty = Self::difficulty(game);
-        let Some(config) = structure_ratio(difficulty, t) else {
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            return self.levels_due(game, t, city_count, has_coastal_tiles) > 0.0;
+        }
+        let Some(config) = structure_ratio(difficulty, GameMode::FFA, false, t) else {
             return false;
         };
 
@@ -636,8 +1060,46 @@ impl NationStructureBehavior {
         (owned as f64) < target_count
     }
 
+    /// Levels of this structure type the configured ratio to the city count still asks for.
+    fn levels_due(
+        &self,
+        game: &GameImpl,
+        t: UnitType,
+        city_count: f64,
+        has_coastal_tiles: bool,
+    ) -> f64 {
+        let game_config = game.config().game_config();
+        let (difficulty, game_mode) = (game_config.difficulty, game_config.game_mode);
+        let Some(config) = structure_ratio(difficulty, game_mode, true, t) else {
+            return 0.0;
+        };
+        let mut ratio = config.ratio_per_city;
+        // Reduce factory spawning if there are coastal tiles.
+        if t == UnitType::Factory
+            && has_coastal_tiles
+            && !game.config().is_unit_disabled(UnitType::Port)
+        {
+            ratio *= factory_coastal_ratio_multiplier(difficulty);
+        }
+        let owned = game.player(self.player).units_owned(t) as f64;
+        let target_count = if t == UnitType::MissileSilo {
+            // The first missile silo uses a higher ratio so nations start nuking earlier.
+            if owned == 0.0 {
+                ratio = FIRST_MISSILE_SILO_RATIO;
+            }
+            f64::min((city_count * ratio).floor(), MAX_MISSILE_SILOS as f64)
+        } else {
+            (city_count * ratio).floor()
+        };
+        target_count - owned
+    }
+
     fn cost(&self, game: &GameImpl, t: UnitType) -> Gold {
-        game.player(self.player).unit_cost(t, 0)
+        self.cost_extra(game, t, 0)
+    }
+
+    fn cost_extra(&self, game: &GameImpl, t: UnitType, extra_units: i64) -> Gold {
+        game.player(self.player).unit_cost(t, extra_units)
     }
 
     fn maybe_spawn_structure(&mut self, game: &mut GameImpl, t: UnitType) -> bool {
@@ -646,11 +1108,17 @@ impl NationStructureBehavior {
             return false;
         }
 
+        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        // Another SAM would cover nothing new, but a higher level stops more of a salvo.
+        if v2 && t == UnitType::SAMLauncher && self.should_upgrade_sam_instead(game) {
+            let best = self.sam_protecting_most(game);
+            return self.upgrade_structure(game, best);
+        }
+
         // Upgrade instead of building new when the density threshold is exceeded.
         let structures = game.player(self.player).units_of(t);
-        if self.get_total_structure_density(game) > UPGRADE_DENSITY_THRESHOLD
-            && game.config().unit_info(t).upgradable.unwrap_or(false)
-        {
+        let upgradable = game.config().unit_info(t).upgradable.unwrap_or(false);
+        if self.get_total_structure_density(game) > UPGRADE_DENSITY_THRESHOLD && upgradable {
             if self.maybe_upgrade_structure(game, &structures) {
                 return true;
             }
@@ -662,7 +1130,11 @@ impl NationStructureBehavior {
         }
 
         let Some(tile) = self.structure_spawn_tile(game, t) else {
-            return false;
+            // No room for a new one (e.g. a short coastline full of ports): upgrade one instead.
+            return v2
+                && upgradable
+                && Self::difficulty(game) != Difficulty::Easy
+                && self.maybe_upgrade_structure(game, &structures);
         };
         if game.player(self.player).can_build(t, tile, None).is_none() {
             return false;
@@ -679,19 +1151,34 @@ impl NationStructureBehavior {
     fn get_perceived_cost(&self, game: &GameImpl, t: UnitType) -> Gold {
         let real_cost = self.cost(game, t);
 
+        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
         let save_up_target = self.get_save_up_target(game);
-        if save_up_target == 0 || game.player(self.player).gold() >= save_up_target {
+        if save_up_target == 0
+            || game.player(self.player).gold() >= save_up_target
+            || (v2 && !is_save_up_within_reach(game, self.player, save_up_target))
+        {
+            return real_cost;
+        }
+
+        let game_config = game.config().game_config();
+        let (difficulty, game_mode) = (game_config.difficulty, game_config.game_mode);
+        // Like humans, nations do not save up before their first few cities stand.
+        if v2 && self.city_count(game) < cities_before_saving(difficulty) {
             return real_cost;
         }
 
         let owned = game.player(self.player).units_owned(t) as f64;
 
-        let increase_per_owned = if t == UnitType::City {
+        let mut increase_per_owned = if t == UnitType::City {
             CITY_PERCEIVED_COST_INCREASE_PER_OWNED
         } else {
-            structure_ratio(Self::difficulty(game), t)
+            structure_ratio(difficulty, game_mode, v2, t)
                 .map_or(0.1, |c| c.perceived_cost_increase_per_owned)
         };
+        // Income structures pay for themselves, so smarter nations keep building them while saving.
+        if v2 && matches!(t, UnitType::City | UnitType::Port | UnitType::Factory) {
+            increase_per_owned *= income_structure_saving_weight(difficulty);
+        }
 
         // realCost * (1 + increasePerOwned * owned)
         let multiplier = 1.0 + increase_per_owned * owned;
@@ -716,7 +1203,11 @@ impl NationStructureBehavior {
         let hydro_enabled = !config.is_unit_disabled(UnitType::HydrogenBomb);
         let atom_enabled = !config.is_unit_disabled(UnitType::AtomBomb);
 
-        if mirv_enabled {
+        // Not for a MIRV that SAMs would shoot down.
+        if mirv_enabled
+            && (!game.config().rules().has(Change::NationsLikeHumans5899)
+                || self.is_mirv_worth_saving_for_memo(game))
+        {
             return self.cost(game, UnitType::MIRV) + self.cost(game, UnitType::HydrogenBomb);
         }
         if hydro_enabled {
@@ -730,6 +1221,10 @@ impl NationStructureBehavior {
 
     /// Tries to upgrade an existing structure when the density threshold is exceeded.
     fn maybe_upgrade_structure(&mut self, game: &mut GameImpl, structures: &[UnitId]) -> bool {
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            let best = self.find_best_structure_to_upgrade(game, structures);
+            return self.upgrade_structure(game, best);
+        }
         if self.get_total_structure_density(game) <= UPGRADE_DENSITY_THRESHOLD {
             return false;
         }
@@ -737,11 +1232,130 @@ impl NationStructureBehavior {
             return false;
         }
         if let Some(structure) = self.find_best_structure_to_upgrade(game, structures) {
-            self.log
-                .queue(game, self.player, Decision::Upgrade { unit: structure });
+            self.log.queue(
+                game,
+                self.player,
+                Decision::Upgrade {
+                    unit: structure,
+                    amount: 1,
+                },
+            );
             return true;
         }
         false
+    }
+
+    fn upgrade_structure(&mut self, game: &mut GameImpl, structure: Option<UnitId>) -> bool {
+        let Some(structure) = structure else {
+            return false;
+        };
+        // canUpgradeUnit was already checked by the caller and is checked again in UpgradeStructureExecution.
+        let amount = self.upgrade_amount(game, game.unit_any(structure).unit_type());
+        self.log.queue(
+            game,
+            self.player,
+            Decision::Upgrade {
+                unit: structure,
+                amount,
+            },
+        );
+        true
+    }
+
+    /// One level, or as many as the gold beyond the save-up target pays for and the structure ratios ask for.
+    fn upgrade_amount(&self, game: &GameImpl, t: UnitType) -> u32 {
+        let difficulty = Self::difficulty(game);
+        // Cities set the ratios, so only gold limits them.
+        let due = if t == UnitType::City {
+            f64::INFINITY
+        } else {
+            self.levels_due(
+                game,
+                t,
+                self.city_count(game),
+                self.shared_water_components.is_some(),
+            )
+        };
+        let max = f64::min(max_upgrades_at_once(difficulty), due);
+        let mut spare = game.player(self.player).gold() - self.get_save_up_target(game);
+        let mut amount = 0.0;
+        while amount < max {
+            let cost = self.cost_extra(game, t, amount as i64);
+            if cost > spare {
+                break;
+            }
+            spare -= cost;
+            amount += 1.0;
+        }
+        f64::max(1.0, amount) as u32
+    }
+
+    /// Whether to upgrade a SAM instead of building one, because SAMs already cover every structure.
+    fn should_upgrade_sam_instead(&self, game: &GameImpl) -> bool {
+        let chance = sam_upgrade_when_covered_chance(Self::difficulty(game));
+        let sams = game.player(self.player).units_of(UnitType::SAMLauncher);
+        if chance == 0.0 || sams.is_empty() {
+            return false;
+        }
+        let config = game.config();
+        for unit in game
+            .player(self.player)
+            .units_of_types(&SAM_PROTECTED_TYPES)
+        {
+            let unit_tile = game.unit_any(unit).tile;
+            let covered = sams.iter().any(|&sam| {
+                let sam_unit = game.unit_any(sam);
+                let range = config.sam_range(sam_unit.level as f64);
+                game.map.euclidean_dist_squared(unit_tile, sam_unit.tile) as f64 <= range * range
+            });
+            if !covered {
+                return false;
+            }
+        }
+        chance == 100.0 || self.rnd().next_int(0.0, 100.0) < chance
+    }
+
+    /// The upgradable SAM with the most structure levels in range, i.e. the likeliest nuke target.
+    fn sam_protecting_most(&self, game: &GameImpl) -> Option<UnitId> {
+        let config = game.config();
+        let protectable = game
+            .player(self.player)
+            .units_of_types(&SAM_PROTECTED_TYPES);
+        let mut best: Option<UnitId> = None;
+        let mut best_levels = -1.0;
+        for sam in game.player(self.player).units_of(UnitType::SAMLauncher) {
+            if !game.player(self.player).can_upgrade_unit(sam) {
+                continue;
+            }
+            let sam_unit = game.unit_any(sam);
+            let range = config.sam_range(sam_unit.level as f64);
+            let range_squared = range * range;
+            let mut levels = 0.0;
+            for &unit in &protectable {
+                let u = game.unit_any(unit);
+                if game.map.euclidean_dist_squared(u.tile, sam_unit.tile) as f64 <= range_squared {
+                    levels += u.level as f64;
+                }
+            }
+            if levels > best_levels {
+                best = Some(sam);
+                best_levels = levels;
+            }
+        }
+        best
+    }
+
+    /// `isMirvWorthSavingFor`, computed once per tick.
+    fn is_mirv_worth_saving_for_memo(&self, game: &GameImpl) -> bool {
+        let tick = game.ticks();
+        if let Some((t, worth)) = self.mirv_worth_saving_memo.get()
+            && t == tick
+        {
+            return worth;
+        }
+        let worth = is_mirv_worth_saving_for(game, self.player);
+        self.mirv_worth_saving_memo.set(Some((tick, worth)));
+        worth
     }
 
     /// Structure count (levels ignored) per owned tile.
@@ -749,7 +1363,12 @@ impl NationStructureBehavior {
         let player = game.player(self.player);
         let tiles_owned = player.num_tiles_owned();
         if tiles_owned > 0 {
-            player.units_of_types(STRUCTURES).len() as f64 / tiles_owned as f64
+            let types: &[UnitType] = if game.config().rules().has(Change::NationsLikeHumans5899) {
+                &DENSITY_STRUCTURE_TYPES
+            } else {
+                STRUCTURES
+            };
+            player.units_of_types(types).len() as f64 / tiles_owned as f64
         } else {
             0.0
         }

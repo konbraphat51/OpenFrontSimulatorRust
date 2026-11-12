@@ -96,6 +96,32 @@ pub enum Change {
     DoomsdayTeamLevels5030,
     /// PR 5052: rotted territory becomes fallout wasteland.
     DoomsdayRotWasteland5052,
+    /// PR 5907: per-player spawn boost for small trade and rail economies replaces the fleet-size boost.
+    SmallEconomyBoost5907,
+    /// PR 5805 (package split): water graph edges are renumbered by node pair after the build.
+    WaterGraphEdgeSort5805,
+    /// PR 5955 and siblings: `PlayerExecution` judges clusters first and annexes severed land.
+    SeveredLandAnnex5955,
+    /// PR 5919: "stop trading with enemies" (embargo all) skips allies.
+    EmbargoAllSkipsAllies5919,
+    /// PR 6087 (nation AI split): tribes may pick an allied traitor, alliance renewal does not count the renewed alliance.
+    NationAiSplit6087,
+    /// PR 6089: an attack checks that it is still active before refunding a completed retreat.
+    AttackInactiveBeforeRetreat6089,
+    /// PR 6016: a water nuke turns a mini map land tile to water when any of its four tiles is water.
+    WaterNukeMiniTile6016,
+    /// PR 6204 and siblings: the onboarding tutorial mode (nations and tribes only grow into free land).
+    TutorialMode6204,
+    /// PR 6242: the tutorial's scripted silo, warship and collapse, smaller atom bombs.
+    TutorialSilo6242,
+    /// PR 6259 and siblings: friend groups are seated back to back in team assignment.
+    TeamFriendGroups6259,
+    /// PR 5719: a train reconciles a split of the railroad it is on.
+    TrainSplitReconcile5719,
+    /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
+    NationsLikeHumans5899,
+    /// PR 5833: a human may send several emojis per window (nations still one).
+    EmojiBatch5833,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -196,6 +222,53 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C012",
         add: &[Change::NewMapThemes5547],
+        remove: &[],
+    },
+    Edge {
+        class: "C081",
+        add: &[
+            Change::SmallEconomyBoost5907,
+            Change::EmojiBatch5833,
+            Change::NationsLikeHumans5899,
+            Change::WaterGraphEdgeSort5805,
+            Change::TrainSplitReconcile5719,
+            Change::SeveredLandAnnex5955,
+            Change::EmbargoAllSkipsAllies5919,
+        ],
+        remove: &[],
+    },
+    Edge {
+        class: "C082",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C083",
+        add: &[
+            Change::NationAiSplit6087,
+            Change::AttackInactiveBeforeRetreat6089,
+            Change::WaterNukeMiniTile6016,
+        ],
+        remove: &[],
+    },
+    Edge {
+        class: "C084",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C085",
+        add: &[Change::TutorialMode6204],
+        remove: &[],
+    },
+    Edge {
+        class: "C086",
+        add: &[Change::TutorialSilo6242],
+        remove: &[],
+    },
+    Edge {
+        class: "C087",
+        add: &[Change::TeamFriendGroups6259],
         remove: &[],
     },
     Edge {
@@ -595,5 +668,23 @@ mod tests {
         assert!(!rules("2d5baafdd0cc").has(Change::Overtime5062));
         assert!(!rules("e9e10703e818").has(Change::BulkPurchase4640));
         assert!(rules("20c813f06a40").has(Change::BulkPurchase4640));
+    }
+
+    #[test]
+    fn v35_classes_are_ported_up_to_c087() {
+        for n in 81..=87 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        assert!(!is_ported("C088") && !is_ported("C089"));
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c081 = rules("dfd420fd7836");
+        assert!(c081.has(Change::NationsLikeHumans5899) && c081.has(Change::SeveredLandAnnex5955));
+        assert!(!c081.has(Change::NationAiSplit6087));
+        let c083 = rules("a2d20f8e5f32");
+        assert!(c083.has(Change::NationAiSplit6087) && c083.has(Change::NationsLikeHumans5899));
+        assert!(!rules("4e837520e886").has(Change::NationsLikeHumans5899));
+        assert!(rules("7ee96860c717").has(Change::TutorialSilo6242));
+        assert!(!rules("c144d134d150").has(Change::TutorialSilo6242));
+        assert!(rules("80bff198b68f").has(Change::TeamFriendGroups6259));
     }
 }

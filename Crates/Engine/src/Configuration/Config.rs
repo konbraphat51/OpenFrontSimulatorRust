@@ -95,6 +95,8 @@ pub struct GameConfig {
     pub disable_nav_mesh: Option<bool>,
     /// Legacy alliance switch.
     pub disable_alliances: Option<bool>,
+    /// The onboarding tutorial.
+    pub tutorial: Option<bool>,
     /// Water nukes.
     pub water_nukes: Option<bool>,
     /// Random spawn.
@@ -587,7 +589,11 @@ impl Config {
 
     /// Global train spawn throttle for `num_train_units` trains.
     pub fn train_saturation(&self, num_train_units: f64) -> f64 {
-        let boost = 1.0 + 0.5 * self.exp(-num_train_units / 30.0);
+        let boost = if self.rules.has(Change::SmallEconomyBoost5907) {
+            1.0
+        } else {
+            1.0 + 0.5 * self.exp(-num_train_units / 30.0)
+        };
         let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
             560.0
         } else if self.rules.has(Change::TrainSaturation500Pr5462) {
@@ -604,10 +610,25 @@ impl Config {
     /// Odds denominator of a train spawn.
     pub fn train_spawn_rate(&self, num_player_factories: f64, num_train_units: f64) -> f64 {
         let rate = (num_player_factories + 10.0) * 15.0;
+        if self.rules.has(Change::SmallEconomyBoost5907) {
+            let boost = self.small_economy_spawn_boost(num_player_factories);
+            return js_max(
+                1.0,
+                (rate / (self.train_saturation(num_train_units) * boost)).floor(),
+            );
+        }
         if !self.rules.has(Change::TradeTrainSaturation5302) {
             return rate;
         }
         js_max(1.0, (rate / self.train_saturation(num_train_units)).floor())
+    }
+
+    /// Per-unit spawn multiplier for a player's first few ports or factories (counted in levels).
+    pub fn small_economy_spawn_boost(&self, levels: f64) -> f64 {
+        if levels <= 0.0 {
+            return 1.0;
+        }
+        1.0 + (0.5 * crate::Core::Util::within((6.0 - levels) / 5.0, 0.0, 1.0)) / levels
     }
 
     /// Gold of a train delivery.
@@ -654,7 +675,11 @@ impl Config {
 
     /// Global trade ship spawn throttle.
     pub fn trade_ship_saturation(&self, num_trade_ships: f64) -> f64 {
-        let boost = 1.0 + 0.45 * self.exp(-num_trade_ships / 120.0);
+        let boost = if self.rules.has(Change::SmallEconomyBoost5907) {
+            1.0
+        } else {
+            1.0 + 0.45 * self.exp(-num_trade_ships / 120.0)
+        };
         let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
             330.0
         } else {
@@ -671,8 +696,17 @@ impl Config {
         &self,
         trade_ship_spawn_rejections: f64,
         num_trade_ships: f64,
+        player_port_levels: f64,
     ) -> f64 {
         let rejection_modifier = 1.0 / (trade_ship_spawn_rejections + 1.0);
+        if self.rules.has(Change::SmallEconomyBoost5907) {
+            let boost = self.small_economy_spawn_boost(player_port_levels);
+            let base = 100.0 / (boost * boost);
+            return js_max(
+                1.0,
+                ((base * rejection_modifier) / self.trade_ship_saturation(num_trade_ships)).floor(),
+            );
+        }
         if !self.rules.has(Change::TradeTrainSaturation5302) {
             let decay_rate = std::f64::consts::LN_2 / 50.0;
             let base_spawn_rate = 1.0 - self.sigmoid(num_trade_ships, decay_rate, 400.0);
@@ -870,6 +904,14 @@ impl Config {
     /// Emoji display duration.
     pub fn emoji_message_duration(&self) -> Tick {
         5 * 10
+    }
+    /// Window `emoji_message_limit` counts over.
+    pub fn emoji_message_window(&self) -> Tick {
+        5 * 10
+    }
+    /// Emojis a human may send one recipient per window.
+    pub fn emoji_message_limit(&self) -> usize {
+        5
     }
     /// Emoji cooldown.
     pub fn emoji_message_cooldown(&self) -> Tick {
@@ -1218,11 +1260,20 @@ impl Config {
                 Difficulty::Impossible => 31_250.0,
             };
         }
+        // The onboarding tutorial's player starts about half full, where troops grow fastest.
+        if self.rules.has(Change::TutorialSilo6242) && self.game_config.tutorial.unwrap_or(false) {
+            return 60_000.0;
+        }
         if self.has_infinite_troops_for(is_lobby_creator) {
             1_000_000.0
         } else {
             25_000.0
         }
+    }
+
+    /// True in the onboarding tutorial.
+    pub fn tutorial(&self) -> bool {
+        self.game_config.tutorial.unwrap_or(false)
     }
 
     /// Troop cap of a player.
@@ -1235,6 +1286,14 @@ impl Config {
             2.0 * (self.pow(p.num_tiles_owned, 0.6) * 1000.0 + 50000.0)
                 + p.city_level_sum * self.city_troop_increase()
         };
+
+        // The tutorial's nations and tribe never spend troops on attacks.
+        if self.rules.has(Change::TutorialMode6204)
+            && self.tutorial()
+            && p.player_type != PlayerType::Human
+        {
+            return max_troops * 0.1;
+        }
 
         if p.player_type == PlayerType::Bot {
             return max_troops / 3.0;
@@ -1288,10 +1347,20 @@ impl Config {
                 inner: 12.0,
                 outer: 18.0,
             },
-            UnitType::AtomBomb => NukeMagnitude {
-                inner: 12.0,
-                outer: 30.0,
-            },
+            UnitType::AtomBomb => {
+                // The tutorial's nukes hurt without wiping out a new player's small territory.
+                if self.rules.has(Change::TutorialSilo6242) && self.tutorial() {
+                    NukeMagnitude {
+                        inner: 8.0,
+                        outer: 16.0,
+                    }
+                } else {
+                    NukeMagnitude {
+                        inner: 12.0,
+                        outer: 30.0,
+                    }
+                }
+            }
             UnitType::HydrogenBomb => NukeMagnitude {
                 inner: 80.0,
                 outer: 100.0,
@@ -1515,6 +1584,7 @@ mod tests {
             instant_build: j["instantBuild"].as_bool().unwrap(),
             disable_nav_mesh: opt_bool("disableNavMesh"),
             disable_alliances: opt_bool("disableAlliances"),
+            tutorial: opt_bool("tutorial"),
             water_nukes: opt_bool("waterNukes"),
             random_spawn: j["randomSpawn"].as_bool().unwrap(),
             max_players: None,
@@ -1877,9 +1947,11 @@ mod tests {
                 "trainSaturation" => check_f(c.train_saturation(fl(&a[0])), want, &ctx),
                 "tradeShipSaturation" => check_f(c.trade_ship_saturation(fl(&a[0])), want, &ctx),
                 "trainSpawnRate" => check_f(c.train_spawn_rate(fl(&a[0]), fl(&a[1])), want, &ctx),
-                "tradeShipSpawnRate" => {
-                    check_f(c.trade_ship_spawn_rate(fl(&a[0]), fl(&a[1])), want, &ctx)
-                }
+                "tradeShipSpawnRate" => check_f(
+                    c.trade_ship_spawn_rate(fl(&a[0]), fl(&a[1]), 0.0),
+                    want,
+                    &ctx,
+                ),
                 "percentageTilesOwnedToWin" => {
                     check_f(c.percentage_tiles_owned_to_win(fl(&a[0])), want, &ctx)
                 }

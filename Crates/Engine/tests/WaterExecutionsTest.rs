@@ -89,6 +89,7 @@ fn make_game() -> (GameImpl, SmallId, SmallId) {
         instant_build: false,
         disable_nav_mesh: None,
         disable_alliances: None,
+        tutorial: None,
         water_nukes: None,
         random_spawn: false,
         max_players: None,

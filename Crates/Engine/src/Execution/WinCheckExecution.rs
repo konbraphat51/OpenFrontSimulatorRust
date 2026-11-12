@@ -2,6 +2,7 @@
 //! Port of src/core/execution/WinCheckExecution.ts: declares the winner of FFA and team games.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{GameMode, PlayerType, RankedType, Team, Tick};
 use crate::Game::GameImpl::{GameImpl, Winner};
@@ -23,12 +24,20 @@ impl WinCheckExecution {
         }
     }
 
+    /// True for the matchmade team modes (2v2 and clan wars).
+    fn is_ranked_team_game(ranked_type: Option<RankedType>) -> bool {
+        matches!(
+            ranked_type,
+            Some(RankedType::TwoVTwo) | Some(RankedType::ClanWars)
+        )
+    }
+
     fn check_ranked_2v2_cancelled(&mut self, game: &mut GameImpl) -> bool {
         if self.checked_ranked_spawns {
             return false;
         }
         self.checked_ranked_spawns = true;
-        if game.config().game_config().ranked_type != Some(RankedType::TwoVTwo) {
+        if !Self::is_ranked_team_game(game.config().game_config().ranked_type) {
             return false;
         }
         let spawned = game
@@ -59,7 +68,22 @@ impl WinCheckExecution {
         if sorted.is_empty() {
             return;
         }
-        if game.config().game_config().ranked_type == Some(RankedType::OneVOne) {
+        // The tutorial is won by conquering its nations and tribe, and nothing else ends it.
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            if sorted
+                .iter()
+                .all(|&p| game.player(p).player_type() == PlayerType::Human)
+            {
+                game.set_winner(Some(Winner::Player(sorted[0])));
+                self.active = false;
+            }
+            return;
+        }
+        let ranked_type = game.config().game_config().ranked_type;
+        if matches!(
+            ranked_type,
+            Some(RankedType::OneVOne) | Some(RankedType::FreeForAll)
+        ) {
             let humans: Vec<_> = sorted
                 .iter()
                 .copied()
@@ -74,7 +98,19 @@ impl WinCheckExecution {
                 return;
             }
         }
-        let max = sorted[0];
+        // A bot cannot win ranked FFA.
+        let max = if ranked_type == Some(RankedType::FreeForAll) {
+            match sorted
+                .iter()
+                .copied()
+                .find(|&p| game.player(p).player_type() == PlayerType::Human)
+            {
+                Some(p) => p,
+                None => return,
+            }
+        } else {
+            sorted[0]
+        };
         if self.has_won(game, game.player(max).num_tiles_owned() as f64) {
             game.set_winner(Some(Winner::Player(max)));
             self.active = false;
@@ -105,7 +141,7 @@ impl WinCheckExecution {
     }
 
     fn check_winner_team(&mut self, game: &mut GameImpl) {
-        if game.config().game_config().ranked_type == Some(RankedType::TwoVTwo) {
+        if Self::is_ranked_team_game(game.config().game_config().ranked_type) {
             let mut teams_remaining: Vec<Team> = Vec::new();
             for p in game.players() {
                 let player = game.player(p);

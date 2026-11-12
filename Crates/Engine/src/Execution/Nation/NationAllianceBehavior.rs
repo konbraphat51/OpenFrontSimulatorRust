@@ -8,7 +8,7 @@ use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecuti
 use crate::Execution::Nation::NationEmojiBehavior::{
     NationEmojiBehavior, emoji_confused, emoji_handshake, emoji_love, emoji_scared_of_threat,
 };
-use crate::Execution::Nation::NationUtils::find_juiciest_target;
+use crate::Execution::Nation::NationUtils::{find_juiciest_target, find_runaway_leader};
 use crate::Execution::Nation::{Shared, SharedRandom};
 use crate::Game::Game::{Difficulty, EmojiRecipient, GameMode, PlayerType, Relation, SmallId};
 use crate::Game::GameImpl::GameImpl;
@@ -143,6 +143,12 @@ impl NationAllianceBehavior {
         if self.has_too_many_alliances(game, other) {
             return false;
         }
+        // Do not help a runaway leader grow even further (Medium and up).
+        if game.config().rules().has(Change::NationsLikeHumans5899)
+            && find_runaway_leader(game) == Some(other)
+        {
+            return false;
+        }
         // Check whether the other player is a threat before looking at the relation.
         if self.is_alliance_partner_threat(game, other) {
             if !is_response && self.chance(6.0) {
@@ -187,7 +193,13 @@ impl NationAllianceBehavior {
             .into_iter()
             .filter(|&p| game.player(p).player_type() != PlayerType::Bot)
             .count() as f64;
-        let other_alliances = game.player(other).alliances().len() as f64;
+        let mut other_alliances = game.player(other).alliances().len() as f64;
+        // An alliance with us is the one being renewed, not another one.
+        if game.config().rules().has(Change::NationAiSplit6087)
+            && game.player(other).is_allied_with(self.player)
+        {
+            other_alliances -= 1.0;
+        }
         if difficulty == Difficulty::Hard {
             other_alliances >= total_players * 0.5
         } else {

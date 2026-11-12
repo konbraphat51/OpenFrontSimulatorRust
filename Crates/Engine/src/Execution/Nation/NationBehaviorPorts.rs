@@ -49,6 +49,10 @@ pub trait AttackPort {
     fn should_attack(&mut self, game: &mut GameImpl, other: SmallId) -> bool;
     /// `findIncomingAttackPlayer()`.
     fn find_incoming_attack_player(&mut self, game: &mut GameImpl) -> Option<SmallId>;
+    /// `strikeTroops(target)`.
+    fn strike_troops(&self, game: &GameImpl, target: SmallId) -> f64;
+    /// `strike(target)`.
+    fn strike(&mut self, game: &mut GameImpl, target: SmallId) -> bool;
 }
 
 impl AttackPort for AiAttackBehavior {
@@ -57,6 +61,12 @@ impl AttackPort for AiAttackBehavior {
     }
     fn find_incoming_attack_player(&mut self, game: &mut GameImpl) -> Option<SmallId> {
         AiAttackBehavior::find_incoming_attack_player(self, game)
+    }
+    fn strike_troops(&self, game: &GameImpl, target: SmallId) -> f64 {
+        AiAttackBehavior::strike_troops(self, game, target)
+    }
+    fn strike(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
+        AiAttackBehavior::strike(self, game, target)
     }
 }
 
@@ -74,6 +84,8 @@ pub enum Decision {
     Upgrade {
         /// Unit to upgrade.
         unit: UnitId,
+        /// Levels to buy.
+        amount: u32,
     },
     /// `new NukeExecution(type, player, tile, null, -1, waitTicks)`.
     Nuke {
@@ -119,8 +131,8 @@ impl DecisionLog {
             Decision::Construct { unit_type, tile } => Box::new(ConstructionExecution::new(
                 player, unit_type, tile, None, None,
             )),
-            Decision::Upgrade { unit } => {
-                Box::new(UpgradeStructureExecution::new(player, unit, Some(1)))
+            Decision::Upgrade { unit, amount } => {
+                Box::new(UpgradeStructureExecution::new(player, unit, Some(amount)))
             }
             Decision::Nuke {
                 nuke_type,

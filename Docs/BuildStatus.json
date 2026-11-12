@@ -23,7 +23,16 @@
     "C020": "ported; 15/15 sampled records pass",
     "C021": "ported; 16/16 sampled records pass (Doomsday Clock variants not ported)",
     "C022": "ported; 2/3 sampled records pass (xQ449cAw fails in the upstream engine too)",
-    "C080": "not ported; its one sampled record carries no hashes, flags not derived"
+    "C080": "not ported; its one sampled record carries no hashes, flags not derived",
+    "C081": "ported; 12/12 sampled records pass (Medium, Easy; Hard and Impossible untested on long records)",
+    "C082": "ported; 32/32 sampled records pass",
+    "C083": "ported; 20/20 sampled records pass (Medium and Easy only)",
+    "C084": "ported; 16/16 sampled records pass",
+    "C085": "ported; 8/8 sampled records pass (tutorial records last 33 to 44 turns)",
+    "C086": "ported; 24/24 sampled records pass (tutorial records last 33 to 44 turns)",
+    "C087": "ported; 36/36 sampled records pass",
+    "C088": "not ported: PlayerExecution rewrite, RailNetworkImpl, MIRV and nuke changes (first mismatch tick 210)",
+    "C089": "not ported: PlayerExecution rewrite, RailNetworkImpl, MIRV and nuke changes (first mismatch tick 210)"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -49,6 +58,15 @@
     "C020": "移植済み; 15/15 件のサンプルが一致",
     "C021": "移植済み; 16/16 件のサンプルが一致 (Doomsday Clock の旧版は未移植)",
     "C022": "移植済み; 2/3 件のサンプルが一致 (xQ449cAw はアップストリームのエンジンでも一致しない)",
-    "C080": "未移植; 唯一のサンプルにハッシュがなく、フラグは未導出"
+    "C080": "未移植; 唯一のサンプルにハッシュがなく、フラグは未導出",
+    "C081": "移植済み; 12/12 件のサンプルが一致 (Medium と Easy。Hard と Impossible は長いレコードで未検証)",
+    "C082": "移植済み; 32/32 件のサンプルが一致",
+    "C083": "移植済み; 20/20 件のサンプルが一致 (Medium と Easy のみ)",
+    "C084": "移植済み; 16/16 件のサンプルが一致",
+    "C085": "移植済み; 8/8 件のサンプルが一致 (チュートリアルのレコードは 33〜44 ターン)",
+    "C086": "移植済み; 24/24 件のサンプルが一致 (チュートリアルのレコードは 33〜44 ターン)",
+    "C087": "移植済み; 36/36 件のサンプルが一致",
+    "C088": "未移植: PlayerExecution の書き直し、RailNetworkImpl、MIRV と核の変更 (最初の不一致は tick 210)",
+    "C089": "未移植: PlayerExecution の書き直し、RailNetworkImpl、MIRV と核の変更 (最初の不一致は tick 210)"
   }
 }

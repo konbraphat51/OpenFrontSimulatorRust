@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::SpawnExecution::SpawnExecution;
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -12,6 +13,9 @@ use crate::Execution::Nation::NationMIRVBehavior::NationMIRVBehavior;
 use crate::Execution::Nation::NationNukeBehavior::NationNukeBehavior;
 use crate::Execution::Nation::NationStructureBehavior::NationStructureBehavior;
 use crate::Execution::Nation::NationWarshipBehavior::NationWarshipBehavior;
+use crate::Execution::Nation::TutorialNation::{
+    tutorial_collapse, tutorial_silo, tutorial_warship,
+};
 use crate::Execution::Nation::{Shared, SharedRandom};
 use crate::Execution::Utils::AiAttackBehavior::AiAttackBehavior;
 use crate::Game::Game::{
@@ -167,7 +171,11 @@ impl NationExecution {
             .collect();
         for other in others {
             let embargo_malus = -20.0;
-            let has = game.player(other).has_embargo_against(player);
+            let has = if game.config().rules().has(Change::NationsLikeHumans5899) {
+                game.player(other).has_manual_embargo_against(player)
+            } else {
+                game.player(other).has_embargo_against(player)
+            };
             let applied = self.embargo_malus_applied.contains(&other);
             if has && !applied {
                 game.player_mut(player)
@@ -250,6 +258,7 @@ impl Execution for NationExecution {
         if let (Some(b), Some(player)) = (self.behaviors.as_mut(), self.player)
             && game.player(player).is_alive()
             && game.config().game_config().difficulty != Difficulty::Easy
+            && !(game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial())
             && game.player(player).units_constructed(UnitType::Port) != 0
             && !game.config().is_unit_disabled(UnitType::Warship)
         {
@@ -315,6 +324,32 @@ impl Execution for NationExecution {
             return;
         }
 
+        // The tutorial's nations only grow into free land (and, from v0.35.9, script a silo and a warship).
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            let attack = self.behaviors.as_ref().expect("initialized").attack.clone();
+            let attack_tick = ticks % self.attack_rate == self.attack_tick;
+            if game.config().rules().has(Change::TutorialSilo6242) {
+                tutorial_collapse(game, player);
+                if !game.player(player).is_alive() {
+                    return;
+                }
+                if attack_tick {
+                    attack.borrow_mut().expand_into_free_land(game);
+                }
+                tutorial_silo(game, player, attack_tick);
+                tutorial_warship(game, player, ticks);
+            } else if attack_tick {
+                attack.borrow_mut().expand_into_free_land(game);
+            }
+            return;
+        }
+        let attack_now = self.behaviors.as_ref().expect("initialized").attack.clone();
+        attack_now.borrow_mut().follow_up_landings(game);
+        self.behaviors
+            .as_mut()
+            .expect("initialized")
+            .nuke
+            .follow_up_strikes(game);
         if ticks % self.attack_rate != self.attack_tick {
             // Call handleStructures at 1/3 and 2/3 of the interval between attack ticks.
             if game.player(player).is_alive() {
@@ -352,8 +387,11 @@ impl Execution for NationExecution {
         b.structure.handle_structures(game);
         b.warship.maybe_spawn_warship(game);
         self.handle_embargoes_to_hostile_nations(game);
-        attack.borrow_mut().maybe_attack(game);
+        let blocker = attack.borrow_mut().maybe_attack(game);
         let b = self.behaviors.as_mut().expect("initialized");
+        if let Some(blocker) = blocker {
+            b.warship.clear_sea_lane(game, blocker);
+        }
         b.warship.counter_warship_infestation(game);
         b.nuke.maybe_send_nuke(game);
     }

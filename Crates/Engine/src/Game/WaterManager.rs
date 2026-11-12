@@ -69,6 +69,9 @@ impl MagnitudeScratch {
 pub struct WaterManager {
     mini_map: GameMapImpl,
     disable_nav_mesh: bool,
+    sort_edges: bool,
+    /// v0.35.3 on: a water nuke converts a mini tile when any of its four tiles is water.
+    pub mini_tile_any_water: bool,
     mini_water_graph: Option<Rc<AbstractGraph>>,
     // Present exactly when the nav mesh is enabled (upstream `_miniWaterHPA`)
     // Chains keep search scratch only; RefCell lets `&GameImpl` queries (canBuild) run them
@@ -89,7 +92,18 @@ pub struct WaterManager {
 impl WaterManager {
     /// Creates the manager; with the nav mesh enabled it builds the initial graph and HPA* finder.
     pub fn new(mini_map: GameMapImpl, disable_nav_mesh: bool) -> Self {
+        Self::with_sorted_edges(mini_map, disable_nav_mesh, false)
+    }
+
+    /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on).
+    pub fn with_sorted_edges(
+        mini_map: GameMapImpl,
+        disable_nav_mesh: bool,
+        sort_edges: bool,
+    ) -> Self {
         let mut manager = Self {
+            sort_edges,
+            mini_tile_any_water: false,
             mini_map,
             disable_nav_mesh,
             mini_water_graph: None,
@@ -121,6 +135,7 @@ impl WaterManager {
                     Some(Rc::clone(&cc)),
                     &mut bfs,
                 )
+                .with_sorted_edges(sort_edges)
                 .build(),
             );
             let hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
@@ -198,7 +213,8 @@ impl WaterManager {
                     if dirty.is_empty() { None } else { Some(&dirty) },
                     self.mini_water_cc.clone(),
                     self.builder_bfs.as_mut().expect("nav mesh enabled"),
-                );
+                )
+                .with_sorted_edges(self.sort_edges);
                 Rc::new(builder.build())
             };
             self.dirty_mini_tiles.clear();
@@ -529,7 +545,12 @@ impl WaterManager {
                     }
                 }
             }
-            if water_count >= 3.min(total_count) {
+            let convert = if self.mini_tile_any_water {
+                water_count > 0
+            } else {
+                water_count >= 3.min(total_count)
+            };
+            if convert {
                 self.mini_map.set_water(mini_tile);
                 converted_mini_tiles.insert(mini_tile);
             }

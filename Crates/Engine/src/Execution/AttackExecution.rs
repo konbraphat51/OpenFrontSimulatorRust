@@ -11,7 +11,9 @@ use crate::Configuration::Config::{AttackLogicAttacker, AttackLogicDefender, Att
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Execution::Utils::FlatBinaryHeap::FlatBinaryHeap;
-use crate::Game::Game::{AttackId, Difficulty, PlayerType, SmallId, TerrainType, Tick, UnitType};
+use crate::Game::Game::{
+    AttackId, Difficulty, PlayerType, Relation, SmallId, TerrainType, Tick, UnitType,
+};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 
@@ -336,7 +338,7 @@ impl Execution for AttackExecution {
         if game
             .config()
             .rules()
-            .has(crate::Builds::Rules::Change::AttackRetreatNoTargets5823)
+            .has(Change::AttackRetreatNoTargets5823)
             && self.to_conquer.size() == 0
         {
             self.retreat(game, 0.0);
@@ -344,6 +346,14 @@ impl Execution for AttackExecution {
         }
 
         if self.target != 0 {
+            let difficulty = game.config().game_config().difficulty;
+            // Hitting back at whoever just attacked us does not anger them, except on Easy.
+            if game.config().rules().has(Change::NationsLikeHumans5899)
+                && difficulty != Difficulty::Easy
+                && game.player(self.owner).relation(self.target) == Relation::Hostile
+            {
+                return;
+            }
             let relation_change = match game.config().game_config().difficulty {
                 Difficulty::Easy => -60.0,
                 Difficulty::Medium => -70.0,
@@ -359,6 +369,18 @@ impl Execution for AttackExecution {
         let attack = self.attack_id();
         let mut troop_count = game.attack(attack).troops();
         let target_is_player = self.target != 0;
+
+        // Must come before the retreat refund: another attack's init can absorb or cancel this one
+        // on the tick its retreat completes.
+        if game
+            .config()
+            .rules()
+            .has(Change::AttackInactiveBeforeRetreat6089)
+            && !game.attack(attack).is_active()
+        {
+            self.active = false;
+            return;
+        }
 
         if game.attack(attack).retreated() {
             if target_is_player {

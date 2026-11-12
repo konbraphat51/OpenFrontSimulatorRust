@@ -16,7 +16,7 @@ English version: [Plan.md](Plan.md)
 | P3 | ユニット: 建設、構造物、港と交易船、輸送船、軍艦、鉄道と列車、核、MIRV、SAM、砲弾、水核、経路探索 | ネーションのないベースラインレコードがすべて `ofsim verify` を通る | |
 | P4 | ネーション AI (`NationExecution` と各 behaviour、`NationCreation`) | ベースラインレコードがすべて通る | `NationExecution`、emoji・alliance・warship の behaviour、`NationUtils` は移植済み (不活性トレース一致、乱数消費も一致)。structure・nuke・MIRV の behaviour (N2) と `AiAttackBehavior` (A2) は未了 |
 | P5 | `ofsim replay` のスナップショット、`batch`、プロファイリング | サンプルゲームでアップストリームのダンパーと出力が同一。スループットを計測済み | 完了 (3 レコードでバイト単位一致、[Output.ja.md](Output.ja.md) 参照。バッチは並列・再開可能。スループットは下表) |
-| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | 進行中: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`) と世代 D のクラス C001 から C012 は完了 (下記)。C013 以降と C081 以降 (モノレポ構成) は未着手 |
+| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | 進行中: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`) と世代 D のクラス C001 から C012 は完了 (下記)。C013 以降と C088 以降は未着手。C081 から C087 (モノレポ構成) は完了 |
 
 ## スループット (P5)
 
@@ -57,8 +57,16 @@ English version: [Plan.md](Plan.md)
 | C020 | v0.33.2、v0.33.3 | 一括購入の amount なし (PR 4640) | 15/15 |
 | C021 | v0.33.1 | 領土腐食のない旧 Doomsday Clock: 未移植 (サンプルに使用例なし) | 16/16 |
 | C022 | v0.33.0 | なし | 2/3 (xQ449cAw はアップストリームのエンジンでも一致しない) |
+| C081 | v0.35.0 | PR 5899 のネーションの全面改修 (`AiAttackBehavior` の報復、王冠、舟ルート、橋頭堡、ボット併合。核の追撃と MIRV 漏れ推定。構造物。軍艦による航路掃討。絵文字と同盟の調整。攻撃の関係値規則)、PR 5907 プレイヤー単位の貿易・列車スポーン加速、PR 5833 絵文字ウィンドウ、PR 5805 水グラフの辺をノード対で整列、PR 5719 列車の分割線路再調整、PR 5955 `PlayerExecution` の降灰分断地併合、PR 5919 全禁輸が同盟国を除外、ランク FFA とクラン戦の勝利判定 | 12 / 12 (Medium と Easy の長いレコード。Hard と Impossible の経路は未検証) |
+| C082 | v0.35.2 | なし (マップのマニフェストのみ) | 32 / 32 |
+| C083 | v0.35.3, v0.35.4 | PR 6087 (部族が同盟中の裏切り者を選ぶ、同盟更新の数え方)、PR 6089 攻撃撤退の順序、PR 6016 水核のミニタイル。ネーション AI のクラス分割は挙動を変えない | 20 / 20 |
+| C084 | v0.35.5, v0.35.6 | なし (マップのマニフェストのみ) | 16 / 16 |
+| C085 | v0.35.7 | チュートリアルモード (`tutorial` 設定: ネーションと部族は空き地にのみ拡大、勝利判定) | 8 / 8 (チュートリアルのレコードは 33〜44 ターン) |
+| C086 | v0.35.9 | チュートリアルのサイロ、崩壊、軍艦 (`TutorialNation.rs`)、初期兵力 60,000、小型の原爆 | 24 / 24 |
+| C087 | v0.35.11, v0.35.12, v0.35.14 | PR 6259 チーム割り当てで友人グループを連続して着席 (`NationCount` の選択は挙動を変えない) | 36 / 36 |
+| C088 | v0.36.0 | 未移植: `PlayerExecution` の書き直し (ピンチパス、領土面積による順位付け)、`RailNetworkImpl`、MIRV と核の変更 | tick 210 で不一致 |
+| C089 | v0.36.1 | 未移植 (C088 が前提) | |
 
 世代 F の数学: PR 5191 より前のビルドはホストの `Math.exp/log/pow/atan2` を呼ぶ。`Compat/HostMath.rs` は `exp`、`log`、`atan2` に V8 の fdlibm 移植を使い、`Math.pow` は V8 の fdlibm 移植とプラットフォームの `powf` から `Config` が選ぶ (`OFSIM_POW=fdlibm|platform`、既定はプラットフォーム)。C013 から C022 のサンプルは pow がどちらでも全て一致するため、レコードでは区別できない。既定は [BuildPlan.ja.md](BuildPlan.ja.md) の V8 13.3 以降の `std::pow` の調査に従う。ネーション (Hard、Impossible)、大きな初期ゴールド、水核、Duos/Quads チームを有効にするよう書き換えたレコードをアップストリームのエンジン (Node 22、fdlibm pow) と照合した差分実行 (1,500 から 3,700 tick を約 25 回) は tick 単位で完全一致。ただし C013 での初期ゴールド 9 億と水核のストレス実行は tick 2224 で分岐する (水の変換が繰り返された後の交易船 1 隻の経路の違い)。`OFSIM_TOGGLE=<Change>,...` は全ルールセットの指定した変更を反転し、二分探索に使う。C080 (C013 とベースラインの間のテストリリース) は未移植: 唯一のサンプルにハッシュがない。C021 の旧 Doomsday Clock (領土腐食なし) も未移植。
 
-注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 以降 (v0.35.x、ファイルが `packages/engine/src/` に移動): リファレンストレーサーと `GenEngineData` はこれらのビルドで動作する。エンジンの変更は未移植 (C081 は短いレコードのみ一致。ネーション AI の書き換えにより難易度 Medium のゲームが tick 210〜970 で分岐し、ランク戦 FFA のレコードは読み込めない)。
-
+注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 から C087 (v0.35.x、ファイルは `packages/*/src/`) はネーション改修のルール集合 `NationsLikeHumans5899` を共有し、`AiAttackBehavior.rs`、`NationNukeBehavior.rs`、`NationStructureBehavior.rs`、`NationMIRVBehavior.rs`、`NationWarshipBehavior.rs`、`NationEmojiBehavior.rs`、`NationAllianceBehavior.rs` の中で分岐する (別ファイルの派生ではなくその場で)。新しいモジュール: `Nation/BotAnnexation.rs`、`Execution/SeveredLand.rs` (降灰で分断された土地の併合)、`Nation/TutorialNation.rs`。デバッグ補助: `Reference/RngLog.ts` と `OFSIM_RNG_LOG`、`OFSIM_RNG_STACK_AT` (乱数の呼び出しごとのログと、ある呼び出しのスタック)、`Reference/ExecLog.ts` (アップストリームが tick ごとに追加した実行)、`ofsim trace` の `OFSIM_UNIT_LOG=<smallId>`。C088 には新しい `PlayerExecution` のアルゴリズム (ピンチパス、`floodTerritoryAreas`、`executeSecondaryPass`、書き直された `removeCluster`)、書き直された `RailNetworkImpl`、MIRV、核、港、SAM の実行の変更が必要で、公開ゲームのレコードは tick 210 で最初に食い違う。
