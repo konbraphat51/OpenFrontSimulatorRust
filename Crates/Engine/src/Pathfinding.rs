@@ -11,3 +11,6 @@ pub mod PathGameView;
 pub mod Spatial;
 pub mod Transformers;
 pub mod Types;
+
+#[cfg(test)]
+mod GoldenTest;
