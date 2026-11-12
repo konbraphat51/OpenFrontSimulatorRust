@@ -15,5 +15,17 @@ The first milestone is hash-exact replay of the baseline build v0.34.22 (`4e8375
 | P2 | Game core: `GameImpl`, `PlayerImpl`, `UnitImpl`, attacks, alliances, `Executor`, `GameRunner`, spawn, tribes, attacks, troop growth, win check | hashes match on baseline records through the end of the spawn phase, then through the first unit build | core landed (game state, spawn, player upkeep, win check, `ofsim verify`/`trace`); attacks, alliances, tribes and nations are `NotPorted`, so records match through the spawn phase of games without nations |
 | P3 | Units: construction, structures, ports and trade ships, transport ships, warships, rails and trains, nukes, MIRV, SAM, shells, water nukes, pathfinding | every baseline record without nations passes `ofsim verify` | |
 | P4 | Nation AI (`NationExecution` and behaviours, `NationCreation`) | every baseline record passes | `NationExecution`, emoji, alliance, warship behaviours and `NationUtils` landed (inert traces identical, RNG draws identical); structure, nuke and MIRV behaviours (N2) and `AiAttackBehavior` (A2) pending |
-| P5 | `ofsim replay` snapshots, `batch`, profiling | output identical to the upstream dumper on sample games; throughput measured | |
+| P5 | `ofsim replay` snapshots, `batch`, profiling | output identical to the upstream dumper on sample games; throughput measured | done (byte-identical on 3 records, see [Output.md](Output.md); batch resumable and parallel; throughput in the table below) |
 | P6 | Build rules for every build from 2025-10-01 (v0.25.21) to the newest, newest first along our data, then backwards | each build passes on sampled records | |
+
+## Throughput (P5)
+
+Single thread, release build, `ofsim verify` on a 4-core machine shared with other jobs (load about 3); upstream is `ReplayDumper.ts` on the baseline worktree (Node 22, `--every 1000000`) on the same machine. Hot spots now are naval path finding (hierarchical A*), territory clusters (`PlayerExecution`) and rail clusters; they are the ported algorithms themselves. The 10x target was not reached: about 3.3x to 3.7x.
+
+| Record | Ticks | Rust s | Rust ticks/s | Upstream ticks/s | Speed-up |
+| --- | --- | --- | --- | --- | --- |
+| cQtf3wZ8VA | 8,503 | 34.1 | 250 | 75 (114 s) | 3.3x |
+| caYteuCaea | 29,013 | 35.4 | 820 | 226 (128 s) | 3.6x |
+| Q94sNurv | 58,511 | 34.6 | 1,690 | 450 (130 s, 100-tick snapshots) | 3.8x |
+
+Speed changes to engine code (behaviour-preserving, 40 of 41 baseline records still pass, `c6dYiNx281` still stops at 3810): the rail A* reuses its stamped buffers between queries instead of allocating 10 MB per query; `RailNetwork::find_station` uses a per-unit index.

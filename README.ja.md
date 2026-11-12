@@ -32,7 +32,15 @@ cargo run --release --bin ofsim -- verify --record game.json.gz --maps <OpenFron
 
 # 再生して 100 tick ごとにスナップショットを書く
 cargo run --release --bin ofsim -- replay --record game.json.gz --maps <OpenFrontIO>/resources/maps --out Out/game --every 100
+
+# 多数のレコードを並列に処理 (レコードごとに JSON 1 行、再開可能。--verify-only は何も書かない)
+cargo run --release --bin ofsim -- batch --records Records/ --maps <OpenFrontIO>/resources/maps --out Out --every 100 --jobs 4
+
+# tick ごとの NDJSON トレース (形式は Reference/README.md)
+cargo run --release --bin ofsim -- trace --record game.json.gz --maps <OpenFrontIO>/resources/maps --out trace.ndjson
 ```
+
+出力ファイルとアップストリームのダンパーとの比較: [Docs/Output.ja.md](Docs/Output.ja.md)。2 つの出力は `python3 Tools/CompareReplayOutput.py <dir A> <dir B>` で比較できます。
 
 ## 開発
 
