@@ -124,7 +124,12 @@ impl WinCheckExecution {
         {
             return true;
         }
-        if time_elapsed >= HARD_TIME_LIMIT_SECONDS {
+        if time_elapsed >= HARD_TIME_LIMIT_SECONDS
+            && game
+                .config()
+                .rules()
+                .has(crate::Builds::Rules::Change::HardTimeLimit170Min30)
+        {
             return true;
         }
         let tiles_without_fallout = game.num_land_tiles() - game.num_tiles_with_fallout();

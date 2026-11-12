@@ -218,6 +218,92 @@ pub enum Change {
     AbstractAStarMinHeap4149,
     /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
     NeighborOrderNswe4495,
+    /// v0.31: PseudoRandom.nextInt floors its bounds (older: it does not).
+    NextIntFloorsArgs31,
+    /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
+    SamCooldown90V31,
+    /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
+    SamCooldown120V30,
+    /// v0.31: missile silo cooldown 90 ticks (older 75).
+    SiloCooldown90V31,
+    /// v0.31: port construction takes 50 ticks (older 20).
+    PortBuild50V31,
+    /// v0.31: attacks on bots lose 30 percent magnitude (older 20 percent).
+    BotAttackMalus07V31,
+    /// v0.31: attacker troop loss blends 0.6 current and 0.4 alternative (older 0.7 and 0.3).
+    AttackerLoss6040V31,
+    /// v0.30.0-beta5: attacker troop loss blends 0.7 and 0.3 (older 0.5 and 0.5).
+    AttackerLoss7030V30,
+    /// v0.31: bots grow troops at half rate (older 0.6).
+    BotTroopGrowth05V31,
+    /// v0.31: atom and hydrogen bombs fly at speed 8 (older 6).
+    NukeSpeed8V31,
+    /// v0.31: conquering a human takes half its gold (older: all of it).
+    ConquerGoldHalfHuman31,
+    /// v0.31: cities under construction add no troop cap.
+    CityTroopsFinishedOnly31,
+    /// v0.31: an attack skips conquered tiles that are not land.
+    AttackSkipsWater31,
+    /// v0.31: a troop donation with nothing to give ends at init.
+    DonateTroopZeroInactive31,
+    /// v0.31: nation attack choice reports whether it attacked, tries the next option, scans lakes and nearby players (older: first match ends the turn, ocean shores only).
+    AiAttackRework31,
+    /// v0.31: an alliance cancels nukes whose blast would hit the new ally (older: only nukes aimed at its tiles).
+    AllianceNukeCancelBlast31,
+    /// v0.31: trade routes, captured trade ships, warship and port spawns respect water components and lakes (older: any port, ocean shores).
+    TradeWaterComponents31,
+    /// v0.31: a SAM that reloads may fire in the same tick (older: the reload ends its tick).
+    SamReloadThenFire31,
+    /// v0.31: Easy nations react slower (65 to 100), team games embargo every outsider on Hard, ship tracking needs a port (older: none of these).
+    NationExecutionTweaks31,
+    /// v0.31: incomingAttacks() leaves out attacks of dead attackers.
+    IncomingAttacksAliveOnly31,
+    /// v0.31: nation structures (paced placement, defense posts on attack fronts, shared water ports, save-up changes) replace the plain build order with defense posts.
+    NationStructureRework31,
+    /// v0.31: nations check silos before choosing a nuke target, hunt dense targets, upgrade helpful silos and save for a MIRV differently in team games.
+    NationNukeRework31,
+    /// v0.31: nation warships respond to incoming transports, move patrols and spawn on any water (older: ocean only, no patrol moves).
+    NationWarshipRework31,
+    /// v0.31: MIRV steamroll thresholds (gap 2, 1.5, 1.25; Easy needs 20 cities) and easy nations never betray humans (older: 1.5, 1.3, 1.2; 15 cities; they may).
+    NationBehaviorTweaks31,
+    /// v0.31: the generated nation names draw from the larger name tables and special plurals (older: 114 templates and 66 nouns).
+    NationNamesExpanded31,
+    /// v0.31: warships heal in ports, retreat to dock, fight enemy warships and keep their patrol after a lost path (older: the plain v0.30 warship).
+    WarshipDocking31,
+    /// v0.31: the clan tag comes from the clanTag field of a player (older: parsed from the [TAG] in the username).
+    ClanTagField31,
+    /// v0.30.10 (PR 3455): a surrounded cluster is judged against the box of the enemy tiles around it (older: the enemy border box).
+    ClusterLocalEnemyBox3455,
+    /// v0.30.10 (PR 3448): players under 100 tiles recompute clusters every tick and a change on the last calc tick counts.
+    ClusterCalcSmallPlayers3448,
+    /// v0.30.10 (PR 3437): nations do not donate troops in public games.
+    NoPublicDonation3437,
+    /// v0.30.10 (PR 3433): a random-spawn game has a 150 turn spawn phase (older: 300).
+    RandomSpawnShortPhase3433,
+    /// v0.30.0-beta5 (PR 3410): after a win teammates may nuke each other and SAMs shoot teammate nukes (older: never).
+    AftergameTeammateNukes3410,
+    /// v0.30.2: train spawn rate 15 and 9 free cities, trade ship sigmoid scale 75000 (older: 18, 5 cities, 50000).
+    TrainTradeRetune30,
+    /// v0.30.0-beta5: train gold falls with the cities visited and trains spawn at 18 (older: flat gold, rate 25).
+    TrainDistanceGold30Beta,
+    /// v0.31: nations stop alliance behaviour when alliances are disabled (older: they only fail to send requests).
+    NationDisabledAlliances31,
+    /// v0.30.0-beta5: the disableAlliances game option exists (older: alliances cannot be disabled).
+    DisableAlliancesOption30,
+    /// v0.30.22 only: one nuke in six bounces past its target and detonates half the distance beyond.
+    BouncingNukes30,
+    /// v0.30.0-beta2 only: trains spawn at (factories + 10) * 25 (beta1 and beta5: 18).
+    TrainSpawnRate25Beta2,
+    /// v0.30.0-beta2: a game ends at 170 minutes (beta1: no hard limit).
+    HardTimeLimit170Min30,
+    /// v0.30.0-beta2: nations reject alliance requests made during the spawn phase (beta1: they judge them).
+    AllianceSpawnReject30,
+    /// v0.30.0-beta2: bots are spawned from their own seed (simpleHash + 2) (beta1: the game runner seed).
+    BotSpawnerOwnSeed30,
+    /// v0.30.0-beta2: nations follow the nations setting (count, default, disabled) (beta1: disableNations flag, compact maps everywhere).
+    NationCreationConfigurable30,
+    /// v0.31: a transport ship order rejects the target's pending alliance request (older: only land attacks do).
+    TransportRejectsAlliances31,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -596,6 +682,96 @@ const EDGES: &[Edge] = &[
         add: &[Change::TradeShipSigmoid400Meta],
         remove: &[],
     },
+    Edge {
+        class: "C040",
+        add: &[],
+        remove: &[
+            Change::NextIntFloorsArgs31,
+            Change::SamCooldown90V31,
+            Change::SiloCooldown90V31,
+            Change::PortBuild50V31,
+            Change::BotAttackMalus07V31,
+            Change::AttackerLoss6040V31,
+            Change::BotTroopGrowth05V31,
+            Change::NukeSpeed8V31,
+            Change::ConquerGoldHalfHuman31,
+            Change::CityTroopsFinishedOnly31,
+            Change::AttackSkipsWater31,
+            Change::DonateTroopZeroInactive31,
+            Change::AiAttackRework31,
+            Change::AllianceNukeCancelBlast31,
+            Change::TradeWaterComponents31,
+            Change::SamReloadThenFire31,
+            Change::NationExecutionTweaks31,
+            Change::IncomingAttacksAliveOnly31,
+            Change::NationStructureRework31,
+            Change::NationNukeRework31,
+            Change::NationWarshipRework31,
+            Change::NationBehaviorTweaks31,
+            Change::NationNamesExpanded31,
+            Change::WarshipDocking31,
+            Change::ClanTagField31,
+            Change::NationDisabledAlliances31,
+            Change::TransportRejectsAlliances31,
+        ],
+    },
+    Edge {
+        class: "C041",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C042",
+        add: &[],
+        remove: &[
+            Change::ClusterLocalEnemyBox3455,
+            Change::ClusterCalcSmallPlayers3448,
+        ],
+    },
+    Edge {
+        class: "C043",
+        add: &[],
+        remove: &[
+            Change::NoPublicDonation3437,
+            Change::RandomSpawnShortPhase3433,
+        ],
+    },
+    Edge {
+        class: "C044",
+        add: &[],
+        remove: &[Change::TrainTradeRetune30],
+    },
+    Edge {
+        class: "C047",
+        add: &[Change::TrainSpawnRate25Beta2],
+        remove: &[
+            Change::SamCooldown120V30,
+            Change::AttackerLoss7030V30,
+            Change::TrainDistanceGold30Beta,
+            Change::DisableAlliancesOption30,
+        ],
+    },
+    Edge {
+        class: "C048",
+        add: &[],
+        remove: &[
+            Change::TrainSpawnRate25Beta2,
+            Change::HardTimeLimit170Min30,
+            Change::AllianceSpawnReject30,
+            Change::BotSpawnerOwnSeed30,
+            Change::NationCreationConfigurable30,
+        ],
+    },
+    Edge {
+        class: "C046",
+        add: &[Change::BouncingNukes30],
+        remove: &[],
+    },
+    Edge {
+        class: "C045",
+        add: &[],
+        remove: &[Change::AftergameTeammateNukes3410],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -675,6 +851,47 @@ const ROOT_CHANGES: &[Change] = &[
     Change::DoomsdayRotLadder4893,
     Change::WaterComponentMarkers4479,
     Change::TradeShipPathReuse4654,
+    Change::NextIntFloorsArgs31,
+    Change::SamCooldown90V31,
+    Change::SamCooldown120V30,
+    Change::SiloCooldown90V31,
+    Change::PortBuild50V31,
+    Change::BotAttackMalus07V31,
+    Change::AttackerLoss6040V31,
+    Change::AttackerLoss7030V30,
+    Change::BotTroopGrowth05V31,
+    Change::NukeSpeed8V31,
+    Change::ConquerGoldHalfHuman31,
+    Change::CityTroopsFinishedOnly31,
+    Change::AttackSkipsWater31,
+    Change::DonateTroopZeroInactive31,
+    Change::AiAttackRework31,
+    Change::AllianceNukeCancelBlast31,
+    Change::TradeWaterComponents31,
+    Change::SamReloadThenFire31,
+    Change::NationExecutionTweaks31,
+    Change::IncomingAttacksAliveOnly31,
+    Change::NationStructureRework31,
+    Change::NationNukeRework31,
+    Change::NationWarshipRework31,
+    Change::NationBehaviorTweaks31,
+    Change::NationNamesExpanded31,
+    Change::WarshipDocking31,
+    Change::ClanTagField31,
+    Change::ClusterLocalEnemyBox3455,
+    Change::ClusterCalcSmallPlayers3448,
+    Change::NoPublicDonation3437,
+    Change::RandomSpawnShortPhase3433,
+    Change::AftergameTeammateNukes3410,
+    Change::TrainTradeRetune30,
+    Change::TrainDistanceGold30Beta,
+    Change::NationDisabledAlliances31,
+    Change::DisableAlliancesOption30,
+    Change::HardTimeLimit170Min30,
+    Change::AllianceSpawnReject30,
+    Change::BotSpawnerOwnSeed30,
+    Change::NationCreationConfigurable30,
+    Change::TransportRejectsAlliances31,
 ];
 
 /// Commit of the baseline build v0.34.22.
@@ -907,7 +1124,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C040"));
+        assert!(is_ported("C040"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
@@ -1032,6 +1249,36 @@ mod tests {
         assert!(rules("661d96ba280f").has(Change::RailroadMaxSizeLimit4337));
         assert!(!rules("305534cc6579").has(Change::UnitsConstructedOnce4320));
         assert!(!rules("5be72db060fc").has(Change::AiBoatTroopsUnified4297));
-        assert!(!is_ported("C040"));
+        assert!(is_ported("C040"));
+    }
+
+    #[test]
+    fn v30_classes_drop_v31_changes_and_their_own_betas() {
+        for n in 40..=48 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c040 = rules("d809c25d1cdd");
+        assert!(
+            !c040.has(Change::NextIntFloorsArgs31) && !c040.has(Change::NationStructureRework31)
+        );
+        assert!(!c040.has(Change::WarshipDocking31) && !c040.has(Change::NukeSpeed8V31));
+        assert!(c040.has(Change::SamCooldown120V30) && c040.has(Change::TrainTradeRetune30));
+        assert!(
+            !c040.has(Change::BouncingNukes30)
+                && rules("f2507c38979c").has(Change::BouncingNukes30)
+        );
+        assert!(rules("3e7088cb2a2b").has(Change::ClusterLocalEnemyBox3455));
+        assert!(!rules("dd2c239aa166").has(Change::ClusterLocalEnemyBox3455));
+        assert!(!rules("5fb7f75f3d5b").has(Change::NoPublicDonation3437));
+        assert!(!rules("ebe7f76cd312").has(Change::TrainTradeRetune30));
+        assert!(!rules("741a38c62b29").has(Change::AftergameTeammateNukes3410));
+        let c047 = rules("df5fad1a1f6d");
+        assert!(!c047.has(Change::SamCooldown120V30) && c047.has(Change::TrainSpawnRate25Beta2));
+        let c048 = rules("339ace0bd677");
+        assert!(
+            !c048.has(Change::TrainSpawnRate25Beta2)
+                && !c048.has(Change::NationCreationConfigurable30)
+        );
     }
 }

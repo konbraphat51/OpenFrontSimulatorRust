@@ -147,8 +147,8 @@ pub enum Intent {
     /// `move_warship`.
     #[serde(rename = "move_warship")]
     MoveWarship {
-        /// Warship unit ids.
-        #[serde(rename = "unitIds")]
+        /// Warship unit ids (builds before v0.31 send a single `unitId`).
+        #[serde(rename = "unitIds", alias = "unitId", deserialize_with = "one_or_many")]
         unit_ids: Vec<i64>,
         /// Target tile.
         tile: u32,
@@ -266,4 +266,18 @@ pub struct StampedIntent {
     /// The intent itself (flattened next to `clientID`).
     #[serde(flatten)]
     pub intent: Intent,
+}
+
+/// Accepts one id or a list of ids.
+fn one_or_many<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Vec<i64>, D::Error> {
+    #[derive(serde::Deserialize)]
+    #[serde(untagged)]
+    enum OneOrMany {
+        One(i64),
+        Many(Vec<i64>),
+    }
+    Ok(match OneOrMany::deserialize(d)? {
+        OneOrMany::One(id) => vec![id],
+        OneOrMany::Many(ids) => ids,
+    })
 }

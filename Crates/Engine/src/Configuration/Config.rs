@@ -489,11 +489,21 @@ impl Config {
     }
     /// SAM launcher cooldown in ticks.
     pub fn sam_cooldown(&self) -> u32 {
-        90
+        if self.rules.has(Change::SamCooldown90V31) {
+            90
+        } else if self.rules.has(Change::SamCooldown120V30) {
+            120
+        } else {
+            75
+        }
     }
     /// Missile silo cooldown in ticks.
     pub fn silo_cooldown(&self) -> u32 {
-        90
+        if self.rules.has(Change::SiloCooldown90V31) {
+            90
+        } else {
+            75
+        }
     }
     /// Defense post range.
     pub fn defense_post_range(&self) -> f64 {
@@ -539,8 +549,15 @@ impl Config {
     }
     /// Alliances disabled (custom duration 0 or the legacy flag).
     pub fn disable_alliances(&self) -> bool {
+        if !self.rules.has(Change::DisableAlliancesOption30) {
+            return false;
+        }
         self.game_config.custom_alliance_duration == Some(0)
             || self.game_config.disable_alliances.unwrap_or(false)
+    }
+    /// True when nations must skip alliance behaviour (builds since v0.31).
+    pub fn nation_alliances_disabled(&self) -> bool {
+        self.rules.has(Change::NationDisabledAlliances31) && self.disable_alliances()
     }
     /// Water nukes.
     pub fn water_nukes(&self) -> bool {
@@ -609,7 +626,14 @@ impl Config {
 
     /// Odds denominator of a train spawn.
     pub fn train_spawn_rate(&self, num_player_factories: f64, num_train_units: f64) -> f64 {
-        let rate = (num_player_factories + 10.0) * 15.0;
+        let per_factory = if self.rules.has(Change::TrainTradeRetune30) {
+            15.0
+        } else if self.rules.has(Change::TrainSpawnRate25Beta2) {
+            25.0
+        } else {
+            18.0
+        };
+        let rate = (num_player_factories + 10.0) * per_factory;
         if self.rules.has(Change::SmallEconomyBoost5907) {
             let boost = self.small_economy_spawn_boost(num_player_factories);
             return js_max(
@@ -638,12 +662,25 @@ impl Config {
         cities_visited: f64,
         is_lobby_creator: bool,
     ) -> Gold {
-        let cities_visited = js_max(0.0, cities_visited - 9.0);
+        let free_cities = if self.rules.has(Change::TrainTradeRetune30) {
+            9.0
+        } else {
+            5.0
+        };
+        let cities_visited = if self.rules.has(Change::TrainDistanceGold30Beta) {
+            js_max(0.0, cities_visited - free_cities)
+        } else {
+            0.0
+        };
         let base_gold = match rel {
             TrainRelation::Ally => 35_000.0,
             TrainRelation::Team | TrainRelation::Other => 25_000.0,
             TrainRelation::Self_ => 10_000.0,
         };
+        if !self.rules.has(Change::TrainDistanceGold30Beta) {
+            // Flat gold: no distance penalty and no floor.
+            return Util::to_int((base_gold * self.gold_multiplier_for(is_lobby_creator)).floor());
+        }
         let dist_penalty = cities_visited * 5_000.0;
         let gold = js_max(5000.0, base_gold - dist_penalty);
         Util::to_int(gold * self.gold_multiplier_for(is_lobby_creator))
@@ -677,7 +714,12 @@ impl Config {
     /// Gold of a trade ship delivery over `dist`.
     pub fn trade_ship_gold(&self, dist: f64, is_lobby_creator: bool) -> Gold {
         let debuff = self.trade_ship_short_range_debuff();
-        let base_gold = 75_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + 50.0 * dist;
+        let scale = if self.rules.has(Change::TrainTradeRetune30) {
+            75_000.0
+        } else {
+            50_000.0
+        };
+        let base_gold = scale / (1.0 + self.exp(-0.03 * (dist - debuff))) + 50.0 * dist;
         let v = (base_gold * self.gold_multiplier_for(is_lobby_creator)).floor();
         assert!(v.is_finite(), "BigInt of a non-finite value throws");
         v as i64
@@ -746,7 +788,11 @@ impl Config {
                 ..UnitInfo::default()
             },
             UnitType::Port => UnitInfo {
-                construction_duration: build(5 * 10),
+                construction_duration: build(if self.rules.has(Change::PortBuild50V31) {
+                    5 * 10
+                } else {
+                    2 * 10
+                }),
                 upgradable: Some(true),
                 ..UnitInfo::default()
             },
@@ -821,7 +867,8 @@ impl Config {
     pub fn conquer_gold_amount(&self, captured_type: PlayerType, gold: Gold) -> Gold {
         match captured_type {
             PlayerType::Bot | PlayerType::Nation => gold,
-            PlayerType::Human => gold / 2,
+            PlayerType::Human if self.rules.has(Change::ConquerGoldHalfHuman31) => gold / 2,
+            PlayerType::Human => gold,
         }
     }
 
@@ -1006,7 +1053,7 @@ impl Config {
         if self.game_config.game_type == GameType::Singleplayer {
             return 100;
         }
-        if self.is_random_spawn() {
+        if self.is_random_spawn() && self.rules.has(Change::RandomSpawnShortPhase3433) {
             return 150;
         }
         if self.rules.has(Change::SpawnPhase20s5347) {
@@ -1151,7 +1198,11 @@ impl Config {
                 || attacker.player_type == PlayerType::Nation)
                 && defender.player_type == PlayerType::Bot
             {
-                mag *= 0.7;
+                mag *= if self.rules.has(Change::BotAttackMalus07V31) {
+                    0.7
+                } else {
+                    0.8
+                };
             }
         }
         let Some(defender) = input.defender else {
@@ -1200,7 +1251,13 @@ impl Config {
             * large_attack_bonus
             * traitor_mod;
         let alt_attacker_loss = 1.3 * defender_troop_loss * (mag / 100.0) * traitor_mod;
-        let attacker_troop_loss = 0.6 * current_attacker_loss + 0.4 * alt_attacker_loss;
+        let attacker_troop_loss = if self.rules.has(Change::AttackerLoss6040V31) {
+            0.6 * current_attacker_loss + 0.4 * alt_attacker_loss
+        } else if self.rules.has(Change::AttackerLoss7030V30) {
+            0.7 * current_attacker_loss + 0.3 * alt_attacker_loss
+        } else {
+            0.5 * current_attacker_loss + 0.5 * alt_attacker_loss
+        };
         LegacyAttackResult {
             attacker_troop_loss,
             defender_troop_loss,
@@ -1331,7 +1388,11 @@ impl Config {
         let ratio = 1.0 - p.troops / max;
         to_add *= ratio;
         if p.player_type == PlayerType::Bot {
-            to_add *= 0.5;
+            to_add *= if self.rules.has(Change::BotTroopGrowth05V31) {
+                0.5
+            } else {
+                0.6
+            };
         }
         if p.player_type == PlayerType::Nation {
             match self.game_config.difficulty {
@@ -1391,8 +1452,10 @@ impl Config {
     fn default_nuke_speed(&self) -> f64 {
         if self.rules.has(Change::NukeSpeed10Meta) {
             10.0
-        } else {
+        } else if self.rules.has(Change::NukeSpeed8V31) {
             8.0
+        } else {
+            6.0
         }
     }
     /// Nuke speed; panics for other units like upstream throws.

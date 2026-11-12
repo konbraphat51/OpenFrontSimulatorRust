@@ -15,7 +15,9 @@ use crate::Execution::NukeAlliance::list_nuke_break_alliance;
 use crate::Game::Game::{SmallId, Tick, TrajectoryTile, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
-use crate::Pathfinding::PathFinderParabola::{ParabolaOptions, ParabolaUniversalPathFinder};
+use crate::Pathfinding::PathFinderParabola::{
+    BouncingParabolaPathFinder, ParabolaOptions, ParabolaUniversalPathFinder,
+};
 use crate::Pathfinding::Types::PathResult;
 
 /// Flight and detonation of one nuke.
@@ -30,6 +32,8 @@ pub struct NukeExecution {
     rocket_direction_up: bool,
     nuke: Option<UnitId>,
     path_finder: ParabolaUniversalPathFinder,
+    /// Set when this nuke is the one in six that bounces (v0.30.22).
+    bouncing: Option<BouncingParabolaPathFinder>,
 }
 
 impl NukeExecution {
@@ -54,6 +58,7 @@ impl NukeExecution {
             rocket_direction_up: rocket_direction_up.unwrap_or(true),
             nuke: None,
             path_finder: ParabolaUniversalPathFinder::default(),
+            bouncing: None,
         }
     }
 
@@ -77,7 +82,7 @@ impl NukeExecution {
         }
     }
 
-    fn tiles_to_destroy(&self, game: &GameImpl) -> Vec<TileRef> {
+    fn tiles_to_destroy(&self, game: &GameImpl, explosion_tile: TileRef) -> Vec<TileRef> {
         let magnitude = game.config().nuke_magnitudes(self.nuke_type);
         let mut rand = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         let inner2 = magnitude.inner * magnitude.inner;
@@ -143,7 +148,7 @@ impl NukeExecution {
             }
             result
         } else {
-            let dst = self.dst;
+            let dst = explosion_tile;
             let filter = |m: &GameMapImpl, n: TileRef| {
                 let d2 = m.euclidean_dist_squared(dst, n) as f64;
                 d2 <= outer2 && (d2 <= inner2 || rand.chance(2.0)) && !m.is_impassable(n)
@@ -216,8 +221,11 @@ impl NukeExecution {
         let range = game.config().default_nuke_targetable_range();
         let target_range_squared = range * range;
         let src = self.src.expect("src set before trajectory");
-        self.path_finder
-            .find_path(&game.map, src, target)
+        let tiles = match &self.bouncing {
+            Some(b) => b.find_path(&game.map, src, target),
+            None => self.path_finder.find_path(&game.map, src, target),
+        };
+        tiles
             .into_iter()
             .map(|tile| TrajectoryTile {
                 tile,
@@ -236,9 +244,9 @@ impl NukeExecution {
         game.unit_mut(nuke).set_targetable(targetable);
     }
 
-    fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId) {
+    fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId, explosion_tile: TileRef) {
         let magnitude = game.config().nuke_magnitudes(game.unit_any(nuke).unit_type);
-        let to_destroy = self.tiles_to_destroy(game);
+        let to_destroy = self.tiles_to_destroy(game, explosion_tile);
 
         let mut tiles_per_player: OrderedMap<SmallId, f64> = OrderedMap::new();
         for &tile in &to_destroy {
@@ -339,7 +347,7 @@ impl Execution for NukeExecution {
             self.speed = game.config().nuke_speed(self.nuke_type);
         }
         let standard_warheads = game.config().rules().has(Change::MirvWarheadsStandard4706);
-        self.path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
+        let options = ParabolaOptions {
             increment: Some(self.speed),
             distance_based_height: (!standard_warheads)
                 .then_some(self.nuke_type != UnitType::MIRVWarhead),
@@ -347,7 +355,14 @@ impl Execution for NukeExecution {
             legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
             legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
             ..Default::default()
-        });
+        };
+        let bounces = game.config().rules().has(Change::BouncingNukes30)
+            && PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64).chance(6.0);
+        if bounces {
+            self.bouncing = Some(BouncingParabolaPathFinder::new(options));
+        } else {
+            self.path_finder = ParabolaUniversalPathFinder::new(options);
+        }
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
@@ -416,14 +431,17 @@ impl Execution for NukeExecution {
         }
 
         let src = self.src.expect("src set at launch");
-        match self
-            .path_finder
-            .next(&game.map, src, self.dst, Some(self.speed))
-        {
-            PathResult::Complete(_)
+        let step = match self.bouncing.as_mut() {
+            Some(b) => b.next(&game.map, src, self.dst, Some(self.speed)),
+            None => self
+                .path_finder
+                .next(&game.map, src, self.dst, Some(self.speed)),
+        };
+        match step {
+            PathResult::Complete(node)
                 if !game.config().rules().has(Change::SamTargetingFixes4770) =>
             {
-                self.detonate(game, nuke);
+                self.detonate(game, nuke, node);
             }
             PathResult::Complete(node) => {
                 game.unit_mut(nuke).move_to(node);
@@ -440,13 +458,16 @@ impl Execution for NukeExecution {
                     )
                     .is_empty();
                 if !should_be_destroyed {
-                    self.detonate(game, nuke);
+                    self.detonate(game, nuke, node);
                 }
             }
             PathResult::Next(node) => {
                 self.update_nuke_targetable(game, nuke);
                 game.unit_mut(nuke).move_to(node);
-                let index = self.path_finder.current_index() as i64;
+                let index = match &self.bouncing {
+                    Some(b) => b.current_index(),
+                    None => self.path_finder.current_index(),
+                } as i64;
                 game.unit_mut(nuke).set_trajectory_index(index);
             }
             PathResult::NotFound => {}

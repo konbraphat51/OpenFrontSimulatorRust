@@ -132,7 +132,12 @@ impl NationWarshipBehavior {
             }
             let tile = game.tile_ref(rand_x, rand_y);
             // Sanity check
-            if !game.is_water(tile) {
+            let ok = if game.config().rules().has(Change::NationWarshipRework31) {
+                game.is_water(tile)
+            } else {
+                game.map.is_ocean(tile)
+            };
+            if !ok {
                 continue;
             }
             return Some(tile);
@@ -144,7 +149,9 @@ impl NationWarshipBehavior {
     pub fn track_ships_and_retaliate(&mut self, game: &mut GameImpl) {
         self.track_transport_ships_and_retaliate(game);
         self.track_trade_ships_and_retaliate(game);
-        self.track_incoming_transports_and_retaliate(game);
+        if game.config().rules().has(Change::NationWarshipRework31) {
+            self.track_incoming_transports_and_retaliate(game);
+        }
     }
 
     // Send out a warship if our transport ship got captured.
@@ -434,6 +441,9 @@ impl NationWarshipBehavior {
     }
 
     fn maybe_move_warship(&mut self, game: &mut GameImpl, tile: TileRef) {
+        if !game.config().rules().has(Change::NationWarshipRework31) {
+            return;
+        }
         // Make sure we are targeting water.
         if !game.is_water(tile) {
             return;
