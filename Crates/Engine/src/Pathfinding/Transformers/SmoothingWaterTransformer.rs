@@ -17,6 +17,8 @@ const MAX_TILES: i64 = 100_000;
 pub struct SmoothingWaterTransformer<P> {
     inner: P,
     local_a_star: AStarWaterBounded,
+    single_magnitude: bool,
+    final_pass: bool,
 }
 
 impl<P> SmoothingWaterTransformer<P> {
@@ -25,7 +27,24 @@ impl<P> SmoothingWaterTransformer<P> {
         Self {
             inner,
             local_a_star: AStarWaterBounded::new(map, LOCAL_ASTAR_MAX_AREA, None, None),
+            single_magnitude: false,
+            final_pass: true,
         }
+    }
+
+    /// Builds before PR 2932 stop after the endpoint refinement; `bucket_queue` also queues its local search that way.
+    pub fn with_legacy_passes(mut self, legacy: bool) -> Self {
+        if legacy {
+            self.final_pass = false;
+            self.local_a_star.use_bucket_queue();
+        }
+        self
+    }
+
+    /// Builds before PR 2959 smooth both passes with the same minimum magnitude (3).
+    pub fn with_single_magnitude(mut self, single_magnitude: bool) -> Self {
+        self.single_magnitude = single_magnitude;
+        self
     }
 
     /// The wrapped finder.
@@ -39,10 +58,18 @@ impl<P> SmoothingWaterTransformer<P> {
         }
 
         // Pass 1: LOS smoothing with binary search
-        let mut smoothed = los_smooth(map, &path, LOS_MIN_MAGNITUDE_PASS1);
+        let pass1 = if self.single_magnitude {
+            LOS_MIN_MAGNITUDE_PASS2
+        } else {
+            LOS_MIN_MAGNITUDE_PASS1
+        };
+        let mut smoothed = los_smooth(map, &path, pass1);
         // Pass 2: local A* refinement on the endpoints
         smoothed = self.refine_endpoints(map, smoothed);
         // Pass 3: LOS smoothing again, farther from the shore
+        if !self.final_pass {
+            return smoothed;
+        }
         los_smooth(map, &smoothed, LOS_MIN_MAGNITUDE_PASS2)
     }
 

@@ -6,42 +6,8 @@
 //! until stored, and comparisons read the rounded stored value.
 
 use super::AbstractGraph::AbstractGraph;
-use super::PriorityQueue::{BucketQueue, MinHeap, PriorityQueue};
+use super::PriorityQueue::{BucketQueue, MinHeap, OpenQueue, PriorityQueue};
 use std::rc::Rc;
-
-/// The open set: a min-heap, or the bucket queue of builds before PR 4149.
-#[derive(Debug)]
-enum OpenQueue {
-    Heap(MinHeap),
-    Bucket(BucketQueue),
-}
-
-impl PriorityQueue for OpenQueue {
-    fn push(&mut self, node: u32, priority: f64) {
-        match self {
-            Self::Heap(q) => q.push(node, priority),
-            Self::Bucket(q) => q.push(node, priority),
-        }
-    }
-    fn pop(&mut self) -> u32 {
-        match self {
-            Self::Heap(q) => q.pop(),
-            Self::Bucket(q) => q.pop(),
-        }
-    }
-    fn is_empty(&self) -> bool {
-        match self {
-            Self::Heap(q) => q.is_empty(),
-            Self::Bucket(q) => q.is_empty(),
-        }
-    }
-    fn clear(&mut self) {
-        match self {
-            Self::Heap(q) => q.clear(),
-            Self::Bucket(q) => q.clear(),
-        }
-    }
-}
 
 /// A* on an [`AbstractGraph`]; ids are node ids.
 #[derive(Debug)]

@@ -127,6 +127,13 @@ impl Execution for AllianceRequestExecution {
             // The recipient already asked: accept that request instead of creating a new one.
             self.active = false;
             game.accept_request(incoming);
+            if !game
+                .config()
+                .rules()
+                .has(crate::Builds::Rules::Change::AllianceRadialAccept3155)
+            {
+                return;
+            }
             game.player_mut(self.requestor)
                 .update_relation(recipient, 100.0);
             game.player_mut(recipient)

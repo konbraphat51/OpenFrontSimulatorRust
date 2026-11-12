@@ -115,6 +115,7 @@ impl RailNetwork {
     /// `TrainStation.setCluster`: leaves the previous cluster first.
     pub(crate) fn station_set_cluster(&mut self, id: StationId, cluster: Option<ClusterId>) {
         if let Some(old) = self.station(id).cluster
+            && !self.legacy_clusters
             && (self.leave_same_cluster || Some(old) != cluster)
         {
             self.cluster_remove_station(old, id);
@@ -204,6 +205,26 @@ impl RailNetwork {
             .trade_stations
             .iter()
             .any(|&s| self.station_trade_available(game, s, player))
+    }
+
+    /// `Cluster.availableForTrade(player)` of builds before PR 3130: every trade station in order.
+    pub fn cluster_available_for_trade(
+        &self,
+        game: &GameImpl,
+        cluster: ClusterId,
+        player: SmallId,
+    ) -> OrderedSet<StationId> {
+        self.clusters[cluster as usize]
+            .stations
+            .iter()
+            .copied()
+            .filter(|&s| {
+                matches!(
+                    game.unit_any(self.station(s).unit).unit_type(),
+                    UnitType::City | UnitType::Port
+                ) && self.station_trade_available(game, s, player)
+            })
+            .collect()
     }
 
     /// `Cluster.randomTradeDestination(player, random)`: reservoir sampling over the eligible stations.

@@ -189,10 +189,11 @@ impl NationAllianceBehavior {
         if difficulty != Difficulty::Hard && difficulty != Difficulty::Impossible {
             return false;
         }
+        let updated = game.config().rules().has(Change::NationBehaviorUpdate3246);
         let total_players = game
             .players()
             .into_iter()
-            .filter(|&p| game.player(p).player_type() != PlayerType::Bot)
+            .filter(|&p| !updated || game.player(p).player_type() != PlayerType::Bot)
             .count() as f64;
         let mut other_alliances = game.player(other).alliances().len() as f64;
         // An alliance with us is the one being renewed, not another one.
@@ -201,7 +202,7 @@ impl NationAllianceBehavior {
         {
             other_alliances -= 1.0;
         }
-        if difficulty == Difficulty::Hard {
+        if difficulty == Difficulty::Hard || !updated {
             other_alliances >= total_players * 0.5
         } else {
             other_alliances >= total_players * 0.25
@@ -253,6 +254,18 @@ impl NationAllianceBehavior {
     fn should_reject_in_team_game(&self, game: &GameImpl) -> bool {
         if game.config().game_config().game_mode != GameMode::Team {
             return false;
+        }
+        if !game
+            .config()
+            .rules()
+            .has(Change::NationTeamRejectHarder2971)
+        {
+            return match game.config().game_config().difficulty {
+                Difficulty::Easy => false,
+                Difficulty::Medium => self.next_int(0.0, 100.0) < 20.0,
+                Difficulty::Hard => self.next_int(0.0, 100.0) < 40.0,
+                Difficulty::Impossible => self.next_int(0.0, 100.0) < 60.0,
+            };
         }
         match game.config().game_config().difficulty {
             Difficulty::Easy => self.next_int(0.0, 100.0) < 25.0,

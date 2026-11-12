@@ -31,9 +31,15 @@ pub struct SpatialQuery {
     gen_counter: u32,
     stack: Vec<TileRef>,
     reachable: HashMap<SmallId, ReachableCache>,
+    simple_start: bool,
 }
 
 impl SpatialQuery {
+    /// Builds before PR 2932 take the first tile of the shore path without refining it.
+    pub fn set_simple_start(&mut self, simple_start: bool) {
+        self.simple_start = simple_start;
+    }
+
     /// Creates an empty query helper.
     pub fn new() -> Self {
         Self::default()
@@ -235,6 +241,9 @@ impl SpatialQuery {
             return None;
         }
 
+        if self.simple_start {
+            return path.first().copied();
+        }
         Some(self.refine_start_tile(game.map(), &path, &shores))
     }
 

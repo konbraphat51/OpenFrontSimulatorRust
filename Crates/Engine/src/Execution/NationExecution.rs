@@ -12,6 +12,7 @@ use crate::Execution::Nation::NationEmojiBehavior::NationEmojiBehavior;
 use crate::Execution::Nation::NationMIRVBehavior::NationMIRVBehavior;
 use crate::Execution::Nation::NationNukeBehavior::NationNukeBehavior;
 use crate::Execution::Nation::NationStructureBehavior::NationStructureBehavior;
+use crate::Execution::Nation::NationUnitsV29::handle_units;
 use crate::Execution::Nation::NationWarshipBehavior::NationWarshipBehavior;
 use crate::Execution::Nation::TutorialNation::{
     tutorial_collapse, tutorial_silo, tutorial_warship,
@@ -244,6 +245,83 @@ impl NationExecution {
     }
 }
 
+impl NationExecution {
+    /// The tick of builds before PR 3152: every decision waits for the attack tick, structures come from `handleUnits`.
+    fn tick_v29(&mut self, game: &mut GameImpl, ticks: Tick) {
+        let Some(player) = self.player else { return };
+        if let Some(b) = self.behaviors.as_mut()
+            && game.player(player).is_alive()
+            && game.config().game_config().difficulty != Difficulty::Easy
+        {
+            b.warship.track_ships_and_retaliate(game);
+        }
+        if ticks % self.attack_rate != self.attack_tick {
+            return;
+        }
+        if game.in_spawn_phase() {
+            // Nations without a spawn cell are placed randomly by SpawnExecution.
+            if self.nation.spawn_cell.is_none() {
+                game.add_execution(self.spawn_exec(None));
+                return;
+            }
+            let Some(rl) = self.random_spawn_land(game) else {
+                return;
+            };
+            game.add_execution(self.spawn_exec(Some(rl)));
+            return;
+        }
+        if !game.player(player).is_alive() {
+            self.active = false;
+            return;
+        }
+        if self.behaviors.is_none() {
+            self.initialize_behaviors(game);
+            let attack = self.behaviors.as_ref().expect("initialized").attack.clone();
+            attack.borrow_mut().force_send_attack(game, 0);
+            return;
+        }
+        let b = self.behaviors.as_ref().expect("initialized");
+        let (emoji, alliance, attack) = (b.emoji.clone(), b.alliance.clone(), b.attack.clone());
+        emoji.borrow_mut().maybe_send_casual_emoji(game);
+        self.update_relations_from_embargos(game);
+        alliance.borrow_mut().handle_alliance_requests(game);
+        alliance
+            .borrow_mut()
+            .handle_alliance_extension_requests(game);
+        let random = self.random.clone();
+        let b = self.behaviors.as_mut().expect("initialized");
+        b.mirv.consider_mirv(game);
+        handle_units(game, player, &random, &mut b.warship);
+        self.handle_embargoes_v29(game);
+        attack.borrow_mut().maybe_attack(game);
+        let b = self.behaviors.as_mut().expect("initialized");
+        b.warship.counter_warship_infestation(game);
+        b.nuke.maybe_send_nuke(game);
+    }
+
+    /// `handleEmbargoesToHostileNations` before the v0.31 team-game rules.
+    fn handle_embargoes_v29(&mut self, game: &mut GameImpl) {
+        let Some(player) = self.player else { return };
+        let others: Vec<SmallId> = game
+            .players()
+            .into_iter()
+            .filter(|&p| p != player)
+            .collect();
+        for other in others {
+            let relation = game.player(player).relation(other);
+            let has_embargo = game.player(player).has_embargo_against(other);
+            if relation <= Relation::Hostile
+                && !has_embargo
+                && !game.player(player).is_on_same_team(other)
+            {
+                game.player_mut(player).add_embargo(other, false);
+            } else if relation >= Relation::Neutral && has_embargo {
+                game.player_mut(player).stop_embargo(other);
+            }
+        }
+    }
+}
+
 impl Execution for NationExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.attack_rate = self.get_attack_rate(game);
@@ -261,6 +339,14 @@ impl Execution for NationExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, ticks: Tick) {
+        if !game
+            .config()
+            .rules()
+            .has(Change::NationStructureBehavior3152)
+        {
+            self.tick_v29(game, ticks);
+            return;
+        }
         // Ship tracking
         if let (Some(b), Some(player)) = (self.behaviors.as_mut(), self.player)
             && game.player(player).is_alive()

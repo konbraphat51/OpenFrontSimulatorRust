@@ -15,6 +15,7 @@ use super::Game::{
 use super::GameImpl::GameImpl;
 use super::GameMap::TileRef;
 use super::Veterancy::max_health_with_veterancy;
+use crate::Builds::Rules::Change;
 use crate::Core::Util::{simple_hash, to_int};
 use std::ops::{Deref, DerefMut};
 
@@ -369,7 +370,17 @@ impl UnitMut<'_> {
 
     /// `setTroops`: clamped at 0.
     pub fn set_troops(&mut self, troops: f64) {
-        let next = if troops > 0.0 { troops } else { 0.0 };
+        let next = if troops > 0.0
+            || !self
+                .game
+                .config()
+                .rules()
+                .has(Change::NukeExplosionBulk3176)
+        {
+            troops
+        } else {
+            0.0
+        };
         self.u().troops = next;
     }
 

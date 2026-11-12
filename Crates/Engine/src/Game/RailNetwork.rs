@@ -44,6 +44,8 @@ pub struct RailNetwork {
     dirty_clusters: OrderedSet<ClusterId>,
     /// Leaving a cluster also happens when the new cluster is the same one (PR 5096 not yet applied).
     pub(crate) leave_same_cluster: bool,
+    /// Builds before PR 3003: no snapping to existing rails, clusters are fixed when a station goes.
+    pub(crate) legacy_clusters: bool,
 }
 
 impl Default for RailNetwork {
@@ -65,6 +67,7 @@ impl RailNetwork {
             grid: RailSpatialGrid::new(GRID_CELL_SIZE),
             dirty_clusters: OrderedSet::new(),
             leave_same_cluster: false,
+            legacy_clusters: false,
         }
     }
 
@@ -142,7 +145,7 @@ impl RailNetwork {
     /// `connectStation(new TrainStation(mg, unit))`: registers the station and links it to the network.
     pub fn connect_station(&mut self, game: &GameImpl, unit: UnitId) -> StationId {
         let station = self.add_station(unit);
-        if !self.connect_to_existing_rails(game, station) {
+        if self.legacy_clusters || !self.connect_to_existing_rails(game, station) {
             self.connect_to_nearby_stations(game, station);
         }
         station
@@ -184,6 +187,10 @@ impl RailNetwork {
             return;
         };
 
+        if self.legacy_clusters {
+            self.remove_station_legacy(game, station);
+            return;
+        }
         self.disconnect_from_network(station);
         // `StationManager.removeStation`
         self.registered[station as usize - 1] = false;
@@ -204,6 +211,37 @@ impl RailNetwork {
             return;
         }
         self.dirty_clusters.insert(cluster);
+    }
+
+    /// `removeStation` before PR 3003: the neighbours of the removed station form fresh clusters.
+    fn remove_station_legacy(&mut self, game: &mut GameImpl, station: StationId) {
+        let neighbors = self.station_neighbors(station);
+        self.disconnect_from_network(station);
+        // The cluster of a lone station is deleted here, so the lookup below finds none.
+        if let Some(cluster) = self.station(station).cluster
+            && self.clusters[cluster as usize].size() == 1
+        {
+            self.delete_cluster(cluster);
+        }
+        self.registered[station as usize - 1] = false;
+        self.station_set.remove(&station);
+        let station_unit = self.station(station).unit;
+        if let Some(v) = self.by_unit.get_mut(&station_unit) {
+            v.retain(|&s| s != station);
+        }
+        let Some(cluster) = self.station(station).cluster else {
+            return;
+        };
+        if neighbors.len() == 1 {
+            self.cluster_remove_station(cluster, station);
+        } else if neighbors.len() > 1 {
+            for neighbor in neighbors {
+                let stations = self.compute_cluster(neighbor);
+                let new_cluster = self.new_cluster();
+                self.cluster_add_stations(game, new_cluster, &stations);
+            }
+        }
+        game.unit_mut(station_unit).set_train_station(false);
     }
 
     /// `findStationsPath`: the stations along the shortest route (empty when none).

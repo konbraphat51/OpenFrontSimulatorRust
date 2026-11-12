@@ -75,6 +75,10 @@ impl AttackImpl {
     pub fn set_troops(&mut self, troops: f64) {
         self.troops = if troops > 0.0 { troops } else { 0.0 };
     }
+    /// `setTroops` without the clamp (builds before PR 3176).
+    pub fn set_troops_unclamped(&mut self, troops: f64) {
+        self.troops = troops;
+    }
     /// `isActive`.
     pub fn is_active(&self) -> bool {
         self.is_active

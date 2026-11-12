@@ -281,7 +281,8 @@ impl NationMIRVBehavior {
     }
 
     fn is_worth_mirving(&self, game: &GameImpl, target: SmallId, v2: bool) -> bool {
-        !self.was_recently_mirved(game, target)
+        (!game.config().rules().has(Change::NationBehaviorUpdate3246)
+            || !self.was_recently_mirved(game, target))
             && (!v2 || mirv_gets_through(game, self.player, target))
     }
 
@@ -441,6 +442,9 @@ impl NationMIRVBehavior {
     }
 
     fn record_mirv_hit(&self, game: &mut GameImpl, target: SmallId) {
+        if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+            return;
+        }
         let id = game.player(target).id().to_string();
         let tick = game.ticks();
         game.recent_mirv_targets.insert(id, tick);
