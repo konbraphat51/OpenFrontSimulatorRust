@@ -101,6 +101,7 @@ impl MirvExecution {
         self.legacy_path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
             increment: Some(self.legacy_speed),
             legacy_curve: true,
+            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
             ..Default::default()
         });
         if self.target_player != 0 {
@@ -147,7 +148,9 @@ impl MirvExecution {
                 .units_of(UnitType::MissileSilo)
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
-            if let Some(silo) = silo {
+            if let Some(silo) = silo
+                && game.config().rules().has(Change::MirvSiloCooldown4707)
+            {
                 game.unit_mut(silo).launch();
             }
         }

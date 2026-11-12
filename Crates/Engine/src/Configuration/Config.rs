@@ -640,6 +640,9 @@ impl Config {
     pub fn railroad_max_size(&self) -> f64 {
         #[allow(clippy::approx_constant)]
         let sqrt2_approx = 1.4142;
+        if !self.rules.has(Change::RailroadMaxSizeDiagonal4406) {
+            return self.train_station_max_range();
+        }
         self.train_station_max_range() * sqrt2_approx
     }
 
@@ -1307,6 +1310,15 @@ impl Config {
     pub fn nuke_speed(&self, unit_type: UnitType) -> f64 {
         match unit_type {
             UnitType::AtomBomb | UnitType::HydrogenBomb => 10.0,
+            UnitType::MIRV | UnitType::MIRVWarhead
+                if !self.rules.has(Change::MirvWarheadsStandard4706) =>
+            {
+                if unit_type == UnitType::MIRV {
+                    10.0
+                } else {
+                    15.0
+                }
+            }
             UnitType::MIRV => 15.0,
             UnitType::MIRVWarhead => 22.0,
             other => panic!("Unknown nuke type: {}", other.as_str()),
@@ -1430,6 +1442,9 @@ impl Config {
     }
     /// Maximum veterancy level.
     pub fn warship_max_veterancy(&self) -> f64 {
+        if !self.rules.has(Change::WarshipVeterancy4433) {
+            return 0.0;
+        }
         3.0
     }
     /// Max-health bonus per veterancy level, integer percent.
