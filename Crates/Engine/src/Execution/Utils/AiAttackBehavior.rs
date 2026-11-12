@@ -5,14 +5,19 @@
 //! Players are small ids with `0` standing for terra nullius. Upstream shares one `PseudoRandom`
 //! and the nation behaviours between the owner execution and this object, hence the `Rc`s.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
+use crate::Configuration::Config::{AttackLogicAttacker, AttackLogicDefender, AttackLogicInput};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::{bounding_box_center, calculate_bounding_box_center};
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::DonateTroopExecution::DonateTroopsExecution;
+use crate::Execution::Nation::BotAnnexation::{plan_bot_attacks, walled_in_bots};
 use crate::Execution::Nation::NationAllianceBehavior::NationAllianceBehavior;
 use crate::Execution::Nation::NationEmojiBehavior::NationEmojiBehavior;
-use crate::Execution::Nation::NationUtils::find_juiciest_target;
+use crate::Execution::Nation::NationUtils::{
+    find_juiciest_target, find_runaway_leader, has_high_starting_gold,
+};
 use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::Util::closest_two_tiles;
 use crate::Execution::Utils::EmojiIds::{
@@ -20,12 +25,14 @@ use crate::Execution::Utils::EmojiIds::{
     emoji_assist_target_me,
 };
 use crate::Game::Game::{
-    Difficulty, EmojiRecipient, GameMode, GameType, PlayerType, Relation, SmallId, TeamCountConfig,
-    UnitType,
+    AttackId, Cell, Difficulty, EmojiRecipient, GameMode, GameType, PlayerType, Relation, SmallId,
+    TeamCountConfig, TerrainType, UnitId, UnitType, WarshipMode,
 };
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
-use crate::Game::TransportShipUtils::can_build_transport_ship;
+use crate::Game::TransportShipUtils::{can_build_transport_ship, target_transport_tile};
+use crate::Pathfinding::PathFinder::find_water_path;
+use crate::Pathfinding::Types::Source;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
@@ -33,6 +40,7 @@ use std::rc::Rc;
 /// The attack strategies of `getAttackStrategies`.
 #[derive(Clone, Copy)]
 enum Strategy {
+    Crown,
     Retaliate,
     Bots,
     Assist,
@@ -59,7 +67,52 @@ pub struct AiAttackBehavior {
     alliance_behavior: Option<Rc<RefCell<NationAllianceBehavior>>>,
     emoji_behavior: Option<Rc<RefCell<NationEmojiBehavior>>>,
     bot_attack_troops_sent: f64,
+    /// Our boat attacks (landed beachheads) already followed up by land, while they last.
+    followed_landings: Vec<AttackId>,
+    /// Only set during a `maybe_attack` call: our land neighbours.
+    land_neighbors: Option<Vec<SmallId>>,
+    /// Only set during a `maybe_attack` call: each boat route planned, in planning order.
+    boat_routes: Option<Vec<(SmallId, Option<BoatRoute>)>>,
 }
+
+/// A planned boat attack: where it lands, how many tiles it sails, what would sink it.
+#[derive(Clone, Copy)]
+struct BoatRoute {
+    landing: TileRef,
+    length: f64,
+    blocker: Option<UnitId>,
+}
+
+/// Which `find*` helper `pick` runs over the target groups.
+#[derive(Clone, Copy)]
+enum Finder {
+    Traitor,
+    Afk,
+    Victim,
+    Juicy,
+    VeryWeak,
+    Weakest,
+    First,
+}
+
+/// Fewest tiles between two boxes (unknown boxes count as touching).
+fn box_gap(a: Option<(Cell, Cell)>, b: Option<(Cell, Cell)>) -> f64 {
+    let (Some((a_min, a_max)), Some((b_min, b_max))) = (a, b) else {
+        return 0.0;
+    };
+    let dx = f64::max(
+        0.0,
+        f64::max((a_min.x - b_max.x) as f64, (b_min.x - a_max.x) as f64),
+    );
+    let dy = f64::max(
+        0.0,
+        f64::max((a_min.y - b_max.y) as f64, (b_min.y - a_max.y) as f64),
+    );
+    dx + dy
+}
+
+/// `CHEAPEST_TROOP_RATIO`.
+const CHEAPEST_TROOP_RATIO: f64 = 0.6;
 
 /// `canBuildTransportShip(...)` used as a JS condition: a landing tile 0 would be falsy.
 fn can_build_truthy(game: &GameImpl, player: SmallId, tile: TileRef) -> bool {
@@ -91,7 +144,15 @@ impl AiAttackBehavior {
             alliance_behavior,
             emoji_behavior,
             bot_attack_troops_sent: 0.0,
+            followed_landings: Vec::new(),
+            land_neighbors: None,
+            boat_routes: None,
         }
+    }
+
+    /// True for builds with the PR 5899 nation behaviour.
+    fn v2(game: &GameImpl) -> bool {
+        game.config().rules().has(Change::NationsLikeHumans5899)
     }
 
     fn chance(&self, odds: f64) -> bool {
@@ -106,8 +167,61 @@ impl AiAttackBehavior {
         game.player(self.player).is_friendly(other, false)
     }
 
-    /// `maybeAttack()`: the nation entry point.
-    pub fn maybe_attack(&mut self, game: &mut GameImpl) {
+    /// `maybeAttack()`: the nation entry point; returns the blocking warship the owner should clear
+    /// a sea lane to (`clearBlockedLane`, Hard and Impossible).
+    pub fn maybe_attack(&mut self, game: &mut GameImpl) -> Option<UnitId> {
+        if !Self::v2(game) {
+            self.choose_attack(game);
+            return None;
+        }
+        self.boat_routes = Some(Vec::new());
+        self.choose_attack(game);
+        let mut land_front = false;
+        for &neighbor in self.land_neighbors.iter().flatten() {
+            if !self.is_friendly(game, neighbor) {
+                land_front = true;
+            }
+        }
+        self.land_neighbors = None;
+        let routes = self.boat_routes.take().unwrap_or_default();
+        self.clear_blocked_lane(game, &routes, land_front)
+    }
+
+    /// `followUpLandings()`: every tick, Hard and Impossible boats are beachheads: once one lands,
+    /// attack its target by land from there, once.
+    pub fn follow_up_landings(&mut self, game: &mut GameImpl) {
+        if !Self::v2(game) || !self.lands_beachheads(game) {
+            return;
+        }
+        let attacks: Vec<AttackId> = game.player(self.player).outgoing_attacks().to_vec();
+        self.followed_landings.retain(|a| attacks.contains(a));
+        for attack in attacks {
+            let landing = game.attack(attack).source_tile();
+            let Some(landing) = landing else { continue };
+            if self.followed_landings.contains(&attack) {
+                continue;
+            }
+            self.followed_landings.push(attack);
+            let target = game.attack(attack).target();
+            if !self.holds_land_next_to(game, target, landing) {
+                continue;
+            }
+            self.send_land_attack(game, target, None, (target != 0).then_some(target));
+        }
+    }
+
+    fn holds_land_next_to(&self, game: &GameImpl, owner: SmallId, tile: TileRef) -> bool {
+        let mut nbuf = [0; 4];
+        let n = game.map.neighbors4(tile, &mut nbuf);
+        for &t in &nbuf[..n] {
+            if game.map.is_land(t) && !game.map.is_impassable(t) && game.map.owner_id(t) == owner {
+                return true;
+            }
+        }
+        false
+    }
+
+    fn choose_attack(&mut self, game: &mut GameImpl) {
         assert!(self.alliance_behavior.is_some(), "not initialized");
 
         // The set's insertion order feeds the stable troop sort below.
@@ -136,6 +250,9 @@ impl AiAttackBehavior {
             }
             player_neighbors = g.player(self.player).nearby();
         }
+        if Self::v2(game) {
+            self.land_neighbors = Some(bordering_player_set.iter().copied().collect());
+        }
         for &n in &player_neighbors {
             if n != 0 {
                 bordering_player_set.insert(n);
@@ -161,12 +278,13 @@ impl AiAttackBehavior {
             return;
         }
 
+        let hold_boats = Self::v2(game) && self.holds_boats_under_attack(game);
         if bordering_enemies.is_empty() {
-            if self.chance(5.0) {
+            if !hold_boats && self.chance(5.0) {
                 self.attack_with_random_boat(game, &[]);
             }
         } else {
-            if self.chance(10.0) {
+            if !hold_boats && self.chance(10.0) {
                 self.attack_with_random_boat(game, &bordering_enemies);
                 return;
             }
@@ -196,18 +314,26 @@ impl AiAttackBehavior {
         let src = *self.random.borrow_mut().rand_element(&shore);
 
         // High-interest targets first (unowned or bot-owned), mainly relevant early on.
-        let mut dst = self.find_random_boat_target(game, src, bordering_enemies, true);
-        if dst.is_none() {
-            dst = self.find_random_boat_target(game, src, bordering_enemies, false);
-            if dst.is_none() {
+        let mut found = self.find_random_boat_target(game, src, bordering_enemies, true);
+        if found.is_none() {
+            found = self.find_random_boat_target(game, src, bordering_enemies, false);
+            if found.is_none() {
                 return;
             }
         }
-        let dst = dst.expect("checked");
+        let (dst, launch) = found.expect("checked");
+        let v2 = Self::v2(game);
+        if v2 && self.sail(game, launch, dst, None).1.is_some() {
+            return;
+        }
 
         let owner = game.owner_id(dst);
+        if v2 && self.lands_beachheads(game) {
+            self.send_beachhead(game, owner, dst);
+            return;
+        }
         let cap = if owner != 0 {
-            self.troop_send_cap(game)
+            self.troop_send_cap(game, None)
         } else {
             self.troop_send_cap_for_expansion(game)
         };
@@ -232,7 +358,7 @@ impl AiAttackBehavior {
         tile: TileRef,
         bordering_enemies: &[SmallId],
         high_interest_only: bool,
-    ) -> Option<TileRef> {
+    ) -> Option<(TileRef, TileRef)> {
         let x = game.x(tile) as f64;
         let y = game.y(tile) as f64;
         let mut unreachable_players: Vec<SmallId> = Vec::new();
@@ -280,13 +406,13 @@ impl AiAttackBehavior {
                 continue;
             }
             // `canBuildTransportShip(...) === false` is a strict comparison upstream.
-            if can_build_transport_ship(game, self.player, rand_tile).is_none() {
+            let Some(launch) = can_build_transport_ship(game, self.player, rand_tile) else {
                 if owner != 0 {
                     unreachable_players.push(owner);
                 }
                 continue;
-            }
-            return Some(rand_tile);
+            };
+            return Some((rand_tile, launch));
         }
         None
     }
@@ -298,6 +424,10 @@ impl AiAttackBehavior {
         bordering_friends: &[SmallId],
         bordering_enemies: &[SmallId],
     ) {
+        if Self::v2(game) {
+            self.attack_best_target_v2(game, bordering_friends, bordering_enemies);
+            return;
+        }
         // With high starting gold nations expand slowly and bots steal their structures:
         // attack bots before the ratio checks.
         if self.has_neighboring_bot_with_structures(game) && self.attack_bots(game) {
@@ -308,11 +438,68 @@ impl AiAttackBehavior {
             return;
         }
         // Maybe save up until the trigger ratio is reached.
-        if !self.has_trigger_ratio_troops(game) && !self.chance(10.0) {
+        if !self.has_trigger_ratio_troops(game, false) && !self.chance(10.0) {
             return;
         }
         for strategy in Self::attack_strategies(game) {
-            if self.run_strategy(game, strategy, bordering_friends, bordering_enemies) {
+            if self.run_strategy(
+                game,
+                strategy,
+                bordering_friends,
+                bordering_enemies,
+                &mut None,
+            ) {
+                return;
+            }
+        }
+    }
+
+    fn attack_best_target_v2(
+        &mut self,
+        game: &mut GameImpl,
+        bordering_friends: &[SmallId],
+        bordering_enemies: &[SmallId],
+    ) {
+        let difficulty = game.config().game_config().difficulty;
+        let hard_or_impossible =
+            difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible;
+
+        // Hard and Impossible: answer attacks right away, even below the reserve and trigger ratios.
+        if hard_or_impossible && self.retaliate(game) {
+            return;
+        }
+        // A walled-in bot costs next to nothing to annex, so do not save up for it.
+        self.annex_walled_in_bots(game);
+
+        // Attack bots before the ratio checks when they hold structures, which we need back,
+        // and with high starting gold, as those checks count the troops of cities built in a rush.
+        if (self.has_neighboring_bot_with_structures(game)
+            || (self.expands_past_city_troops(game) && self.has_trigger_ratio_troops(game, true)))
+            && self.attack_bots(game)
+        {
+            return;
+        }
+        // Save up troops until the reserve ratio is reached.
+        if !self.has_reserve_ratio_troops(game) {
+            return;
+        }
+        // Medium: answer attacks without saving up to the trigger ratio first.
+        if difficulty == Difficulty::Medium && self.retaliate(game) {
+            return;
+        }
+        // Maybe save up until the trigger ratio is reached.
+        if !self.has_trigger_ratio_troops(game, false) && !self.chance(10.0) {
+            return;
+        }
+        let mut groups: Option<Vec<Vec<SmallId>>> = None;
+        for strategy in Self::attack_strategies(game) {
+            if self.run_strategy(
+                game,
+                strategy,
+                bordering_friends,
+                bordering_enemies,
+                &mut groups,
+            ) {
                 return;
             }
         }
@@ -320,6 +507,23 @@ impl AiAttackBehavior {
 
     fn attack_strategies(game: &GameImpl) -> Vec<Strategy> {
         use Strategy::*;
+        if Self::v2(game) {
+            return match game.config().game_config().difficulty {
+                Difficulty::Easy => vec![Nuked, Bots, Retaliate, Assist, Betray, Hated, Weakest],
+                Difficulty::Medium => vec![
+                    Bots, Nuked, Assist, Betray, Hated, Afk, Traitor, Crown, Weakest, Island,
+                    Donate,
+                ],
+                Difficulty::Hard => vec![
+                    Bots, Assist, Betray, Nuked, Traitor, Afk, Hated, VeryWeak, Juicy, Victim,
+                    Crown, Weakest, Island, Donate,
+                ],
+                Difficulty::Impossible => vec![
+                    Bots, VeryWeak, Betray, Assist, Victim, Crown, Traitor, Juicy, Afk, Nuked,
+                    Hated, Weakest, Island, Donate,
+                ],
+            };
+        }
         match game.config().game_config().difficulty {
             Difficulty::Easy => vec![Nuked, Bots, Retaliate, Assist, Betray, Hated, Weakest],
             Difficulty::Medium => vec![
@@ -343,8 +547,19 @@ impl AiAttackBehavior {
         strategy: Strategy,
         bordering_friends: &[SmallId],
         bordering_enemies: &[SmallId],
+        groups: &mut Option<Vec<Vec<SmallId>>>,
     ) -> bool {
+        if Self::v2(game) {
+            return self.run_strategy_v2(
+                game,
+                strategy,
+                bordering_friends,
+                bordering_enemies,
+                groups,
+            );
+        }
         match strategy {
+            Strategy::Crown => false,
             Strategy::Retaliate => match self.find_incoming_attack_player(game) {
                 Some(attacker) => self.send_attack(game, attacker, true),
                 None => false,
@@ -425,6 +640,175 @@ impl AiAttackBehavior {
         }
     }
 
+    /// The target groups, tried in order, each sorted by troops (ascending).
+    fn target_groups(
+        &mut self,
+        game: &mut GameImpl,
+        bordering_enemies: &[SmallId],
+        groups: &mut Option<Vec<Vec<SmallId>>>,
+    ) -> Vec<Vec<SmallId>> {
+        if let Some(g) = groups {
+            return g.clone();
+        }
+        let difficulty = game.config().game_config().difficulty;
+        let by_troops = |game: &GameImpl, list: &mut Vec<SmallId>| {
+            sort_by_key_f64(list, |&p| game.player(p).troops());
+        };
+        let land_front = bordering_enemies
+            .iter()
+            .any(|&enemy| self.borders_by_land(game, enemy));
+        let hard_or_impossible =
+            difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible;
+        let result = if difficulty == Difficulty::Impossible && land_front {
+            let mut overseas = self.overseas_targets(game, bordering_enemies);
+            by_troops(game, &mut overseas);
+            vec![bordering_enemies.to_vec(), overseas]
+        } else if hard_or_impossible && !land_front {
+            let mut all = bordering_enemies.to_vec();
+            all.extend(self.overseas_targets(game, bordering_enemies));
+            by_troops(game, &mut all);
+            vec![all]
+        } else {
+            vec![bordering_enemies.to_vec()]
+        };
+        *groups = Some(result.clone());
+        result
+    }
+
+    /// What `finder` picks among the targets we can reach right now, from the first group where it picks anything.
+    fn pick(
+        &mut self,
+        game: &mut GameImpl,
+        finder: Finder,
+        bordering_enemies: &[SmallId],
+        groups: &mut Option<Vec<Vec<SmallId>>>,
+    ) -> Option<SmallId> {
+        let easy = game.config().game_config().difficulty == Difficulty::Easy;
+        for group in self.target_groups(game, bordering_enemies, groups) {
+            let mut pool = group;
+            loop {
+                let Some(target) = self.run_finder(game, finder, &pool) else {
+                    break;
+                };
+                if easy || self.can_reach(game, target) {
+                    return Some(target);
+                }
+                pool.retain(|&enemy| enemy != target);
+            }
+        }
+        None
+    }
+
+    fn run_finder(&self, game: &GameImpl, finder: Finder, pool: &[SmallId]) -> Option<SmallId> {
+        match finder {
+            Finder::Traitor => self.find_traitor(game, pool),
+            Finder::Afk => pool.iter().copied().find(|&enemy| {
+                game.player(enemy).is_disconnected()
+                    && (!self.is_ffa(game) || game.player(enemy).troops() < self.troops(game) * 3.0)
+            }),
+            Finder::Victim => self.find_victim(game, pool),
+            Finder::Juicy => self.find_juicy_target(game, pool),
+            Finder::VeryWeak => self.find_very_weak_enemy(game, pool),
+            Finder::Weakest => pool.iter().copied().find(|&enemy| {
+                !self.is_ffa(game) || game.player(enemy).troops() < self.troops(game)
+            }),
+            Finder::First => pool.first().copied(),
+        }
+    }
+
+    fn run_strategy_v2(
+        &mut self,
+        game: &mut GameImpl,
+        strategy: Strategy,
+        bordering_friends: &[SmallId],
+        bordering_enemies: &[SmallId],
+        groups: &mut Option<Vec<Vec<SmallId>>>,
+    ) -> bool {
+        let difficulty = game.config().game_config().difficulty;
+        let picked = |this: &mut Self,
+                      game: &mut GameImpl,
+                      f: Finder,
+                      groups: &mut Option<Vec<Vec<SmallId>>>| {
+            this.pick(game, f, bordering_enemies, groups)
+        };
+        match strategy {
+            Strategy::Retaliate => self.retaliate(game),
+            Strategy::Bots => self.attack_bots(game),
+            Strategy::Assist => self.assist_allies(game),
+            Strategy::Traitor => match picked(self, game, Finder::Traitor, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Afk => match picked(self, game, Finder::Afk, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Betray => {
+                self.maybe_betray_and_attack(game, bordering_friends, bordering_enemies)
+            }
+            Strategy::Nuked => {
+                if self.is_bordering_nuked_territory(game) {
+                    self.send_attack(game, 0, false)
+                } else {
+                    false
+                }
+            }
+            Strategy::Victim => match picked(self, game, Finder::Victim, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Juicy => match picked(self, game, Finder::Juicy, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Hated => {
+                let relations = game.player(self.player).all_relations_sorted();
+                for (other, relation) in relations {
+                    if relation != Relation::Hostile {
+                        continue;
+                    }
+                    if self.is_friendly(game, other) {
+                        continue;
+                    }
+                    if self.is_ffa(game) && game.player(other).troops() > self.troops(game) * 3.0 {
+                        continue;
+                    }
+                    if difficulty != Difficulty::Easy && !self.can_reach(game, other) {
+                        continue;
+                    }
+                    return self.send_attack(game, other, false);
+                }
+                false
+            }
+            Strategy::VeryWeak => match picked(self, game, Finder::VeryWeak, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Weakest => match picked(self, game, Finder::Weakest, groups) {
+                Some(t) => self.send_attack(game, t, false),
+                None => false,
+            },
+            Strategy::Island => {
+                if picked(self, game, Finder::First, groups).is_none()
+                    && let Some(enemy) = self.find_nearest_island_enemy(game)
+                {
+                    return self.send_attack(game, enemy, false);
+                }
+                false
+            }
+            Strategy::Donate => self.donate_troops(game),
+            Strategy::Crown => {
+                let leader = self.find_crown_target(game, bordering_enemies);
+                match leader {
+                    Some(l) => {
+                        self.should_attack(game, l) && self.send_land_attack(game, l, None, Some(l))
+                    }
+                    None => false,
+                }
+            }
+        }
+    }
+
     fn has_neighboring_bot_with_structures(&self, game: &GameImpl) -> bool {
         game.player(self.player).nearby().into_iter().any(|n| {
             n != 0
@@ -446,9 +830,28 @@ impl AiAttackBehavior {
         p.troops() / p.max_troops() >= self.reserve_ratio
     }
 
-    fn has_trigger_ratio_troops(&self, game: &GameImpl) -> bool {
+    fn has_trigger_ratio_troops(&self, game: &GameImpl, expansion: bool) -> bool {
+        if Self::v2(game) {
+            return game.player(self.player).troops() / self.reserve_basis(game, expansion)
+                >= self.trigger_ratio;
+        }
         let p = game.player(self.player);
         p.troops() / p.max_troops() >= self.trigger_ratio
+    }
+
+    /// The max troops the troop ratios refer to. With high starting gold, cities do not hold back
+    /// expanding into free land and bots.
+    fn reserve_basis(&self, game: &GameImpl, expansion: bool) -> f64 {
+        let p = game.player(self.player);
+        if expansion && self.expands_past_city_troops(game) {
+            p.max_troops_without_cities()
+        } else {
+            p.max_troops()
+        }
+    }
+
+    fn expands_past_city_troops(&self, game: &GameImpl) -> bool {
+        has_high_starting_gold(game, self.player)
     }
 
     /// `findIncomingAttackPlayer()`: the attacker of the largest unfriendly incoming attack.
@@ -478,9 +881,158 @@ impl AiAttackBehavior {
         largest_attacker
     }
 
+    fn retaliate(&mut self, game: &mut GameImpl) -> bool {
+        let Some(attacker) = self.find_incoming_attack_player(game) else {
+            return false;
+        };
+        let difficulty = game.config().game_config().difficulty;
+        if (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
+            && self.is_ffa(game)
+            && game.player(self.player).shares_border_with(attacker)
+        {
+            return self.send_retaliation(game, attacker);
+        }
+        self.send_attack(game, attacker, true)
+    }
+
+    /// Hard and Impossible keep their troops home while under attack, Medium only sometimes.
+    fn holds_boats_under_attack(&mut self, game: &GameImpl) -> bool {
+        if self.find_incoming_attack_player(game).is_none() {
+            return false;
+        }
+        match game.config().game_config().difficulty {
+            Difficulty::Easy => false,
+            Difficulty::Medium => self.chance(2.0),
+            Difficulty::Hard | Difficulty::Impossible => true,
+        }
+    }
+
+    /// Cancels the attacker's incoming troops, and pushes into its land when we can also match its
+    /// home army while keeping back what `troop_send_cap` wants for every other neighbour.
+    fn send_retaliation(&mut self, game: &mut GameImpl, attacker: SmallId) -> bool {
+        let mut incoming = 0.0;
+        for attack in game.player(self.player).incoming_attacks() {
+            if game.attack(attack).attacker() == attacker {
+                incoming += game.attack(attack).troops();
+            }
+        }
+        let mut pressing = 0.0;
+        for &attack in game.player(self.player).outgoing_attacks() {
+            if game.attack(attack).target() == attacker {
+                pressing += game.attack(attack).troops();
+            }
+        }
+        let troops = self.troops(game);
+        let max_troops = game.player(self.player).max_troops();
+        let spare = f64::min(
+            troops - max_troops * self.expand_ratio,
+            self.neighbor_troop_cap(game, Some(attacker)),
+        );
+        let above_reserve = troops - max_troops * self.reserve_ratio;
+        let counter = incoming + f64::max(0.0, game.player(attacker).troops() - pressing);
+        let send = if spare >= counter {
+            f64::max(counter, f64::min(above_reserve, spare))
+        } else {
+            f64::min(incoming, f64::max(spare, above_reserve))
+        };
+        self.send_land_attack(game, attacker, Some(send), Some(attacker))
+    }
+
+    /// Troops a strike on `target` could send now: above the reserve, and within `troop_send_cap` without target.
+    pub fn strike_troops(&self, game: &GameImpl, target: SmallId) -> f64 {
+        let max_troops = game.player(self.player).max_troops();
+        f64::min(
+            self.troops(game) - max_troops * self.reserve_ratio,
+            self.troop_send_cap(game, Some(target)),
+        )
+    }
+
+    /// Attacks a player our nuke just hit, while its troops are down. Skips the trigger ratio.
+    pub fn strike(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
+        if self.is_friendly(game, target) || !game.player(self.player).shares_border_with(target) {
+            return false;
+        }
+        self.send_land_attack(game, target, None, Some(target))
+    }
+
+    /// A bordering runaway leader: Hard and Impossible always consider it, Medium only joins
+    /// attacks already under way.
+    fn find_crown_target(&self, game: &GameImpl, bordering_enemies: &[SmallId]) -> Option<SmallId> {
+        let leader = find_runaway_leader(game)?;
+        if !bordering_enemies.contains(&leader)
+            || !game.player(self.player).shares_border_with(leader)
+        {
+            return None;
+        }
+        let difficulty = game.config().game_config().difficulty;
+        if difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible {
+            return Some(leader);
+        }
+        if self.troops_attacking(game, leader) >= game.player(leader).troops() * 0.1 {
+            Some(leader)
+        } else {
+            None
+        }
+    }
+
+    fn troops_attacking(&self, game: &GameImpl, target: SmallId) -> f64 {
+        game.player(target)
+            .incoming_attacks()
+            .into_iter()
+            .fold(0.0, |sum, a| sum + game.attack(a).troops())
+    }
+
+    fn neighboring_bots(&self, game: &GameImpl) -> Vec<SmallId> {
+        game.player(self.player)
+            .nearby()
+            .into_iter()
+            .filter(|&n| {
+                n != 0
+                    && !self.is_friendly(game, n)
+                    && game.player(n).player_type() == PlayerType::Bot
+            })
+            .collect()
+    }
+
+    /// Hard and Impossible nations take bots in an order that walls others in, annexing them for free.
+    fn annexes_bots(&self, game: &GameImpl) -> bool {
+        let difficulty = game.config().game_config().difficulty;
+        game.player(self.player).player_type() == PlayerType::Nation
+            && (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
+    }
+
+    /// The engine only checks a bot for annexation when its land changes, so a 1% attack makes it
+    /// hand over a bot only we border.
+    fn annex_walled_in_bots(&mut self, game: &mut GameImpl) {
+        if !self.annexes_bots(game) {
+            return;
+        }
+        let bots = self.neighboring_bots(game);
+        if bots.is_empty() {
+            return;
+        }
+        let troops = (self.troops(game) / 100.0).floor();
+        if troops < 1.0 {
+            return;
+        }
+        for bot in walled_in_bots(game, self.player, &bots) {
+            let target_id = Self::target_id(game, bot);
+            game.add_execution(Box::new(AttackExecution::new(
+                Some(troops),
+                self.player,
+                target_id,
+                None,
+                true,
+            )));
+        }
+    }
+
     // Attacks many neighbouring bots in parallel, densest-last; `send_attack` does nothing when
     // the reserve is used up. Bots with structures come first.
     fn attack_bots(&mut self, game: &mut GameImpl) -> bool {
+        if Self::v2(game) {
+            return self.attack_bots_v2(game);
+        }
         let bots: Vec<SmallId> = game
             .player(self.player)
             .nearby()
@@ -521,6 +1073,44 @@ impl AiAttackBehavior {
         }
         // Short-circuit the pipeline only when troops were actually allocated to bot attacks.
         self.bot_attack_troops_sent > 0.0
+    }
+
+    fn attack_bots_v2(&mut self, game: &mut GameImpl) -> bool {
+        let bots = self.neighboring_bots(game);
+        if bots.is_empty() {
+            return false;
+        }
+        self.bot_attack_troops_sent = 0.0;
+
+        let mut ordered: Vec<SmallId> = if self.annexes_bots(game) {
+            plan_bot_attacks(game, self.player, &bots)
+        } else {
+            let density = |p: SmallId| {
+                let pl = game.player(p);
+                pl.troops() / pl.num_tiles_owned() as f64
+            };
+            let mut sorted = bots.clone();
+            sorted.sort_by(|&a, &b| {
+                (density(a) - density(b))
+                    .partial_cmp(&0.0)
+                    .unwrap_or(Ordering::Equal)
+            });
+            sorted
+        };
+        ordered.sort_by_key(|&b| std::cmp::Reverse(Self::owns_structures(game, b)));
+        let parallelism = self.bot_attack_max_parallelism(game);
+        let reduced: Vec<SmallId> = ordered.into_iter().take(parallelism).collect();
+        for &bot in &reduced {
+            self.send_attack(game, bot, false);
+        }
+        // Hard and Impossible only top up running attacks, so those count as well.
+        self.bot_attack_troops_sent > 0.0
+            || (self.annexes_bots(game)
+                && game
+                    .player(self.player)
+                    .outgoing_attacks()
+                    .iter()
+                    .any(|&a| reduced.contains(&game.attack(a).target())))
     }
 
     fn bot_attack_max_parallelism(&self, game: &GameImpl) -> usize {
@@ -685,7 +1275,7 @@ impl AiAttackBehavior {
         find_juiciest_target(game, &candidates)
     }
 
-    fn find_nearest_island_enemy(&mut self, game: &GameImpl) -> Option<SmallId> {
+    fn find_nearest_island_enemy(&mut self, game: &mut GameImpl) -> Option<SmallId> {
         if game.config().is_unit_disabled(UnitType::TransportShip) {
             return None;
         }
@@ -733,9 +1323,25 @@ impl AiAttackBehavior {
             .collect();
         sorted_players.sort_by_key(|&(_, d)| d);
 
+        let v2 = Self::v2(game);
         let my_shore = self.shore_tiles(game, self.player);
         let mut reachable_players: Vec<SmallId> = Vec::new();
         for (p, _) in sorted_players {
+            if v2 {
+                // Beachhead boats sail any distance, even past a warship: nothing nearer is left to attack.
+                let reachable = if self.lands_beachheads(game) {
+                    self.borders_by_land(game, p) || self.boat_route(game, p).is_some()
+                } else {
+                    self.can_reach(game, p)
+                };
+                if reachable {
+                    reachable_players.push(p);
+                    if reachable_players.len() >= 2 {
+                        break;
+                    }
+                }
+                continue;
+            }
             let their_shore = self.shore_tiles(game, p);
             let Some((_, y)) = closest_two_tiles(
                 &game.map,
@@ -779,7 +1385,7 @@ impl AiAttackBehavior {
     /// `attackRandomTarget()`.
     pub fn attack_random_target(&mut self, game: &mut GameImpl) {
         // Save up troops until the trigger ratio is reached.
-        if !self.has_trigger_ratio_troops(game) {
+        if !self.has_trigger_ratio_troops(game, false) {
             return;
         }
         // Retaliate against incoming attacks.
@@ -857,13 +1463,13 @@ impl AiAttackBehavior {
         }
         if target != 0 {
             if game.player(self.player).shares_border_with(target) {
-                self.send_land_attack(game, target)
+                self.send_land_attack(game, target, None, None)
             } else {
                 self.send_boat_attack(game, target)
             }
         } else if self.has_land_border_with_terra_nullius(game) {
             // `sharesBorderWith(TerraNullius)` counts water as terra nullius, so land is checked.
-            self.send_land_attack(game, target)
+            self.send_land_attack(game, target, None, None)
         } else {
             self.send_boat_attack_to_nearby_terra_nullius(game)
         }
@@ -936,7 +1542,16 @@ impl AiAttackBehavior {
                 if game.map.has_fallout(tile) {
                     continue;
                 }
-                if !can_build_truthy(game, self.player, tile) {
+                let launch = can_build_transport_ship(game, self.player, tile);
+                if Self::v2(game) {
+                    let Some(launch) = launch else { continue };
+                    if self.sail(game, launch, tile, None).1.is_some() {
+                        continue;
+                    }
+                    if self.lands_beachheads(game) {
+                        return self.send_beachhead(game, 0, tile);
+                    }
+                } else if !launch.is_some_and(|t| t != 0) {
                     continue;
                 }
                 let troops = (self.troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game));
@@ -996,7 +1611,25 @@ impl AiAttackBehavior {
 
     // Hard and Impossible nations in FFA: the most troops that can be sent without dropping below
     // a fraction of the strongest non-allied, non-bot neighbour (Hard 75%, Impossible 90%).
-    fn troop_send_cap(&self, game: &GameImpl) -> f64 {
+    fn troop_send_cap(&self, game: &GameImpl, ignore: Option<SmallId>) -> f64 {
+        if Self::v2(game) {
+            let mut cap = self.neighbor_troop_cap(game, ignore);
+            // Nations under attack may retaliate with at least the incoming troops.
+            let incoming = game.player(self.player).incoming_attacks();
+            if !incoming.is_empty() {
+                let total_incoming = incoming
+                    .into_iter()
+                    .fold(0.0, |sum, a| sum + game.attack(a).troops());
+                cap = f64::max(cap, total_incoming);
+            }
+            return cap;
+        }
+        self.neighbor_troop_cap(game, ignore)
+    }
+
+    /// `troopSendCap()` without the allowance for nations under attack (v2) or with it (older builds).
+    fn neighbor_troop_cap(&self, game: &GameImpl, ignore: Option<SmallId>) -> f64 {
+        let v2 = Self::v2(game);
         let me = game.player(self.player);
         if me.player_type() == PlayerType::Bot {
             return f64::INFINITY;
@@ -1012,6 +1645,7 @@ impl AiAttackBehavior {
         let mut max_neighbor_troops = 0.0;
         for n in me.nearby() {
             if n != 0
+                && Some(n) != ignore
                 && !self.is_friendly(game, n)
                 && game.player(n).player_type() != PlayerType::Bot
                 && game.player(n).troops() > max_neighbor_troops
@@ -1025,6 +1659,9 @@ impl AiAttackBehavior {
             let min_retained = (max_neighbor_troops * retain_fraction).ceil();
             f64::max(0.0, me.troops() - min_retained)
         };
+        if v2 {
+            return cap;
+        }
         // Nations under attack may retaliate with at least the incoming troops.
         let incoming = me.incoming_attacks();
         if !incoming.is_empty() {
@@ -1038,7 +1675,7 @@ impl AiAttackBehavior {
 
     // Like `troop_send_cap`, but above 0: terra nullius cannot fight back, so it is throttled.
     fn troop_send_cap_for_expansion(&self, game: &GameImpl) -> f64 {
-        let cap = self.troop_send_cap(game);
+        let cap = self.troop_send_cap(game, None);
         if cap > 0.0 {
             return cap;
         }
@@ -1050,8 +1687,15 @@ impl AiAttackBehavior {
         game: &mut GameImpl,
         target: SmallId,
         non_bot_troops: impl FnOnce(&Self, &GameImpl, f64) -> f64,
+        opponent: Option<SmallId>,
     ) -> Option<f64> {
-        let max_troops = game.player(self.player).max_troops();
+        let v2 = Self::v2(game);
+        let max_troops = if v2 {
+            let expansion = target == 0 || game.player(target).player_type() == PlayerType::Bot;
+            self.reserve_basis(game, expansion)
+        } else {
+            game.player(self.player).max_troops()
+        };
         let target_is_player = target != 0;
         let bot_with_structures = target_is_player
             && game.player(target).player_type() == PlayerType::Bot
@@ -1080,14 +1724,20 @@ impl AiAttackBehavior {
 
         // Hard and Impossible: do not drop below the neighbour troop threshold.
         troops = troops.min(if target_is_player {
-            self.troop_send_cap(game)
+            self.troop_send_cap(game, opponent)
         } else {
             self.troop_send_cap_for_expansion(game)
         });
         if troops < 1.0 {
             return None;
         }
-        if target_is_player && self.is_attack_too_weak(game, troops, target) {
+        // Troops already attacking an opponent we take on on purpose count toward the too-weak check.
+        let pile_on = if v2 && target_is_player && Some(target) == opponent {
+            self.troops_attacking(game, target)
+        } else {
+            0.0
+        };
+        if target_is_player && self.is_attack_too_weak(game, troops + pile_on, target) {
             return None;
         }
         if target_is_player && game.player(self.player).player_type() == PlayerType::Nation {
@@ -1101,10 +1751,19 @@ impl AiAttackBehavior {
         Some(troops)
     }
 
-    fn send_land_attack(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
-        let Some(troops) = self.calculate_attack_troops(game, target, |this, g, target_troops| {
-            this.troops(g) - target_troops
-        }) else {
+    fn send_land_attack(
+        &mut self,
+        game: &mut GameImpl,
+        target: SmallId,
+        fixed_troops: Option<f64>,
+        opponent: Option<SmallId>,
+    ) -> bool {
+        let Some(troops) = self.calculate_attack_troops(
+            game,
+            target,
+            |this, g, target_troops| fixed_troops.unwrap_or_else(|| this.troops(g) - target_troops),
+            opponent,
+        ) else {
             return false;
         };
         let target_id = Self::target_id(game, target);
@@ -1119,6 +1778,9 @@ impl AiAttackBehavior {
     }
 
     fn send_boat_attack(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
+        if Self::v2(game) {
+            return self.send_boat_attack_v2(game, target);
+        }
         if game.config().is_unit_disabled(UnitType::TransportShip) {
             return false;
         }
@@ -1135,7 +1797,7 @@ impl AiAttackBehavior {
             return false;
         }
         let Some(troops) =
-            self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0)
+            self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0, None)
         else {
             return false;
         };
@@ -1147,6 +1809,361 @@ impl AiAttackBehavior {
         true
     }
 
+    fn send_boat_attack_v2(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
+        let Some(route) = self.boat_route(game, target) else {
+            return false;
+        };
+        // A beachhead boat is cheap enough to risk past a warship, one at a time.
+        let beachhead = self.lands_beachheads(game);
+        if route.blocker.is_some()
+            && (!beachhead || game.player(self.player).unit_count(UnitType::TransportShip) > 0)
+        {
+            return false;
+        }
+        if beachhead {
+            return self.send_beachhead(game, target, route.landing);
+        }
+        let Some(troops) =
+            self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0, None)
+        else {
+            return false;
+        };
+        game.add_execution(Box::new(TransportShipExecution::new(
+            self.player,
+            route.landing,
+            Some(troops),
+        )));
+        true
+    }
+
+    /// Hard and Impossible nations boat a tiny force and attack by land as soon as it lands.
+    fn lands_beachheads(&self, game: &GameImpl) -> bool {
+        let difficulty = game.config().game_config().difficulty;
+        game.player(self.player).player_type() == PlayerType::Nation
+            && (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
+    }
+
+    /// A 1% boat, if the land attack following its landing would be worth making now.
+    fn send_beachhead(&mut self, game: &mut GameImpl, target: SmallId, landing: TileRef) -> bool {
+        let Some(troops) = self.calculate_attack_troops(
+            game,
+            target,
+            |this, g, target_troops| this.troops(g) - target_troops,
+            (target != 0).then_some(target),
+        ) else {
+            return false;
+        };
+        let boat_troops = f64::max(1.0, (self.troops(game) / 100.0).floor());
+        // Only the boat leaves now: the land attack is budgeted once it lands.
+        if target != 0 && game.player(target).player_type() == PlayerType::Bot {
+            self.bot_attack_troops_sent += boat_troops - troops;
+        }
+        game.add_execution(Box::new(TransportShipExecution::new(
+            self.player,
+            landing,
+            Some(boat_troops),
+        )));
+        true
+    }
+
+    fn borders_by_land(&self, game: &GameImpl, target: SmallId) -> bool {
+        match &self.land_neighbors {
+            Some(set) => set.contains(&target),
+            None => game.player(self.player).shares_border_with(target),
+        }
+    }
+
+    /// By land, or by a boat that passes no hostile warship and is not sailing too far.
+    fn can_reach(&mut self, game: &mut GameImpl, target: SmallId) -> bool {
+        if self.borders_by_land(game, target) {
+            return true;
+        }
+        match self.boat_route(game, target) {
+            Some(route) => route.blocker.is_none() && route.length <= self.max_boat_route(game),
+            None => false,
+        }
+    }
+
+    fn boat_route(&mut self, game: &mut GameImpl, target: SmallId) -> Option<BoatRoute> {
+        if let Some(routes) = &self.boat_routes
+            && let Some((_, known)) = routes.iter().find(|(t, _)| *t == target)
+        {
+            return *known;
+        }
+        let route = self.plan_boat_route(game, target);
+        if let Some(routes) = self.boat_routes.as_mut() {
+            routes.push((target, route));
+        }
+        route
+    }
+
+    /// The direct crossing, or if a warship blocks it, the shortest safe one landing elsewhere.
+    fn plan_boat_route(&mut self, game: &mut GameImpl, target: SmallId) -> Option<BoatRoute> {
+        if game.config().is_unit_disabled(UnitType::TransportShip)
+            || game.player(self.player).unit_count(UnitType::TransportShip)
+                >= game.config().boat_max_number() as i64
+        {
+            return None;
+        }
+        let ours = self.shore_tiles(game, self.player);
+        let theirs = self.shore_tiles(game, target);
+        let (_, closest_y) =
+            closest_two_tiles(&game.map, ours.iter().copied(), theirs.iter().copied())?;
+        let warships = self.hostile_warships(game);
+        let direct = self.route_to(game, closest_y, &warships);
+        if let Some(d) = direct
+            && d.blocker.is_none()
+        {
+            return Some(d);
+        }
+        let mut best: Option<BoatRoute> = None;
+        for landing in self.other_landings(game, &ours, &theirs, closest_y, &warships) {
+            let route = self.route_to(game, landing, &warships);
+            if let Some(r) = route
+                && r.blocker.is_none()
+                && best.is_none_or(|b| r.length < b.length)
+            {
+                best = Some(r);
+            }
+        }
+        best.or(direct)
+    }
+
+    /// The launch follows from the landing: our shore closest to it by water.
+    fn route_to(
+        &mut self,
+        game: &mut GameImpl,
+        landing: TileRef,
+        warships: &[UnitId],
+    ) -> Option<BoatRoute> {
+        let launch = can_build_transport_ship(game, self.player, landing)?;
+        let (length, blocker) = self.sail(game, launch, landing, Some(warships));
+        Some(BoatRoute {
+            landing,
+            length,
+            blocker,
+        })
+    }
+
+    /// Landing spots on their coast apart from `tried` and clear of hostile warships, nearest to
+    /// our coast first: Medium tries 1, Hard 2, Impossible 4.
+    fn other_landings(
+        &self,
+        game: &GameImpl,
+        ours: &[TileRef],
+        theirs: &[TileRef],
+        tried: TileRef,
+        warships: &[UnitId],
+    ) -> Vec<TileRef> {
+        let count = match game.config().game_config().difficulty {
+            Difficulty::Easy => return Vec::new(),
+            Difficulty::Medium => 1,
+            Difficulty::Hard => 2,
+            Difficulty::Impossible => 4,
+        };
+        let range = self.danger_range(game);
+        let range_squared = range * range;
+        let our_step = usize::max(1, ours.len() / 32);
+        let our_sample: Vec<TileRef> = ours
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| i % our_step == 0)
+            .map(|(_, &t)| t)
+            .collect();
+        let mut candidates: Vec<(TileRef, f64)> = Vec::new();
+        let their_step = usize::max(1, theirs.len() / 32);
+        let mut i = 0;
+        while i < theirs.len() {
+            let tile = theirs[i];
+            i += their_step;
+            if warships.iter().any(|&w| {
+                game.map
+                    .euclidean_dist_squared(game.unit_any(w).tile(), tile) as f64
+                    <= range_squared
+            }) {
+                continue;
+            }
+            let mut dist = f64::INFINITY;
+            for &s in &our_sample {
+                dist = dist.min(game.map.manhattan_dist(s, tile) as f64);
+            }
+            candidates.push((tile, dist));
+        }
+        candidates.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(Ordering::Equal));
+        let mut picked = vec![tried];
+        for (tile, _) in candidates {
+            if picked.len() > count {
+                break;
+            }
+            if picked
+                .iter()
+                .any(|&p| game.map.manhattan_dist(p, tile) < 50)
+            {
+                continue;
+            }
+            picked.push(tile);
+        }
+        picked.split_off(1)
+    }
+
+    fn hostile_warships(&self, game: &GameImpl) -> Vec<UnitId> {
+        game.units_of(UnitType::Warship)
+            .into_iter()
+            .filter(|&w| {
+                let unit = game.unit_any(w);
+                unit.owner_id() != self.player
+                    && !unit.is_under_construction()
+                    && unit.warship_state().state != WarshipMode::Docked
+                    && game
+                        .player(unit.owner_id())
+                        .can_attack_player(self.player, true)
+            })
+            .collect()
+    }
+
+    /// Warship targeting range, plus what it may move while our boat approaches.
+    fn danger_range(&self, game: &GameImpl) -> f64 {
+        game.config().warship_targetting_range() + 20.0
+    }
+
+    /// Tiles a boat sails from `launch` to the shore at `target`, and the hostile warship that sinks it.
+    /// Easy does not look, Medium checks both shores, Hard and Impossible pathfind.
+    fn sail(
+        &self,
+        game: &mut GameImpl,
+        launch: TileRef,
+        target: TileRef,
+        warships: Option<&[UnitId]>,
+    ) -> (f64, Option<UnitId>) {
+        let landing = target_transport_tile(game, self.player, target).unwrap_or(target);
+        let direct = game.map.manhattan_dist(launch, landing) as f64;
+        let difficulty = game.config().game_config().difficulty;
+        if game.player(self.player).player_type() == PlayerType::Bot
+            || difficulty == Difficulty::Easy
+        {
+            return (direct, None);
+        }
+        let hostile;
+        let warships: &[UnitId] = match warships {
+            Some(w) => w,
+            None => {
+                hostile = self.hostile_warships(game);
+                &hostile
+            }
+        };
+
+        let path: Option<Vec<TileRef>> = if difficulty == Difficulty::Medium || direct <= 20.0 {
+            None
+        } else {
+            find_water_path(
+                &mut game.water_manager,
+                &game.map,
+                Source::Single(launch),
+                landing,
+            )
+        };
+        let route: Vec<TileRef> = path.clone().unwrap_or_else(|| vec![launch, landing]);
+        let length = path.as_ref().map_or(direct, |p| p.len() as f64);
+        // Without a path, assume the warship can fire as soon as we launch.
+        let sailed = |i: usize| if path.is_none() { 0.0 } else { i as f64 };
+
+        let range = self.danger_range(game);
+        let (mut min_x, mut max_x, mut min_y, mut max_y) = (
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+        );
+        for &t in &route {
+            let (x, y) = (game.map.x(t) as f64, game.map.y(t) as f64);
+            min_x = min_x.min(x);
+            max_x = max_x.max(x);
+            min_y = min_y.min(y);
+            max_y = max_y.max(y);
+        }
+        for &w in warships {
+            let w_tile = game.unit_any(w).tile();
+            let (wx, wy) = (game.map.x(w_tile) as f64, game.map.y(w_tile) as f64);
+            if wx < min_x - range || wx > max_x + range || wy < min_y - range || wy > max_y + range
+            {
+                continue;
+            }
+            for (i, &r) in route.iter().enumerate() {
+                if game.map.euclidean_dist_squared(w_tile, r) as f64 > range * range {
+                    continue;
+                }
+                // Shell and boat close in by at most 4 tiles a tick; 10 tiles spare for its reaction.
+                let ticks_left = length - sailed(i);
+                if 4.0 * ticks_left >= game.map.manhattan_dist(w_tile, r) as f64 - 10.0 {
+                    return (length, Some(w));
+                }
+                break;
+            }
+        }
+        (length, None)
+    }
+
+    /// Hard and Impossible do not sail further than this to attack someone.
+    fn max_boat_route(&self, game: &GameImpl) -> f64 {
+        match game.config().game_config().difficulty {
+            Difficulty::Easy | Difficulty::Medium => f64::INFINITY,
+            Difficulty::Hard => 300.0,
+            Difficulty::Impossible => 500.0,
+        }
+    }
+
+    /// Enemies across the water (not bordering us) whose main territory is within boat range of ours.
+    fn overseas_targets(&self, game: &GameImpl, bordering_enemies: &[SmallId]) -> Vec<SmallId> {
+        if game.player(self.player).unit_count(UnitType::TransportShip)
+            >= game.config().boat_max_number() as i64
+        {
+            return Vec::new();
+        }
+        let range = self.max_boat_route(game);
+        let ours = game.player(self.player).largest_cluster_bounding_box;
+        game.players()
+            .into_iter()
+            .filter(|&p| {
+                p != self.player
+                    && game.player(p).player_type() != PlayerType::Bot
+                    && !self.is_friendly(game, p)
+                    && !bordering_enemies.contains(&p)
+                    && (!self.is_ffa(game) || game.player(p).troops() < self.troops(game))
+                    && box_gap(ours, game.player(p).largest_cluster_bounding_box) <= range
+            })
+            .collect()
+    }
+
+    /// Hard and Impossible send warships at whatever blocks the juiciest target they could not reach.
+    /// Without a land front any distance counts: the sea is the only way to attack.
+    fn clear_blocked_lane(
+        &self,
+        game: &GameImpl,
+        routes: &[(SmallId, Option<BoatRoute>)],
+        land_front: bool,
+    ) -> Option<UnitId> {
+        let difficulty = game.config().game_config().difficulty;
+        if difficulty != Difficulty::Hard && difficulty != Difficulty::Impossible {
+            return None;
+        }
+        let max_route = self.max_boat_route(game);
+        let mut blocked: Vec<(SmallId, UnitId)> = Vec::new();
+        for (target, route) in routes {
+            let Some(route) = route else { continue };
+            let Some(blocker) = route.blocker else {
+                continue;
+            };
+            if (!land_front || route.length <= max_route)
+                && (!self.is_ffa(game) || game.player(*target).troops() < self.troops(game))
+            {
+                blocked.push((*target, blocker));
+            }
+        }
+        let keys: Vec<SmallId> = blocked.iter().map(|(t, _)| *t).collect();
+        let target = find_juiciest_target(game, &keys)?;
+        blocked.iter().find(|(t, _)| *t == target).map(|(_, b)| *b)
+    }
+
     fn calculate_bot_attack_troops(
         &self,
         game: &GameImpl,
@@ -1155,6 +2172,12 @@ impl AiAttackBehavior {
     ) -> f64 {
         if game.config().game_config().difficulty == Difficulty::Easy {
             return max_troops;
+        }
+        if Self::v2(game) && game.config().game_config().difficulty != Difficulty::Medium {
+            // Top up what already attacks the bot, or wait until we can send it all.
+            let troops = self.bot_attack_troops_needed(game, target) * 1.3
+                - self.our_stack_against(game, target);
+            return if troops <= max_troops { troops } else { 0.0 };
         }
         let target_troops = game.player(target).troops();
         let mut troops = target_troops * 4.0;
@@ -1165,6 +2188,85 @@ impl AiAttackBehavior {
                 troops = 0.0;
             } else {
                 troops = max_troops;
+            }
+        }
+        troops
+    }
+
+    /// Keeps the attack at its cheapest loss rate until the bot collapses below 100 tiles.
+    fn bot_attack_troops_needed(&self, game: &GameImpl, bot: SmallId) -> f64 {
+        let stack = f64::max(1.0, game.player(bot).troops() / CHEAPEST_TROOP_RATIO);
+        let tiles = f64::max(0.0, game.player(bot).num_tiles_owned() as f64 - 100.0);
+        f64::max(stack, tiles * self.bot_tile_loss(game, bot, stack))
+    }
+
+    /// Troops lost per tile at that stack: Impossible reads the terrain on a 6x6 grid over the
+    /// bot's land, Hard assumes highland.
+    fn bot_tile_loss(&self, game: &GameImpl, bot: SmallId, stack: f64) -> f64 {
+        let mut terrains: Vec<TerrainType> = Vec::new();
+        let bx = game.player(bot).largest_cluster_bounding_box;
+        let difficulty = game.config().game_config().difficulty;
+        if difficulty == Difficulty::Impossible
+            && let Some((min, max)) = bx
+        {
+            let width = (max.x - min.x + 1) as f64;
+            let height = (max.y - min.y + 1) as f64;
+            for i in 0..6 {
+                for j in 0..6 {
+                    let x = min.x + (((2 * i + 1) as f64 * width) / 12.0).floor() as i32;
+                    let y = min.y + (((2 * j + 1) as f64 * height) / 12.0).floor() as i32;
+                    let tile = game.tile_ref(x, y);
+                    if game.map.owner_id(tile) == bot {
+                        terrains.push(game.map.terrain_type(tile));
+                    }
+                }
+            }
+        }
+        if terrains.is_empty() {
+            terrains.push(TerrainType::Highland);
+        }
+        let me = game.player(self.player);
+        let b = game.player(bot);
+        let mut loss = 0.0;
+        for &terrain in &terrains {
+            loss += game
+                .config()
+                .attack_logic(&AttackLogicInput {
+                    terrain,
+                    attack_troops: stack,
+                    attacker: AttackLogicAttacker {
+                        player_type: me.player_type(),
+                        num_tiles: me.num_tiles_owned() as f64,
+                    },
+                    defender: Some(AttackLogicDefender {
+                        player_type: b.player_type(),
+                        num_tiles: b.num_tiles_owned() as f64,
+                        troops: b.troops(),
+                        is_traitor: b.is_traitor(),
+                        is_disconnected_teammate: false,
+                    }),
+                    defender_has_defense_post: false,
+                    fallout_ratio: None,
+                    border_size: 1.0,
+                })
+                .attacker_troop_loss;
+        }
+        loss / terrains.len() as f64
+    }
+
+    /// Land attacks on the same target merge, so these troops join the next one we send, while the
+    /// target's attacks on us cancel out against it.
+    fn our_stack_against(&self, game: &GameImpl, target: SmallId) -> f64 {
+        let mut troops = 0.0;
+        for &attack in game.player(self.player).outgoing_attacks() {
+            let a = game.attack(attack);
+            if a.target() == target && a.source_tile().is_none() {
+                troops += a.troops();
+            }
+        }
+        for attack in game.player(self.player).incoming_attacks() {
+            if game.attack(attack).attacker() == target {
+                troops -= game.attack(attack).troops();
             }
         }
         troops
@@ -1182,7 +2284,7 @@ impl AiAttackBehavior {
         if !game.config().donate_troops() {
             return false;
         }
-        if game.winner().is_some() {
+        if !Self::v2(game) && game.winner().is_some() {
             return false;
         }
         match game.config().game_config().difficulty {

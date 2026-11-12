@@ -5,6 +5,7 @@ use crate::Core::PseudoRandom::PseudoRandom;
 use std::cell::RefCell;
 use std::rc::Rc;
 
+pub mod BotAnnexation;
 pub mod NationAllianceBehavior;
 pub mod NationBehaviorPorts;
 pub mod NationEmojiBehavior;

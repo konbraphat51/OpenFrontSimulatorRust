@@ -279,6 +279,10 @@ impl PlayerImpl {
     pub fn has_embargo_against(&self, other: SmallId) -> bool {
         self.embargoes.contains_key(&other)
     }
+    /// `hasManualEmbargoAgainst`: a permanent (non-temporary) embargo.
+    pub fn has_manual_embargo_against(&self, other: SmallId) -> bool {
+        self.embargoes.get(&other).is_some_and(|e| !e.is_temporary)
+    }
     /// `getEmbargoes()`.
     pub fn get_embargoes(&self) -> Vec<Embargo> {
         self.embargoes.values().copied().collect()
@@ -411,6 +415,13 @@ impl<'a> PlayerRef<'a> {
     /// `config.maxTroops(player)`.
     pub fn max_troops(&self) -> f64 {
         self.game.config().max_troops(&self.troop_input())
+    }
+
+    /// `config.maxTroopsWithoutCities(player)`.
+    pub fn max_troops_without_cities(&self) -> f64 {
+        let mut input = self.troop_input();
+        input.city_level_sum = 0.0;
+        self.game.config().max_troops(&input)
     }
 
     /// `config.troopIncreaseRate(player)`.

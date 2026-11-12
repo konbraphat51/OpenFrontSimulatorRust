@@ -4,7 +4,7 @@
 
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::calculate_bounding_box;
-use crate::Game::Game::{Cell, SmallId, UnitType};
+use crate::Game::Game::{Cell, Difficulty, GameMode, Gold, PlayerType, SmallId, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 
@@ -123,4 +123,77 @@ pub fn find_juiciest_target(game: &GameImpl, candidates: &[SmallId]) -> Option<S
         }
     }
     best
+}
+
+/// Starting gold from which nations place many structures at once, ballooning their max troops.
+const HIGH_STARTING_GOLD: Gold = 3_000_000;
+
+/// `hasHighStartingGold(game, player)`.
+pub fn has_high_starting_gold(game: &GameImpl, player: SmallId) -> bool {
+    let p = game.player(player);
+    let info = p.info();
+    game.config()
+        .starting_gold(info.player_type, info.is_lobby_creator)
+        >= HIGH_STARTING_GOLD
+}
+
+/// Most minutes of income a nation saves up for, keyed by difficulty (infinite when unbounded).
+fn save_up_horizon_minutes(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy | Difficulty::Medium => f64::INFINITY,
+        Difficulty::Hard => 5.0,
+        Difficulty::Impossible => 6.0,
+    }
+}
+
+/// `isSaveUpWithinReach(game, player, target)`: whether `target` gold is close enough to save up for.
+pub fn is_save_up_within_reach(game: &GameImpl, player: SmallId, target: Gold) -> bool {
+    let horizon = save_up_horizon_minutes(game.config().game_config().difficulty);
+    let missing = (target - game.player(player).gold()) as f64;
+    if horizon == f64::INFINITY || missing <= 0.0 {
+        return true;
+    }
+    // Income grows about linearly over a game, so the current rate is about twice the average.
+    let minutes = f64::max(1.0, game.ticks() as f64 / 600.0);
+    let income_per_minute = (2.0 * game.player(player).gold_earned() as f64) / minutes;
+    missing <= income_per_minute * horizon
+}
+
+/// How many times the runner-up's land the leader must own to count as a runaway leader.
+fn runaway_lead_factor(difficulty: Difficulty) -> Option<f64> {
+    match difficulty {
+        Difficulty::Easy => None,
+        Difficulty::Medium => Some(3.0),
+        Difficulty::Hard => Some(2.0),
+        Difficulty::Impossible => Some(1.5),
+    }
+}
+
+/// `findRunawayLeader(game)`: the FFA player (not a bot) owning far more land than the runner-up.
+pub fn find_runaway_leader(game: &GameImpl) -> Option<SmallId> {
+    let config = game.config().game_config();
+    if config.game_mode != GameMode::FFA {
+        return None;
+    }
+    let factor = runaway_lead_factor(config.difficulty)?;
+    let mut leader: Option<SmallId> = None;
+    let mut runner_up: Option<SmallId> = None;
+    let tiles = |p: SmallId| game.player(p).num_tiles_owned();
+    for p in game.players() {
+        if game.player(p).player_type() == PlayerType::Bot {
+            continue;
+        }
+        if leader.is_none_or(|l| tiles(p) > tiles(l)) {
+            runner_up = leader;
+            leader = Some(p);
+        } else if runner_up.is_none_or(|r| tiles(p) > tiles(r)) {
+            runner_up = Some(p);
+        }
+    }
+    let (leader, runner_up) = (leader?, runner_up?);
+    if tiles(leader) as f64 >= tiles(runner_up) as f64 * factor {
+        Some(leader)
+    } else {
+        None
+    }
 }

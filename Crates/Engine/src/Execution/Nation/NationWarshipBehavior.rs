@@ -2,13 +2,16 @@
 //! Port of src/core/execution/nation/NationWarshipBehavior.ts: nation warship decisions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Execution::ConstructionExecution::ConstructionExecution;
 use crate::Execution::Nation::NationEmojiBehavior::{
     NationEmojiBehavior, emoji_warship_retaliation,
 };
 use crate::Execution::Nation::{Shared, SharedRandom};
-use crate::Game::Game::{Difficulty, EmojiRecipient, PlayerType, SmallId, UnitId, UnitType};
+use crate::Game::Game::{
+    Difficulty, EmojiRecipient, PlayerType, SmallId, UnitId, UnitType, WarshipMode,
+};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 
@@ -251,6 +254,12 @@ impl NationWarshipBehavior {
         if enemy == self.player {
             return;
         }
+        // One of ours already patrols there (sent by any trigger): do not pile up more.
+        if game.config().rules().has(Change::NationsLikeHumans5899)
+            && !self.warships_covering(game, tile).is_empty()
+        {
+            return;
+        }
         // Do not send too many warships.
         if game.player(self.player).units_of(UnitType::Warship).len() >= 10 {
             self.maybe_move_warship(game, tile);
@@ -285,6 +294,115 @@ impl NationWarshipBehavior {
             let delta = if reason == Reason::Trade { -7.5 } else { -15.0 };
             game.player_mut(self.player).update_relation(enemy, delta);
         }
+    }
+
+    /// `clearSeaLane(blocker)`: sends a squad at the fleet blocking our boats, all at once or not at all.
+    pub fn clear_sea_lane(&mut self, game: &mut GameImpl, blocker: UnitId) {
+        if game.config().is_unit_disabled(UnitType::Warship) {
+            return;
+        }
+        let target = game.unit_any(blocker).tile();
+        let fleet = self.hostile_warships_near(game, target);
+        let wanted = match game.config().game_config().difficulty {
+            Difficulty::Easy | Difficulty::Medium => return,
+            Difficulty::Hard => fleet,
+            Difficulty::Impossible => fleet + 1,
+        } as i64;
+
+        let covering = self.warships_covering(game, target);
+        let component = game.water_manager.get_water_component(&game.map, target);
+        // Ships with enemies around their patrol tile are busy; pulling them away would thrash.
+        let mut spare: Vec<UnitId> = game
+            .player(self.player)
+            .units_of(UnitType::Warship)
+            .into_iter()
+            .filter(|&w| {
+                let unit = game.unit_any(w);
+                let state = unit.warship_state();
+                !covering.contains(&w)
+                    && state.state == WarshipMode::Patrolling
+                    && game
+                        .water_manager
+                        .get_water_component(&game.map, unit.tile())
+                        == component
+                    && state
+                        .patrol_tile
+                        .is_none_or(|p| self.hostile_warships_near(game, p) == 0)
+            })
+            .collect();
+        spare.sort_by_key(|&w| game.manhattan_dist(game.unit_any(w).tile(), target));
+        let missing = i64::max(0, wanted - covering.len() as i64) as usize;
+        let recruits: Vec<UnitId> = spare.into_iter().take(missing).collect();
+        let builds = wanted - covering.len() as i64 - recruits.len() as i64;
+        // Ships sent in one by one get sunk one by one.
+        if builds > 0 {
+            if game.player(self.player).units_of(UnitType::Warship).len() as i64 + builds > 10 {
+                return;
+            }
+            // Each ship we own raises the price of the next.
+            let mut total = 0i64;
+            for i in 0..builds {
+                total += game.player(self.player).unit_cost(UnitType::Warship, i);
+            }
+            if game.player(self.player).gold() < total {
+                return;
+            }
+            if game
+                .player(self.player)
+                .can_build(UnitType::Warship, target, None)
+                .is_none()
+            {
+                return;
+            }
+        }
+        for w in recruits {
+            game.unit_mut(w)
+                .update_warship_state(false, None, Some(Some(target)), None);
+        }
+        for _ in 0..builds {
+            game.add_execution(Box::new(ConstructionExecution::new(
+                self.player,
+                UnitType::Warship,
+                target,
+                None,
+                None,
+            )));
+        }
+    }
+
+    fn hostile_warships_near(&self, game: &GameImpl, tile: TileRef) -> usize {
+        game.nearby_units(
+            tile,
+            game.config().warship_targetting_range(),
+            &[UnitType::Warship],
+            None,
+            false,
+        )
+        .into_iter()
+        .filter(|&(unit, _)| {
+            game.player(game.unit_any(unit).owner_id())
+                .can_attack_player(self.player, true)
+        })
+        .count()
+    }
+
+    /// Our warships on the same water whose patrol area includes `tile`.
+    fn warships_covering(&self, game: &GameImpl, tile: TileRef) -> Vec<UnitId> {
+        let component = game.water_manager.get_water_component(&game.map, tile);
+        let patrol_range = game.config().warship_patrol_range();
+        game.player(self.player)
+            .units_of(UnitType::Warship)
+            .into_iter()
+            .filter(|&w| {
+                let unit = game.unit_any(w);
+                unit.warship_state().patrol_tile.is_some_and(|patrol| {
+                    game.water_manager
+                        .get_water_component(&game.map, unit.tile())
+                        == component
+                        && game.manhattan_dist(patrol, tile) as f64 <= patrol_range
+                })
+            })
+            .collect()
     }
 
     fn maybe_move_warship(&mut self, game: &mut GameImpl, tile: TileRef) {

@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::SpawnExecution::SpawnExecution;
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -167,7 +168,11 @@ impl NationExecution {
             .collect();
         for other in others {
             let embargo_malus = -20.0;
-            let has = game.player(other).has_embargo_against(player);
+            let has = if game.config().rules().has(Change::NationsLikeHumans5899) {
+                game.player(other).has_manual_embargo_against(player)
+            } else {
+                game.player(other).has_embargo_against(player)
+            };
             let applied = self.embargo_malus_applied.contains(&other);
             if has && !applied {
                 game.player_mut(player)
