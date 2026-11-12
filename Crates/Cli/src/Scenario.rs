@@ -21,6 +21,7 @@ impl Lcg {
 }
 
 /// Runs the scenario and writes the trace to `out`.
+#[allow(clippy::too_many_arguments)]
 pub fn scenario(
     record_path: &Path,
     maps: &Path,
@@ -127,7 +128,7 @@ pub fn scenario(
             {
                 game.player_mut(p).conquer(n);
             }
-            if rng.next() % 40 == 0 {
+            if rng.next().is_multiple_of(40) {
                 let tiles: Vec<u32> = game.player(p).tiles().iter().collect();
                 if let Some(&t) = tiles.get(rng.next() as usize % tiles.len().max(1)) {
                     game.player_mut(p).relinquish(t);
