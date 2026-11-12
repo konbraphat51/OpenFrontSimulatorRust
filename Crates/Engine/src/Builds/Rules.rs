@@ -126,6 +126,8 @@ pub enum Change {
     BfsFifoOrder36,
     /// v0.36.0: `PlayerExecution` ranks clusters by 4-way territory area and has a pinch pass.
     PlayerClusterRewrite36,
+    /// v0.36.0: a port spawns on the first shore tile of the valid structure tiles (no radius-20 search).
+    PortSpawnFirstShore36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -329,6 +331,7 @@ const EDGES: &[Edge] = &[
             Change::RailNetworkHash36,
             Change::BfsFifoOrder36,
             Change::PlayerClusterRewrite36,
+            Change::PortSpawnFirstShore36,
         ],
         remove: &[],
     },
