@@ -3,6 +3,7 @@
 
 use anyhow::Result;
 use ofsim_engine::Compat::JsNumber::js_number_to_string;
+use ofsim_engine::Game::GameImpl::GameImpl;
 use ofsim_engine::Runner::Replay::{Stop, replay};
 use std::io::Write;
 use std::path::Path;
@@ -12,37 +13,7 @@ pub fn trace(record: &Path, maps: &Path, out: &Path, until: Option<u32>) -> Resu
     let mut file = std::io::BufWriter::new(std::fs::File::create(out)?);
     let mut write_error: Option<std::io::Error> = None;
     let outcome = replay(record, maps, until, &mut |runner, info| {
-        let game = &runner.game;
-        let mut line = String::with_capacity(256);
-        line.push_str(&format!(
-            "{{\"tick\":{},\"hash\":{},\"recordHash\":{},\"players\":[",
-            info.tick,
-            js_number_to_string(game.hash()),
-            info.turn
-                .hash
-                .map_or("null".to_string(), js_number_to_string)
-        ));
-        for (i, id) in game.all_players().into_iter().enumerate() {
-            let p = game.player(id);
-            let mut unit_hash_sum = 0.0;
-            for &u in p.units() {
-                unit_hash_sum += game.unit_any(u).hash();
-            }
-            if i > 0 {
-                line.push(',');
-            }
-            line.push_str(&format!(
-                "[{},{},{},\"{}\",{},{},{}]",
-                id,
-                js_number_to_string(p.troops()),
-                p.num_tiles_owned(),
-                p.gold(),
-                js_number_to_string(unit_hash_sum),
-                p.is_alive(),
-                p.units().len()
-            ));
-        }
-        line.push_str("]}\n");
+        let line = trace_line(&runner.game, info.tick, info.turn.hash);
         if let Err(e) = file.write_all(line.as_bytes()) {
             write_error = Some(e);
             return false;
@@ -60,4 +31,37 @@ pub fn trace(record: &Path, maps: &Path, out: &Path, until: Option<u32>) -> Resu
         ),
         other => format!("{other:?} ({} ticks written)", outcome.ticks_run),
     })
+}
+
+/// One NDJSON trace line (with trailing newline) of the game state after tick `tick`.
+pub fn trace_line(game: &GameImpl, tick: u32, record_hash: Option<f64>) -> String {
+    let mut line = String::with_capacity(256);
+    line.push_str(&format!(
+        "{{\"tick\":{},\"hash\":{},\"recordHash\":{},\"players\":[",
+        tick,
+        js_number_to_string(game.hash()),
+        record_hash.map_or("null".to_string(), js_number_to_string)
+    ));
+    for (i, id) in game.all_players().into_iter().enumerate() {
+        let p = game.player(id);
+        let mut unit_hash_sum = 0.0;
+        for &u in p.units() {
+            unit_hash_sum += game.unit_any(u).hash();
+        }
+        if i > 0 {
+            line.push(',');
+        }
+        line.push_str(&format!(
+            "[{},{},{},\"{}\",{},{},{}]",
+            id,
+            js_number_to_string(p.troops()),
+            p.num_tiles_owned(),
+            p.gold(),
+            js_number_to_string(unit_hash_sum),
+            p.is_alive(),
+            p.units().len()
+        ));
+    }
+    line.push_str("]}\n");
+    line
 }

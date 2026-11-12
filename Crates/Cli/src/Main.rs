@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `ofsim`: command-line replayer for OpenFront game records (unofficial port, see NOTICE).
 
+mod Scenario;
 mod Trace;
 
 use clap::{Parser, Subcommand};
@@ -57,6 +58,40 @@ enum Command {
         /// Stop after this tick (inclusive)
         #[arg(long)]
         until: Option<u32>,
+    },
+    /// Seeded territory fuzz for differential tests (see Reference/ScenarioDump.ts)
+    #[command(hide = true)]
+    Scenario {
+        /// Game record (.json.gz)
+        #[arg(long)]
+        record: PathBuf,
+        /// Directory of upstream map resources
+        #[arg(long)]
+        maps: PathBuf,
+        /// Output NDJSON file
+        #[arg(long)]
+        out: PathBuf,
+        /// Ticks of the record to run first
+        #[arg(long)]
+        warm: u32,
+        /// Number of fuzz rounds (one tick each)
+        #[arg(long)]
+        rounds: u32,
+        /// Territory mutations per round
+        #[arg(long)]
+        steps: u32,
+        /// Mutate only the first K alive players (0 = all)
+        #[arg(long, default_value_t = 0)]
+        focus: u32,
+        /// Only take unowned land
+        #[arg(long, default_value_t = false)]
+        free_only: bool,
+        /// Players the first alive player walls in before the fuzz
+        #[arg(long, default_value_t = 0)]
+        enclaves: u32,
+        /// Manhattan radius of the wall
+        #[arg(long, default_value_t = 8)]
+        radius: i32,
     },
     /// Replay a record and write state snapshots
     Replay {
@@ -119,6 +154,26 @@ fn main() -> ExitCode {
             }
             Err(e) => {
                 eprintln!("ofsim trace: {e:#}");
+                ExitCode::from(2)
+            }
+        },
+        Command::Scenario {
+            record,
+            maps,
+            out,
+            warm,
+            rounds,
+            steps,
+            focus,
+            free_only,
+            enclaves,
+            radius,
+        } => match Scenario::scenario(
+            &record, &maps, &out, warm, rounds, steps, focus, free_only, enclaves, radius,
+        ) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("ofsim scenario: {e:#}");
                 ExitCode::from(2)
             }
         },
