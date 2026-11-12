@@ -166,6 +166,11 @@ const EDGES: &[Edge] = &[
         remove: &[],
     },
     Edge {
+        class: "C082",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
         class: "C090",
         add: &[],
         remove: &[],

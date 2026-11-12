@@ -17,14 +17,14 @@ mod rng_log {
 
     pub static ENABLED: AtomicBool = AtomicBool::new(false);
     static COUNT: AtomicU64 = AtomicU64::new(0);
-    static SINK: OnceLock<Mutex<std::io::BufWriter<std::fs::File>>> = OnceLock::new();
+    static SINK: OnceLock<Mutex<std::io::LineWriter<std::fs::File>>> = OnceLock::new();
 
     /// Turns the log on when `OFSIM_RNG_LOG` is set.
     pub fn init() {
         if let Ok(path) = std::env::var("OFSIM_RNG_LOG")
             && let Ok(file) = std::fs::File::create(path)
         {
-            let _ = SINK.set(Mutex::new(std::io::BufWriter::new(file)));
+            let _ = SINK.set(Mutex::new(std::io::LineWriter::new(file)));
             ENABLED.store(true, Ordering::Relaxed);
         }
     }

@@ -320,6 +320,13 @@ impl Execution for NationExecution {
             return;
         }
 
+        let attack_now = self.behaviors.as_ref().expect("initialized").attack.clone();
+        attack_now.borrow_mut().follow_up_landings(game);
+        self.behaviors
+            .as_mut()
+            .expect("initialized")
+            .nuke
+            .follow_up_strikes(game);
         if ticks % self.attack_rate != self.attack_tick {
             // Call handleStructures at 1/3 and 2/3 of the interval between attack ticks.
             if game.player(player).is_alive() {
@@ -357,8 +364,11 @@ impl Execution for NationExecution {
         b.structure.handle_structures(game);
         b.warship.maybe_spawn_warship(game);
         self.handle_embargoes_to_hostile_nations(game);
-        attack.borrow_mut().maybe_attack(game);
+        let blocker = attack.borrow_mut().maybe_attack(game);
         let b = self.behaviors.as_mut().expect("initialized");
+        if let Some(blocker) = blocker {
+            b.warship.clear_sea_lane(game, blocker);
+        }
         b.warship.counter_warship_infestation(game);
         b.nuke.maybe_send_nuke(game);
     }
