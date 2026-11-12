@@ -33,10 +33,21 @@ impl PortExecution {
     fn should_spawn_trade_ship(&mut self, game: &GameImpl) -> bool {
         let num_trade_ships = game.unit_count(UnitType::TradeShip);
         let random = self.random.as_mut().expect("initialised");
+        // Before PR 5302 the rate was computed once for all port levels.
+        let per_level = game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::TradeTrainSaturation5302);
+        let mut spawn_rate = game
+            .config()
+            .trade_ship_spawn_rate(self.trade_ship_spawn_rejections, num_trade_ships as f64);
         for _ in 0..game.unit_any(self.port).level() {
-            let spawn_rate = game
-                .config()
-                .trade_ship_spawn_rate(self.trade_ship_spawn_rejections, num_trade_ships as f64);
+            if per_level {
+                spawn_rate = game.config().trade_ship_spawn_rate(
+                    self.trade_ship_spawn_rejections,
+                    num_trade_ships as f64,
+                );
+            }
             if random.chance(spawn_rate) {
                 self.trade_ship_spawn_rejections = 0.0;
                 return true;
