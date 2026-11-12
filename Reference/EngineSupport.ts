@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Shared helpers of the engine scripts: map loading from disk and record decoding.
  *

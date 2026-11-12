@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! OpenFront map resources: terrain binaries, mini maps and manifests (nations, spawn areas).
 
 #![allow(non_snake_case)]

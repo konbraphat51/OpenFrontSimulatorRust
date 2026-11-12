@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of `GameStartInfo` and `toWireGameStartInfo` (src/core/Util.ts, src/core/Schemas.ts).
 
 use crate::Config::{GameConfig, GameType};

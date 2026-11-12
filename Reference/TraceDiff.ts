@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Compares two NDJSON traces (TraceDumper or `ofsim trace`) and reports the first difference.
  *

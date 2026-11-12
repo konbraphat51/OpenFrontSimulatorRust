@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Golden digests of the record and map layers, computed with the upstream baseline engine code.
  *

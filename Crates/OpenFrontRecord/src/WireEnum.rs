@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Macro for string enums of the wire format that keep unknown values instead of failing.
 
 /// Defines an enum over wire strings with an `Other(String)` fallback, plus `as_str`/`from_wire` and serde.

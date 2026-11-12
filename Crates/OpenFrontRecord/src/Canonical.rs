@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Canonical JSON text (sorted keys, JS number formatting, null members dropped) for cross-language digests.
 
 use serde_json::Value;
