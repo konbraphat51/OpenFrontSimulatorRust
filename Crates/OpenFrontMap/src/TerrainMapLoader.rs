@@ -48,6 +48,9 @@ pub struct Nation {
     pub flag: Option<String>,
     /// Display name.
     pub name: String,
+    /// Other manifest keys (for example `strength`, unused by the baseline engine).
+    #[serde(flatten)]
+    pub extra: serde_json::Map<String, serde_json::Value>,
 }
 
 /// Upstream `AdditionalNation`.

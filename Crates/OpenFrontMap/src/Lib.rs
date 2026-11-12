@@ -22,3 +22,20 @@ pub fn directory_key_of(wire_name: &str) -> Result<String> {
         .map(|(key, _)| key.to_lowercase())
         .ok_or_else(|| anyhow!("unknown map: {wire_name}"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::directory_key_of;
+
+    #[test]
+    fn directory_keys_follow_the_enum_key() {
+        assert_eq!(directory_key_of("Black Sea").unwrap(), "blacksea");
+        assert_eq!(directory_key_of("Hecate Strait").unwrap(), "hecatestrait");
+        assert_eq!(directory_key_of("Tourney 2 Teams").unwrap(), "tourney1");
+        assert_eq!(
+            directory_key_of("Gulf of St. Lawrence").unwrap(),
+            "gulfofstlawrence"
+        );
+        assert!(directory_key_of("Nope").is_err());
+    }
+}
