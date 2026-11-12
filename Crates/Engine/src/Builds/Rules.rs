@@ -36,6 +36,60 @@ pub enum Change {
     ChannelIslandsTribes5564,
     /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
     NewMapThemes5547,
+    /// PR 5173 and siblings: `attackLogic` is pure with per-tile tick fractions (older builds use `attackTilesPerTick`).
+    AttackLogicRework5173,
+    /// PR 5111: an attack holds the troops actually deducted from its owner.
+    AttackTroopsDeducted5111,
+    /// PR 4890: `handleDeadDefender` converges over up to 100 passes (older builds do exactly 10).
+    AnnexConvergeLoop4890,
+    /// PR 5027: annexing needs an enclosed territory; impassable tiles count as map edge.
+    AnnexEnclosedOnly5027,
+    /// PR 4892: a donate-gold intent without an amount keeps its null gold.
+    DonateGoldKeepNull4892,
+    /// PR 4953: the Doomsday Clock execution goes inactive once a winner is set.
+    DoomsdayIdleOnWinner4953,
+    /// PR 4867: a client spawn intent is gated on the phase it was queued in.
+    SpawnIntentGate4867,
+    /// PR 4921: spawn retries beyond 750 ignore the minimum distance between players.
+    SpawnRelaxMinDist4921,
+    /// PR 5321: a failed spawn restores the player's previous tiles.
+    SpawnRollback5321,
+    /// PR 5347: multiplayer spawn phase 200 turns (older builds 300).
+    SpawnPhase20s5347,
+    /// PR 5200: a train re-resolves a split railroad instead of despawning.
+    TrainSplitResolve5200,
+    /// PR 5302: trade ship and train spawn rates are throttled by saturation curves.
+    TradeTrainSaturation5302,
+    /// PR 5223: the win bar is 80 percent in team games too and the win test is cross-multiplied.
+    WinThresholdSame5223,
+    /// PR 5054: an alliance cancels in-flight MIRVs and warheads too.
+    AllianceCancelMirv5054,
+    /// PR 5188 and 4927: fixed-point Bezier curve, normalised MIRV flight and staged warheads.
+    MirvNormalize5188,
+    /// PR 5351: MIRV betrayal happens once the missile actually spawned.
+    MirvBetrayalOnSpawn5351,
+    /// PR 5197 and 5040: cached SAM interception states and dynamic range on upgrade.
+    SamTargeting5197,
+    /// PR 5332: no teammate aftergame nuking in singleplayer.
+    AftergameSingleplayer5332,
+    /// PR 5330: smarter betrayal logic for Hard and Impossible nations.
+    NationBetray5330,
+    /// PR 5294: the juicy attack strategy of nations.
+    NationJuicy5294,
+    /// PR 5290: nations expanding into terra nullius keep a troop send cap floor.
+    NationExpansionCap5290,
+    /// PR 5344: crowded-map first structure uses its own one-shot flag.
+    NationCrowdedFirst5344,
+    /// PR 5223: nation victory denial thresholds as whole percents (one ladder).
+    NationVictoryDenialPercent5223,
+    /// PR 4758: duo/trio/quad team forming prefers the fullest team.
+    TeamAssignDuos4758,
+    /// PR 5246: factory rail paths are searched from the city side.
+    RailFactoryDirection5246,
+    /// PR 4903: rails cannot start on or cross impassable terrain.
+    RailNoImpassable4903,
+    /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
+    WaterNukeMinimap4975,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -138,6 +192,40 @@ const EDGES: &[Edge] = &[
         add: &[Change::NewMapThemes5547],
         remove: &[],
     },
+    Edge {
+        class: "C013",
+        add: &[],
+        remove: &[
+            Change::DetMath5191,
+            Change::AttackLogicRework5173,
+            Change::AttackTroopsDeducted5111,
+            Change::AnnexConvergeLoop4890,
+            Change::AnnexEnclosedOnly5027,
+            Change::DonateGoldKeepNull4892,
+            Change::DoomsdayIdleOnWinner4953,
+            Change::SpawnIntentGate4867,
+            Change::SpawnRelaxMinDist4921,
+            Change::SpawnRollback5321,
+            Change::SpawnPhase20s5347,
+            Change::TrainSplitResolve5200,
+            Change::TradeTrainSaturation5302,
+            Change::WinThresholdSame5223,
+            Change::AllianceCancelMirv5054,
+            Change::MirvNormalize5188,
+            Change::MirvBetrayalOnSpawn5351,
+            Change::SamTargeting5197,
+            Change::AftergameSingleplayer5332,
+            Change::NationBetray5330,
+            Change::NationJuicy5294,
+            Change::NationExpansionCap5290,
+            Change::NationCrowdedFirst5344,
+            Change::NationVictoryDenialPercent5223,
+            Change::TeamAssignDuos4758,
+            Change::RailFactoryDirection5246,
+            Change::RailNoImpassable4903,
+            Change::WaterNukeMinimap4975,
+        ],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -151,6 +239,33 @@ const ROOT_CHANGES: &[Change] = &[
     Change::TeamCountMinTwo5436,
     Change::AttackSpeedDivisor5425,
     Change::ChannelIslandsTribes5564,
+    Change::AttackLogicRework5173,
+    Change::AttackTroopsDeducted5111,
+    Change::AnnexConvergeLoop4890,
+    Change::AnnexEnclosedOnly5027,
+    Change::DonateGoldKeepNull4892,
+    Change::DoomsdayIdleOnWinner4953,
+    Change::SpawnIntentGate4867,
+    Change::SpawnRelaxMinDist4921,
+    Change::SpawnRollback5321,
+    Change::SpawnPhase20s5347,
+    Change::TrainSplitResolve5200,
+    Change::TradeTrainSaturation5302,
+    Change::WinThresholdSame5223,
+    Change::AllianceCancelMirv5054,
+    Change::MirvNormalize5188,
+    Change::MirvBetrayalOnSpawn5351,
+    Change::SamTargeting5197,
+    Change::AftergameSingleplayer5332,
+    Change::NationBetray5330,
+    Change::NationJuicy5294,
+    Change::NationExpansionCap5290,
+    Change::NationCrowdedFirst5344,
+    Change::NationVictoryDenialPercent5223,
+    Change::TeamAssignDuos4758,
+    Change::RailFactoryDirection5246,
+    Change::RailNoImpassable4903,
+    Change::WaterNukeMinimap4975,
 ];
 
 /// Commit of the baseline build v0.34.22.
@@ -355,7 +470,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C013"));
+        assert!(!is_ported("C023"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));

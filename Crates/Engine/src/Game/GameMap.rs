@@ -252,6 +252,13 @@ impl GameMapImpl {
             || self.is_impassable(tile + w)
     }
 
+    /// True when the tile lies on the map boundary (`isOnEdgeOfMap` before impassable tiles counted).
+    pub fn is_on_map_boundary(&self, tile: TileRef) -> bool {
+        let w = self.width;
+        let x = tile % w;
+        x == 0 || x == w - 1 || tile < w || tile >= (self.height - 1) * w
+    }
+
     /// True when a cardinal neighbour has a different owner.
     pub fn is_border(&self, tile: TileRef) -> bool {
         let w = self.width;

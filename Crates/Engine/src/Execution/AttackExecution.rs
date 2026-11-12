@@ -5,6 +5,7 @@
 //! Client messages and the stats that never reach the simulation are not ported. The attack's
 //! own `PseudoRandom(123)` and the f32 heap priorities decide the conquest order exactly.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Configuration::Config::{AttackLogicAttacker, AttackLogicDefender, AttackLogicInput};
 use crate::Core::PseudoRandom::PseudoRandom;
@@ -183,8 +184,9 @@ impl AttackExecution {
         let target = self.target;
         game.conquer_player(self.owner, target);
 
-        const MAX_PASSES: usize = 100;
-        for _pass in 0..MAX_PASSES {
+        let converge = game.config().rules().has(Change::AnnexConvergeLoop4890);
+        let max_passes: usize = if converge { 100 } else { 10 };
+        for _pass in 0..max_passes {
             let mut progressed = false;
             // `target.tiles()` is iterated while tiles move away; the cursor tolerates that.
             let mut cursor = game.player_impl_mut(target).tiles.pin_cursor();
@@ -216,7 +218,7 @@ impl AttackExecution {
                 }
             }
             game.player_impl_mut(target).tiles.unpin();
-            if !progressed {
+            if converge && !progressed {
                 break;
             }
         }
@@ -278,8 +280,10 @@ impl Execution for AttackExecution {
         };
         if self.remove_troops {
             start_troops = owner_troops.min(start_troops);
-            // The amount actually deducted, not the amount asked for.
-            start_troops = game.player_mut(self.owner).remove_troops(start_troops);
+            let deducted = game.player_mut(self.owner).remove_troops(start_troops);
+            if game.config().rules().has(Change::AttackTroopsDeducted5111) {
+                start_troops = deducted;
+            }
         }
         self.start_troops = Some(start_troops);
         let attack = game.player_mut(self.owner).create_attack(
@@ -379,8 +383,15 @@ impl Execution for AttackExecution {
         }
 
         let border_size = game.attack(attack).border_size() + self.random.next_int(0.0, 5.0);
+        let rework = game.config().rules().has(Change::AttackLogicRework5173);
         // Each tile consumes a fraction of the tick; conquer until it is spent.
-        let mut tick_budget = 1.0;
+        let mut tick_budget = if rework {
+            1.0
+        } else {
+            let defender_troops = target_is_player.then(|| game.player(self.target).troops());
+            game.config()
+                .attack_tiles_per_tick_legacy(troop_count, defender_troops, border_size)
+        };
 
         while tick_budget > 0.0 {
             if troop_count < 1.0 {
@@ -414,13 +425,26 @@ impl Execution for AttackExecution {
             }
             self.add_neighbors(game, tile_to_conquer);
             let input = self.attack_logic_input(game, troop_count, tile_to_conquer, border_size);
-            let result = game.config().attack_logic(&input);
-            tick_budget -= result.tick_fraction;
-            troop_count -= result.attacker_troop_loss;
+            let (attacker_loss, defender_loss, spent) = if rework {
+                let result = game.config().attack_logic(&input);
+                (
+                    result.attacker_troop_loss,
+                    result.defender_troop_loss,
+                    result.tick_fraction,
+                )
+            } else {
+                let result = game.config().attack_logic_legacy(&input);
+                (
+                    result.attacker_troop_loss,
+                    result.defender_troop_loss,
+                    result.tiles_per_tick_used,
+                )
+            };
+            tick_budget -= spent;
+            troop_count -= attacker_loss;
             game.attack_mut(attack).set_troops(troop_count);
             if target_is_player {
-                game.player_mut(self.target)
-                    .remove_troops(result.defender_troop_loss);
+                game.player_mut(self.target).remove_troops(defender_loss);
             }
             game.player_mut(self.owner).conquer(tile_to_conquer);
             self.handle_dead_defender(game);

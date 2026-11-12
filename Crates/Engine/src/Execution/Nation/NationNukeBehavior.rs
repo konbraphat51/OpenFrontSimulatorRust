@@ -5,6 +5,7 @@
 use super::NationBehaviorPorts::{AttackPort, Decision, DecisionLog, EmojiPort};
 use super::NationUtils::rand_territory_tile_array;
 use super::SharedRandom;
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::bounding_box_tiles;
@@ -608,6 +609,7 @@ impl NationNukeBehavior {
             distance_based_height: Some(true),
             direction_up: Some(true),
             ignore_map_bounds: None,
+            legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
         });
         path_finder.find_path(&game.map, from, to)
     }
