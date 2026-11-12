@@ -64,6 +64,11 @@ const EDGES: &[Edge] = &[
         add: &[Change::AttackRetreatNoTargets5823],
         remove: &[],
     },
+    Edge {
+        class: "C002",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
