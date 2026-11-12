@@ -14,7 +14,7 @@ use crate::Execution::Execution::Execution;
 use crate::Execution::NukeAlliance::list_nuke_break_alliance;
 use crate::Game::Game::{SmallId, Tick, TrajectoryTile, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
-use crate::Game::GameMap::TileRef;
+use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::PathFinderParabola::{ParabolaOptions, ParabolaUniversalPathFinder};
 use crate::Pathfinding::Types::PathResult;
 
@@ -144,13 +144,16 @@ impl NukeExecution {
             result
         } else {
             let dst = self.dst;
-            map.bfs(dst, |m, n| {
+            let filter = |m: &GameMapImpl, n: TileRef| {
                 let d2 = m.euclidean_dist_squared(dst, n) as f64;
                 d2 <= outer2 && (d2 <= inner2 || rand.chance(2.0)) && !m.is_impassable(n)
-            })
-            .iter()
-            .copied()
-            .collect()
+            };
+            let tiles = if game.config().rules().has(Change::BfsFifoOrder36) {
+                map.bfs_fifo(dst, filter)
+            } else {
+                map.bfs(dst, filter)
+            };
+            tiles.iter().copied().collect()
         }
     }
 

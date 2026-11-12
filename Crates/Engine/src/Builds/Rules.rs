@@ -120,6 +120,12 @@ pub enum Change {
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
     NationsLikeHumans5899,
+    /// v0.36.0: the game-state hash includes a digest of the rail network.
+    RailNetworkHash36,
+    /// v0.36.0: `GameMap.bfs` is a FIFO breadth-first search (tile order and filter call order change).
+    BfsFifoOrder36,
+    /// v0.36.0: `PlayerExecution` ranks clusters by 4-way territory area and has a pinch pass.
+    PlayerClusterRewrite36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -315,6 +321,20 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C087",
         add: &[Change::TeamFriendGroups6259],
+        remove: &[],
+    },
+    Edge {
+        class: "C088",
+        add: &[
+            Change::RailNetworkHash36,
+            Change::BfsFifoOrder36,
+            Change::PlayerClusterRewrite36,
+        ],
+        remove: &[],
+    },
+    Edge {
+        class: "C089",
+        add: &[],
         remove: &[],
     },
     Edge {

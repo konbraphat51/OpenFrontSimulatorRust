@@ -716,6 +716,9 @@ impl GameImpl {
         for p in &self.players {
             hash += self.player(p.small_id).hash();
         }
+        if self.config.rules().has(Change::RailNetworkHash36) {
+            hash += self.rail_network.hash();
+        }
         hash
     }
 

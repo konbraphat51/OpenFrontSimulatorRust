@@ -565,6 +565,56 @@ impl GameMapImpl {
         seen
     }
 
+    /// `bfs` of v0.36.0 on: FIFO queue, so the set comes out in breadth-first order and the
+    /// filter runs in that order too.
+    pub fn bfs_fifo(
+        &self,
+        tile: TileRef,
+        mut filter: impl FnMut(&GameMapImpl, TileRef) -> bool,
+    ) -> OrderedSet<TileRef> {
+        let mut seen = OrderedSet::new();
+        if !filter(self, tile) {
+            return seen;
+        }
+        let mut q: Vec<TileRef> = vec![tile];
+        let mut marked: std::collections::HashSet<TileRef> = std::collections::HashSet::new();
+        marked.insert(tile);
+        let w = self.width;
+        let south_limit = (self.height - 1) * w;
+        let mut head = 0;
+        while head < q.len() {
+            let curr = q[head];
+            head += 1;
+            seen.insert(curr);
+            let x = curr % w;
+            let mut cand = [0; 4];
+            let mut n = 0;
+            if curr >= w {
+                cand[n] = curr - w;
+                n += 1;
+            }
+            if curr < south_limit {
+                cand[n] = curr + w;
+                n += 1;
+            }
+            if x != 0 {
+                cand[n] = curr - 1;
+                n += 1;
+            }
+            if x != w - 1 {
+                cand[n] = curr + 1;
+                n += 1;
+            }
+            for &nb in &cand[..n] {
+                if !marked.contains(&nb) && filter(self, nb) {
+                    marked.insert(nb);
+                    q.push(nb);
+                }
+            }
+        }
+        seen
+    }
+
     /// `bfs` returning a [`TileSet`].
     pub fn bfs_tiles(
         &self,

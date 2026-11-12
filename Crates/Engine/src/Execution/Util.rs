@@ -11,15 +11,21 @@ use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef, eucl_dist_fn};
 use crate::Game::TileSet::TileSet;
 
-/// `getSpawnTiles`: tiles of the radius-4 disc around `tile`; with `require_all_valid` the result
+/// `getSpawnTiles`: tiles of the radius-4 disc around `tile`; with `fifo` (v0.36.0 on) the disc is in breadth-first order; with `require_all_valid` the result
 /// is `None` when any of them is owned, water or impassable, else only the valid ones are kept.
 pub fn get_spawn_tiles(
     gm: &GameMapImpl,
     tile: TileRef,
     require_all_valid: bool,
+    fifo: bool,
 ) -> Option<Vec<TileRef>> {
     let filter = eucl_dist_fn(tile, 4.0, true);
-    let spawn_tiles: Vec<TileRef> = gm.bfs(tile, |g, t| filter(g, t)).iter().copied().collect();
+    let found = if fifo {
+        gm.bfs_fifo(tile, |g, t| filter(g, t))
+    } else {
+        gm.bfs(tile, |g, t| filter(g, t))
+    };
+    let spawn_tiles: Vec<TileRef> = found.iter().copied().collect();
     let is_invalid = |t: TileRef| gm.has_owner(t) || !gm.is_land(t) || gm.is_impassable(t);
     if !require_all_valid {
         return Some(
