@@ -36,6 +36,10 @@ pub enum Change {
     ChannelIslandsTribes5564,
     /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
     NewMapThemes5547,
+    /// PR 5907: per-player spawn boost for small trade and rail economies replaces the fleet-size boost.
+    SmallEconomyBoost5907,
+    /// PR 5833: a human may send several emojis per window (nations still one).
+    EmojiBatch5833,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -140,7 +144,7 @@ const EDGES: &[Edge] = &[
     },
     Edge {
         class: "C081",
-        add: &[],
+        add: &[Change::SmallEconomyBoost5907, Change::EmojiBatch5833],
         remove: &[],
     },
     Edge {

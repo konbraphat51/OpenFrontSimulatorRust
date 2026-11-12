@@ -32,11 +32,15 @@ impl PortExecution {
 
     fn should_spawn_trade_ship(&mut self, game: &GameImpl) -> bool {
         let num_trade_ships = game.unit_count(UnitType::TradeShip);
+        let port_owner = game.unit_any(self.port).owner_id();
+        let port_levels = game.player(port_owner).unit_count(UnitType::Port);
         let random = self.random.as_mut().expect("initialised");
         for _ in 0..game.unit_any(self.port).level() {
-            let spawn_rate = game
-                .config()
-                .trade_ship_spawn_rate(self.trade_ship_spawn_rejections, num_trade_ships as f64);
+            let spawn_rate = game.config().trade_ship_spawn_rate(
+                self.trade_ship_spawn_rejections,
+                num_trade_ships as f64,
+                port_levels as f64,
+            );
             if random.chance(spawn_rate) {
                 self.trade_ship_spawn_rejections = 0.0;
                 return true;

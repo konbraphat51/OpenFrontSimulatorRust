@@ -17,5 +17,5 @@ name="$(basename "$record" .json.gz)"
 flag=()
 if [ "$inert" = "--inert" ]; then flag=(--inert 1); export OFSIM_INERT=1; fi
 (cd "$tree" && npx tsx "$refdir/TraceDumper.ts" "$record" "$out/$name.ref.ndjson" --until "$until" "${flag[@]}" 2>&1 | tail -n 2) || true
-"$bin" trace --record "$record" --maps "$tree/resources/maps" --out "$out/$name.rs.ndjson" --until "$until" 2>&1 | tail -n 2
+"$bin" trace --upstream "${OFSIM_UPSTREAM:-/home/user/OpenFrontDs/Simulator/Cache/OpenFrontIO}" --record "$record" --maps "$tree/resources/maps" --out "$out/$name.rs.ndjson" --until "$until" 2>&1 | tail -n 2
 (cd "$tree" && npx tsx "$refdir/TraceDiff.ts" "$out/$name.ref.ndjson" "$out/$name.rs.ndjson")

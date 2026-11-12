@@ -18,6 +18,7 @@ use super::GameImpl::GameImpl;
 use super::GameMap::{GameMapImpl, TileRef, manhattan_dist_fn};
 use super::TileSet::TileSet;
 use super::TransportShipUtils::{best_shore_deployment_source, can_build_transport_ship};
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Configuration::Config::{CostContext, TroopInput};
@@ -751,6 +752,21 @@ impl<'a> PlayerRef<'a> {
     pub fn can_send_emoji(&self, recipient: EmojiRecipient) -> bool {
         if recipient == EmojiRecipient::Player(self.id) {
             return false;
+        }
+        if self.game.config().rules().has(Change::EmojiBatch5833) {
+            let window = self.game.config().emoji_message_window() as f64;
+            let ticks = self.game.ticks() as f64;
+            let recent = self
+                .outgoing_emojis
+                .iter()
+                .filter(|m| m.recipient == recipient && ticks - (m.created_at as f64) < window)
+                .count();
+            let limit = if self.info.player_type == PlayerType::Human {
+                self.game.config().emoji_message_limit()
+            } else {
+                1
+            };
+            return recent < limit;
         }
         for msg in self
             .outgoing_emojis
