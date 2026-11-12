@@ -1,0 +1,9 @@
+# Changes class C036 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "Sfc32PseudoRandom4233",
+  "AiTroopCap4239",
+  "NationsIgnoreImmunity4282",
+  "NukeSpeed10Meta",
+  "TradeShipSigmoid400Meta",
+]

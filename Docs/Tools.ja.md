@@ -23,7 +23,7 @@ Tools/ClassDigest.py C064 --max-lines 150  # hunk 行の予算を小さくする
 - hunk をファイルと外側の `Class.method` でまとめます。import、コメント、波括弧のみの行は `--verbose` でのみ表示します。
 - `--max-lines N` は hunk 行の総予算で、各ファイルにサイズ比例(最低 4 行)で配分し、切り詰めマーカーを出します。
 - `->` の対応は `Crates/` の `//! Port of src/core/<path>.ts` ヘッダから都度作る索引で求めます。`~` はファイル名による代替対応(例 `PlayerExecutionV36.rs`)、`(no Rust port found)` はこのブランチで未移植のファイルです。
-- 先頭行にコミット数、コミット間の PR 番号(重複除去)、`EDGES` に既にある `Change` フラグを表示します。
+- 先頭行にコミット数、コミット間の PR 番号(重複除去)、`Edges/<class>.toml` に既にある `Change` フラグを表示します。
 
 ## VerifyClass
 
@@ -62,5 +62,5 @@ Tools/Triage.sh Cache/Records/<commit12>/<id>.json.gz [--trace] [--bisect-flags 
 
 - 既定: コミット、クラス、判定、一致したハッシュ数、最初の不一致 tick を 1 行で表示します。
 - `--trace`: その tick まで `Tools/TraceCompare.sh` を実行し、最後の 20 行(最初に異なるフィールド)を表示します。`OFSIM_WORKTREE`(レコードのコミットの upstream worktree。`node_modules` と最新の `ofsim-reference/` が必要)を指定します。
-- `--bisect-flags`: クラスの `EDGES` の `Change` フラグ(`--depth 2` で親の分も)ごとに `OFSIM_TOGGLE=<flag>` で verify をやり直し、1 行ずつ `REMOVES mismatch`、`MOVES a -> b`、`no effect`(レコードが通る場合は `BREAKS at tick`)を表示します。`--until T` で高速化できます。
+- `--bisect-flags`: クラスの `Edges/<class>.toml` の `Change` フラグ(`--depth 2` で親の分も)ごとに `OFSIM_TOGGLE=<flag>` で verify をやり直し、1 行ずつ `REMOVES mismatch`、`MOVES a -> b`、`no effect`(レコードが通る場合は `BREAKS at tick`)を表示します。`--until T` で高速化できます。
 - 注意: `OFSIM_TOGGLE` は `Rules::for_class` で適用され、C000 自身のビルドに対する C000 のフラグの反転は効果がありません。

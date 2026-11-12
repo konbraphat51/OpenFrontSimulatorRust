@@ -122,6 +122,21 @@ pub fn create_nations_for_game(
         .collect()
 }
 
+/// The nations of v0.28.4 (`createGameRunner`): every manifest nation, none when `disableNPCs`.
+pub fn create_nations_v28(
+    config: &GameConfig,
+    manifest_nations: &[ManifestNation],
+    random: &mut PseudoRandom,
+) -> Vec<Nation> {
+    if matches!(config.nations, NationsSetting::Disabled) {
+        return vec![];
+    }
+    manifest_nations
+        .iter()
+        .map(|n| to_nation(n, random))
+        .collect()
+}
+
 /// `createNationsForGame` of v0.30.0-beta1: `disableNations`, a quarter of the nations on every compact map.
 fn create_nations_v30_beta1(
     config: &GameConfig,

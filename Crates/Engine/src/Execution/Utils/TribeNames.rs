@@ -115,8 +115,25 @@ fn legacy_names() -> &'static LegacyNames {
     })
 }
 
+/// `BOT_NAME_PREFIXES` and `BOT_NAME_SUFFIXES` of `BotNames.ts` (builds v0.30.0-beta2 and older).
+fn bot_names_v29() -> &'static LegacyNames {
+    static NAMES: OnceLock<LegacyNames> = OnceLock::new();
+    NAMES.get_or_init(|| {
+        serde_json::from_str(include_str!("../../../data/BotNamesV29.json"))
+            .expect("BotNamesV29.json is valid")
+    })
+}
+
 /// `resolveTribeNameData(mapType)`.
 pub fn resolve_tribe_name_data(map: GameMapType, rules: &Rules) -> TribeNameData {
+    if !rules.has(Change::TribeNamesRevised30) {
+        let names = bot_names_v29();
+        return TribeNameData {
+            prefixes: names.prefixes.clone(),
+            suffixes: names.suffixes.clone(),
+            custom_tribes: None,
+        };
+    }
     if !rules.has(Change::TribeNameThemes4647) {
         let names = legacy_names();
         return TribeNameData {

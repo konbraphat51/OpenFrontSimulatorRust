@@ -25,7 +25,7 @@ Make `ofsim` reproduce every recorded state hash for the builds of classes C060 
 1. `Docs/Architecture.md`: binding porting rules.
 2. `Docs/Plan.md`: phases and per-class status.
 3. `Docs/BuildPlan.md`: one row per class, with builds, parent, changed files, PRs and risk, plus an edge section for big file changes.
-4. `Crates/Engine/src/Builds/Rules.rs`: the `Change` flags and the `EDGES` table.
+4. `Crates/Engine/src/Builds/Rules.rs`: the `Change` flags; class edges are one file each in `Crates/Engine/src/Builds/Edges/<class>.toml`.
 5. `Crates/Engine/src/Builds/BuildClasses.toml`: maps each commit to a class and each class to its parent. It is generated, so do not edit it by hand.
 
 ## Remaining classes
@@ -63,9 +63,9 @@ Recommended order: C060 to C063 first (one branch off C059), then C064 to C068, 
 - **One `Change` per upstream behaviour change.**
   - Name it after the upstream PR number (for example `WaterHpaSharedFinder4979`).
   - Use a version suffix only when no PR can be found.
-  - `rules.has(X)` is true for the newer behaviour. Branch at the exact place where upstream diverged.
-  - Define each class edge in `EDGES` relative to its parent.
-- **Large rewrites become side-by-side variant modules.** Examples: `PlayerExecutionV36.rs`, `FakeHumanExecution.rs`, `Utils/BotBehaviorV28.rs`, `Pathfinding/Legacy28/`. Do not thread many flags through one function.
+  - `game.has(X)` is true for the newer behaviour. Branch at the exact place where upstream diverged.
+  - Define each class edge in `Edges/<class>.toml` relative to its parent.
+- **Large rewrites become side-by-side variant modules.** Examples: `PlayerExecutionV36.rs`, `FakeHumanExecutionV28.rs`, `Utils/BotBehaviorV28.rs`, `Pathfinding/Legacy28/`. Do not thread many flags through one function.
 - **Era S** uses seedrandom ARC4 (`Core/Arc4.rs`), selected by the absence of `Change::Sfc32PseudoRandom4233`.
   - Old `PseudoRandom.nextInt` does not floor its arguments.
   - Builds before DetMath use `Compat/HostMath.rs` (V8 fdlibm port; `OFSIM_POW=fdlibm|platform`).

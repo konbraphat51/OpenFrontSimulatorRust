@@ -21,6 +21,7 @@ pub mod TerraNulliusImpl;
 pub mod TileSet;
 pub mod TrainStation;
 pub mod TransportShipUtils;
+pub mod TransportShipUtilsV28;
 pub mod UnitGrid;
 pub mod UnitImpl;
 pub mod Veterancy;

@@ -12,6 +12,7 @@ use super::ConfigConversion::game_config_from_record;
 use super::Executor::Executor;
 use crate::Builds::Rules::{Change, Rules};
 use crate::Configuration::Config::Config;
+use crate::Core::Obscenity;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::DoomsdayClockExecution::DoomsdayClockExecution;
@@ -21,15 +22,15 @@ use crate::Execution::WinCheckExecution::WinCheckExecution;
 use crate::Game::Game::{GameType, PlayerInfo, PlayerType, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::GameMapImpl;
-use crate::Game::NationCreation::create_nations_for_game;
+use crate::Game::NationCreation::{create_nations_for_game, create_nations_v28};
 use anyhow::Result;
 use ofsim_map::{MapData, MapSize, TerrainMap};
 use ofsim_record::Records::Turn;
 use ofsim_record::StartInfo::GameStartInfo;
 use std::path::Path;
 
-/// `getClanTag(name)` of builds before v0.31: the first `[TAG]` of 2 to 5 letters or digits, upper-cased.
-fn clan_tag_from_name(name: &str) -> Option<String> {
+/// `getClanTagOriginalCase(name)`: the first `[TAG]` of 2 to 5 letters or digits, as written.
+fn clan_tag_original_case(name: &str) -> Option<String> {
     let bytes: Vec<char> = name.chars().collect();
     let mut i = 0;
     while i < bytes.len() {
@@ -40,12 +41,52 @@ fn clan_tag_from_name(name: &str) -> Option<String> {
             }
             let len = j - i - 1;
             if (2..=5).contains(&len) && j < bytes.len() && bytes[j] == ']' {
-                return Some(bytes[i + 1..j].iter().collect::<String>().to_uppercase());
+                return Some(bytes[i + 1..j].iter().collect::<String>());
             }
         }
         i += 1;
     }
     None
+}
+
+/// `getClanTag(name)` of builds before v0.31: the first `[TAG]`, upper-cased.
+fn clan_tag_from_name(name: &str) -> Option<String> {
+    clan_tag_original_case(name).map(|t| t.to_uppercase())
+}
+
+/// Replacement names of profane usernames (`shadowNames`).
+const SHADOW_NAMES: [&str; 7] = [
+    "NicePeopleOnly",
+    "BeKindPlz",
+    "LearningManners",
+    "StayClassy",
+    "BeNicer",
+    "NeedHugs",
+    "MakeFriends",
+];
+
+/// JS `String.prototype.trim` white space: Unicode White_Space and the byte order mark.
+fn js_trim(s: &str) -> &str {
+    s.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')
+}
+
+/// `censorNameWithClanTag(username)`: profane names are replaced, a clan tag is upper-cased unless profane.
+fn censor_name_with_clan_tag(username: &str) -> String {
+    let clan_tag = clan_tag_original_case(username);
+    let name_without_clan = match &clan_tag {
+        Some(tag) => js_trim(&username.replacen(&format!("[{tag}]"), "", 1)).to_string(),
+        None => username.to_string(),
+    };
+    let clan_tag_is_profane = clan_tag.as_ref().is_some_and(|t| Obscenity::has_match(t));
+    let censored = if Obscenity::has_match(&name_without_clan) {
+        SHADOW_NAMES[simple_hash(&name_without_clan) as usize % SHADOW_NAMES.len()].to_string()
+    } else {
+        name_without_clan
+    };
+    match clan_tag {
+        Some(tag) if !clan_tag_is_profane => format!("[{}] {}", tag.to_uppercase(), censored),
+        _ => censored,
+    }
 }
 
 fn game_map_of(t: &TerrainMap, rules: &Rules) -> Result<GameMapImpl> {
@@ -83,8 +124,14 @@ pub fn create_game_runner(
         .players
         .iter()
         .map(|p| {
+            // Builds before PR 3122 censor every name in the game runner (the tracer passes no client id).
+            let name = if rules.has(Change::ServerUsernameCensoring3122) {
+                p.username.clone()
+            } else {
+                censor_name_with_clan_tag(&p.username)
+            };
             PlayerInfo::new(
-                p.username.clone(),
+                name.clone(),
                 PlayerType::Human,
                 Some(p.client_id.clone()),
                 random.next_id(),
@@ -92,7 +139,7 @@ pub fn create_game_runner(
                 if rules.has(Change::ClanTagField31) {
                     p.clan_tag.clone()
                 } else {
-                    clan_tag_from_name(&p.username)
+                    clan_tag_from_name(&name)
                 },
                 p.friends.clone().unwrap_or_default(),
                 p.team_index,
@@ -101,15 +148,19 @@ pub fn create_game_runner(
         })
         .collect();
 
-    let nations = create_nations_for_game(
-        &engine_config,
-        &terrain.nations,
-        &terrain.additional_nations,
-        humans.len(),
-        rules.has(Change::NationNamesExpanded31),
-        rules.has(Change::NationCreationConfigurable30),
-        &mut random,
-    );
+    let nations = if rules.has(Change::FakeHumanNations28) {
+        create_nations_v28(&engine_config, &terrain.nations, &mut random)
+    } else {
+        create_nations_for_game(
+            &engine_config,
+            &terrain.nations,
+            &terrain.additional_nations,
+            humans.len(),
+            rules.has(Change::NationNamesExpanded31),
+            rules.has(Change::NationCreationConfigurable30),
+            &mut random,
+        )
+    };
 
     let game = GameImpl::new(
         humans,
@@ -138,12 +189,12 @@ impl GameRunner {
     /// `init()`: the executions every game starts with.
     pub fn init(&mut self) {
         if self.game.config().game_config().game_type != GameType::Singleplayer
-            && self.game.config().rules().has(Change::SpawnPhaseTimer3199)
+            && self.game.has(Change::SpawnPhaseTimer3199)
         {
             self.game
                 .add_execution(Box::new(SpawnTimerExecution::new()));
         }
-        let nations_last = !self.game.config().rules().has(Change::NationSpawnRetry4117);
+        let nations_last = !self.game.has(Change::NationSpawnRetry4117);
         if !nations_last && self.game.config().spawn_nations() {
             for e in self.executor.nation_executions(&self.game) {
                 self.game.add_execution(e);
@@ -166,7 +217,7 @@ impl GameRunner {
             }
         }
         self.game.add_execution(Box::new(WinCheckExecution::new()));
-        if self.game.config().rules().has(Change::DoomsdayClock4469)
+        if self.game.has(Change::DoomsdayClock4469)
             && self.game.config().doomsday_clock_config().enabled
         {
             self.game

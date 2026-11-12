@@ -1,0 +1,7 @@
+# Changes class C029 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "ClusterOffsetFromId4426",
+  "RandomSpawnIgnoresTile4428",
+  "NearbySkipsFallout4422",
+]

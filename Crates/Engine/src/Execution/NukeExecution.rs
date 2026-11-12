@@ -11,7 +11,7 @@ use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::DetMath;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
-use crate::Execution::NukeAlliance::list_nuke_break_alliance;
+use crate::Execution::NukeAlliance::{list_nuke_break_alliance, list_nuke_break_ally_legacy};
 use crate::Game::Game::{SmallId, Tick, TrajectoryTile, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
@@ -34,6 +34,8 @@ pub struct NukeExecution {
     path_finder: ParabolaUniversalPathFinder,
     /// Set when this nuke is the one in six that bounces (v0.30.22).
     bouncing: Option<BouncingParabolaPathFinder>,
+    /// Blast tiles computed once at launch (v0.28.4 caches them for the detonation).
+    tiles_cache: Option<Vec<TileRef>>,
 }
 
 impl NukeExecution {
@@ -59,6 +61,7 @@ impl NukeExecution {
             nuke: None,
             path_finder: ParabolaUniversalPathFinder::default(),
             bouncing: None,
+            tiles_cache: None,
         }
     }
 
@@ -105,10 +108,7 @@ impl NukeExecution {
             let cx = map.x(self.dst) as f64;
             let cy = map.y(self.dst) as f64;
             let outer = magnitude.outer;
-            let use_det_math = game
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::DetMath5191);
+            let use_det_math = game.has(Change::DetMath5191);
 
             let mut result = Vec::new();
             let x0 = f64::max(0.0, cx - outer) as i32;
@@ -153,12 +153,54 @@ impl NukeExecution {
                 let d2 = m.euclidean_dist_squared(dst, n) as f64;
                 d2 <= outer2 && (d2 <= inner2 || rand.chance(2.0)) && !m.is_impassable(n)
             };
-            let tiles = if game.config().rules().has(Change::BfsFifoOrder36) {
+            let tiles = if game.has(Change::BfsFifoOrder36) {
                 map.bfs_fifo(dst, filter)
             } else {
                 map.bfs(dst, filter)
             };
             tiles.iter().copied().collect()
+        }
+    }
+
+    /// `tilesToDestroy()` of v0.28.4: computed on first use and kept.
+    fn tiles_cached(&mut self, game: &GameImpl) -> Vec<TileRef> {
+        if self.tiles_cache.is_none() {
+            self.tiles_cache = Some(self.tiles_to_destroy(game, self.dst));
+        }
+        self.tiles_cache.clone().expect("set above")
+    }
+
+    /// `maybeBreakAlliances(toDestroy)` of v0.28.4: counts destroyed tiles per owner (no weighting).
+    fn maybe_break_alliances_v28(&self, game: &mut GameImpl, to_destroy: &[TileRef]) {
+        let nuke_type = game.unit_any(self.nuke.expect("not initialized")).unit_type;
+        let mut attacked: OrderedMap<SmallId, f64> = OrderedMap::new();
+        for &tile in to_destroy {
+            let owner = game.owner_id(tile);
+            if owner != 0 {
+                let prev = attacked.get(&owner).copied().unwrap_or(0.0);
+                attacked.insert(owner, prev + 1.0);
+            }
+        }
+        let threshold = game.config().nuke_alliance_break_threshold();
+        let entries: Vec<(SmallId, f64)> = attacked.iter().map(|(&p, &n)| (p, n)).collect();
+        for (attacked_player, tiles_destroyed) in entries {
+            if tiles_destroyed > threshold && nuke_type != UnitType::MIRVWarhead {
+                let pending = game
+                    .player(attacked_player)
+                    .incoming_alliance_requests()
+                    .into_iter()
+                    .find(|&ar| game.alliance_request(ar).requestor() == self.player);
+                if let Some(request) = pending {
+                    game.reject_alliance_request(request);
+                }
+                if let Some(alliance) = game.player(self.player).alliance_with(attacked_player) {
+                    game.player_mut(self.player).break_alliance(alliance);
+                }
+                if attacked_player != self.player {
+                    game.player_mut(attacked_player)
+                        .update_relation(self.player, -100.0);
+                }
+            }
         }
     }
 
@@ -168,16 +210,29 @@ impl NukeExecution {
             return;
         }
         let magnitude = game.config().nuke_magnitudes(nuke_type);
-        let to_break = list_nuke_break_alliance(
-            game,
-            self.dst,
-            magnitude,
-            game.config().nuke_alliance_break_threshold(),
-        );
+        let legacy = !game.has(Change::NukeBreakAllyList2912);
+        let to_break = if legacy {
+            list_nuke_break_ally_legacy(
+                game,
+                self.player,
+                self.dst,
+                magnitude,
+                game.config().nuke_alliance_break_threshold(),
+            )
+        } else {
+            list_nuke_break_alliance(
+                game,
+                self.dst,
+                magnitude,
+                game.config().nuke_alliance_break_threshold(),
+            )
+        };
 
-        for incoming in game.player(self.player).incoming_alliance_requests() {
-            if to_break.contains(&game.alliance_request(incoming).requestor()) {
-                game.reject_alliance_request(incoming);
+        if !legacy {
+            for incoming in game.player(self.player).incoming_alliance_requests() {
+                if to_break.contains(&game.alliance_request(incoming).requestor()) {
+                    game.reject_alliance_request(incoming);
+                }
             }
         }
 
@@ -192,7 +247,9 @@ impl NukeExecution {
                 .find(|&ar| game.alliance_request(ar).requestor() == self.player);
             if let Some(request) = pending {
                 game.reject_alliance_request(request);
-                continue;
+                if !legacy {
+                    continue;
+                }
             }
             if let Some(alliance) = game.player(self.player).alliance_with(attacked) {
                 game.player_mut(self.player).break_alliance(alliance);
@@ -244,12 +301,71 @@ impl NukeExecution {
         game.unit_mut(nuke).set_targetable(targetable);
     }
 
+    /// The blast of builds before PR 3176: troops die tile by tile, owner by owner.
+    fn destroy_tiles_per_tile(&self, game: &mut GameImpl, to_destroy: &[TileRef]) {
+        let target = game.owner_id(self.dst);
+        let max_troops = if target != 0 {
+            game.player(target).max_troops()
+        } else {
+            1.0
+        };
+        for &tile in to_destroy {
+            let owner = game.owner_id(tile);
+            if owner != 0 {
+                game.player_mut(owner).relinquish(tile);
+                let factor = game.config().nuke_death_factor(
+                    self.nuke_type,
+                    game.player(owner).troops(),
+                    game.player(owner).num_tiles_owned() as f64,
+                    max_troops,
+                );
+                game.player_mut(owner).remove_troops(factor);
+                let attacks: Vec<_> = game.player(owner).outgoing_attacks().to_vec();
+                for attack in attacks {
+                    let attack_troops = game.attack(attack).troops();
+                    let deaths = game.config().nuke_death_factor(
+                        self.nuke_type,
+                        attack_troops,
+                        game.player(owner).num_tiles_owned() as f64,
+                        max_troops,
+                    );
+                    game.set_attack_troops(attack, attack_troops - deaths);
+                }
+                for unit in game.player(owner).units_of(UnitType::TransportShip) {
+                    let unit_troops = game.unit_any(unit).troops();
+                    let deaths = game.config().nuke_death_factor(
+                        self.nuke_type,
+                        unit_troops,
+                        game.player(owner).num_tiles_owned() as f64,
+                        max_troops,
+                    );
+                    game.unit_mut(unit).set_troops(unit_troops - deaths);
+                }
+            }
+            if game.is_land(tile) {
+                game.queue_water_conversion(tile);
+            }
+        }
+    }
+
     fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId, explosion_tile: TileRef) {
         let magnitude = game.config().nuke_magnitudes(game.unit_any(nuke).unit_type);
-        let to_destroy = self.tiles_to_destroy(game, explosion_tile);
+        let to_destroy = if game.has(Change::LegacyProjectiles28) {
+            let tiles = self.tiles_cached(game);
+            self.maybe_break_alliances_v28(game, &tiles);
+            tiles
+        } else {
+            self.tiles_to_destroy(game, explosion_tile)
+        };
 
         let mut tiles_per_player: OrderedMap<SmallId, f64> = OrderedMap::new();
+        if !game.has(Change::NukeExplosionBulk3176) {
+            self.destroy_tiles_per_tile(game, &to_destroy);
+        }
         for &tile in &to_destroy {
+            if !game.has(Change::NukeExplosionBulk3176) {
+                break;
+            }
             let owner = game.owner_id(tile);
             if owner != 0 {
                 game.player_mut(owner).relinquish(tile);
@@ -289,7 +405,7 @@ impl NukeExecution {
                         num_tiles_left,
                         max_troops,
                     );
-                    game.attack_mut(attack).set_troops(attack_troops - deaths);
+                    game.set_attack_troops(attack, attack_troops - deaths);
                 }
                 for entry in transport_troops.iter_mut() {
                     let deaths = game.config().nuke_death_factor(
@@ -314,21 +430,20 @@ impl NukeExecution {
                 let u = game.unit_any(unit);
                 (u.unit_type, u.tile(), u.owner_id())
             };
+            let skips_sam_missile =
+                game.has(Change::SamMissileImmunity3167) && t == UnitType::SAMMissile;
             if matches!(
                 t,
                 UnitType::AtomBomb
                     | UnitType::HydrogenBomb
                     | UnitType::MIRVWarhead
                     | UnitType::MIRV
-                    | UnitType::SAMMissile
-            ) {
+            ) || skips_sam_missile
+            {
                 continue;
             }
             if (game.map.euclidean_dist_squared(dst, tile) as f64) < outer2 {
-                let friendly = game
-                    .config()
-                    .rules()
-                    .has(crate::Builds::Rules::Change::NukeFriendlyKillNoCredit5525)
+                let friendly = game.has(Change::NukeFriendlyKillNoCredit5525)
                     && game.player(self.player).is_friendly(owner, true);
                 game.unit_mut(unit)
                     .delete(Some(true), if friendly { None } else { Some(self.player) });
@@ -346,17 +461,17 @@ impl Execution for NukeExecution {
         if self.speed == -1.0 {
             self.speed = game.config().nuke_speed(self.nuke_type);
         }
-        let standard_warheads = game.config().rules().has(Change::MirvWarheadsStandard4706);
+        let standard_warheads = game.has(Change::MirvWarheadsStandard4706);
         let options = ParabolaOptions {
             increment: Some(self.speed),
             distance_based_height: (!standard_warheads)
                 .then_some(self.nuke_type != UnitType::MIRVWarhead),
             direction_up: Some(self.rocket_direction_up),
-            legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
-            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            legacy_curve: !game.has(Change::MirvNormalize5188),
+            legacy_reset: !game.has(Change::SamTargetingFixes4770),
             ..Default::default()
         };
-        let bounces = game.config().rules().has(Change::BouncingNukes30)
+        let bounces = game.has(Change::BouncingNukes30)
             && PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64).chance(6.0);
         if bounces {
             self.bouncing = Some(BouncingParabolaPathFinder::new(options));
@@ -374,7 +489,7 @@ impl Execution for NukeExecution {
                 self.active = false;
                 return;
             };
-            let src = if game.config().rules().has(Change::NukeKeepSrcTile4756) {
+            let src = if game.has(Change::NukeKeepSrcTile4756) {
                 *self.src.get_or_insert(spawn)
             } else {
                 self.src = Some(spawn);
@@ -386,7 +501,7 @@ impl Execution for NukeExecution {
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
             if let Some(silo) = silo
-                && game.config().rules().has(Change::BulkPurchase4640)
+                && game.has(Change::BulkPurchase4640)
             {
                 let mut last_dep = 0.0;
                 for &launch_tick in game.unit_any(silo).missile_timer_queue() {
@@ -409,7 +524,10 @@ impl Execution for NukeExecution {
             self.nuke = Some(id);
             game.unit_mut(id)
                 .update_nuke_state(None, None, Some(self.wait_ticks));
-            if self.nuke_type != UnitType::MIRVWarhead {
+            if game.has(Change::LegacyProjectiles28) {
+                let tiles = self.tiles_cached(game);
+                self.maybe_break_alliances_v28(game, &tiles);
+            } else if self.nuke_type != UnitType::MIRVWarhead {
                 self.maybe_break_alliances(game);
             }
             if let Some(silo) = silo {
@@ -438,9 +556,7 @@ impl Execution for NukeExecution {
                 .next(&game.map, src, self.dst, Some(self.speed)),
         };
         match step {
-            PathResult::Complete(node)
-                if !game.config().rules().has(Change::SamTargetingFixes4770) =>
-            {
+            PathResult::Complete(node) if !game.has(Change::SamTargetingFixes4770) => {
                 self.detonate(game, nuke, node);
             }
             PathResult::Complete(node) => {

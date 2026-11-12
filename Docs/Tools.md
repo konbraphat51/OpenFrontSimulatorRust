@@ -23,7 +23,7 @@ Tools/ClassDigest.py C064 --max-lines 150  # smaller hunk budget
 - Groups hunks by file and enclosing `Class.method`. Imports, comments and brace-only lines are hidden unless `--verbose`.
 - `--max-lines N` is a total hunk-line budget; each file gets a share proportional to its size (at least 4 lines), with a truncation marker.
 - The `->` mapping comes from `//! Port of src/core/<path>.ts` headers in `Crates/` (index built on the fly). `~` marks a fallback by file name (for example `PlayerExecutionV36.rs`); `(no Rust port found)` means the file is not ported on this branch yet.
-- The header line lists commit count, PR numbers between the commits (de-duplicated) and the `Change` flags already in the class's `EDGES` entry.
+- The header line lists commit count, PR numbers between the commits (de-duplicated) and the `Change` flags already in the class's `Edges/<class>.toml`.
 
 ## VerifyClass
 
@@ -62,5 +62,5 @@ Tools/Triage.sh Cache/Records/<commit12>/<id>.json.gz [--trace] [--bisect-flags 
 
 - Default: one line with commit, class, verdict, hashes matched and first mismatching tick.
 - `--trace`: runs `Tools/TraceCompare.sh` up to that tick and prints the last 20 lines (first differing fields). Needs `OFSIM_WORKTREE`, the upstream worktree of the record's commit with `node_modules` and a current `ofsim-reference/`.
-- `--bisect-flags`: reruns verify once per `Change` flag of the class's `EDGES` entry (`--depth 2` adds the parent's) with `OFSIM_TOGGLE=<flag>`. Each line says `REMOVES mismatch`, `MOVES a -> b`, `no effect`, or (when the record passes) `BREAKS at tick`. `--until T` speeds this up.
+- `--bisect-flags`: reruns verify once per `Change` flag of the class's `Edges/<class>.toml` (`--depth 2` adds the parent's) with `OFSIM_TOGGLE=<flag>`. Each line says `REMOVES mismatch`, `MOVES a -> b`, `no effect`, or (when the record passes) `BREAKS at tick`. `--until T` speeds this up.
 - Caveat: `OFSIM_TOGGLE` is applied in `Rules::for_class`; toggling flags of class C000 has no effect on its own builds.
