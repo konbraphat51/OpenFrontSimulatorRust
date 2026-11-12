@@ -66,6 +66,30 @@ impl TrainStationExecution {
         };
         let owner = game.unit_any(self.unit).owner_id();
         if !game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::TrainDestinationReservoir3130)
+        {
+            let available = game
+                .rail_network
+                .cluster_available_for_trade(game, cluster, owner);
+            if available.is_empty() || !self.should_spawn_train(game) {
+                return;
+            }
+            let random = self.random.as_mut().expect("initialised");
+            let destination = *random.rand_from_set(&available);
+            if destination != station {
+                game.add_execution(Box::new(TrainExecution::new(
+                    owner,
+                    station,
+                    destination,
+                    NUM_CARS,
+                )));
+                self.last_spawn_tick = current_tick;
+            }
+            return;
+        }
+        if !game
             .rail_network
             .cluster_has_any_trade_destination(game, cluster, owner)
         {
