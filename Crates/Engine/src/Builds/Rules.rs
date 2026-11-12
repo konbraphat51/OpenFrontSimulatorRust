@@ -44,6 +44,12 @@ pub enum Change {
     SeveredLandAnnex5955,
     /// PR 5919: "stop trading with enemies" (embargo all) skips allies.
     EmbargoAllSkipsAllies5919,
+    /// PR 6087 (nation AI split): tribes may pick an allied traitor, alliance renewal does not count the renewed alliance.
+    NationAiSplit6087,
+    /// PR 6089: an attack checks that it is still active before refunding a completed retreat.
+    AttackInactiveBeforeRetreat6089,
+    /// PR 6016: a water nuke turns a mini map land tile to water when any of its four tiles is water.
+    WaterNukeMiniTile6016,
     /// PR 5719: a train reconciles a split of the railroad it is on.
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
@@ -168,6 +174,15 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C082",
         add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C083",
+        add: &[
+            Change::NationAiSplit6087,
+            Change::AttackInactiveBeforeRetreat6089,
+            Change::WaterNukeMiniTile6016,
+        ],
         remove: &[],
     },
     Edge {

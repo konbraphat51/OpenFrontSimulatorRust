@@ -193,7 +193,13 @@ impl NationAllianceBehavior {
             .into_iter()
             .filter(|&p| game.player(p).player_type() != PlayerType::Bot)
             .count() as f64;
-        let other_alliances = game.player(other).alliances().len() as f64;
+        let mut other_alliances = game.player(other).alliances().len() as f64;
+        // An alliance with us is the one being renewed, not another one.
+        if game.config().rules().has(Change::NationAiSplit6087)
+            && game.player(other).is_allied_with(self.player)
+        {
+            other_alliances -= 1.0;
+        }
         if difficulty == Difficulty::Hard {
             other_alliances >= total_players * 0.5
         } else {

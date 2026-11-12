@@ -136,11 +136,12 @@ impl GameImpl {
         team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     ) -> Self {
         let unit_grid = UnitGrid::new(&map);
-        let water_manager = WaterManager::with_sorted_edges(
+        let mut water_manager = WaterManager::with_sorted_edges(
             mini_map,
             config.disable_nav_mesh(),
             config.rules().has(Change::WaterGraphEdgeSort5805),
         );
+        water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         let tiles = map.width() as usize * map.height() as usize;
         let mut game = Self {
             ticks: 0,

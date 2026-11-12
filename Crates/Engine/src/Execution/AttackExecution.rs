@@ -367,6 +367,18 @@ impl Execution for AttackExecution {
         let mut troop_count = game.attack(attack).troops();
         let target_is_player = self.target != 0;
 
+        // Must come before the retreat refund: another attack's init can absorb or cancel this one
+        // on the tick its retreat completes.
+        if game
+            .config()
+            .rules()
+            .has(Change::AttackInactiveBeforeRetreat6089)
+            && !game.attack(attack).is_active()
+        {
+            self.active = false;
+            return;
+        }
+
         if game.attack(attack).retreated() {
             if target_is_player {
                 self.retreat(game, MALUS_FOR_RETREAT);

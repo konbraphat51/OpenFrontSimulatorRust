@@ -1392,7 +1392,7 @@ impl AiAttackBehavior {
             return;
         }
         // Select a traitor as an enemy.
-        if let Some(to_attack) = self.get_neighbor_traitor_to_attack(game)
+        if let Some(to_attack) = self.get_neighbor_traitor_to_attack(game, false)
             && self.chance(3.0)
             && self.send_attack(game, to_attack, false)
         {
@@ -1419,7 +1419,11 @@ impl AiAttackBehavior {
     }
 
     /// `getNeighborTraitorToAttack()`.
-    pub fn get_neighbor_traitor_to_attack(&mut self, game: &GameImpl) -> Option<SmallId> {
+    pub fn get_neighbor_traitor_to_attack(
+        &mut self,
+        game: &GameImpl,
+        include_allies: bool,
+    ) -> Option<SmallId> {
         if game.config().disable_alliances() {
             return None;
         }
@@ -1427,7 +1431,11 @@ impl AiAttackBehavior {
             .player(self.player)
             .nearby()
             .into_iter()
-            .filter(|&n| n != 0 && !self.is_friendly(game, n) && game.player(n).is_traitor())
+            .filter(|&n| {
+                n != 0
+                    && (include_allies || !self.is_friendly(game, n))
+                    && game.player(n).is_traitor()
+            })
             .collect();
         if traitors.is_empty() {
             None
