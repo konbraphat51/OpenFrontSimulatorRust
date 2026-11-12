@@ -71,6 +71,12 @@ fn maps_root(cache: &Path) -> PathBuf {
         .join("resources/maps")
 }
 
+/// Game id of a cached record file (`<gameId>.json.gz`).
+fn record_id(file: &std::path::Path) -> &str {
+    let name = file.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    name.split('.').next().unwrap_or("")
+}
+
 #[test]
 fn records_match_upstream_digests() {
     let Some(cache) = find_cache() else {
@@ -78,7 +84,11 @@ fn records_match_upstream_digests() {
         return;
     };
     let expected = golden("Records.json");
-    let files = record_files(&cache);
+    // Only records named in the golden file are checked; the cache may hold more.
+    let files: Vec<_> = record_files(&cache)
+        .into_iter()
+        .filter(|f| expected.get(record_id(f)).is_some())
+        .collect();
     assert_eq!(files.len(), expected.as_object().unwrap().len());
     let mut unknown = 0;
     for file in files {
