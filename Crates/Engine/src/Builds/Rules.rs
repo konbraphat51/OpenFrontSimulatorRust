@@ -415,6 +415,10 @@ pub enum Change {
     RelationPenalties28,
     /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
     WarshipLegacy28,
+    /// v0.28.5 and v0.28.7 (aac3bb37e): trade ship distance bonus 100 -> 150 gold per tile (before PR 3232 formula).
+    TradeShipDistanceGold150,
+    /// PRs 2552 and 2609 (v0.28.0 to v0.28.3, reverted in v0.28.4): bots beyond the first 20 take names from the community lists.
+    CommunityBotNames2552,
 }
 }
 

@@ -136,7 +136,12 @@ impl Config {
         is_lobby_creator: bool,
     ) -> Gold {
         let debuff = self.trade_ship_short_range_debuff();
-        let base_gold = 100_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + 100.0 * dist;
+        let per_tile = if self.rules.has(Change::TradeShipDistanceGold150) {
+            150.0
+        } else {
+            100.0
+        };
+        let base_gold = 100_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + per_tile * dist;
         let num_port_bonus = num_ports - 1.0;
         // Hyperbolic decay, midpoint at 5 ports, 3x bonus max.
         let bonus = 1.0 + 2.0 * (num_port_bonus / (num_port_bonus + 5.0));
