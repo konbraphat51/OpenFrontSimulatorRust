@@ -1,0 +1,117 @@
+/**
+ * Replays a game record through the upstream engine and writes one NDJSON trace line per tick.
+ *
+ * Copied into an OpenFrontIO worktree (`<worktree>/ofsim-reference/`) and run with that worktree's
+ * tsx. The trace format is the contract of `ofsim trace`; see Reference/README.md.
+ *
+ * Usage:
+ *   tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-at t1,t2,...] [--until tick]
+ */
+import fs from "fs";
+import { PlayerType } from "../src/core/game/Game";
+import { createGameRunner } from "../src/core/GameRunner";
+import {
+  createMapLoader,
+  loadRecord,
+  parseArguments,
+  resolveWorktree,
+  silenceEngineLogs,
+} from "./EngineSupport";
+
+/** Writes full-state dumps for the requested ticks to `<out>.full.ndjson`. */
+function captureFull(runner: Awaited<ReturnType<typeof createGameRunner>>, tick: number): string {
+  const game = runner.game;
+  const map = game.map();
+  const state = map.tileStateBuffer();
+  const owners = new Array<number>(state.length);
+  for (let i = 0; i < state.length; i++) owners[i] = state[i] & 0x0fff;
+  const units = game.units().map((u) => ({
+    id: u.id(),
+    type: u.type(),
+    owner: u.owner().smallID(),
+    tile: u.tile(),
+    troops: u.troops(),
+    level: u.level(),
+    active: u.isActive(),
+    hash: u.hash(),
+  }));
+  const players = game.allPlayers().map((p) => ({
+    smallId: p.smallID(),
+    type: p.type(),
+    troops: p.troops(),
+    gold: p.gold().toString(),
+    tilesOwned: p.numTilesOwned(),
+    isAlive: p.isAlive(),
+    hasSpawned: p.hasSpawned(),
+    hash: p.hash(),
+  }));
+  return JSON.stringify({ tick, full: { width: map.width(), height: map.height(), tileState: Array.from(state), owners, units, players } });
+}
+
+/** Replays the record and writes the trace; returns a short summary. */
+async function main(): Promise<void> {
+  silenceEngineLogs();
+  const { positional, options } = parseArguments(process.argv.slice(2));
+  if (positional.length < 2) {
+    throw new Error("usage: TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-at t1,t2,...] [--until tick]");
+  }
+  const [recordPath, outPath] = positional;
+  const fullAt = new Set((options.get("--full-at") ?? "").split(",").filter((s) => s !== "").map(Number));
+  const until = options.has("--until") ? Number(options.get("--until")) : Infinity;
+  const worktree = resolveWorktree(import.meta.url);
+  const { record, gameStart } = loadRecord(recordPath);
+
+  let tickError: string | null = null;
+  const runner = await createGameRunner(gameStart, undefined, createMapLoader(worktree), (update) => {
+    if ("errMsg" in update) tickError = `${update.errMsg}\n${update.stack ?? ""}`;
+  });
+  const game = runner.game as unknown as { hash(): number } & typeof runner.game;
+  const out = fs.openSync(outPath, "w");
+  const fullOut = fullAt.size > 0 ? fs.openSync(`${outPath}.full.ndjson`, "w") : null;
+  let checked = 0;
+  let mismatches = 0;
+  let firstMismatch = -1;
+  let lastTick = -1;
+  const started = performance.now();
+  try {
+    for (const turn of record.turns) {
+      const tick = game.ticks();
+      if (tick > until) break;
+      runner.addTurn(turn);
+      if (!runner.executeNextTick()) throw new Error(tickError ?? `tick ${tick} failed`);
+      // State is read after executeNextTick(), i.e. after the tick `tick` ran (ticks() is now tick + 1).
+      const hash = game.hash();
+      const recordHash = turn.hash ?? null;
+      if (recordHash !== null) {
+        checked++;
+        if (recordHash !== hash) {
+          mismatches++;
+          if (firstMismatch < 0) firstMismatch = tick;
+        }
+      }
+      const players = game.allPlayers().map((p) => {
+        const units = p.units();
+        let unitHashSum = 0;
+        for (const u of units) unitHashSum += u.hash();
+        return [p.smallID(), p.troops(), p.numTilesOwned(), p.gold().toString(), unitHashSum, p.isAlive(), units.length];
+      });
+      fs.writeSync(out, JSON.stringify({ tick, hash, recordHash, players }) + "\n");
+      if (fullOut !== null && fullAt.has(tick)) fs.writeSync(fullOut, captureFull(runner, tick) + "\n");
+      lastTick = tick;
+    }
+  } finally {
+    fs.closeSync(out);
+    if (fullOut !== null) fs.closeSync(fullOut);
+  }
+  const seconds = (performance.now() - started) / 1000;
+  const humans = game.allPlayers().filter((p) => p.type() === PlayerType.Human).length;
+  console.error(
+    JSON.stringify({ gameID: record.info.gameID, ticks: lastTick + 1, humans, hashesChecked: checked, mismatches, firstMismatch, seconds, ticksPerSecond: (lastTick + 1) / seconds }),
+  );
+  process.exitCode = mismatches > 0 ? 2 : 0;
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
