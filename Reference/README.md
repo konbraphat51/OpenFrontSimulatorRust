@@ -73,3 +73,7 @@ python Tools/FetchRecords.py --start 2026-10-03T00:00:00Z --end 2026-10-03T00:29
 ```
 
 Lists `/public/games` for the window (`--type`, `--mode` filter the listing), downloads `/public/game/<id>` into `Cache/Records/<commit12>/<gameId>.json.gz` with at least 0.5 s between requests, and keeps only records whose `gitCommit` starts with `--commit` (the commit is only known after the download). HTTP goes through `curl` (replace `http_get` for another transport). Games starting on a day in `--exclude-day` (repeatable, default `2026-10-02` UTC) are never downloaded: this is the hold-out data of the parent research project. Records contain usernames: never commit them.
+
+## Debugging tools
+
+`RngLog.ts <record> <out.txt> <until> [stackAt]` logs every `PseudoRandom` draw of the upstream engine as `<counter word before the draw> <raw u32>` and, with `stackAt`, prints the stack of that draw and exits. `ofsim` writes the same format when `OFSIM_RNG_LOG=<file>` is set (`OFSIM_RNG_STACK_AT=<n>` prints the Rust backtrace of draw n and exits with 3). Streams are told apart by their counter word, which increments by one per draw, so compare stream by stream: the creation order of streams that never draw after their warm-up differs between the engines. `ExecLog.ts <record> <fromTick> <toTick>` prints every execution the upstream engine adds in that range (type, owner, troops, target). `ofsim trace` prints the mobile units of one player every tick to stderr when `OFSIM_UNIT_LOG=<smallId>` is set.
