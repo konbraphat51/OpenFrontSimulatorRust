@@ -9,6 +9,7 @@
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
+use crate::Execution::NationExecution::NationExecution;
 use crate::Execution::NoOpExecution::NoOpExecution;
 use crate::Execution::NotPorted::NotPorted;
 use crate::Execution::PauseExecution::PauseExecution;
@@ -103,11 +104,11 @@ impl Executor {
         spawn_players(game, &self.game_id)
     }
 
-    /// `nationExecutions()`: one `NationExecution` per nation (not ported: panics when initialised).
+    /// `nationExecutions()`: one `NationExecution` per nation.
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
         game.nations()
             .iter()
-            .map(|_| NotPorted::at_init("NationExecution", true))
+            .map(|n| Box::new(NationExecution::new(&self.game_id, n.clone())) as Box<dyn Execution>)
             .collect()
     }
 }

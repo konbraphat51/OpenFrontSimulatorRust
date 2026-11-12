@@ -55,6 +55,8 @@ Point of reading: upstream computes the stored hash inside `GameImpl.executeNext
 
 On a work-in-progress branch, list extra ported intent types in `OFSIM_PORTED_INTENTS` (comma separated, e.g. `attack,boat`) and engine-created executions to keep active in `OFSIM_PORTED_EXECS` (`Nation`, `Tribe`, `DoomsdayClock`), so no shared file has to change. Executions created from inside a ported execution (for example a tribe launching an attack) are not covered: keep such paths ported on both sides, or compare only up to the first one.
 
+`OFSIM_INERT_CLASSES` (comma separated) makes single classes inert on the TypeScript side while the Rust side has only a stub (which is inert under `OFSIM_INERT`): executions created from inside ported code (`AllianceRequestExecution`, `AllianceExtensionExecution`, `ConstructionExecution`: `init` and `tick` do nothing) and behaviours (`AiAttackBehavior`, `NationStructureBehavior`, `NationMIRVBehavior`, `NationNukeBehavior`: their decision methods return a default). Extend the tables in `InertPatch.ts` when a new stub needs it.
+
 ## TraceDiff
 
 ```sh
