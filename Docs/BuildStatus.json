@@ -1,0 +1,32 @@
+{
+  "en": {
+    "C000": "baseline; 40 of 41 records (c6dYiNx281 open)",
+    "C001": "ported; 44/44 sampled records pass",
+    "C002": "ported; 7/7 sampled records pass",
+    "C003": "ported; 9/9 sampled records pass",
+    "C004": "ported; 6/6 sampled records pass",
+    "C005": "ported; 6/6 sampled records pass",
+    "C006": "ported; 8/8 sampled records pass",
+    "C007": "ported; 11/11 sampled records pass",
+    "C008": "ported; 13/13 sampled records pass",
+    "C009": "ported; 6/6 sampled records pass",
+    "C010": "ported; 18/18 sampled records pass",
+    "C011": "ported; 12/12 sampled records pass",
+    "C012": "ported; 6/6 sampled records pass"
+  },
+  "ja": {
+    "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
+    "C001": "移植済み; 44/44 件のサンプルが一致",
+    "C002": "移植済み; 7/7 件のサンプルが一致",
+    "C003": "移植済み; 9/9 件のサンプルが一致",
+    "C004": "移植済み; 6/6 件のサンプルが一致",
+    "C005": "移植済み; 6/6 件のサンプルが一致",
+    "C006": "移植済み; 8/8 件のサンプルが一致",
+    "C007": "移植済み; 11/11 件のサンプルが一致",
+    "C008": "移植済み; 13/13 件のサンプルが一致",
+    "C009": "移植済み; 6/6 件のサンプルが一致",
+    "C010": "移植済み; 18/18 件のサンプルが一致",
+    "C011": "移植済み; 12/12 件のサンプルが一致",
+    "C012": "移植済み; 6/6 件のサンプルが一致"
+  }
+}

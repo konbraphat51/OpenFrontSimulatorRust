@@ -10,7 +10,7 @@ Responsibility of this file: how to run the upstream TypeScript engine as a refe
 Reference/Setup.sh 4e837520e886          # Linux/macOS; Windows: Reference\Setup.ps1 4e837520e886
 ```
 
-Clones upstream into `Cache/OpenFrontIO` if missing, adds the worktree `Cache/Worktrees/<commit12>`, runs `npm ci --ignore-scripts --engine-strict=false` (Node 22 works although upstream asks for 24) and copies `Reference/*.ts` into `<worktree>/ofsim-reference/`. Re-run it after editing a script; it is idempotent. The scripts import `../src/core/...`, so they always run against the engine of that worktree's commit (use the worktree matching the record's `gitCommit`).
+Clones upstream into `Cache/OpenFrontIO` if missing, adds the worktree `Cache/Worktrees/<commit12>`, runs `npm ci --ignore-scripts --engine-strict=false` (Node 22 works although upstream asks for 24) and copies `Reference/*.ts` into `<worktree>/ofsim-reference/`. Re-run it after editing a script; it is idempotent. `node_modules` is symlinked from another worktree with an identical `package-lock.json` (or from the one named by `OFSIM_SHARE_NODE_MODULES=<commit12>`; the tracer only needs the engine's few dependencies) instead of running `npm ci` for every build. The scripts import `../src/core/...`, so they always run against the engine of that worktree's commit (use the worktree matching the record's `gitCommit`).
 
 ## TraceDumper
 

@@ -83,8 +83,8 @@ def render(ja, data, builds, table):
     w("")
     w("## " + t("Classes", "クラス表"))
     w("")
-    w(t("Columns: Weight = day-equivalents / Public records in the index; Cum.% = cumulative weight in porting order; Era: S seedrandom, F sfc32 without DetMath, D sfc32 with DetMath; Diff lines = added + deleted in the simulation files against the parent class representative; est. Rust lines = added + deleted/4; Map files changed = maps whose files differ from the parent representative (all maps in the tree, not only those played). The builds of a class are listed oldest first; the first listed build of C000 is the oldest build with the baseline code.",
-        "列: 重み = 日換算 / インデックス内のPublicレコード数、累積% = 移植順の累積重み、世代: S seedrandom、F DetMathなしsfc32、D DetMathありsfc32、差分行 = 親クラスの代表との間のシミュレーションファイルの追加+削除行、推定Rust行 = 追加 + 削除/4、変更マップファイル = 親の代表と異なるマップ (木に含まれる全マップ、プレイされたものに限らない)。クラス内のビルドは古い順。"))
+    w(t("Columns: Weight = day-equivalents / Public records in the index; Cum.% = cumulative weight in porting order; Era: S seedrandom, F sfc32 without DetMath, D sfc32 with DetMath; Diff lines = added + deleted in the simulation files against the parent class representative; est. Rust lines = added + deleted/4; Map files changed = maps whose files differ from the parent representative (all maps in the tree, not only those played). The builds of a class are listed oldest first; the first listed build of C000 is the oldest build with the baseline code. Status = porting state in `Rules.rs` and how many sampled records of the class replay with every hash matching (hand-maintained in `Docs/BuildStatus.json`).",
+        "列: 重み = 日換算 / インデックス内のPublicレコード数、累積% = 移植順の累積重み、世代: S seedrandom、F DetMathなしsfc32、D DetMathありsfc32、差分行 = 親クラスの代表との間のシミュレーションファイルの追加+削除行、推定Rust行 = 追加 + 削除/4、変更マップファイル = 親の代表と異なるマップ (木に含まれる全マップ、プレイされたものに限らない)。クラス内のビルドは古い順。状態 = `Rules.rs` での移植状況と、そのクラスのサンプルレコードのうち全ハッシュが一致した件数 (`Docs/BuildStatus.json` に手書きで保持)。"))
     w("")
     w(table)
     w("")

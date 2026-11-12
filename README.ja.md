@@ -8,7 +8,7 @@ English version: [README.md](README.md)
 
 [OpenFront](https://github.com/openfrontio/OpenFrontIO) のゲームシミュレーションを Rust で再実装した、高速かつ決定的なシミュレーター。公開 OpenFront API のゲームレコードを受け取り、ゲームを tick ごとに再生して、そのゲームを実行したアップストリームのエンジンビルドと同一のゲーム状態を再現する。再現性はレコードに保存された状態ハッシュで検証される。研究やツール用途で、任意の tick の領土、兵力、ユニット、攻撃、同盟を復元できる。
 
-状態: 開発中。対応ビルドは [Docs/Plan.ja.md](Docs/Plan.ja.md) を参照。
+状態: 開発中。対応ビルド: ベースライン v0.34.19 から v0.34.23 (クラス C000) と、クラス C001 から C012 の v0.34 系ビルド (v0.34.0 から v0.34.18、v0.34.24、v0.34.25)。それ以外のビルドは `build <commit> (class Cnnn) not ported yet` で失敗する。クラス別の状況は [Docs/Plan.ja.md](Docs/Plan.ja.md) と [Docs/BuildPlan.ja.md](Docs/BuildPlan.ja.md) を参照。
 
 ## セットアップ
 
@@ -27,7 +27,9 @@ git clone https://github.com/openfrontio/OpenFrontIO Cache/OpenFrontIO
 ## 使い方
 
 ```sh
-# レコードを保存されたハッシュに対して検証する
+# レコードを保存されたハッシュに対して検証する。--maps はベースラインビルド (v0.34.22) のマップディレクトリ。
+# マップファイルが異なるビルドでは、ofsim が --upstream (既定 Cache/OpenFrontIO) から git で読み、
+# Cache/Maps/<commit12>/ にキャッシュする。
 cargo run --release --bin ofsim -- verify --record game.json.gz --maps <OpenFrontIO>/resources/maps
 
 # 再生して 100 tick ごとにスナップショットを書く

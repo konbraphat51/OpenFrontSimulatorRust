@@ -73,11 +73,11 @@ def summary(c, ja):
     return s
 
 
-def table(up, builds, data, ja):
+def table(up, builds, data, ja, status):
     cl = data["classes"]
     tot = sum(c["weight"] for c in cl)
-    hdr = (["Class", "Builds (commit12 tag)", "Weight (day-eq / public recs)", "Cum.%", "Parent", "Era", "Change summary", "Diff lines / est. Rust lines", "Risk", "Map files changed"]
-           if not ja else ["クラス", "ビルド (commit12 タグ)", "重み (日換算 / Public件数)", "累積%", "親", "世代", "変更概要", "差分行 / 推定Rust行", "リスク", "変更マップファイル"])
+    hdr = (["Class", "Builds (commit12 tag)", "Weight (day-eq / public recs)", "Cum.%", "Parent", "Era", "Change summary", "Diff lines / est. Rust lines", "Risk", "Map files changed", "Status"]
+           if not ja else ["クラス", "ビルド (commit12 タグ)", "重み (日換算 / Public件数)", "累積%", "親", "世代", "変更概要", "差分行 / 推定Rust行", "リスク", "変更マップファイル", "状態"])
     rows = ["| " + " | ".join(hdr) + " |", "|" + "---|" * len(hdr)]
     cum = 0.0
     for c in cl:
@@ -91,7 +91,7 @@ def table(up, builds, data, ja):
         rows.append("| " + " | ".join([
             c["id"], bl, f"{c['weight']} / {c['public']}", f"{100 * cum / tot:.0f}", c["parent"] or "root", data["era"][c["id"]],
             summary(c, ja), f"{c['lines']} / {c['size_est']}" + (f" ({c['rewrites']} rewrite)" if c["rewrites"] else ""),
-            c["risk"], mtxt or "-"]) + " |")
+            c["risk"], mtxt or "-", status.get(c["id"], "-")]) + " |")
     return "\n".join(rows)
 
 
@@ -108,8 +108,10 @@ def main():
     spec = importlib.util.spec_from_file_location("prose", os.path.join(os.path.dirname(__file__), "BuildPlanProse.py"))
     prose = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(prose)
+    status_path = os.path.join(a.out_dir, "BuildStatus.json")  # hand-maintained: {"en": {class: text}, "ja": {class: text}}
+    status = json.load(open(status_path)) if os.path.exists(status_path) else {}
     for ja, name in ((False, "BuildPlan.md"), (True, "BuildPlan.ja.md")):
-        text = prose.render(ja, data, builds, table(a.upstream, builds, data, ja))
+        text = prose.render(ja, data, builds, table(a.upstream, builds, data, ja, status.get("ja" if ja else "en", {})))
         open(os.path.join(a.out_dir, name), "w").write(text)
 
 
