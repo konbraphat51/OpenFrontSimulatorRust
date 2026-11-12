@@ -186,17 +186,42 @@ impl NationMIRVBehavior {
     }
 
     fn steamroll_city_gap_multiplier(game: &GameImpl) -> f64 {
+        let new = game.config().rules().has(Change::NationBehaviorTweaks31);
         match Self::difficulty(game) {
-            Difficulty::Easy => 2.0,
-            Difficulty::Medium => 1.5,
-            Difficulty::Hard => 1.25,
+            Difficulty::Easy => {
+                if new {
+                    2.0
+                } else {
+                    1.5
+                }
+            }
+            Difficulty::Medium => {
+                if new {
+                    1.5
+                } else {
+                    1.3
+                }
+            }
+            Difficulty::Hard => {
+                if new {
+                    1.25
+                } else {
+                    1.2
+                }
+            }
             Difficulty::Impossible => 1.15,
         }
     }
 
     fn steamroll_min_leader_cities(game: &GameImpl) -> f64 {
         match Self::difficulty(game) {
-            Difficulty::Easy => 20.0,
+            Difficulty::Easy => {
+                if game.config().rules().has(Change::NationBehaviorTweaks31) {
+                    20.0
+                } else {
+                    15.0
+                }
+            }
             Difficulty::Medium | Difficulty::Hard => 10.0,
             Difficulty::Impossible => 8.0,
         }

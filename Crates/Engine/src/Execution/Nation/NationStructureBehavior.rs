@@ -41,9 +41,14 @@ fn structure_ratio(
     difficulty: Difficulty,
     game_mode: GameMode,
     v2: bool,
+    legacy: bool,
     t: UnitType,
 ) -> Option<StructureRatioConfig> {
     match t {
+        UnitType::DefensePost if legacy => Some(StructureRatioConfig {
+            ratio_per_city: 0.25,
+            perceived_cost_increase_per_owned: 1.0,
+        }),
         UnitType::Port | UnitType::Factory => Some(StructureRatioConfig {
             ratio_per_city: if v2
                 && t == UnitType::Port
@@ -58,7 +63,7 @@ fn structure_ratio(
         }),
         UnitType::SAMLauncher => Some(StructureRatioConfig {
             ratio_per_city: sam_ratio(difficulty),
-            perceived_cost_increase_per_owned: 0.3,
+            perceived_cost_increase_per_owned: if legacy { 0.5 } else { 0.3 },
         }),
         UnitType::MissileSilo => Some(StructureRatioConfig {
             ratio_per_city: 0.2,
@@ -208,6 +213,12 @@ enum SpawnValue {
     },
     Port {
         other_tiles: Vec<TileRef>,
+        /// Before v0.31 the spacing to other ports is capped at the structure spacing.
+        cap: Option<f64>,
+    },
+    DefensePost {
+        other_tiles: Vec<TileRef>,
+        spacing: Spacing,
     },
     Factory {
         other_tiles: Vec<TileRef>,
@@ -275,8 +286,16 @@ impl NationStructureBehavior {
         game.config().game_config().difficulty
     }
 
+    /// True before the v0.31 structure rework (plain build order, defense posts in it).
+    fn legacy31(game: &GameImpl) -> bool {
+        !game.config().rules().has(Change::NationStructureRework31)
+    }
+
     /// `handleStructures()`.
     pub fn handle_structures(&mut self, game: &mut GameImpl) -> bool {
+        if Self::legacy31(game) {
+            return self.do_handle_structures(game);
+        }
         // Defense posts are outside the pacing/counter system and are never the very first structure.
         if self.placements_count > 0 && !game.config().is_unit_disabled(UnitType::DefensePost) {
             if self.try_build_defense_post(game) {
@@ -885,14 +904,23 @@ impl NationStructureBehavior {
         self.reachable_stations_cache = None;
         let cities_disabled = game.config().is_unit_disabled(UnitType::City);
         let city_count = self.city_count(game);
-        self.shared_water_components = game.shared_water_components(self.player);
-        let has_coastal_tiles = self.shared_water_components.is_some();
+        let legacy = Self::legacy31(game);
+        let has_coastal_tiles = if legacy {
+            game.player(self.player)
+                .border_tiles()
+                .iter()
+                .any(|t| game.map.is_ocean_shore(t))
+        } else {
+            self.shared_water_components = game.shared_water_components(self.player);
+            self.shared_water_components.is_some()
+        };
 
         let missile_silos_enabled = !game.config().is_unit_disabled(UnitType::MissileSilo);
 
         // High-starting-gold Hard/Impossible nations build a SAM first.
         let difficulty = Self::difficulty(game);
-        if self.placements_count == 0
+        if !legacy
+            && self.placements_count == 0
             && (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
             && !game.config().is_unit_disabled(UnitType::AtomBomb)
             && missile_silos_enabled
@@ -910,7 +938,8 @@ impl NationStructureBehavior {
         } else {
             game.player(self.player).units_owned(UnitType::City) == 0
         };
-        if !cities_disabled
+        if !legacy
+            && !cities_disabled
             && first_pending
             && (self.is_high_nation_density(game)
                 || (game.config().rules().has(Change::NationsLikeHumans5899)
@@ -938,18 +967,28 @@ impl NationStructureBehavior {
         }
 
         // Build order for non-city structures (priority order).
-        let build_order = [
-            UnitType::Port,
-            UnitType::Factory,
-            UnitType::SAMLauncher,
-            UnitType::MissileSilo,
-        ];
+        let build_order: &[UnitType] = if legacy {
+            &[
+                UnitType::DefensePost,
+                UnitType::Port,
+                UnitType::Factory,
+                UnitType::SAMLauncher,
+                UnitType::MissileSilo,
+            ]
+        } else {
+            &[
+                UnitType::Port,
+                UnitType::Factory,
+                UnitType::SAMLauncher,
+                UnitType::MissileSilo,
+            ]
+        };
 
         let nukes_enabled = !game.config().is_unit_disabled(UnitType::AtomBomb)
             || !game.config().is_unit_disabled(UnitType::HydrogenBomb)
             || !game.config().is_unit_disabled(UnitType::MIRV);
 
-        for structure_type in build_order {
+        for &structure_type in build_order {
             if game.config().is_unit_disabled(structure_type) {
                 continue;
             }
@@ -1030,7 +1069,9 @@ impl NationStructureBehavior {
         if game.config().rules().has(Change::NationsLikeHumans5899) {
             return self.levels_due(game, t, city_count, has_coastal_tiles) > 0.0;
         }
-        let Some(config) = structure_ratio(difficulty, GameMode::FFA, false, t) else {
+        let Some(config) =
+            structure_ratio(difficulty, GameMode::FFA, false, Self::legacy31(game), t)
+        else {
             return false;
         };
 
@@ -1050,8 +1091,16 @@ impl NationStructureBehavior {
             return false;
         }
 
+        // Density cap on defense posts: they cannot be upgraded, so a new one would be built.
+        if t == UnitType::DefensePost {
+            let tiles_owned = game.player(self.player).num_tiles_owned() as f64;
+            if tiles_owned > 0.0 && (owned as f64) / tiles_owned >= 1.0 / 5000.0 {
+                return false;
+            }
+        }
+
         // The first missile silo uses a higher ratio so nations start nuking earlier.
-        if t == UnitType::MissileSilo && owned == 0 {
+        if t == UnitType::MissileSilo && owned == 0 && !Self::legacy31(game) {
             ratio = FIRST_MISSILE_SILO_RATIO;
         }
 
@@ -1070,7 +1119,7 @@ impl NationStructureBehavior {
     ) -> f64 {
         let game_config = game.config().game_config();
         let (difficulty, game_mode) = (game_config.difficulty, game_config.game_mode);
-        let Some(config) = structure_ratio(difficulty, game_mode, true, t) else {
+        let Some(config) = structure_ratio(difficulty, game_mode, true, false, t) else {
             return 0.0;
         };
         let mut ratio = config.ratio_per_city;
@@ -1172,7 +1221,7 @@ impl NationStructureBehavior {
         let mut increase_per_owned = if t == UnitType::City {
             CITY_PERCEIVED_COST_INCREASE_PER_OWNED
         } else {
-            structure_ratio(difficulty, game_mode, v2, t)
+            structure_ratio(difficulty, game_mode, v2, Self::legacy31(game), t)
                 .map_or(0.1, |c| c.perceived_cost_increase_per_owned)
         };
         // Income structures pay for themselves, so smarter nations keep building them while saving.
@@ -1189,13 +1238,18 @@ impl NationStructureBehavior {
     fn get_save_up_target(&self, game: &GameImpl) -> Gold {
         let config = game.config();
 
-        // Only save up for SAMs if missile silos are disabled.
+        let legacy = Self::legacy31(game);
+        // Only save up for SAMs if missile silos are disabled (nothing to save before v0.31).
         if config.is_unit_disabled(UnitType::MissileSilo) {
-            return self.cost(game, UnitType::SAMLauncher);
+            return if legacy {
+                0
+            } else {
+                self.cost(game, UnitType::SAMLauncher)
+            };
         }
 
         // A limited amount in team games, synced with NationNukeBehavior.
-        if config.game_config().game_mode == GameMode::Team {
+        if !legacy && config.game_config().game_mode == GameMode::Team {
             return self.cost(game, UnitType::HydrogenBomb);
         }
 
@@ -1215,6 +1269,9 @@ impl NationStructureBehavior {
         }
         if atom_enabled {
             return self.cost(game, UnitType::AtomBomb) * 20;
+        }
+        if legacy {
+            return 0;
         }
         self.cost(game, UnitType::SAMLauncher)
     }
@@ -1457,7 +1514,7 @@ impl NationStructureBehavior {
         if tiles.is_empty() {
             return None;
         }
-        let value_function = self.structure_spawn_tile_value(game, t);
+        let value_function = self.structure_spawn_tile_value(game, t)?;
         let mut best_tile: Option<TileRef> = None;
         let mut best_value = 0.0;
         for tile in tiles {
@@ -1477,6 +1534,15 @@ impl NationStructureBehavior {
 
     /// Samples shore tiles adjacent to water reachable by another player (so trading is possible).
     fn rand_coastal_tile_array(&self, game: &GameImpl, num_tiles: usize) -> Vec<TileRef> {
+        if Self::legacy31(game) {
+            let tiles: Vec<TileRef> = game
+                .player(self.player)
+                .border_tiles()
+                .iter()
+                .filter(|&t| game.map.is_ocean_shore(t))
+                .collect();
+            return self.array_sampler(tiles, num_tiles);
+        }
         let shared = self.shared_water_components.as_ref();
         let difficulty = Self::difficulty(game);
         let tiles: Vec<TileRef> = game
@@ -1538,15 +1604,34 @@ impl NationStructureBehavior {
         out
     }
 
-    fn structure_spawn_tile_value(&mut self, game: &GameImpl, t: UnitType) -> SpawnValue {
-        match t {
+    fn structure_spawn_tile_value(&mut self, game: &GameImpl, t: UnitType) -> Option<SpawnValue> {
+        Some(match t {
             UnitType::City => self.city_value(game),
             UnitType::MissileSilo => self.missile_silo_value(game),
             UnitType::Factory => self.factory_value(game),
             UnitType::Port => self.port_value(game),
             UnitType::SAMLauncher => self.sam_launcher_value(game),
+            UnitType::DefensePost => return self.defense_post_value(game),
             _ => panic!("Value function not implemented for {}", t.as_str()),
+        })
+    }
+
+    /// Defense posts (before v0.31): none without a hostile non-bot neighbour with more troops.
+    fn defense_post_value(&self, game: &GameImpl) -> Option<SpawnValue> {
+        let me = game.player(self.player);
+        let has_hostile_neighbor = me.nearby().into_iter().any(|n| {
+            n != 0
+                && !me.is_friendly(n, false)
+                && game.player(n).player_type() != PlayerType::Bot
+                && game.player(n).troops() > me.troops()
+        });
+        if !has_hostile_neighbor {
+            return None;
         }
+        Some(SpawnValue::DefensePost {
+            other_tiles: self.unit_tiles(game, UnitType::DefensePost),
+            spacing: Self::spacing(game),
+        })
     }
 
     fn unit_tiles(&self, game: &GameImpl, t: UnitType) -> Vec<TileRef> {
@@ -1569,6 +1654,7 @@ impl NationStructureBehavior {
     fn port_value(&self, game: &GameImpl) -> SpawnValue {
         SpawnValue::Port {
             other_tiles: self.unit_tiles(game, UnitType::Port),
+            cap: Self::legacy31(game).then(|| Self::spacing(game).structure),
         }
     }
 
@@ -1805,9 +1891,64 @@ impl NationStructureBehavior {
                 }
                 w
             }
-            SpawnValue::Port { other_tiles } => {
+            SpawnValue::Port { other_tiles, cap } => {
                 let mut w = 0.0;
-                w += nearest_other(other_tiles);
+                let d = nearest_other(other_tiles);
+                w += cap.map_or(d, |c| d.min(c));
+                w
+            }
+            SpawnValue::DefensePost {
+                other_tiles,
+                spacing,
+            } => {
+                let mut w = 0.0;
+                // Prefer higher elevations.
+                w += game.map.magnitude(tile) as f64;
+                let (closest, closest_border_dist) =
+                    crate::Execution::Util::closest_tile(&game.map, border_tiles.iter(), tile);
+                if let Some(closest) = closest {
+                    // Prefer to be borderSpacing tiles from the border.
+                    w += f64::max(
+                        0.0,
+                        spacing.border - (spacing.border - closest_border_dist).abs(),
+                    );
+                    // Prefer adjacent players who are hostile and have more troops.
+                    let mut neighbors: Vec<SmallId> = Vec::new();
+                    for neighbor_tile in game.map.neighbors(closest) {
+                        if !game.map.is_land(neighbor_tile) {
+                            continue;
+                        }
+                        let id = game.map.owner_id(neighbor_tile);
+                        if id == self.player || id == 0 {
+                            continue;
+                        }
+                        if game.player(id).player_type() == PlayerType::Bot {
+                            continue;
+                        }
+                        if game.player(id).troops() <= owner.troops() {
+                            continue;
+                        }
+                        if !neighbors.contains(&id) {
+                            neighbors.push(id);
+                        }
+                    }
+                    for neighbor in neighbors {
+                        w += spacing.border
+                            * (Relation::Friendly as u8 as f64
+                                - owner.relation(neighbor) as u8 as f64);
+                    }
+                }
+                // Prefer to be away from other structures of the same type.
+                let others: Vec<TileRef> =
+                    other_tiles.iter().copied().filter(|&t| t != tile).collect();
+                if let Some((x, _)) = crate::Execution::Util::closest_two_tiles(
+                    &game.map,
+                    others.iter().copied(),
+                    [tile],
+                ) {
+                    let d = game.map.manhattan_dist(x, tile) as f64;
+                    w += d.min(spacing.structure);
+                }
                 w
             }
             SpawnValue::Factory {

@@ -581,6 +581,10 @@ string_enum! {
         Didier = "Didier",
         DidierFrance = "Didier France",
         Dyslexdria = "Dyslexdria",
+        AmazonRiverWide = "Amazon River Wide",
+        ReglaciatedAntarctica = "Reglaciated Antarctica",
+        TheBoxPlus = "The Box Plus",
+        WorldRotated = "World Rotated",
         EastAsia = "East Asia",
         Europe = "Europe",
         EuropeClassic = "Europe Classic",
@@ -702,7 +706,7 @@ mod tests {
         assert_eq!(UnitType::AtomBomb.as_str(), "Atom Bomb");
         assert_eq!(GameMode::FFA.as_str(), "Free For All");
         assert_eq!(GameMapType::AmazonRiver.as_str(), "Amazon River");
-        assert_eq!(GameMapType::ALL.len(), 146);
+        assert_eq!(GameMapType::ALL.len(), 150);
         assert_eq!(GameMapType::from_str("nope"), None);
         assert_eq!(PlayerType::from_str("NATION"), Some(PlayerType::Nation));
     }

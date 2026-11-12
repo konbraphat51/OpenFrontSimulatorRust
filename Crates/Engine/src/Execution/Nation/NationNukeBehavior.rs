@@ -158,10 +158,12 @@ impl NationNukeBehavior {
     pub fn maybe_send_nuke(&mut self, game: &mut GameImpl) {
         let silos = game.player(self.player).units_of(UnitType::MissileSilo);
         let config = game.config();
-        if silos.is_empty()
-            || config.is_unit_disabled(UnitType::MissileSilo)
-            || (config.is_unit_disabled(UnitType::AtomBomb)
-                && config.is_unit_disabled(UnitType::HydrogenBomb))
+        let legacy = !config.rules().has(Change::NationNukeRework31);
+        if !legacy
+            && (silos.is_empty()
+                || config.is_unit_disabled(UnitType::MissileSilo)
+                || (config.is_unit_disabled(UnitType::AtomBomb)
+                    && config.is_unit_disabled(UnitType::HydrogenBomb)))
         {
             return;
         }
@@ -175,7 +177,8 @@ impl NationNukeBehavior {
         };
 
         // Don't nuke tribes (as opposed to nations and humans).
-        if game.player(nuke_target).player_type() == PlayerType::Bot
+        if (legacy && silos.is_empty())
+            || game.player(nuke_target).player_type() == PlayerType::Bot
             || game.player(self.player).is_on_same_team(nuke_target)
             || !self
                 .attack_behavior
@@ -295,6 +298,7 @@ impl NationNukeBehavior {
 
         // On Impossible, the richest nation hunts very high structure density targets.
         if diff == Difficulty::Impossible
+            && game.config().rules().has(Change::NationNukeRework31)
             && self.is_richest_nation(game)
             && self.rnd().chance(2.0)
             && let Some(dense_target) = self.find_high_density_target(game)
@@ -590,7 +594,9 @@ impl NationNukeBehavior {
 
         // A limited amount in team games, synced with NationStructureBehavior.
         let gold = game.player(self.player).gold();
-        if Self::game_mode(game) == GameMode::Team && gold > self.cost(game, UnitType::HydrogenBomb)
+        if Self::game_mode(game) == GameMode::Team
+            && (gold > self.cost(game, UnitType::HydrogenBomb)
+                || !game.config().rules().has(Change::NationNukeRework31))
         {
             return self.cost(game, t);
         }
@@ -680,6 +686,7 @@ impl NationNukeBehavior {
             ignore_map_bounds: None,
             legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
             legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            ..Default::default()
         });
         path_finder.find_path(&game.map, from, to)
     }
@@ -1131,8 +1138,12 @@ impl NationNukeBehavior {
 
         // Couldn't destroy any SAM: upgrade silos only if capacity was the bottleneck
         // (if only gold is lacking, don't waste it on upgrades).
-        if needs_more_silos && let Some(failed) = failed_target {
-            self.maybe_upgrade_helpful_silo(game, &failed);
+        if game.config().rules().has(Change::NationNukeRework31) {
+            if needs_more_silos && let Some(failed) = failed_target {
+                self.maybe_upgrade_helpful_silo(game, &failed);
+            }
+        } else if needs_more_silos {
+            self.maybe_upgrade_best_protected_silo(game);
         }
     }
 
@@ -1159,6 +1170,49 @@ impl NationNukeBehavior {
             }
         }
         result
+    }
+
+    /// Before v0.31: upgrades the silo best protected by our own SAMs.
+    fn maybe_upgrade_best_protected_silo(&mut self, game: &mut GameImpl) {
+        let silos = game.player(self.player).units_of(UnitType::MissileSilo);
+        if silos.is_empty() {
+            return;
+        }
+        let our_sams = game.player(self.player).units_of(UnitType::SAMLauncher);
+        let mut best_silo: Option<UnitId> = None;
+        let mut best_protection = -1.0;
+        for &silo in &silos {
+            let silo_unit = game.unit_any(silo);
+            if !game.player(self.player).can_upgrade_unit(silo) {
+                continue;
+            }
+            let mut protection = 0.0;
+            for &sam in &our_sams {
+                let sam_unit = game.unit_any(sam);
+                let range = game.config().sam_range(sam_unit.level as f64);
+                let dist_squared = game
+                    .map
+                    .euclidean_dist_squared(silo_unit.tile, sam_unit.tile)
+                    as f64;
+                if dist_squared <= range * range {
+                    protection += sam_unit.level as f64;
+                }
+            }
+            if protection > best_protection {
+                best_protection = protection;
+                best_silo = Some(silo);
+            }
+        }
+        if let Some(silo) = best_silo {
+            self.log.queue(
+                game,
+                self.player,
+                Decision::Upgrade {
+                    unit: silo,
+                    amount: 1,
+                },
+            );
+        }
     }
 
     /// Upgrades a silo that would have helped the failed overwhelm attempt: its trajectory to the failed

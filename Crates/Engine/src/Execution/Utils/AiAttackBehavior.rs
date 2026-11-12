@@ -159,6 +159,16 @@ impl AiAttackBehavior {
         game.config().rules().has(Change::NationsLikeHumans5899)
     }
 
+    /// True before the v0.31 rework: a chosen attack ends the turn whether or not it was sent.
+    pub fn legacy31(game: &GameImpl) -> bool {
+        !game.config().rules().has(Change::AiAttackRework31)
+    }
+
+    /// The result an attack strategy reports: before v0.31 always true once a target was found.
+    pub fn sent(game: &GameImpl, attacked: bool) -> bool {
+        Self::legacy31(game) || attacked
+    }
+
     fn chance(&self, odds: f64) -> bool {
         self.random.borrow_mut().chance(odds)
     }
@@ -298,9 +308,11 @@ impl AiAttackBehavior {
         if Self::v2(game) {
             self.land_neighbors = Some(bordering_player_set.iter().copied().collect());
         }
-        for &n in &player_neighbors {
-            if n != 0 {
-                bordering_player_set.insert(n);
+        if !Self::legacy31(game) {
+            for &n in &player_neighbors {
+                if n != 0 {
+                    bordering_player_set.insert(n);
+                }
             }
         }
         let mut bordering_players: Vec<SmallId> = bordering_player_set.iter().copied().collect();
@@ -317,10 +329,17 @@ impl AiAttackBehavior {
             .collect();
 
         // Terra nullius, but not nuked territory (direct border or across a river).
-        let has_non_nuked_terra_nullius =
-            border_has_non_nuked_terra_nullius || player_neighbors.contains(&0);
-        if has_non_nuked_terra_nullius && self.send_attack(game, 0, false) {
-            return;
+        if Self::legacy31(game) {
+            if border_has_non_nuked_terra_nullius {
+                self.send_attack(game, 0, false);
+                return;
+            }
+        } else {
+            let has_non_nuked_terra_nullius =
+                border_has_non_nuked_terra_nullius || player_neighbors.contains(&0);
+            if has_non_nuked_terra_nullius && self.send_attack(game, 0, false) {
+                return;
+            }
         }
 
         let hold_boats = Self::v2(game) && self.holds_boats_under_attack(game);
@@ -624,13 +643,19 @@ impl AiAttackBehavior {
         match strategy {
             Strategy::Crown => false,
             Strategy::Retaliate => match self.find_incoming_attack_player(game) {
-                Some(attacker) => self.send_attack(game, attacker, true),
+                Some(attacker) => {
+                    let r = self.send_attack(game, attacker, true);
+                    Self::sent(game, r)
+                }
                 None => false,
             },
             Strategy::Bots => self.attack_bots(game),
             Strategy::Assist => self.assist_allies(game),
             Strategy::Traitor => match self.find_traitor(game, bordering_enemies) {
-                Some(traitor) => self.send_attack(game, traitor, false),
+                Some(traitor) => {
+                    let r = self.send_attack(game, traitor, false);
+                    Self::sent(game, r)
+                }
                 None => false,
             },
             Strategy::Afk => {
@@ -641,7 +666,10 @@ impl AiAttackBehavior {
                             || game.player(enemy).troops() < self.troops(game) * 3.0)
                 });
                 match afk {
-                    Some(afk) => self.send_attack(game, afk, false),
+                    Some(afk) => {
+                        let r = self.send_attack(game, afk, false);
+                        Self::sent(game, r)
+                    }
                     None => false,
                 }
             }
@@ -650,17 +678,24 @@ impl AiAttackBehavior {
             }
             Strategy::Nuked => {
                 if self.is_bordering_nuked_territory(game) {
-                    self.send_attack(game, 0, false)
+                    let r = self.send_attack(game, 0, false);
+                    Self::sent(game, r)
                 } else {
                     false
                 }
             }
             Strategy::Victim => match self.find_victim(game, bordering_enemies) {
-                Some(victim) => self.send_attack(game, victim, false),
+                Some(victim) => {
+                    let r = self.send_attack(game, victim, false);
+                    Self::sent(game, r)
+                }
                 None => false,
             },
             Strategy::Juicy => match self.find_juicy_target(game, bordering_enemies) {
-                Some(target) => self.send_attack(game, target, false),
+                Some(target) => {
+                    let r = self.send_attack(game, target, false);
+                    Self::sent(game, r)
+                }
                 None => false,
             },
             Strategy::Hated => {
@@ -674,19 +709,24 @@ impl AiAttackBehavior {
                     if self.is_ffa(game) && game.player(other).troops() > self.troops(game) * 3.0 {
                         continue;
                     }
-                    return self.send_attack(game, other, false);
+                    let r = self.send_attack(game, other, false);
+                    return Self::sent(game, r);
                 }
                 false
             }
             Strategy::VeryWeak => match self.find_very_weak_enemy(game, bordering_enemies) {
-                Some(enemy) => self.send_attack(game, enemy, false),
+                Some(enemy) => {
+                    let r = self.send_attack(game, enemy, false);
+                    Self::sent(game, r)
+                }
                 None => false,
             },
             Strategy::Weakest => {
                 if let Some(&weakest) = bordering_enemies.first() {
                     // In FFA, no attack on someone with more troops than us.
                     if !self.is_ffa(game) || game.player(weakest).troops() < self.troops(game) {
-                        return self.send_attack(game, weakest, false);
+                        let r = self.send_attack(game, weakest, false);
+                        return Self::sent(game, r);
                     }
                 }
                 false
@@ -695,7 +735,8 @@ impl AiAttackBehavior {
                 if bordering_enemies.is_empty()
                     && let Some(enemy) = self.find_nearest_island_enemy(game)
                 {
-                    return self.send_attack(game, enemy, false);
+                    let r = self.send_attack(game, enemy, false);
+                    return Self::sent(game, r);
                 }
                 false
             }
@@ -920,7 +961,7 @@ impl AiAttackBehavior {
         let mut incoming: Vec<_> = me
             .incoming_attacks()
             .into_iter()
-            .filter(|&a| !self.is_friendly(game, game.attack(a).attacker()))
+            .filter(|&a| Self::legacy31(game) || !self.is_friendly(game, game.attack(a).attacker()))
             .collect();
         // Bot attacks are ignored unless we are a bot.
         if me.player_type() != PlayerType::Bot {
@@ -1239,7 +1280,7 @@ impl AiAttackBehavior {
 
     fn assist_allies(&mut self, game: &mut GameImpl) -> bool {
         let emoji = self.emoji_behavior.clone().expect("not initialized");
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return false;
         }
         for ally in game.player(self.player).allies() {
@@ -1271,10 +1312,15 @@ impl AiAttackBehavior {
                     );
                     continue;
                 }
-                if !self.send_attack(game, target, false) {
-                    continue;
+                if Self::legacy31(game) {
+                    game.player_mut(self.player).update_relation(ally, -20.0);
+                    self.send_attack(game, target, false);
+                } else {
+                    if !self.send_attack(game, target, false) {
+                        continue;
+                    }
+                    game.player_mut(self.player).update_relation(ally, -20.0);
                 }
-                game.player_mut(self.player).update_relation(ally, -20.0);
                 emoji.borrow_mut().send_emoji(
                     game,
                     EmojiRecipient::Player(ally),
@@ -1288,7 +1334,7 @@ impl AiAttackBehavior {
 
     // A traitor who is not significantly stronger than us.
     fn find_traitor(&self, game: &GameImpl, bordering_enemies: &[SmallId]) -> Option<SmallId> {
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return None;
         }
         bordering_enemies.iter().copied().find(|&enemy| {
@@ -1304,7 +1350,7 @@ impl AiAttackBehavior {
         bordering_enemies: &[SmallId],
     ) -> bool {
         let behavior = self.alliance_behavior.clone().expect("not initialized");
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return false;
         }
         if !bordering_friends.is_empty() {
@@ -1320,7 +1366,8 @@ impl AiAttackBehavior {
                     bordering_friends,
                     bordering_enemies,
                 ) {
-                    return self.send_attack(game, friend, true);
+                    let r = self.send_attack(game, friend, true);
+                    return Self::sent(game, r);
                 }
             }
         }
@@ -1393,11 +1440,13 @@ impl AiAttackBehavior {
         {
             return None;
         }
-        let has_shore = game
-            .player(self.player)
-            .border_tiles()
-            .iter()
-            .any(|t| game.map.is_shore(t));
+        let has_shore = game.player(self.player).border_tiles().iter().any(|t| {
+            if Self::legacy31(game) {
+                game.map.is_ocean_shore(t)
+            } else {
+                game.map.is_shore(t)
+            }
+        });
         if !has_shore {
             return None;
         }
@@ -1480,7 +1529,8 @@ impl AiAttackBehavior {
     // In team games nations attack and boat into stronger enemies, relying on donations; in FFA
     // going after someone much stronger usually loses.
     fn is_ffa(&self, game: &GameImpl) -> bool {
-        game.config().game_config().game_mode == GameMode::FFA
+        // Before v0.31 the FFA caution applied in every mode.
+        Self::legacy31(game) || game.config().game_config().game_mode == GameMode::FFA
     }
 
     fn player_center(&self, game: &GameImpl, player: SmallId) -> crate::Game::Game::Cell {
@@ -1498,17 +1548,20 @@ impl AiAttackBehavior {
             return;
         }
         // Retaliate against incoming attacks.
-        if let Some(incoming) = self.find_incoming_attack_player(game)
-            && self.send_attack(game, incoming, true)
-        {
-            return;
+        if let Some(incoming) = self.find_incoming_attack_player(game) {
+            let r = self.send_attack(game, incoming, true);
+            if Self::sent(game, r) {
+                return;
+            }
         }
         // Select a traitor as an enemy.
         if let Some(to_attack) = self.get_neighbor_traitor_to_attack(game, false)
             && self.chance(3.0)
-            && self.send_attack(game, to_attack, false)
         {
-            return;
+            let r = self.send_attack(game, to_attack, false);
+            if Self::sent(game, r) {
+                return;
+            }
         }
         // Choose a new enemy randomly.
         let neighbors = game.player(self.player).nearby();
@@ -1524,7 +1577,8 @@ impl AiAttackBehavior {
             if (t == PlayerType::Nation || t == PlayerType::Human) && self.chance(2.0) {
                 continue;
             }
-            if self.send_attack(game, neighbor, false) {
+            let r = self.send_attack(game, neighbor, false);
+            if Self::sent(game, r) {
                 return;
             }
         }
@@ -1536,7 +1590,7 @@ impl AiAttackBehavior {
         game: &GameImpl,
         include_allies: bool,
     ) -> Option<SmallId> {
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return None;
         }
         let traitors: Vec<SmallId> = game
@@ -1586,6 +1640,14 @@ impl AiAttackBehavior {
         if !force && !self.should_attack(game, target) {
             return false;
         }
+        if Self::legacy31(game) {
+            if game.player(self.player).shares_border_with(target) {
+                return self.send_land_attack(game, target, None, None);
+            } else if target != 0 {
+                return self.send_boat_attack(game, target);
+            }
+            return false;
+        }
         if target != 0 {
             if game.player(self.player).shares_border_with(target) {
                 self.send_land_attack(game, target, None, None)
@@ -1620,7 +1682,13 @@ impl AiAttackBehavior {
         game.player(player)
             .border_tiles()
             .iter()
-            .filter(|&t| game.map.is_shore(t))
+            .filter(|&t| {
+                if Self::legacy31(game) {
+                    game.map.is_ocean_shore(t)
+                } else {
+                    game.map.is_shore(t)
+                }
+            })
             .collect()
     }
 
@@ -1709,8 +1777,15 @@ impl AiAttackBehavior {
         }
         // Lower difficulties are prevented from attacking humans.
         let difficulty = game.config().game_config().difficulty;
-        if difficulty == Difficulty::Easy && self.random.borrow_mut().next_int(0.0, 4.0) != 0.0 {
-            return false;
+        if difficulty == Difficulty::Easy {
+            let skip = if Self::legacy31(game) {
+                self.chance(2.0)
+            } else {
+                self.random.borrow_mut().next_int(0.0, 4.0) != 0.0
+            };
+            if skip {
+                return false;
+            }
         }
         if difficulty == Difficulty::Medium && self.chance(4.0) {
             return false;
@@ -2454,7 +2529,9 @@ impl AiAttackBehavior {
             return false;
         }
         // Not in public games (to balance HvN).
-        if game.config().game_config().game_type == GameType::Public {
+        if game.config().game_config().game_type == GameType::Public
+            && game.config().rules().has(Change::NoPublicDonation3437)
+        {
             return false;
         }
         if !game.config().donate_troops() {

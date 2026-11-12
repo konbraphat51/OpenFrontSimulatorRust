@@ -35,8 +35,8 @@ pub struct WarshipExecution {
     random: PseudoRandom,
     warship: Option<UnitId>,
     pathfinder: Option<WaterPathFinder>,
-    last_shell_attack: f64,
-    already_sent_shell: HashSet<UnitId>,
+    pub(super) last_shell_attack: f64,
+    pub(super) already_sent_shell: HashSet<UnitId>,
     last_manual_move_tick_retreat_disabled: f64,
     last_observed_patrol_tile: Option<TileRef>,
     active_healing_remainder: f64,
@@ -69,7 +69,7 @@ impl WarshipExecution {
         }
     }
 
-    fn ship(&self) -> UnitId {
+    pub(super) fn ship(&self) -> UnitId {
         self.warship.expect("warship exists after init")
     }
 
@@ -77,7 +77,7 @@ impl WarshipExecution {
         game.unit_any(self.ship()).warship_state().state
     }
 
-    fn patrol_tile(&self, game: &GameImpl) -> Option<TileRef> {
+    pub(super) fn patrol_tile(&self, game: &GameImpl) -> Option<TileRef> {
         game.unit_any(self.ship()).warship_state().patrol_tile
     }
 
@@ -85,8 +85,13 @@ impl WarshipExecution {
         game.unit_any(self.ship()).warship_state().retreat_port
     }
 
-    fn owner(&self, game: &GameImpl) -> SmallId {
+    pub(super) fn owner(&self, game: &GameImpl) -> SmallId {
         game.unit_any(self.ship()).owner_id()
+    }
+
+    /// Ends the execution (its warship is gone).
+    pub(super) fn set_inactive(&mut self) {
+        self.active = false;
     }
 
     /// `isDocked`.
@@ -748,7 +753,7 @@ impl WarshipExecution {
         best
     }
 
-    fn next_step(
+    pub(super) fn next_step(
         &mut self,
         game: &mut GameImpl,
         from: TileRef,
@@ -816,11 +821,33 @@ impl WarshipExecution {
                 + self
                     .random
                     .next_int(-warship_patrol_range / 2.0, warship_patrol_range / 2.0);
+            let legacy = !game.config().rules().has(Change::WarshipDocking31);
+            if legacy {
+                // Before v0.31 fractional coordinates pass `isValidCoord`, index no tile and are rejected.
+                let (w, h) = (game.map.width() as f64, game.map.height() as f64);
+                if !(x >= 0.0 && x < w && y >= 0.0 && y < h) {
+                    continue;
+                }
+                if x.fract() != 0.0 || y.fract() != 0.0 {
+                    attempts += 1;
+                    if attempts == MAX_ATTEMPT_BEFORE_EXPAND {
+                        expand_count += 1;
+                        attempts = 0;
+                        warship_patrol_range += (warship_patrol_range / 2.0).floor();
+                    }
+                    continue;
+                }
+            }
             if !game.is_valid_coord(x as i32, y as i32) {
                 continue;
             }
             let tile = game.tile_ref(x as i32, y as i32);
-            let rejected = !game.map.is_water(tile)
+            let water = if game.config().rules().has(Change::WarshipDocking31) {
+                game.map.is_water(tile)
+            } else {
+                game.map.is_ocean(tile)
+            };
+            let rejected = !water
                 || (!allow_shoreline && game.map.is_shoreline(tile))
                 // Water component connectivity
                 || warship_component.is_some_and(|c| {
@@ -873,6 +900,10 @@ impl Execution for WarshipExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if !game.config().rules().has(Change::WarshipDocking31) {
+            super::WarshipExecutionV30::tick_v30(self, game);
+            return;
+        }
         let ship = self.ship();
         if !game.unit_any(ship).is_active() {
             self.active = false;

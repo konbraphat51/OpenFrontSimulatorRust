@@ -19,6 +19,8 @@ pub struct ParabolaOptions {
     pub direction_up: Option<bool>,
     /// Do not clamp control points to the map (default false).
     pub ignore_map_bounds: Option<bool>,
+    /// Lowest arc height when the height follows the distance (default 50).
+    pub min_height: Option<f64>,
     /// Sample the curve with the pre-PR-5188 floating-point table.
     pub legacy_curve: bool,
     /// With the legacy curve: reset the sampled distance to 0 after each point (before PR 4770; later builds subtract the spacing).
@@ -80,7 +82,10 @@ pub fn get_parabola_control_points(
     let dy = p3.y - p0.y;
     let distance = (dx * dx + dy * dy).sqrt();
     let max_height = if distance_based_height {
-        f64::max(distance / 3.0, PARABOLA_MIN_HEIGHT)
+        f64::max(
+            distance / 3.0,
+            options.min_height.unwrap_or(PARABOLA_MIN_HEIGHT),
+        )
     } else {
         0.0
     };
@@ -188,5 +193,98 @@ impl ParabolaUniversalPathFinder {
     /// Index of the current curve point.
     pub fn current_index(&self) -> usize {
         self.curve.as_ref().map_or(0, |c| c.current_index())
+    }
+}
+
+/// `BouncingParabolaUniversalPathFinder`: the arc to the target, then a second arc that overshoots it by half the distance.
+#[derive(Clone, Debug)]
+pub struct BouncingParabolaPathFinder {
+    parabola: ParabolaUniversalPathFinder,
+    options: ParabolaOptions,
+    bouncing: bool,
+    from_bounce: TileRef,
+    to_bounce: TileRef,
+    previous_index: usize,
+}
+
+impl BouncingParabolaPathFinder {
+    /// Creates the finder with the first arc's options.
+    pub fn new(options: ParabolaOptions) -> Self {
+        Self {
+            parabola: ParabolaUniversalPathFinder::new(options),
+            options,
+            bouncing: false,
+            from_bounce: 0,
+            to_bounce: 0,
+            previous_index: 0,
+        }
+    }
+
+    fn compute_bounce_destination(
+        map: &GameMapImpl,
+        src: TileRef,
+        dst: TileRef,
+    ) -> Option<TileRef> {
+        let (dest_x, dest_y) = (map.x(dst) as f64, map.y(dst) as f64);
+        let (src_x, src_y) = (map.x(src) as f64, map.y(src) as f64);
+        let new_x = f64::min(
+            (dest_x + (dest_x - src_x) / 2.0).floor(),
+            map.width() as f64 - 1.0,
+        );
+        let new_y = f64::min(
+            (dest_y + (dest_y - src_y) / 2.0).floor(),
+            map.height() as f64 - 1.0,
+        );
+        // Both are integers here, so the upstream integer check reduces to the lower bound.
+        (new_x >= 0.0 && new_y >= 0.0).then(|| map.tile_ref(new_x as i32, new_y as i32))
+    }
+
+    /// Both arcs' sampled tiles.
+    pub fn find_path(&self, map: &GameMapImpl, from: TileRef, to: TileRef) -> Vec<TileRef> {
+        let mut tiles = self.parabola.find_path(map, from, to);
+        if let Some(new_dest) = Self::compute_bounce_destination(map, from, to) {
+            tiles.extend(self.parabola.find_path(map, to, new_dest));
+        }
+        tiles
+    }
+
+    /// Advances along the first arc, then along the bounce.
+    pub fn next(
+        &mut self,
+        map: &GameMapImpl,
+        from: TileRef,
+        to: TileRef,
+        speed: Option<f64>,
+    ) -> PathResult<TileRef> {
+        if self.bouncing {
+            return self
+                .parabola
+                .next(map, self.from_bounce, self.to_bounce, speed);
+        }
+        let result = self.parabola.next(map, from, to, speed);
+        if matches!(result, PathResult::Complete(_))
+            && let Some(dest) = Self::compute_bounce_destination(map, from, to)
+        {
+            self.previous_index = self.parabola.current_index();
+            self.bouncing = true;
+            self.from_bounce = to;
+            self.to_bounce = dest;
+            self.parabola = ParabolaUniversalPathFinder::new(ParabolaOptions {
+                increment: Some(self.options.increment.unwrap_or(3.0)),
+                distance_based_height: Some(true),
+                direction_up: Some(self.options.direction_up.unwrap_or(true)),
+                min_height: Some(25.0),
+                legacy_curve: self.options.legacy_curve,
+                legacy_reset: self.options.legacy_reset,
+                ..Default::default()
+            });
+            return self.parabola.next(map, to, dest, None);
+        }
+        result
+    }
+
+    /// Index along both arcs.
+    pub fn current_index(&self) -> usize {
+        self.parabola.current_index() + self.previous_index
     }
 }

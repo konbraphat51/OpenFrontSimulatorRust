@@ -2,6 +2,7 @@
 //! Port of src/core/execution/DonateTroopExecution.ts: troop donation with nation reactions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
@@ -63,7 +64,7 @@ impl Execution for DonateTroopsExecution {
         let max_donation = game.player(recipient).max_troops() - game.player(recipient).troops();
         let troops = troops.min(max_donation);
         self.troops = Some(troops);
-        if troops <= 0.0 {
+        if troops <= 0.0 && game.config().rules().has(Change::DonateTroopZeroInactive31) {
             self.active = false;
         }
     }

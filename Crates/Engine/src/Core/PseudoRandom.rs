@@ -31,6 +31,32 @@ mod rng_log {
         }
     }
 
+    /// Writes a tick marker `T <tick>` (era S log).
+    pub fn mark_tick(tick: u32) {
+        if let Some(sink) = SINK.get() {
+            let mut w = sink.lock().expect("log lock");
+            let _ = writeln!(w, "T {}", tick);
+        }
+    }
+
+    /// Writes one era S draw: the stream's first value (its key), the draw index and the value.
+    pub fn log_arc4(first: f64, index: u64, v: f64) {
+        let n = COUNT.fetch_add(1, Ordering::Relaxed);
+        if let Some(sink) = SINK.get() {
+            let mut w = sink.lock().expect("log lock");
+            let _ = writeln!(w, "A {} {} {}", first, index, v);
+            if std::env::var("OFSIM_RNG_STACK_AT")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                == Some(n)
+            {
+                let _ = w.flush();
+                eprintln!("{}", std::backtrace::Backtrace::force_capture());
+                std::process::exit(3);
+            }
+        }
+    }
+
     /// Writes one draw: the stream's counter word before the draw and the raw 32-bit value.
     pub fn log(s3: i32, t: u32) {
         let n = COUNT.fetch_add(1, Ordering::Relaxed);
@@ -50,6 +76,13 @@ mod rng_log {
     }
 }
 
+/// Marks the start of a tick in the draw log.
+pub fn mark_rng_log_tick(tick: u32) {
+    if rng_log::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+        rng_log::mark_tick(tick);
+    }
+}
+
 /// Starts the optional draw log (see `rng_log`).
 pub fn init_rng_log() {
     rng_log::init();
@@ -64,16 +97,22 @@ pub struct PseudoRandom {
     s3: i32,
     /// Era S backend (`seedrandom(String(seed))`); the sfc32 words are unused when set.
     arc4: Option<Box<Arc4>>,
+    /// `nextInt` floors its bounds first (builds since v0.31).
+    floors_args: bool,
+    /// Debug log state of an era S stream: first value and draws so far.
+    arc4_log: (Option<f64>, u64),
 }
 
 impl PseudoRandom {
     /// Creates the generator the build's rules select (sfc32, or seedrandom before PR 4233).
     pub fn for_rules(rules: &Rules, seed: f64) -> Self {
-        if rules.has(Change::Sfc32PseudoRandom4233) {
+        let mut random = if rules.has(Change::Sfc32PseudoRandom4233) {
             Self::new(seed)
         } else {
             Self::new_seedrandom(seed)
-        }
+        };
+        random.floors_args = rules.has(Change::NextIntFloorsArgs31);
+        random
     }
 
     /// Creates an era S generator: npm `seedrandom` seeded with `String(seed)`.
@@ -84,6 +123,8 @@ impl PseudoRandom {
             s2: 0,
             s3: 0,
             arc4: Some(Box::new(Arc4::new(seed))),
+            floors_args: true,
+            arc4_log: (None, 0),
         }
     }
 
@@ -108,6 +149,8 @@ impl PseudoRandom {
             s2,
             s3,
             arc4: None,
+            floors_args: true,
+            arc4_log: (None, 0),
         };
         for _ in 0..12 {
             rng.next();
@@ -119,7 +162,13 @@ impl PseudoRandom {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> f64 {
         if let Some(arc4) = self.arc4.as_mut() {
-            return arc4.next_double();
+            let v = arc4.next_double();
+            if rng_log::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+                let first = *self.arc4_log.0.get_or_insert(v);
+                rng_log::log_arc4(first, self.arc4_log.1, v);
+                self.arc4_log.1 += 1;
+            }
+            return v;
         }
         let t = self.s0.wrapping_add(self.s1).wrapping_add(self.s3);
         if rng_log::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
@@ -135,6 +184,9 @@ impl PseudoRandom {
 
     /// Random integer in [min, max); arguments are floored first like upstream.
     pub fn next_int(&mut self, min: f64, max: f64) -> f64 {
+        if !self.floors_args {
+            return (self.next() * (max - min)).floor() + min;
+        }
         let lo = min.floor();
         let hi = max.floor();
         (self.next() * (hi - lo)).floor() + lo

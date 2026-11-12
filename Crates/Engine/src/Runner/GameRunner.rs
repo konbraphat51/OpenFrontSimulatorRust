@@ -28,6 +28,26 @@ use ofsim_record::Records::Turn;
 use ofsim_record::StartInfo::GameStartInfo;
 use std::path::Path;
 
+/// `getClanTag(name)` of builds before v0.31: the first `[TAG]` of 2 to 5 letters or digits, upper-cased.
+fn clan_tag_from_name(name: &str) -> Option<String> {
+    let bytes: Vec<char> = name.chars().collect();
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == '[' {
+            let mut j = i + 1;
+            while j < bytes.len() && bytes[j].is_ascii_alphanumeric() {
+                j += 1;
+            }
+            let len = j - i - 1;
+            if (2..=5).contains(&len) && j < bytes.len() && bytes[j] == ']' {
+                return Some(bytes[i + 1..j].iter().collect::<String>().to_uppercase());
+            }
+        }
+        i += 1;
+    }
+    None
+}
+
 fn game_map_of(t: &TerrainMap, rules: &Rules) -> Result<GameMapImpl> {
     let mut map = GameMapImpl::new(t.width, t.height, t.data.clone(), t.num_land_tiles as i64)
         .map_err(|e| anyhow::anyhow!(e))?;
@@ -69,7 +89,11 @@ pub fn create_game_runner(
                 Some(p.client_id.clone()),
                 random.next_id(),
                 p.is_lobby_creator.unwrap_or(false),
-                p.clan_tag.clone(),
+                if rules.has(Change::ClanTagField31) {
+                    p.clan_tag.clone()
+                } else {
+                    clan_tag_from_name(&p.username)
+                },
                 p.friends.clone().unwrap_or_default(),
                 p.team_index,
                 None,
@@ -82,6 +106,8 @@ pub fn create_game_runner(
         &terrain.nations,
         &terrain.additional_nations,
         humans.len(),
+        rules.has(Change::NationNamesExpanded31),
+        rules.has(Change::NationCreationConfigurable30),
         &mut random,
     );
 

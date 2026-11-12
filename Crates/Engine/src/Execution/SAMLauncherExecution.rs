@@ -423,7 +423,11 @@ impl SamTargetingSystem {
         }
         let nuke_owner = unit.owner_id();
         if game.player(sam_owner).is_friendly(nuke_owner, false) {
-            let game_over = game.winner().is_some()
+            let game_over = game
+                .config()
+                .rules()
+                .has(Change::AftergameTeammateNukes3410)
+                && game.winner().is_some()
                 && (!game.config().rules().has(Change::AftergameSingleplayer5332)
                     || game.config().game_config().game_type != GameType::Singleplayer);
             return game_over && game.player(sam_owner).is_on_same_team(nuke_owner);
@@ -577,7 +581,11 @@ impl SAMLauncherExecution {
                     }
                     if game.player(player).is_friendly(nuke_owner, false)
                         && (game.winner().is_none()
-                            || !game.player(player).is_on_same_team(nuke_owner))
+                            || !game.player(player).is_on_same_team(nuke_owner)
+                            || !game
+                                .config()
+                                .rules()
+                                .has(Change::AftergameTeammateNukes3410))
                     {
                         return false;
                     }
@@ -676,7 +684,12 @@ impl Execution for SAMLauncherExecution {
             self.player = owner;
         }
 
-        while let Some(&front_time) = game.unit_any(sam).missile_timer_queue().first() {
+        let was_in_cooldown = game.unit_any(sam).is_in_cooldown();
+        let reload_first = game.config().rules().has(Change::SamReloadThenFire31);
+        // Before v0.31 missiles only reload while every slot is in cooldown.
+        while (reload_first || was_in_cooldown)
+            && let Some(&front_time) = game.unit_any(sam).missile_timer_queue().first()
+        {
             let cooldown = game.config().sam_cooldown() as f64 - (game.ticks() as f64 - front_time);
             if cooldown > 0.0 {
                 break;
@@ -686,7 +699,9 @@ impl Execution for SAMLauncherExecution {
                 break;
             }
         }
-        if game.unit_any(sam).is_in_cooldown() {
+        if game.unit_any(sam).is_in_cooldown()
+            || (was_in_cooldown && !game.config().rules().has(Change::SamReloadThenFire31))
+        {
             return;
         }
 

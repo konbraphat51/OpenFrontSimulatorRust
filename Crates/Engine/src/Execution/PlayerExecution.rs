@@ -390,6 +390,28 @@ impl PlayerExecution {
         if enemies.len() != 1 {
             return None;
         }
+        if !game.config().rules().has(Change::ClusterLocalEnemyBox3455) {
+            // Before v0.30.10 the box of the enemy's whole border is compared.
+            let enemy = enemies[0];
+            let (mut min_x, mut min_y, mut max_x, mut max_y) = (
+                1_000_000_000i32,
+                1_000_000_000i32,
+                -1_000_000_000i32,
+                -1_000_000_000i32,
+            );
+            for t in game.player(enemy).border_tiles().iter() {
+                let (x, y) = (map.x(t) as i32, map.y(t) as i32);
+                min_x = min_x.min(x);
+                min_y = min_y.min(y);
+                max_x = max_x.max(x);
+                max_y = max_y.max(y);
+            }
+            if min_x <= box_min_x && min_y <= box_min_y && max_x >= box_max_x && max_y >= box_max_y
+            {
+                return Some(enemy);
+            }
+            return None;
+        }
         if min_x <= box_min_x && min_y <= box_min_y && max_x >= box_max_x && max_y >= box_max_y {
             return Some(enemies[0]);
         }
@@ -762,9 +784,18 @@ impl Execution for PlayerExecution {
             }
         }
 
+        let small_calc = game
+            .config()
+            .rules()
+            .has(Change::ClusterCalcSmallPlayers3448);
+        let changed = if small_calc {
+            game.player(player).last_tile_change() >= self.last_calc
+        } else {
+            game.player(player).last_tile_change() > self.last_calc
+        };
         if (ticks as f64 - self.last_calc > TICKS_PER_CLUSTER_CALC
-            || game.player(player).num_tiles_owned() < 100)
-            && game.player(player).last_tile_change() >= self.last_calc
+            || (small_calc && game.player(player).num_tiles_owned() < 100))
+            && changed
         {
             self.last_calc = ticks as f64;
             self.remove_clusters(game);

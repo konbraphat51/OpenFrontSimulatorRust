@@ -669,6 +669,19 @@ impl GameImpl {
 
     /// `addExecution`.
     pub fn add_execution(&mut self, exec: Box<dyn Execution>) {
+        static LOG: std::sync::OnceLock<Option<(u32, u32)>> = std::sync::OnceLock::new();
+        let range = LOG.get_or_init(|| {
+            // `OFSIM_EXEC_LOG=<from>,<to>`: prints every execution added in that tick range.
+            let text = std::env::var("OFSIM_EXEC_LOG").ok()?;
+            let (a, b) = text.split_once(',')?;
+            Some((a.parse().ok()?, b.parse().ok()?))
+        });
+        if let Some((from, to)) = *range
+            && self.ticks >= from
+            && self.ticks <= to
+        {
+            eprintln!("exec {} {}", self.ticks, exec.debug_name());
+        }
         self.un_init_execs.push(exec);
     }
 
@@ -677,6 +690,7 @@ impl GameImpl {
     /// tick increment.
     pub fn execute_next_tick(&mut self) -> Option<f64> {
         let ticks = self.ticks;
+        crate::Core::PseudoRandom::mark_rng_log_tick(ticks);
         let mut execs = std::mem::take(&mut self.execs);
         for e in execs.iter_mut() {
             if (!self.in_spawn_phase() || e.active_during_spawn_phase()) && e.is_active() {

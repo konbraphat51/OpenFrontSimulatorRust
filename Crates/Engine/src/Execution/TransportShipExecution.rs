@@ -96,7 +96,12 @@ impl Execution for TransportShipExecution {
             return;
         }
 
-        if self.target != 0 {
+        if self.target != 0
+            && game
+                .config()
+                .rules()
+                .has(Change::TransportRejectsAlliances31)
+        {
             let target_type = game.player(self.target).player_type();
             if target_type != PlayerType::Bot
                 && game.player(self.attacker).player_type() != PlayerType::Bot

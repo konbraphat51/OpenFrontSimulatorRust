@@ -49,7 +49,16 @@
     "C086": "ported; 24/24 sampled records pass (tutorial records last 33 to 44 turns)",
     "C087": "ported; 36/36 sampled records pass",
     "C088": "ported; 12/12 sampled records pass (10 long Public records of 5,400 to 12,900 turns; tutorial records have 1 to 33 turns)",
-    "C089": "ported; 12/12 sampled records pass (8 long Public records of 211 to 12,900 turns)"
+    "C089": "ported; 12/12 sampled records pass (8 long Public records of 211 to 12,900 turns)",
+    "C040": "ported; 158 of 158 (17 long)",
+    "C041": "ported; 32 of 32 (5 long)",
+    "C042": "ported; 8 of 8 (5 long)",
+    "C043": "ported; 21 of 21 (5 long)",
+    "C044": "ported; 97 of 98 (35 long; EsfbsR7h mismatches in the upstream engine at tick 0 too)",
+    "C045": "ported; no usable record (the only sample is a one-player team game that throws `Too few teams` upstream too)",
+    "C046": "ported; 9 of 9 (5 long)",
+    "C047": "ported; 1 of 1 (short, 279 turns)",
+    "C048": "ported; 4 of 4 (short, no hashes beyond the spawn phase)"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -101,6 +110,15 @@
     "C086": "移植済み; 24/24 件のサンプルが一致 (チュートリアルのレコードは 33〜44 ターン)",
     "C087": "移植済み; 36/36 件のサンプルが一致",
     "C088": "移植済み; 12/12 件のサンプルが一致 (長い Public レコード 10 件、5,400〜12,900 ターン; チュートリアルは 1〜33 ターン)",
-    "C089": "移植済み; 12/12 件のサンプルが一致 (長い Public レコード 8 件、211〜12,900 ターン)"
+    "C089": "移植済み; 12/12 件のサンプルが一致 (長い Public レコード 8 件、211〜12,900 ターン)",
+    "C040": "移植済み; 158/158 (長尺 17 件)",
+    "C041": "移植済み; 32/32 (長尺 5 件)",
+    "C042": "移植済み; 8/8 (長尺 5 件)",
+    "C043": "移植済み; 21/21 (長尺 5 件)",
+    "C044": "移植済み; 97/98 (長尺 35 件; EsfbsR7h はアップストリームでも tick 0 で不一致)",
+    "C045": "移植済み; 使えるレコードなし (唯一のサンプルは 1 人のチーム戦で、アップストリームも `Too few teams` で例外)",
+    "C046": "移植済み; 9/9 (長尺 5 件)",
+    "C047": "移植済み; 1/1 (短尺 279 ターン)",
+    "C048": "移植済み; 4/4 (短尺、ハッシュはスポーン期間のみ)"
   }
 }

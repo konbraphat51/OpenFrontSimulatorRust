@@ -18,4 +18,8 @@ pub trait Execution {
     fn is_active(&self) -> bool;
     /// Whether the execution runs during the spawn phase.
     fn active_during_spawn_phase(&self) -> bool;
+    /// Type name for the `OFSIM_EXEC_LOG` debug log.
+    fn debug_name(&self) -> &'static str {
+        std::any::type_name::<Self>()
+    }
 }

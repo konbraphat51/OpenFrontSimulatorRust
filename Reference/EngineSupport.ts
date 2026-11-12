@@ -20,6 +20,15 @@ import * as UtilModule from "../src/core/Util";
 // Builds before v0.35.0 that load their config through `getGameLogicConfig` need a bundled game env.
 process.env.GAME_ENV ??= "prod";
 
+// Builds before v0.31 read the game env from the server (`getServerConfigFromClient` fetches /api/env).
+const realFetch = globalThis.fetch;
+globalThis.fetch = ((input: unknown, init?: unknown) => {
+  if (typeof input === "string" && input === "/api/env") {
+    return Promise.resolve(new Response(JSON.stringify({ game_env: "prod" })));
+  }
+  return (realFetch as (a: unknown, b?: unknown) => Promise<Response>)(input, init);
+}) as typeof fetch;
+
 const { decompressGameRecord } = UtilModule;
 // Builds before v0.33.13 have no toWireGameStartInfo: their record info is used as is.
 const toWireGameStartInfo: (info: GameStartInfo) => GameStartInfo =

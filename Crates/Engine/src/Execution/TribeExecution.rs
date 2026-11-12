@@ -72,6 +72,15 @@ impl TribeExecution {
         if !game.player(self.tribe).can_delete_unit() {
             return;
         }
+        if AiAttackBehavior::legacy31(game) {
+            // Before v0.31 every structure is queued for deletion at once.
+            for unit in game.player(self.tribe).units().to_vec() {
+                if game.unit_any(unit).unit_type().is_structure() {
+                    game.add_execution(Box::new(DeleteUnitExecution::new(self.tribe, unit)));
+                }
+            }
+            return;
+        }
         for unit in game.player(self.tribe).units().to_vec() {
             let u = game.unit_any(unit);
             if !u.unit_type().is_structure() {
@@ -102,7 +111,8 @@ impl TribeExecution {
                 if let Some(alliance) = alliance {
                     game.player_mut(self.tribe).break_alliance(alliance);
                 }
-                if behavior.send_attack(game, to_attack, false) {
+                let sent = behavior.send_attack(game, to_attack, false);
+                if AiAttackBehavior::sent(game, sent) {
                     return;
                 }
             }
@@ -110,7 +120,8 @@ impl TribeExecution {
 
         if self.neighbors_terra_nullius {
             if game.player(self.tribe).nearby().contains(&0) {
-                if behavior.send_attack(game, 0, false) {
+                let sent = behavior.send_attack(game, 0, false);
+                if AiAttackBehavior::sent(game, sent) {
                     return;
                 }
             } else {

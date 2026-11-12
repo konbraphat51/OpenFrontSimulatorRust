@@ -81,11 +81,18 @@ impl AllianceRequestExecution {
                     let Some(t) = target_tile else {
                         continue;
                     };
-                    let magnitude = game.config().nuke_magnitudes(unit_type);
-                    if !would_nuke_break_alliance(
+                    if !game
+                        .config()
+                        .rules()
+                        .has(crate::Builds::Rules::Change::AllianceNukeCancelBlast31)
+                    {
+                        if game.owner_id(t) != other {
+                            continue;
+                        }
+                    } else if !would_nuke_break_alliance(
                         game,
                         t,
-                        magnitude,
+                        game.config().nuke_magnitudes(unit_type),
                         &[other],
                         game.config().nuke_alliance_break_threshold(),
                     ) {

@@ -51,12 +51,13 @@ impl NationAllianceBehavior {
 
     /// `handleAllianceRequests()`.
     pub fn handle_alliance_requests(&mut self, game: &mut GameImpl) {
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return;
         }
         for req in game.player(self.player).incoming_alliance_requests() {
             // Requests created during the spawn phase run on the first tick after it: reject them.
             if game.alliance_request(req).created_at() <= game.config().num_spawn_phase_turns() + 1
+                && game.config().rules().has(Change::AllianceSpawnReject30)
             {
                 game.reject_request(req);
                 continue;
@@ -72,7 +73,7 @@ impl NationAllianceBehavior {
 
     /// `handleAllianceExtensionRequests()`.
     pub fn handle_alliance_extension_requests(&mut self, game: &mut GameImpl) {
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return;
         }
         let alliances: Vec<_> = game.player(self.player).alliances().to_vec();
@@ -99,7 +100,7 @@ impl NationAllianceBehavior {
         game: &mut GameImpl,
         bordering_enemies: &[SmallId],
     ) {
-        if game.config().disable_alliances() {
+        if game.config().nation_alliances_disabled() {
             return;
         }
         // Only easy nations may send alliance requests to bots.
@@ -372,7 +373,8 @@ impl NationAllianceBehavior {
         // Betray very weak players on the easier difficulties (not humans on easy).
         if (difficulty == Difficulty::Easy || difficulty == Difficulty::Medium)
             && !(difficulty == Difficulty::Easy
-                && game.player(other_player).player_type() == PlayerType::Human)
+                && game.player(other_player).player_type() == PlayerType::Human
+                && game.config().rules().has(Change::NationBehaviorTweaks31))
             && game.player(self.player).troops() >= game.player(other_player).troops() * 10.0
         {
             self.betray(game, other_player);

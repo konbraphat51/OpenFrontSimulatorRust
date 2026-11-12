@@ -400,7 +400,14 @@ impl<'a> PlayerRef<'a> {
         let mut city_level_sum = 0.0;
         for &u in &self.units {
             let unit = self.game.unit_any(u);
-            if unit.unit_type == UnitType::City && !unit.under_construction {
+            if unit.unit_type == UnitType::City
+                && (!unit.under_construction
+                    || !self
+                        .game
+                        .config()
+                        .rules()
+                        .has(Change::CityTroopsFinishedOnly31))
+            {
                 city_level_sum += unit.level as f64;
             }
         }
@@ -512,8 +519,10 @@ impl<'a> PlayerRef<'a> {
                 }
             });
         }
-        for n in self.shore_reachable_neighbors().iter() {
-            ns.insert(*n);
+        if self.game.config().rules().has(Change::AiAttackRework31) {
+            for n in self.shore_reachable_neighbors().iter() {
+                ns.insert(*n);
+            }
         }
         ns.iter().copied().collect()
     }
@@ -1063,7 +1072,11 @@ impl<'a> PlayerRef<'a> {
             return None;
         }
         let owner = mg.owner_id(tile);
-        let game_over = mg.winner().is_some()
+        let game_over = mg
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::AftergameTeammateNukes3410)
+            && mg.winner().is_some()
             && (!mg
                 .config()
                 .rules()
@@ -1121,7 +1134,14 @@ impl<'a> PlayerRef<'a> {
         let mut spawns: Vec<TileRef> = found
             .iter()
             .copied()
-            .filter(|&t| mg.map.owner_id(t) == self.id && mg.map.is_shore(t))
+            .filter(|&t| {
+                mg.map.owner_id(t) == self.id
+                    && if mg.config().rules().has(Change::TradeWaterComponents31) {
+                        mg.map.is_shore(t)
+                    } else {
+                        mg.map.is_ocean_shore(t)
+                    }
+            })
             .collect();
         spawns.sort_by_key(|&t| mg.map.manhattan_dist(t, tile));
         let computed;
@@ -1138,6 +1158,19 @@ impl<'a> PlayerRef<'a> {
     /// `warshipSpawn(tile)`: the closest ready port in the tile's water component.
     pub fn warship_spawn(&self, tile: TileRef) -> Option<TileRef> {
         let mg = self.game;
+        if !mg.config().rules().has(Change::TradeWaterComponents31) {
+            // Before v0.31: the closest port of any water body, as long as the tile is ocean.
+            if !mg.map.is_ocean(tile) {
+                return None;
+            }
+            let ports = self.units_of(UnitType::Port);
+            return find_closest_by(
+                &ports,
+                |&p| mg.map.manhattan_dist(mg.unit_any(p).tile, tile) as f64,
+                |_| true,
+            )
+            .map(|&p| mg.unit_any(p).tile);
+        }
         if !mg.map.is_water(tile) {
             return None;
         }
@@ -1253,9 +1286,15 @@ impl<'a> PlayerRef<'a> {
             .iter()
             .copied()
             .filter(|&a| {
-                self.game
-                    .player(self.game.attacks[a as usize].attacker)
-                    .is_alive()
+                !self
+                    .game
+                    .config()
+                    .rules()
+                    .has(Change::IncomingAttacksAliveOnly31)
+                    || self
+                        .game
+                        .player(self.game.attacks[a as usize].attacker)
+                        .is_alive()
             })
             .collect()
     }

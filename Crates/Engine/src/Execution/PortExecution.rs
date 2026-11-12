@@ -2,6 +2,7 @@
 //! Port of src/core/execution/PortExecution.ts: a port that joins the rail network and spawns trade ships.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Execution::TradeShipExecution::TradeShipExecution;
@@ -101,10 +102,12 @@ impl PortExecution {
             }
             for port in game.player(p).units_of(UnitType::Port) {
                 let tile = game.unit_any(port).tile();
-                if source_components.iter().any(|&comp| {
-                    game.water_manager
-                        .has_water_component(&game.map, tile, comp)
-                }) {
+                if !game.config().rules().has(Change::TradeWaterComponents31)
+                    || source_components.iter().any(|&comp| {
+                        game.water_manager
+                            .has_water_component(&game.map, tile, comp)
+                    })
+                {
                     ports.push(port);
                 }
             }

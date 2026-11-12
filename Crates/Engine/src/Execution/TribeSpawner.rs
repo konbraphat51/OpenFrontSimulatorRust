@@ -37,7 +37,16 @@ impl<'a> TribeSpawner<'a> {
             // A different seed than createGameRunner, to avoid id collisions.
             random: PseudoRandom::for_rules(
                 game.config().rules(),
-                simple_hash(game_id) as f64 + 2.0,
+                simple_hash(game_id) as f64
+                    + if game
+                        .config()
+                        .rules()
+                        .has(crate::Builds::Rules::Change::BotSpawnerOwnSeed30)
+                    {
+                        2.0
+                    } else {
+                        0.0
+                    },
             ),
             tribe_name_data: resolve_tribe_name_data(
                 game.config().game_config().game_map,

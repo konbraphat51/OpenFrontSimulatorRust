@@ -85,7 +85,10 @@ impl NationExecution {
     fn get_attack_rate(&self, game: &GameImpl) -> u32 {
         let mut random = self.random.borrow_mut();
         let (lo, hi) = match game.config().game_config().difficulty {
-            Difficulty::Easy => (65.0, 100.0),
+            Difficulty::Easy if game.config().rules().has(Change::NationExecutionTweaks31) => {
+                (65.0, 100.0)
+            }
+            Difficulty::Easy => (65.0, 80.0),
             Difficulty::Medium => (55.0, 70.0),
             Difficulty::Hard => (45.0, 60.0),
             Difficulty::Impossible => (30.0, 50.0),
@@ -203,7 +206,8 @@ impl NationExecution {
         let difficulty = game.config().game_config().difficulty;
         let is_higher_difficulty =
             difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible;
-        let team_game = game.config().game_config().game_mode == GameMode::Team;
+        let team_game = game.config().game_config().game_mode == GameMode::Team
+            && game.config().rules().has(Change::NationExecutionTweaks31);
 
         for other in others {
             if team_game
@@ -262,7 +266,8 @@ impl Execution for NationExecution {
             && game.player(player).is_alive()
             && game.config().game_config().difficulty != Difficulty::Easy
             && !(game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial())
-            && game.player(player).units_constructed(UnitType::Port) != 0
+            && (game.player(player).units_constructed(UnitType::Port) != 0
+                || !game.config().rules().has(Change::NationExecutionTweaks31))
             && !game.config().is_unit_disabled(UnitType::Warship)
         {
             b.warship.track_ships_and_retaliate(game);

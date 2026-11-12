@@ -497,6 +497,7 @@ fn check_parabola(label: &str, entry: &Value, map: &GameMapImpl) {
             ignore_map_bounds: o["ignoreMapBounds"].as_bool(),
             legacy_curve: false,
             legacy_reset: false,
+            ..Default::default()
         };
         let cps = get_parabola_control_points(map, from, to, &options);
         let cp: Vec<String> = cps

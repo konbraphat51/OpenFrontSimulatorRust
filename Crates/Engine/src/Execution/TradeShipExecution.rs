@@ -149,6 +149,7 @@ impl Execution for TradeShipExecution {
         {
             let my_component = game.water_manager.get_water_component(&game.map, cur_tile);
             let ports = game.player(ship_owner).units_of(UnitType::Port);
+            let reachable = game.config().rules().has(Change::TradeWaterComponents31);
             let nearest = find_closest_by(
                 &ports,
                 |&port| {
@@ -157,6 +158,10 @@ impl Execution for TradeShipExecution {
                         as f64
                 },
                 |&port| {
+                    if !reachable {
+                        // `sort(distSortUnit)` upstream: every port counts, the first nearest wins.
+                        return true;
+                    }
                     let p = game.unit_any(port);
                     p.is_active()
                         && !p.is_marked_for_deletion()

@@ -36,6 +36,10 @@ pub enum NationsConfig {
     Mode(String),
 }
 
+fn default_nations() -> NationsConfig {
+    NationsConfig::Mode("default".to_string())
+}
+
 /// `playerTeams` (`TeamCountConfig`): a team count, or "Duos" / "Trios" / "Quads" / "Humans Vs Nations".
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -252,8 +256,16 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub public_game_modifiers: Option<PublicGameModifiers>,
-    /// Nation count or mode.
+    /// Nation count or mode (builds before v0.30.0-beta2 have `disableNations` instead).
+    #[serde(default = "default_nations")]
     pub nations: NationsConfig,
+    /// `disableNations` of the earliest v0.30 builds.
+    #[serde(
+        default,
+        rename = "disableNations",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub disable_nations: Option<bool>,
     /// Number of tribes (bots).
     pub bots: u32,
     /// Infinite gold.

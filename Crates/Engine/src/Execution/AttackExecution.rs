@@ -454,7 +454,10 @@ impl Execution for AttackExecution {
             if game.map.owner_id(tile_to_conquer) != self.target || !on_border {
                 continue;
             }
-            if !game.map.is_land(tile_to_conquer) || game.map.is_impassable(tile_to_conquer) {
+            if (!game.map.is_land(tile_to_conquer)
+                && game.config().rules().has(Change::AttackSkipsWater31))
+                || game.map.is_impassable(tile_to_conquer)
+            {
                 continue;
             }
             self.add_neighbors(game, tile_to_conquer);
