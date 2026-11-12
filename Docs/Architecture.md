@@ -26,7 +26,7 @@ Rust modules mirror upstream `src/core/` so that every Rust file has one upstrea
 Crates/Engine/src/
   Lib.rs
   Compat/        JS semantics: number helpers, insertion-ordered sets and maps, stable sort
-  Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)
+  Core/          PseudoRandom (sfc32 or seedrandom ARC4), DetMath, Util (simpleHash, toInt, ...)
   Configuration/ Config (DefaultConfig values of the build), unit infos
   Game/          GameMap, TileSet, Game (shared types and enums), GameImpl, PlayerImpl, UnitImpl,
                  AttackImpl, AllianceImpl, AllianceRequestImpl, UnitGrid, RailNetwork, TeamAssignment,
@@ -89,7 +89,7 @@ pub trait Execution {
 2. **Transcendentals.** Builds with `DetMath` use the ported `Core::DetMath` bit for bit. Builds before it call V8's `Math.exp/log/pow/atan2/sin/cos`; those are ported from V8's fdlibm (`src/base/ieee754.cc`) in `Compat::V8Math`, never Rust `f64` methods (`sqrt` is exact in both and may use Rust).
 3. **Iteration order.** JS `Map` and `Set` iterate in insertion order, a delete plus re-add moves to the end, and entries added during iteration are visited. Use `Compat` ordered collections (or the ported `TileSet`), never `HashMap`/`HashSet` iteration where order can reach the state. `HashMap` is fine for pure lookups.
 4. **Sorting.** `Array.prototype.sort` is stable; use stable sorts with the same comparator. Where a comparator can be inconsistent (NaN, ties broken by nothing), port V8's TimSort (`Compat::JsSort`) instead of assuming equivalence.
-5. **Randomness.** Every `PseudoRandom` instance is seeded exactly as upstream (game, executor, player, tribe spawner, per execution with `mg.ticks()` and so on) and is drawn in the same order. A missed or extra draw desyncs everything after it.
+5. **Randomness.** Every `PseudoRandom` instance is seeded exactly as upstream (game, executor, player, tribe spawner, per execution with `mg.ticks()` and so on) and is drawn in the same order. A missed or extra draw desyncs everything after it. Builds before PR 4233 (era S, C036 and older) use npm `seedrandom` (ARC4, `Core/Arc4.rs`) seeded with `String(seed)`; every site creates its generator with `PseudoRandom::for_rules(rules, seed)`, and the `Change::Sfc32PseudoRandom4233` flag selects sfc32 or ARC4.
 6. **Strings.** Player ids, `simpleHash` inputs and `nextID()` output must be byte-identical (`toString(36)`, `padStart`). `simpleHash` iterates UTF-16 code units.
 7. **No client-only code.** Rendering, stats sent to the client, emojis and chat that never reach the state are not ported, unless simulation logic reads them (check before skipping: for example nation AI reads emojis and relations).
 8. **Errors.** Where upstream throws inside a tick, the runner reports the error for that tick; do not paper over it.

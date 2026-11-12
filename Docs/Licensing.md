@@ -44,6 +44,7 @@ Snapshots (`Tiles/*.u16.zst`, `Entities.ndjson`) and derived datasets are comput
 ## Third-party code
 
 - V8 / Sun fdlibm math ported for exact JavaScript results: [ThirdPartyNotices/V8.md](../ThirdPartyNotices/V8.md) (BSD-3-Clause and the fdlibm notice).
+- seedrandom (ARC4 generator ported for the era S builds): [ThirdPartyNotices/Seedrandom.md](../ThirdPartyNotices/Seedrandom.md) (MIT).
 - Rust crates keep their own licenses. `deny.toml` allows only AGPL-compatible ones; run `cargo deny check licenses`.
 
 ## File headers

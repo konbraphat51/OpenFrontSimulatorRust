@@ -43,6 +43,8 @@ Third-party notices
 
 - V8 and Sun fdlibm (floating-point math ported to reproduce JavaScript
   results): see ThirdPartyNotices/V8.md.
+- seedrandom (ARC4 pseudo-random generator of the pre-sfc32 builds): see
+  ThirdPartyNotices/Seedrandom.md.
 - Rust crate dependencies are used under their own permissive licenses
   (MIT, Apache-2.0, BSD, ISC, Zlib, Unicode, MPL-2.0). List them with
   `cargo license` or check them with `cargo deny check licenses`.
