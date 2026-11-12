@@ -50,10 +50,20 @@ pub fn build_simple_chain(core: AStarWater) -> SimpleWaterChain {
     MiniMapTransformer::new(ShoreCoercingTransformer::new(core))
 }
 
+/// Swaps the graph inside a hierarchical chain (`AStarWaterHierarchical.setGraph` plus the component check's graph).
+pub fn set_chain_graph(chain: &mut HierarchicalWaterChain, graph: Rc<AbstractGraph>) {
+    let component_check = chain.inner_mut().inner_mut().inner_mut();
+    component_check.set_graph(Rc::clone(&graph));
+    component_check.inner_mut().set_graph(graph);
+}
+
 /// The chain of one water graph version (upstream's `_waterChainCache` entry).
+///
+/// Upstream's HPA finder is one object owned by the water manager whose graph is swapped on rebuild,
+/// so every version's chain searches the current graph; only the simple-or-HPA choice is per version.
 pub struct SharedWaterChain {
-    /// HPA* chain around that version's graph and finder.
-    pub hierarchical: RefCell<HierarchicalWaterChain>,
+    /// The HPA* chain shared by all versions.
+    pub hierarchical: Rc<RefCell<HierarchicalWaterChain>>,
     /// False when the graph had under 100 nodes at build time: queries then use the simple chain.
     pub use_hierarchical: bool,
 }

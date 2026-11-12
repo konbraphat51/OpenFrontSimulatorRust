@@ -14,6 +14,7 @@ use crate::Pathfinding::Algorithms::BfsGrid::BfsGrid;
 use crate::Pathfinding::Algorithms::ConnectedComponents::ConnectedComponents;
 use crate::Pathfinding::PathFinder::{
     ChainRef, SharedWaterChain, SimpleWaterChain, build_hierarchical_chain, build_simple_chain,
+    set_chain_graph,
 };
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 use std::cell::RefCell;
@@ -82,8 +83,6 @@ pub struct WaterManager {
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
     legacy: bool,
     old_markers: bool,
-    /// Before PR 4149 the abstract graph A* queues with a bucket queue.
-    bucket_queue: bool,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
     water_graph_dirty: bool,
@@ -122,7 +121,6 @@ impl WaterManager {
             mini_water_cc: None,
             legacy: false,
             old_markers,
-            bucket_queue,
             builder_bfs: None,
             water_graph_version: 0,
             water_graph_dirty: false,
@@ -157,7 +155,11 @@ impl WaterManager {
             hpa.set_bucket_queue(bucket_queue);
             manager.hierarchical_chain = Some(Rc::new(SharedWaterChain {
                 use_hierarchical: graph.node_count() >= 100,
-                hierarchical: RefCell::new(build_hierarchical_chain(mini, hpa, Rc::clone(&graph))),
+                hierarchical: Rc::new(RefCell::new(build_hierarchical_chain(
+                    mini,
+                    hpa,
+                    Rc::clone(&graph),
+                ))),
             }));
             manager.mini_water_cc = Some(cc);
             manager.builder_bfs = Some(bfs);
@@ -235,18 +237,12 @@ impl WaterManager {
                 Rc::new(builder.build())
             };
             self.dirty_mini_tiles.clear();
-            if self.hierarchical_chain.is_some() {
-                // A new finder and chain per version; finders created earlier keep theirs
-                let mut hpa = AStarWaterHierarchical::new(&self.mini_map, Rc::clone(&graph), true);
-                hpa.set_component_filter(self.old_markers);
-                hpa.set_bucket_queue(self.bucket_queue);
+            if let Some(old) = self.hierarchical_chain.take() {
+                // The finder is shared: swap its graph; the new version's chain only re-decides HPA or simple
+                set_chain_graph(&mut old.hierarchical.borrow_mut(), Rc::clone(&graph));
                 self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
                     use_hierarchical: graph.node_count() >= 100,
-                    hierarchical: RefCell::new(build_hierarchical_chain(
-                        &self.mini_map,
-                        hpa,
-                        Rc::clone(&graph),
-                    )),
+                    hierarchical: Rc::clone(&old.hierarchical),
                 }));
             }
             self.mini_water_graph = Some(graph);
