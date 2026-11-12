@@ -2,9 +2,14 @@
 //! Port of src/core/pathfinding/algorithms/AStar.Rail.ts: 4-connected A* for railroads on the mini map.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use super::AStar::{AStar, AStarAdapter};
+use super::AStar::{AStar, AStarAdapter, AStarScratch};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
+use std::cell::RefCell;
+
+thread_local! {
+    static SCRATCH: RefCell<Option<AStarScratch>> = const { RefCell::new(None) };
+}
 
 const WATER_PENALTY: f64 = 5.0;
 const HEURISTIC_WEIGHT: f64 = 2.0;
@@ -16,8 +21,11 @@ pub struct AStarRail;
 
 impl PathFinder for AStarRail {
     fn find_path(&mut self, ctx: &PathCtx, from: Source, to: TileRef) -> Option<Vec<TileRef>> {
-        let mut a_star = AStar::new(RailAdapter::new(ctx.mini_map), None);
-        a_star.find_path(from.as_slice(), to)
+        let scratch = SCRATCH.with(|s| s.borrow_mut().take());
+        let mut a_star = AStar::with_scratch(RailAdapter::new(ctx.mini_map), None, scratch);
+        let path = a_star.find_path(from.as_slice(), to);
+        SCRATCH.with(|s| *s.borrow_mut() = Some(a_star.into_scratch()));
+        path
     }
 }
 
