@@ -629,7 +629,9 @@ fn flood_fill_with_gen(
 
 impl Execution for PlayerExecution {
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
-        let h = simple_hash(game.player(self.player).id()) as f64;
+        let by_id = game.config().rules().has(Change::ClusterOffsetFromId4426);
+        let player = game.player(self.player);
+        let h = simple_hash(if by_id { player.id() } else { player.name() }) as f64;
         self.last_calc = ticks as f64 + (h % TICKS_PER_CLUSTER_CALC);
     }
 

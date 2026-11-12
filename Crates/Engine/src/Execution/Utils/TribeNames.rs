@@ -82,8 +82,31 @@ fn map_entry(map: GameMapType, rules: &Rules) -> (Option<Vec<String>>, Option<Ve
     }
 }
 
+#[derive(Deserialize)]
+struct LegacyNames {
+    prefixes: Vec<String>,
+    suffixes: Vec<String>,
+}
+
+/// The single prefix and suffix pool of builds before PR 4647 (`TRIBE_NAME_PREFIXES`, `TRIBE_NAME_SUFFIXES`).
+fn legacy_names() -> &'static LegacyNames {
+    static NAMES: OnceLock<LegacyNames> = OnceLock::new();
+    NAMES.get_or_init(|| {
+        serde_json::from_str(include_str!("../../../data/TribeNamesLegacy.json"))
+            .expect("TribeNamesLegacy.json is valid")
+    })
+}
+
 /// `resolveTribeNameData(mapType)`.
 pub fn resolve_tribe_name_data(map: GameMapType, rules: &Rules) -> TribeNameData {
+    if !rules.has(Change::TribeNameThemes4647) {
+        let names = legacy_names();
+        return TribeNameData {
+            prefixes: names.prefixes.clone(),
+            suffixes: names.suffixes.clone(),
+            custom_tribes: None,
+        };
+    }
     let t = tables();
     let default_theme = t
         .themes

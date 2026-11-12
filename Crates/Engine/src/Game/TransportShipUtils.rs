@@ -5,6 +5,7 @@
 use super::Game::{SmallId, UnitType};
 use super::GameImpl::GameImpl;
 use super::GameMap::TileRef;
+use crate::Builds::Rules::Change;
 use crate::Pathfinding::Spatial::SpatialQuery::DEFAULT_MAX_DIST;
 
 /// `canBuildTransportShip`: the shore tile a ship would start from, or `None`.
@@ -36,6 +37,18 @@ pub fn can_build_transport_ship(
 
 /// `targetTransportTile`: the landing shore the attacker can reach by water.
 pub fn target_transport_tile(game: &GameImpl, attacker: SmallId, tile: TileRef) -> Option<TileRef> {
+    if !game
+        .config()
+        .rules()
+        .has(Change::ReachableShoreTransport4577)
+    {
+        return game.spatial.borrow_mut().closest_shore(
+            &game,
+            game.owner_id(tile),
+            tile,
+            DEFAULT_MAX_DIST,
+        );
+    }
     // Only reachable shores count, so a shore facing a disconnected inland lake is never chosen
     game.spatial.borrow_mut().closest_reachable_shore(
         &game,
