@@ -20,6 +20,8 @@ pub enum Change {
     Sfc32PseudoRandom4233,
     /// PR 5823: an attack with nothing to conquer retreats in `init` instead of lingering.
     AttackRetreatNoTargets5823,
+    /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
+    ChannelIslandsTribes5564,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -84,10 +86,19 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[],
     },
+    Edge {
+        class: "C006",
+        add: &[],
+        remove: &[Change::ChannelIslandsTribes5564],
+    },
 ];
 
 /// Changes of the baseline class C000.
-const ROOT_CHANGES: &[Change] = &[Change::DetMath5191, Change::Sfc32PseudoRandom4233];
+const ROOT_CHANGES: &[Change] = &[
+    Change::DetMath5191,
+    Change::Sfc32PseudoRandom4233,
+    Change::ChannelIslandsTribes5564,
+];
 
 /// Commit of the baseline build v0.34.22.
 pub const BASELINE_COMMIT: &str = "4e837520e886";
