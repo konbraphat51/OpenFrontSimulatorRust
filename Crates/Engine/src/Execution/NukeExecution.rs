@@ -11,7 +11,7 @@ use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::DetMath;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
-use crate::Execution::NukeAlliance::list_nuke_break_alliance;
+use crate::Execution::NukeAlliance::{list_nuke_break_alliance, list_nuke_break_ally_legacy};
 use crate::Game::Game::{SmallId, Tick, TrajectoryTile, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
@@ -168,16 +168,29 @@ impl NukeExecution {
             return;
         }
         let magnitude = game.config().nuke_magnitudes(nuke_type);
-        let to_break = list_nuke_break_alliance(
-            game,
-            self.dst,
-            magnitude,
-            game.config().nuke_alliance_break_threshold(),
-        );
+        let legacy = !game.config().rules().has(Change::NukeBreakAllyList2912);
+        let to_break = if legacy {
+            list_nuke_break_ally_legacy(
+                game,
+                self.player,
+                self.dst,
+                magnitude,
+                game.config().nuke_alliance_break_threshold(),
+            )
+        } else {
+            list_nuke_break_alliance(
+                game,
+                self.dst,
+                magnitude,
+                game.config().nuke_alliance_break_threshold(),
+            )
+        };
 
-        for incoming in game.player(self.player).incoming_alliance_requests() {
-            if to_break.contains(&game.alliance_request(incoming).requestor()) {
-                game.reject_alliance_request(incoming);
+        if !legacy {
+            for incoming in game.player(self.player).incoming_alliance_requests() {
+                if to_break.contains(&game.alliance_request(incoming).requestor()) {
+                    game.reject_alliance_request(incoming);
+                }
             }
         }
 
@@ -192,7 +205,9 @@ impl NukeExecution {
                 .find(|&ar| game.alliance_request(ar).requestor() == self.player);
             if let Some(request) = pending {
                 game.reject_alliance_request(request);
-                continue;
+                if !legacy {
+                    continue;
+                }
             }
             if let Some(alliance) = game.player(self.player).alliance_with(attacked) {
                 game.player_mut(self.player).break_alliance(alliance);
@@ -244,12 +259,65 @@ impl NukeExecution {
         game.unit_mut(nuke).set_targetable(targetable);
     }
 
+    /// The blast of builds before PR 3176: troops die tile by tile, owner by owner.
+    fn destroy_tiles_per_tile(&self, game: &mut GameImpl, to_destroy: &[TileRef]) {
+        let target = game.owner_id(self.dst);
+        let max_troops = if target != 0 {
+            game.player(target).max_troops()
+        } else {
+            1.0
+        };
+        for &tile in to_destroy {
+            let owner = game.owner_id(tile);
+            if owner != 0 {
+                game.player_mut(owner).relinquish(tile);
+                let factor = game.config().nuke_death_factor(
+                    self.nuke_type,
+                    game.player(owner).troops(),
+                    game.player(owner).num_tiles_owned() as f64,
+                    max_troops,
+                );
+                game.player_mut(owner).remove_troops(factor);
+                let attacks: Vec<_> = game.player(owner).outgoing_attacks().to_vec();
+                for attack in attacks {
+                    let attack_troops = game.attack(attack).troops();
+                    let deaths = game.config().nuke_death_factor(
+                        self.nuke_type,
+                        attack_troops,
+                        game.player(owner).num_tiles_owned() as f64,
+                        max_troops,
+                    );
+                    game.set_attack_troops(attack, attack_troops - deaths);
+                }
+                for unit in game.player(owner).units_of(UnitType::TransportShip) {
+                    let unit_troops = game.unit_any(unit).troops();
+                    let deaths = game.config().nuke_death_factor(
+                        self.nuke_type,
+                        unit_troops,
+                        game.player(owner).num_tiles_owned() as f64,
+                        max_troops,
+                    );
+                    game.unit_mut(unit).set_troops(unit_troops - deaths);
+                }
+            }
+            if game.is_land(tile) {
+                game.queue_water_conversion(tile);
+            }
+        }
+    }
+
     fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId, explosion_tile: TileRef) {
         let magnitude = game.config().nuke_magnitudes(game.unit_any(nuke).unit_type);
         let to_destroy = self.tiles_to_destroy(game, explosion_tile);
 
         let mut tiles_per_player: OrderedMap<SmallId, f64> = OrderedMap::new();
+        if !game.config().rules().has(Change::NukeExplosionBulk3176) {
+            self.destroy_tiles_per_tile(game, &to_destroy);
+        }
         for &tile in &to_destroy {
+            if !game.config().rules().has(Change::NukeExplosionBulk3176) {
+                break;
+            }
             let owner = game.owner_id(tile);
             if owner != 0 {
                 game.player_mut(owner).relinquish(tile);
@@ -289,7 +357,7 @@ impl NukeExecution {
                         num_tiles_left,
                         max_troops,
                     );
-                    game.attack_mut(attack).set_troops(attack_troops - deaths);
+                    game.set_attack_troops(attack, attack_troops - deaths);
                 }
                 for entry in transport_troops.iter_mut() {
                     let deaths = game.config().nuke_death_factor(
@@ -314,14 +382,16 @@ impl NukeExecution {
                 let u = game.unit_any(unit);
                 (u.unit_type, u.tile(), u.owner_id())
             };
+            let skips_sam_missile =
+                game.config().rules().has(Change::SamTargetingFix3223) && t == UnitType::SAMMissile;
             if matches!(
                 t,
                 UnitType::AtomBomb
                     | UnitType::HydrogenBomb
                     | UnitType::MIRVWarhead
                     | UnitType::MIRV
-                    | UnitType::SAMMissile
-            ) {
+            ) || skips_sam_missile
+            {
                 continue;
             }
             if (game.map.euclidean_dist_squared(dst, tile) as f64) < outer2 {
