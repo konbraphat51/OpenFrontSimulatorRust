@@ -2,6 +2,7 @@
 //! The `Execution` trait and the ported executions (one file per upstream execution).
 
 pub mod Alliance;
+pub mod ConstructionExecution;
 pub mod EmojiExecution;
 #[allow(clippy::module_inception)]
 pub mod Execution;
