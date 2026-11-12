@@ -110,6 +110,11 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[Change::NukeFriendlyKillNoCredit5525],
     },
+    Edge {
+        class: "C009",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
