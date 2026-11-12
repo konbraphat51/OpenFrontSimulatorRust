@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/execution/utils/AiAttackBehavior.ts: attack decisions shared by nations and tribes.
-//! STUB(owner=A2): replaced at merge.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
+//! STUB(owner=A2): replaced at merge.
 
 use crate::Execution::Nation::NationAllianceBehavior::NationAllianceBehavior;
 use crate::Execution::Nation::NationEmojiBehavior::NationEmojiBehavior;

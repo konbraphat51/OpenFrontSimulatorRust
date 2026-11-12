@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/execution/nation/NationNukeBehavior.ts: nation nuke decisions.
-//! STUB(owner=N2): replaced at merge.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
+//! STUB(owner=N2): replaced at merge.
 
 use crate::Execution::Nation::NationEmojiBehavior::NationEmojiBehavior;
 use crate::Execution::Nation::{Shared, SharedRandom};
