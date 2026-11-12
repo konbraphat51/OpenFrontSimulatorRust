@@ -229,7 +229,7 @@ impl GameImpl {
         let is_duos_trios_quads = matches!(
             pt,
             TeamCountConfig::Duos | TeamCountConfig::Trios | TeamCountConfig::Quads
-        );
+        ) && self.config.rules().has(Change::TeamAssignDuos4758);
         let assignment = assign_teams(
             &all_players,
             &self.player_teams.clone(),

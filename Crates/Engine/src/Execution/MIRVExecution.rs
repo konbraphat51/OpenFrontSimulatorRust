@@ -2,6 +2,7 @@
 //! Port of src/core/execution/MIRVExecution.ts: a MIRV carrier flight that separates into warheads.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::JsNumber;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
@@ -63,6 +64,10 @@ pub struct MirvExecution {
     warhead_executions: Vec<Rc<RefCell<NukeExecution>>>,
     player: SmallId,
     dst: TileRef,
+    /// Pre-PR-5188 flight: betrayal at init, float Bezier path, warheads released on arrival.
+    legacy: bool,
+    legacy_speed: f64,
+    legacy_path_finder: ParabolaUniversalPathFinder,
 }
 
 impl MirvExecution {
@@ -84,7 +89,116 @@ impl MirvExecution {
             warhead_executions: Vec::new(),
             player,
             dst,
+            legacy: false,
+            legacy_speed: -1.0,
+            legacy_path_finder: ParabolaUniversalPathFinder::default(),
         }
+    }
+
+    /// Pre-PR-5188 `init`: betrayal on construction and the fixed-speed path finder.
+    fn init_legacy(&mut self, game: &mut GameImpl) {
+        self.legacy_speed = game.config().nuke_speed(UnitType::MIRV);
+        self.legacy_path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
+            increment: Some(self.legacy_speed),
+            legacy_curve: true,
+            ..Default::default()
+        });
+        if self.target_player != 0 {
+            if let Some(alliance) = game.player(self.player).alliance_with(self.target_player) {
+                game.player_mut(self.player).break_alliance(alliance);
+            }
+            if self.target_player != self.player {
+                game.player_mut(self.target_player)
+                    .update_relation(self.player, -100.0);
+                game.player_mut(self.player)
+                    .update_relation(self.target_player, -100.0);
+            }
+        }
+    }
+
+    /// Pre-PR-5188 `tick`.
+    fn tick_legacy(&mut self, game: &mut GameImpl) {
+        if self.nuke.is_none() {
+            let Some(spawn) = game
+                .player(self.player)
+                .can_build(UnitType::MIRV, self.dst, None)
+            else {
+                self.active = false;
+                return;
+            };
+            self.spawn_tile = spawn;
+            let nuke = game.player_mut(self.player).build_unit(
+                UnitType::MIRV,
+                spawn,
+                UnitParams {
+                    target_tile: Some(self.dst),
+                    ..Default::default()
+                },
+            );
+            self.nuke = Some(nuke);
+            game.stats_mut().mirv_launched();
+            let x = ((game.x(self.dst) as f64 + game.x(game.unit_any(nuke).tile()) as f64) / 2.0)
+                .floor();
+            let y = f64::max(0.0, game.y(self.dst) as f64 - 500.0) + 50.0;
+            self.separate_dst = game.tile_ref(x as i32, y as i32);
+
+            let silo = game
+                .player(self.player)
+                .units_of(UnitType::MissileSilo)
+                .into_iter()
+                .find(|&s| game.unit_any(s).tile() == spawn);
+            if let Some(silo) = silo {
+                game.unit_mut(silo).launch();
+            }
+        }
+        let nuke = self.nuke.expect("launched above");
+        match self.legacy_path_finder.next(
+            &game.map,
+            self.spawn_tile,
+            self.separate_dst,
+            Some(self.legacy_speed),
+        ) {
+            PathResult::Complete(_) => {
+                self.separate_legacy(game, nuke);
+                self.active = false;
+            }
+            PathResult::Next(node) => game.unit_mut(nuke).move_to(node),
+            _ => {}
+        }
+    }
+
+    fn separate_legacy(&mut self, game: &mut GameImpl, nuke: UnitId) {
+        self.base_x = game.x(self.dst) as f64;
+        self.base_y = game.y(self.dst) as f64;
+        self.staged_targets = vec![self.dst];
+        for _ in 0..1000 {
+            if let Some(target) = self.try_generate_target(game) {
+                self.staged_targets.push(target);
+            }
+            if self.staged_targets.len() >= WARHEAD_COUNT {
+                break;
+            }
+        }
+        let dst = self.dst;
+        let mut destinations = std::mem::take(&mut self.staged_targets);
+        destinations.sort_by(|&a, &b| {
+            game.manhattan_dist(b, dst)
+                .cmp(&game.manhattan_dist(a, dst))
+        });
+        let warhead_speed = game.config().nuke_speed(UnitType::MIRVWarhead);
+        let src = game.unit_any(nuke).tile();
+        for (i, &dst) in destinations.iter().enumerate() {
+            game.add_execution(Box::new(NukeExecution::new(
+                UnitType::MIRVWarhead,
+                self.player,
+                dst,
+                Some(src),
+                warhead_speed + ((i as f64 / WARHEAD_COUNT as f64) * 5.0).floor(),
+                self.random.next_int(0.0, 15.0),
+                None,
+            )));
+        }
+        game.unit_mut(nuke).delete(Some(false), None);
     }
 
     /// `owner()`.
@@ -255,9 +369,17 @@ impl Execution for MirvExecution {
         self.base_x = game.x(self.dst) as f64;
         self.base_y = game.y(self.dst) as f64;
         self.staged_targets = vec![self.dst];
+        self.legacy = !game.config().rules().has(Change::MirvNormalize5188);
+        if self.legacy {
+            self.init_legacy(game);
+        }
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if self.legacy {
+            self.tick_legacy(game);
+            return;
+        }
         if self.nuke.is_none() {
             let Some(spawn) = game
                 .player(self.player)

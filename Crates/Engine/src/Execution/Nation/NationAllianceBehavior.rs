@@ -2,6 +2,7 @@
 //! Port of src/core/execution/nation/NationAllianceBehavior.ts: nation alliance decisions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
 use crate::Execution::Nation::NationEmojiBehavior::{
@@ -330,13 +331,30 @@ impl NationAllianceBehavior {
         }
         let difficulty = game.config().game_config().difficulty;
 
-        // Betray our juiciest ally when everybody around us is weak.
-        if (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
-            && juiciest_ally == Some(other_player)
-            && self.is_safe_to_betray(game, other_player, bordering_friends, bordering_enemies)
-        {
-            self.betray(game, other_player);
-            return true;
+        if game.config().rules().has(Change::NationBetray5330) {
+            // Betray our juiciest ally when everybody around us is weak.
+            if (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
+                && juiciest_ally == Some(other_player)
+                && self.is_safe_to_betray(game, other_player, bordering_friends, bordering_enemies)
+            {
+                self.betray(game, other_player);
+                return true;
+            }
+        } else if difficulty != Difficulty::Easy && difficulty != Difficulty::Medium {
+            // Betray very weak players (for example MIRVed ones).
+            let other_max_troops = game.player(other_player).max_troops();
+            let outgoing: f64 = game
+                .player(other_player)
+                .outgoing_attacks()
+                .iter()
+                .map(|&a| game.attack(a).troops())
+                .sum();
+            if game.player(other_player).troops() + outgoing < other_max_troops * 0.2
+                && game.player(other_player).troops() < game.player(self.player).troops()
+            {
+                self.betray(game, other_player);
+                return true;
+            }
         }
 
         // Betray very weak players on the easier difficulties (not humans on easy).

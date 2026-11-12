@@ -198,7 +198,9 @@ impl RailNetwork {
             map: &game.map,
             mini_map: game.water_manager.mini_map(),
         };
-        MiniMapTransformer::new(AStarRail)
+        MiniMapTransformer::new(AStarRail {
+            cross_impassable: !game.config().rules().has(crate::Builds::Rules::Change::RailNoImpassable4903),
+        })
             .find_path(&ctx, Source::Single(from), to)
             .unwrap_or_default()
     }

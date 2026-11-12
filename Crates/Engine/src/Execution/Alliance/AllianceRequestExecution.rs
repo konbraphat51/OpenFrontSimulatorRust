@@ -37,12 +37,21 @@ impl AllianceRequestExecution {
             } else {
                 self.requestor
             };
-            let units = game.player(launcher).units_of_types(&[
-                UnitType::AtomBomb,
-                UnitType::HydrogenBomb,
-                UnitType::MIRV,
-                UnitType::MIRVWarhead,
-            ]);
+            let cancels_mirv = game
+                .config()
+                .rules()
+                .has(crate::Builds::Rules::Change::AllianceCancelMirv5054);
+            let types: &[UnitType] = if cancels_mirv {
+                &[
+                    UnitType::AtomBomb,
+                    UnitType::HydrogenBomb,
+                    UnitType::MIRV,
+                    UnitType::MIRVWarhead,
+                ]
+            } else {
+                &[UnitType::AtomBomb, UnitType::HydrogenBomb]
+            };
+            let units = game.player(launcher).units_of_types(types);
             for unit in units {
                 let (is_active, reached, target_tile, unit_type, target_player) = {
                     let u = game.unit_any(unit);

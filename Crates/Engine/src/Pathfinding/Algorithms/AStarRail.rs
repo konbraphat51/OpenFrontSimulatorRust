@@ -17,12 +17,15 @@ const DIRECTION_CHANGE_PENALTY: f64 = 3.0;
 
 /// Rail path finder; it keeps no state, so every query builds its search on the current mini map.
 #[derive(Clone, Copy, Debug, Default)]
-pub struct AStarRail;
+pub struct AStarRail {
+    /// Rails may start on and cross impassable terrain (before PR 4903).
+    pub cross_impassable: bool,
+}
 
 impl PathFinder for AStarRail {
     fn find_path(&mut self, ctx: &PathCtx, from: Source, to: TileRef) -> Option<Vec<TileRef>> {
         let scratch = SCRATCH.with(|s| s.borrow_mut().take());
-        let mut a_star = AStar::with_scratch(RailAdapter::new(ctx.mini_map), None, scratch);
+        let mut a_star = AStar::with_scratch(RailAdapter::new(ctx.mini_map, self.cross_impassable), None, scratch);
         let path = a_star.find_path(from.as_slice(), to);
         SCRATCH.with(|s| *s.borrow_mut() = Some(a_star.into_scratch()));
         path
@@ -34,19 +37,21 @@ struct RailAdapter<'a> {
     map: &'a GameMapImpl,
     width: u32,
     num_nodes: u32,
+    cross_impassable: bool,
 }
 
 impl<'a> RailAdapter<'a> {
-    fn new(map: &'a GameMapImpl) -> Self {
+    fn new(map: &'a GameMapImpl, cross_impassable: bool) -> Self {
         Self {
             map,
+            cross_impassable,
             width: map.width(),
             num_nodes: map.width() * map.height(),
         }
     }
 
     fn is_traversable(&self, to: TileRef, from_shoreline: bool, is_impassable: bool) -> bool {
-        if is_impassable {
+        if is_impassable && !self.cross_impassable {
             return false;
         }
         if !self.map.is_water(to) {

@@ -1000,7 +1000,9 @@ impl<'a> PlayerRef<'a> {
         }
         let owner = mg.owner_id(tile);
         let game_over =
-            mg.winner().is_some() && mg.config().game_config().game_type != GameType::Singleplayer;
+            mg.winner().is_some()
+            && (!mg.config().rules().has(crate::Builds::Rules::Change::AftergameSingleplayer5332)
+                || mg.config().game_config().game_type != GameType::Singleplayer);
         if owner != 0 && self.is_on_same_team(owner) && !game_over {
             return None;
         }
