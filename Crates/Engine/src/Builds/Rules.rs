@@ -28,6 +28,10 @@ pub enum Change {
     NukeFriendlyKillNoCredit5525,
     /// PR 5462: train saturation midpoint 300 -> 500.
     TrainSaturation500Pr5462,
+    /// PR 5436: team count of Duos/Trios/Quads is at least 2.
+    TeamCountMinTwo5436,
+    /// PR 5425: player-vs-player attack speed divisor 7.77 -> 8.55.
+    AttackSpeedDivisor5425,
     /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
     ChannelIslandsTribes5564,
 }
@@ -122,6 +126,11 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[Change::TrainSaturation500Pr5462],
     },
+    Edge {
+        class: "C011",
+        add: &[],
+        remove: &[Change::TeamCountMinTwo5436, Change::AttackSpeedDivisor5425],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -132,6 +141,8 @@ const ROOT_CHANGES: &[Change] = &[
     Change::InternalBorderAnnexFix5545,
     Change::NukeFriendlyKillNoCredit5525,
     Change::TrainSaturation500Pr5462,
+    Change::TeamCountMinTwo5436,
+    Change::AttackSpeedDivisor5425,
     Change::ChannelIslandsTribes5564,
 ];
 

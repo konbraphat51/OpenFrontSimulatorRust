@@ -207,6 +207,8 @@ const TERRA_NULLIUS_MAX_COST: f64 = 100.0;
 const ATTACKER_LOSS_BASE: f64 = 0.463;
 const ATTACKER_LOSS_PER_DENSITY: f64 = 0.0039;
 const SPEED_COST_DIVISOR: f64 = 8.55;
+/// Speed divisor before PR 5425.
+const SPEED_COST_DIVISOR_OLD: f64 = 7.77;
 const LARGE_ATTACKER_SPEED_DEPTH: f64 = 0.73;
 
 /// Attacker side of `attackLogic`.
@@ -993,7 +995,11 @@ impl Config {
 
         let speed_cost = (Util::within(troop_ratio, 0.82, 7.5)
             * Util::within(troop_ratio / 20.0, 1.0, 50.0))
-            / SPEED_COST_DIVISOR;
+            / if self.rules.has(Change::AttackSpeedDivisor5425) {
+                SPEED_COST_DIVISOR
+            } else {
+                SPEED_COST_DIVISOR_OLD
+            };
         let large_attacker_speed_bonus =
             self.large_territory_bonus(attacker.num_tiles, LARGE_ATTACKER_SPEED_DEPTH);
         AttackLogicResult {

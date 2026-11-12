@@ -184,7 +184,11 @@ pub fn assign_teams(
 }
 
 /// `resolveTeamsList`.
-pub fn resolve_teams_list(config: TeamCountConfig, total_players: usize) -> Vec<Team> {
+pub fn resolve_teams_list(
+    config: TeamCountConfig,
+    total_players: usize,
+    min_two_teams: bool,
+) -> Vec<Team> {
     if config == TeamCountConfig::HumansVsNations {
         let _ = HUMANS_VS_NATIONS;
         return vec![colored("Humans"), colored("Nations")];
@@ -199,7 +203,12 @@ pub fn resolve_teams_list(config: TeamCountConfig, total_players: usize) -> Vec<
                 _ => unreachable!(),
             };
             let _ = (DUOS, TRIOS, QUADS);
-            f64::max(2.0, (total_players as f64 / divisor).ceil())
+            let count = (total_players as f64 / divisor).ceil();
+            if min_two_teams {
+                f64::max(2.0, count)
+            } else {
+                count
+            }
         }
     };
     assert!(num_teams >= 2.0, "Too few teams: {num_teams}");
@@ -247,19 +256,19 @@ mod tests {
     #[test]
     fn team_lists() {
         assert_eq!(
-            resolve_teams_list(TeamCountConfig::Count(2), 10),
+            resolve_teams_list(TeamCountConfig::Count(2), 10, true),
             ["Red", "Blue"]
         );
         assert_eq!(
-            resolve_teams_list(TeamCountConfig::Duos, 7),
+            resolve_teams_list(TeamCountConfig::Duos, 7, true),
             ["Red", "Blue", "Yellow", "Green"]
         );
         assert_eq!(
-            resolve_teams_list(TeamCountConfig::Count(8), 0)[7],
+            resolve_teams_list(TeamCountConfig::Count(8), 0, true)[7],
             "Team 8"
         );
         assert_eq!(
-            resolve_teams_list(TeamCountConfig::HumansVsNations, 3),
+            resolve_teams_list(TeamCountConfig::HumansVsNations, 3, true),
             ["Humans", "Nations"]
         );
     }
@@ -272,7 +281,7 @@ mod tests {
             info("c", Some("X")),
             info("d", None),
         ];
-        let teams = resolve_teams_list(TeamCountConfig::Count(2), 4);
+        let teams = resolve_teams_list(TeamCountConfig::Count(2), 4, true);
         let result = assign_teams(&players, &teams, false, Some(2));
         let clan: Vec<_> = result.iter().take(3).collect();
         assert_eq!(clan[0].1, clan[1].1);
