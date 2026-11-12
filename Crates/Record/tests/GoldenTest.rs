@@ -5,10 +5,10 @@
 
 #![allow(non_snake_case)]
 
-use openfront_map::{MapData, MapSize};
-use openfront_record::Canonical::canonical_json;
-use openfront_record::Records::GameRecord;
-use openfront_record::StartInfo::GameStartInfo;
+use ofsim_map::{MapData, MapSize};
+use ofsim_record::Canonical::canonical_json;
+use ofsim_record::Records::GameRecord;
+use ofsim_record::StartInfo::GameStartInfo;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;

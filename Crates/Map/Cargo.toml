@@ -1,5 +1,5 @@
 [package]
-name = "openfront-map"
+name = "ofsim-map"
 description = "Loader for OpenFront map resources (terrain binaries and manifests)"
 version.workspace = true
 edition.workspace = true

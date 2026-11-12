@@ -2,10 +2,10 @@
 
 #![allow(non_snake_case)]
 
-use openfront_record::Config::GameType;
-use openfront_record::Intents::{Intent, StampedIntent};
-use openfront_record::Records::GameRecord;
-use openfront_record::StartInfo::GameStartInfo;
+use ofsim_record::Config::GameType;
+use ofsim_record::Intents::{Intent, StampedIntent};
+use ofsim_record::Records::GameRecord;
+use ofsim_record::StartInfo::GameStartInfo;
 use serde_json::{Value, json};
 
 fn sample_record(game_type: &str, anonymize: bool) -> Value {

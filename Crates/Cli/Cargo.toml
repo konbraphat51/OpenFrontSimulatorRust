@@ -1,5 +1,5 @@
 [package]
-name = "openfront-sim"
+name = "ofsim"
 description = "Command-line replayer: hash verification, state snapshots and batch runs"
 version.workspace = true
 edition.workspace = true
@@ -11,8 +11,8 @@ name = "ofsim"
 path = "src/Main.rs"
 
 [dependencies]
-openfront-record.workspace = true
-openfront-engine.workspace = true
+ofsim-record.workspace = true
+ofsim-engine.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 zstd.workspace = true

@@ -3,7 +3,7 @@
  *
  * Responsibility: print, for every baseline record, digests of the expanded turns (decompressGameRecord),
  * the start info (toWireGameStartInfo) and of every map (loadTerrainMap) that the Rust crates
- * `openfront-record` and `openfront-map` must reproduce bit for bit. No usernames or game content are printed.
+ * `ofsim-record` and `ofsim-map` must reproduce bit for bit. No usernames or game content are printed.
  *
  * Usage: copy this file into `<upstream worktree>/openfrontds/` (so `../src/...` resolves) and run there:
  *   npx tsx openfrontds/GoldenDigests.ts <recordsDir> <outDir>

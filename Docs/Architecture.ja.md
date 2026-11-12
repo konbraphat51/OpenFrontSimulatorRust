@@ -12,10 +12,10 @@ English version: [Architecture.md](Architecture.md)
 
 | クレート | パス | 責務 |
 | --- | --- | --- |
-| `openfront-record` | `Crates/OpenFrontRecord` | レコード JSON スキーマ (serde)、gzip 読み込み、疎なターンの展開 (`decompressGameRecord`)、エンジンが消費する開始情報 (`toWireGameStartInfo`)。エンジンロジックは持たない。 |
-| `openfront-map` | `Crates/OpenFrontMap` | マップディレクトリ (`map.bin`、`map4x.bin`、`map16x.bin`、`manifest.json`) を素のデータとして読むことと、`GameMapType` 名からディレクトリへの対応表。エンジンロジックは持たない。 |
-| `openfront-engine` | `Crates/OpenFrontEngine` | 決定的シミュレーション: ゲーム状態、execution、経路探索、AI、ハッシュ、ビルドルール。 |
-| `openfront-sim` | `Crates/OpenFrontSim` | `ofsim` CLI: `verify`、`replay` (スナップショット)、`trace`、`trace-diff`、`batch`。 |
+| `ofsim-record` | `Crates/Record` | レコード JSON スキーマ (serde)、gzip 読み込み、疎なターンの展開 (`decompressGameRecord`)、エンジンが消費する開始情報 (`toWireGameStartInfo`)。エンジンロジックは持たない。 |
+| `ofsim-map` | `Crates/Map` | マップディレクトリ (`map.bin`、`map4x.bin`、`map16x.bin`、`manifest.json`) を素のデータとして読むことと、`GameMapType` 名からディレクトリへの対応表。エンジンロジックは持たない。 |
+| `ofsim-engine` | `Crates/Engine` | 決定的シミュレーション: ゲーム状態、execution、経路探索、AI、ハッシュ、ビルドルール。 |
+| `ofsim` | `Crates/Cli` | `ofsim` CLI: `verify`、`replay` (スナップショット)、`trace`、`trace-diff`、`batch`。 |
 | リファレンストレーサー | `Reference/` | アップストリームのワークツリーにコピーして使う TypeScript スクリプト。差分デバッグのため `ofsim trace` と同じトレースを出力する。 |
 
 ## エンジンのモジュール構成
@@ -23,7 +23,7 @@ English version: [Architecture.md](Architecture.md)
 Rust のモジュールは、すべての Rust ファイルがヘッダコメントに書かれたアップストリーム上の対応ファイルを 1 つ持つように、アップストリームの `src/core/` を鏡写しにする (`//! Port of src/core/game/PlayerImpl.ts`)。
 
 ```
-Crates/OpenFrontEngine/src/
+Crates/Engine/src/
   Lib.rs
   Compat/        JS のセマンティクス: 数値ヘルパー、挿入順の set と map、安定ソート
   Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)

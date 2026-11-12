@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["Crates/OpenFrontRecord", "Crates/OpenFrontMap", "Crates/OpenFrontEngine", "Crates/OpenFrontSim"]
+members = ["Crates/Record", "Crates/Map", "Crates/Engine", "Crates/Cli"]
 
 [workspace.package]
 version = "0.1.0"
@@ -10,9 +10,9 @@ repository = "https://github.com/konbraphat51/OpenFrontSimulatorRust"
 rust-version = "1.90"
 
 [workspace.dependencies]
-openfront-record = { path = "Crates/OpenFrontRecord" }
-openfront-map = { path = "Crates/OpenFrontMap" }
-openfront-engine = { path = "Crates/OpenFrontEngine" }
+ofsim-record = { path = "Crates/Record" }
+ofsim-map = { path = "Crates/Map" }
+ofsim-engine = { path = "Crates/Engine" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 flate2 = "1"

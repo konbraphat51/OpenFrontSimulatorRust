@@ -317,18 +317,26 @@ dependencies = [
 ]
 
 [[package]]
-name = "once_cell_polyfill"
-version = "1.70.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
-
-[[package]]
-name = "openfront-engine"
+name = "ofsim"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "openfront-map",
- "openfront-record",
+ "clap",
+ "ofsim-engine",
+ "ofsim-record",
+ "rayon",
+ "serde",
+ "serde_json",
+ "zstd",
+]
+
+[[package]]
+name = "ofsim-engine"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "ofsim-map",
+ "ofsim-record",
  "serde",
  "serde_json",
  "thiserror",
@@ -336,7 +344,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "openfront-map"
+name = "ofsim-map"
 version = "0.1.0"
 dependencies = [
  "anyhow",
@@ -345,30 +353,22 @@ dependencies = [
 ]
 
 [[package]]
-name = "openfront-record"
+name = "ofsim-record"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "flate2",
- "openfront-map",
+ "ofsim-map",
  "serde",
  "serde_json",
  "sha2",
 ]
 
 [[package]]
-name = "openfront-sim"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "openfront-engine",
- "openfront-record",
- "rayon",
- "serde",
- "serde_json",
- "zstd",
-]
+name = "once_cell_polyfill"
+version = "1.70.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
 name = "pkg-config"

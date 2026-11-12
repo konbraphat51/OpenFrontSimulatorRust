@@ -12,10 +12,10 @@ Replay any public OpenFront game record from 2025-10-01 onward, tick by tick, wi
 
 | Crate | Path | Responsibility |
 | --- | --- | --- |
-| `openfront-record` | `Crates/OpenFrontRecord` | Record JSON schema (serde), gzip loading, expansion of sparse turns (`decompressGameRecord`), the start info the engine consumes (`toWireGameStartInfo`). No engine logic. |
-| `openfront-map` | `Crates/OpenFrontMap` | Reading a map directory (`map.bin`, `map4x.bin`, `map16x.bin`, `manifest.json`) into plain data, and the `GameMapType` name to directory table. No engine logic. |
-| `openfront-engine` | `Crates/OpenFrontEngine` | The deterministic simulation: game state, executions, pathfinding, AI, hashing, build rules. |
-| `openfront-sim` | `Crates/OpenFrontSim` | The `ofsim` CLI: `verify`, `replay` (snapshots), `trace`, `trace-diff`, `batch`. |
+| `ofsim-record` | `Crates/Record` | Record JSON schema (serde), gzip loading, expansion of sparse turns (`decompressGameRecord`), the start info the engine consumes (`toWireGameStartInfo`). No engine logic. |
+| `ofsim-map` | `Crates/Map` | Reading a map directory (`map.bin`, `map4x.bin`, `map16x.bin`, `manifest.json`) into plain data, and the `GameMapType` name to directory table. No engine logic. |
+| `ofsim-engine` | `Crates/Engine` | The deterministic simulation: game state, executions, pathfinding, AI, hashing, build rules. |
+| `ofsim` | `Crates/Cli` | The `ofsim` CLI: `verify`, `replay` (snapshots), `trace`, `trace-diff`, `batch`. |
 | reference tracer | `Reference/` | TypeScript scripts copied into an upstream worktree that emit the same trace as `ofsim trace`, for differential debugging. |
 
 ## Engine module map
@@ -23,7 +23,7 @@ Replay any public OpenFront game record from 2025-10-01 onward, tick by tick, wi
 Rust modules mirror upstream `src/core/` so that every Rust file has one upstream counterpart named in its header comment (`//! Port of src/core/game/PlayerImpl.ts`).
 
 ```
-Crates/OpenFrontEngine/src/
+Crates/Engine/src/
   Lib.rs
   Compat/        JS semantics: number helpers, insertion-ordered sets and maps, stable sort
   Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)
