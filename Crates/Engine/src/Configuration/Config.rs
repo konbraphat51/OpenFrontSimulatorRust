@@ -551,7 +551,12 @@ impl Config {
     /// Global train spawn throttle for `num_train_units` trains.
     pub fn train_saturation(&self, num_train_units: f64) -> f64 {
         let boost = 1.0 + 0.5 * self.exp(-num_train_units / 30.0);
-        let damping = 1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 100.0, 560.0);
+        let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
+            560.0
+        } else {
+            500.0
+        };
+        let damping = 1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 100.0, midpoint);
         let plateau =
             0.25 * (1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 150.0, 900.0));
         boost * js_max(damping, plateau)
@@ -608,7 +613,12 @@ impl Config {
     /// Global trade ship spawn throttle.
     pub fn trade_ship_saturation(&self, num_trade_ships: f64) -> f64 {
         let boost = 1.0 + 0.45 * self.exp(-num_trade_ships / 120.0);
-        let damping = 1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 50.0, 330.0);
+        let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
+            330.0
+        } else {
+            230.0
+        };
+        let damping = 1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 50.0, midpoint);
         let plateau =
             0.25 * (1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 100.0, 800.0));
         boost * js_max(damping, plateau)

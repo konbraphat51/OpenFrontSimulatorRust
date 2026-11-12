@@ -20,6 +20,10 @@ pub enum Change {
     Sfc32PseudoRandom4233,
     /// PR 5823: an attack with nothing to conquer retreats in `init` instead of lingering.
     AttackRetreatNoTargets5823,
+    /// PR 5587: trade ship (230 -> 330) and train (500 -> 560) saturation midpoints.
+    SaturationMidpoints5587,
+    /// PR 5545: `PlayerExecution` skips a hole cluster when picking the largest border cluster.
+    InternalBorderAnnexFix5545,
     /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
     ChannelIslandsTribes5564,
 }
@@ -91,12 +95,22 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[Change::ChannelIslandsTribes5564],
     },
+    Edge {
+        class: "C007",
+        add: &[],
+        remove: &[
+            Change::InternalBorderAnnexFix5545,
+            Change::SaturationMidpoints5587,
+        ],
+    },
 ];
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[
     Change::DetMath5191,
     Change::Sfc32PseudoRandom4233,
+    Change::SaturationMidpoints5587,
+    Change::InternalBorderAnnexFix5545,
     Change::ChannelIslandsTribes5564,
 ];
 
