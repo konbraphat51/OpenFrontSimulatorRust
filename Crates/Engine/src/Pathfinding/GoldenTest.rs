@@ -791,3 +791,39 @@ fn lemnos() {
 fn giant_world_map() {
     run_map(&golden_entry("Giant World Map"));
 }
+
+/// Mean time of the golden's shore-to-shore chain queries (transport and trade ships) on the large map.
+/// Run with `cargo test --release -- --ignored --nocapture timing`; the generator prints the tsx figure to stderr.
+#[test]
+#[ignore]
+fn giant_world_map_timing() {
+    let Some(maps) = find_maps() else {
+        return;
+    };
+    let entry = golden_entry("Giant World Map");
+    let data = MapData::load(&maps, "Giant World Map", MapSize::Normal).unwrap();
+    let map = map_of(&data.game_map);
+    let built = std::time::Instant::now();
+    let mut water = WaterManager::new(map_of(&data.mini_game_map), false);
+    eprintln!(
+        "Giant World Map: water manager (components, graph, HPA) built in {:.1} ms",
+        built.elapsed().as_secs_f64() * 1000.0
+    );
+    // The first pass starts with empty edge path caches (like the tsx figure), the second is warm
+    for pass in ["cold", "warm"] {
+        let mut total = std::time::Duration::ZERO;
+        let mut timed = 0;
+        for (i, q) in entry["chain"].as_array().unwrap().iter().enumerate() {
+            let started = std::time::Instant::now();
+            let _ = find_water_path(&mut water, &map, Source::Single(u(&q["from"])), u(&q["to"]));
+            if i % 4 != 2 && i % 4 != 3 {
+                total += started.elapsed();
+                timed += 1;
+            }
+        }
+        eprintln!(
+            "Giant World Map ({pass}): mean {:.3} ms over {timed} queries",
+            total.as_secs_f64() * 1000.0 / timed as f64
+        );
+    }
+}

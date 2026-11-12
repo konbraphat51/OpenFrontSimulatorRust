@@ -7,6 +7,7 @@
 
 use super::BfsGrid::{BfsGrid, Visit};
 use super::ConnectedComponents::ConnectedComponents;
+use crate::Compat::OrderedMap::FxBuildHasher;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use std::cell::{Ref, RefCell};
 use std::collections::{HashMap, HashSet};
@@ -264,7 +265,7 @@ impl AbstractGraph {
 }
 
 /// Old edge costs by tile pair, used to skip BFS in clean clusters.
-type OldEdgeCosts = HashMap<(TileRef, TileRef), (u32, u32, u32)>;
+type OldEdgeCosts = HashMap<(TileRef, TileRef), (u32, u32, u32), FxBuildHasher>;
 
 /// Builds an [`AbstractGraph`] from a (mini) map, optionally reusing an older graph for clean clusters.
 pub struct AbstractGraphBuilder<'a> {
@@ -281,10 +282,10 @@ pub struct AbstractGraphBuilder<'a> {
     dirty_mini_tiles: Option<&'a [TileRef]>,
 
     graph: AbstractGraph,
-    tile_to_node: HashMap<TileRef, u32>,
+    tile_to_node: HashMap<TileRef, u32, FxBuildHasher>,
     next_node_id: u32,
     next_edge_id: u32,
-    edge_between: HashMap<(u32, u32), u32>,
+    edge_between: HashMap<(u32, u32), u32, FxBuildHasher>,
     clean_clusters: Option<HashSet<u32>>,
     old_edge_costs: Option<OldEdgeCosts>,
 }
@@ -325,10 +326,10 @@ impl<'a> AbstractGraphBuilder<'a> {
             old_graph,
             dirty_mini_tiles,
             graph: AbstractGraph::new(cluster_size, clusters_x, clusters_y),
-            tile_to_node: HashMap::new(),
+            tile_to_node: HashMap::default(),
             next_node_id: 0,
             next_edge_id: 0,
-            edge_between: HashMap::new(),
+            edge_between: HashMap::default(),
             clean_clusters: None,
             old_edge_costs: None,
         }
@@ -584,7 +585,7 @@ impl<'a> AbstractGraphBuilder<'a> {
         let from_x = self.map.x(from);
         let from_y = self.map.y(from);
 
-        let mut tile_to_node_id: HashMap<TileRef, u32> = HashMap::new();
+        let mut tile_to_node_id: HashMap<TileRef, u32, FxBuildHasher> = HashMap::default();
         let mut max_manhattan_dist = 0u32;
         for node in target_nodes {
             tile_to_node_id.insert(node.tile, node.id);
@@ -666,7 +667,7 @@ impl<'a> AbstractGraphBuilder<'a> {
                 .collect(),
         );
 
-        let mut old_edge_costs: OldEdgeCosts = HashMap::new();
+        let mut old_edge_costs: OldEdgeCosts = HashMap::default();
         for edge in old_graph.get_all_edges() {
             let (Some(node_a), Some(node_b)) = (
                 old_graph.get_node(edge.node_a),

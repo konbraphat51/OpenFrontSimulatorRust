@@ -22,46 +22,41 @@ pub trait PriorityQueue {
 /// Binary min-heap, O(log n), any priority values.
 #[derive(Clone, Debug)]
 pub struct MinHeap {
-    heap: Vec<u32>,
-    priorities: Vec<f32>,
+    // (priority, node) pairs: one array instead of upstream's two parallel ones, same layout and order
+    entries: Vec<(f32, u32)>,
 }
 
 impl MinHeap {
     /// Creates a heap with room for `capacity` entries (it grows past that, as upstream does).
     pub fn new(capacity: usize) -> Self {
         Self {
-            heap: Vec::with_capacity(capacity),
-            priorities: Vec::with_capacity(capacity),
+            entries: Vec::with_capacity(capacity),
         }
     }
 }
 
 impl PriorityQueue for MinHeap {
     fn push(&mut self, node: u32, priority: f64) {
-        let mut i = self.heap.len();
-        self.heap.push(node);
-        self.priorities.push(priority as f32);
+        let mut i = self.entries.len();
+        self.entries.push((priority as f32, node));
 
         // Bubble up
         while i > 0 {
             let parent = (i - 1) >> 1;
-            if self.priorities[parent] <= self.priorities[i] {
+            if self.entries[parent].0 <= self.entries[i].0 {
                 break;
             }
-            self.heap.swap(parent, i);
-            self.priorities.swap(parent, i);
+            self.entries.swap(parent, i);
             i = parent;
         }
     }
 
     fn pop(&mut self) -> u32 {
-        let result = self.heap[0];
-        let size = self.heap.len() - 1;
+        let result = self.entries[0].1;
+        let size = self.entries.len() - 1;
         if size > 0 {
-            self.heap[0] = self.heap[size];
-            self.priorities[0] = self.priorities[size];
-            self.heap.truncate(size);
-            self.priorities.truncate(size);
+            self.entries[0] = self.entries[size];
+            self.entries.truncate(size);
 
             // Bubble down
             let mut i = 0;
@@ -69,33 +64,30 @@ impl PriorityQueue for MinHeap {
                 let left = (i << 1) + 1;
                 let right = left + 1;
                 let mut smallest = i;
-                if left < size && self.priorities[left] < self.priorities[smallest] {
+                if left < size && self.entries[left].0 < self.entries[smallest].0 {
                     smallest = left;
                 }
-                if right < size && self.priorities[right] < self.priorities[smallest] {
+                if right < size && self.entries[right].0 < self.entries[smallest].0 {
                     smallest = right;
                 }
                 if smallest == i {
                     break;
                 }
-                self.heap.swap(smallest, i);
-                self.priorities.swap(smallest, i);
+                self.entries.swap(smallest, i);
                 i = smallest;
             }
         } else {
-            self.heap.clear();
-            self.priorities.clear();
+            self.entries.clear();
         }
         result
     }
 
     fn is_empty(&self) -> bool {
-        self.heap.is_empty()
+        self.entries.is_empty()
     }
 
     fn clear(&mut self) {
-        self.heap.clear();
-        self.priorities.clear();
+        self.entries.clear();
     }
 }
 
