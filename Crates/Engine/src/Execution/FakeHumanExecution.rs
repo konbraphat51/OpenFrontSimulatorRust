@@ -633,11 +633,12 @@ impl FakeHumanExecution {
         }
         let Some(dst) = dst else { return };
         let troops = game.player(player).troops() / 5.0;
-        game.add_execution(Box::new(TransportShipExecution::new(
-            player,
-            dst,
-            Some(troops),
-        )));
+        let owner = game.owner_id(dst);
+        let target_id = (owner != 0).then(|| game.player(owner).id().to_string());
+        game.add_execution(Box::new(
+            TransportShipExecution::new(player, dst, Some(troops))
+                .with_intent_target(target_id, None),
+        ));
     }
 
     fn random_boat_target(

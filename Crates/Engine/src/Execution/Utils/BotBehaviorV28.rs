@@ -529,11 +529,11 @@ impl BotBehaviorV28 {
         if troops < 1.0 {
             return;
         }
-        game.add_execution(Box::new(TransportShipExecution::new(
-            self.player,
-            landing,
-            Some(troops),
-        )));
+        let other_id = game.player(other).id().to_string();
+        game.add_execution(Box::new(
+            TransportShipExecution::new(self.player, landing, Some(troops))
+                .with_intent_target(Some(other_id), None),
+        ));
         self.maybe_send_emoji(game, other);
     }
 
