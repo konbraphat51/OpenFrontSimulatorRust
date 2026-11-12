@@ -368,6 +368,14 @@ pub enum Change {
     RailPathfindingFix2950,
     /// PR 3134: MIRV warheads separate even when the launcher died meanwhile.
     MirvWarheadsWhenDead3134,
+    /// PR 2932: naval invasions search with a short bounded path, MinHeap queues, a final smoothing pass and a refined launch tile (older: none of these).
+    NavalInvasionPathing2932,
+    /// PR 2915: lobbies can set the starting gold and a gold multiplier.
+    LobbyGoldOptions2915,
+    /// PR 2896: a bot expands into free land only when a land tile next to its border is unowned (older: any border tile next to terra nullius, water included).
+    BotTerraNulliusLand2896,
+    /// PR 2878: a nuke also angers allies owning a structure in its blast (older: only the weighted tile count).
+    NukeBreakAlliedStructures2878,
     /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
     TeamSpawnAreas3263,
     /// PR 3152: nations use the structure behaviour class (older: an inline build order).
@@ -902,6 +910,24 @@ const EDGES: &[Edge] = &[
         ],
     },
     Edge {
+        class: "C056",
+        add: &[],
+        remove: &[
+            Change::NavalInvasionPathing2932,
+            Change::LobbyGoldOptions2915,
+        ],
+    },
+    Edge {
+        class: "C057",
+        add: &[],
+        remove: &[Change::BotTerraNulliusLand2896],
+    },
+    Edge {
+        class: "C058",
+        add: &[],
+        remove: &[Change::NukeBreakAlliedStructures2878],
+    },
+    Edge {
         class: "C046",
         add: &[Change::BouncingNukes30],
         remove: &[],
@@ -1045,6 +1071,10 @@ const ROOT_CHANGES: &[Change] = &[
     Change::AllianceRadialAccept3155,
     Change::AllianceIncomingBypass3092,
     Change::NukeBreakAllyList2912,
+    Change::NukeBreakAlliedStructures2878,
+    Change::BotTerraNulliusLand2896,
+    Change::NavalInvasionPathing2932,
+    Change::LobbyGoldOptions2915,
     Change::MirvWarheadsWhenDead3134,
     Change::PathfindingRefinements2959,
     Change::ShoreCoerceBestNeighbor2937,

@@ -360,7 +360,9 @@ impl WaterManager {
         let tweaks = self.tweaks;
         self.simple_chain
             .borrow_mut()
-            .get_or_insert_with(|| build_simple_chain(AStarWater::new(mini, None, None), tweaks))
+            .get_or_insert_with(|| {
+                build_simple_chain(AStarWater::new(mini, None, None), mini, tweaks)
+            })
             .find_path(&ctx, from, to)
     }
 

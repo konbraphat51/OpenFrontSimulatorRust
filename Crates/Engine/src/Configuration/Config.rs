@@ -585,12 +585,15 @@ impl Config {
     }
     /// Global gold multiplier, default 1.
     pub fn gold_multiplier(&self) -> f64 {
+        if !self.rules.has(Change::LobbyGoldOptions2915) {
+            return 1.0;
+        }
         self.game_config.gold_multiplier.unwrap_or(1.0)
     }
 
     /// Starting gold of a player.
     pub fn starting_gold(&self, player_type: PlayerType, is_lobby_creator: bool) -> Gold {
-        if player_type == PlayerType::Bot {
+        if player_type == PlayerType::Bot || !self.rules.has(Change::LobbyGoldOptions2915) {
             return 0;
         }
         let base = self.game_config.starting_gold.unwrap_or(0) as i64;
