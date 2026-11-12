@@ -20,6 +20,8 @@ use crate::Game::GameMap::TileRef;
 enum Reason {
     Trade,
     Transport,
+    /// An incoming enemy transport (v0.36.0 on): may dip into the gold kept for nukes.
+    Invasion,
 }
 
 /// Decides warship spawning, retaliation and infestation counters of a nation.
@@ -60,6 +62,22 @@ impl NationWarshipBehavior {
         game.player(self.player).unit_cost(t, 0)
     }
 
+    /// `spareGold()`: with atom bombs disabled, silo owners keep a hydrogen bomb's price for nukes (v0.36.0 on).
+    fn spare_gold(&self, game: &GameImpl) -> i64 {
+        let gold = game.player(self.player).gold();
+        if !game.config().rules().has(Change::NationWarshipSpareGold36) {
+            return gold;
+        }
+        let config = game.config();
+        if !config.is_unit_disabled(UnitType::AtomBomb)
+            || config.is_unit_disabled(UnitType::HydrogenBomb)
+            || game.player(self.player).unit_count(UnitType::MissileSilo) == 0
+        {
+            return gold;
+        }
+        gold - self.cost(game, UnitType::HydrogenBomb)
+    }
+
     /// `maybeSpawnWarship()`.
     pub fn maybe_spawn_warship(&mut self, game: &mut GameImpl) -> bool {
         if game.config().is_unit_disabled(UnitType::Warship) {
@@ -72,7 +90,7 @@ impl NationWarshipBehavior {
         let ships = game.player(self.player).units_of(UnitType::Warship);
         if !ports.is_empty()
             && ships.is_empty()
-            && game.player(self.player).gold() > self.cost(game, UnitType::Warship)
+            && self.spare_gold(game) > self.cost(game, UnitType::Warship)
         {
             let port = *self.random.borrow_mut().rand_element(&ports);
             let port_tile = game.unit_any(port).tile();
@@ -236,7 +254,12 @@ impl NationWarshipBehavior {
                 let Some(ocean_tile) = self.warship_spawn_tile(game, target, 30) else {
                     continue;
                 };
-                self.maybe_retaliate_with_warship(game, ocean_tile, owner, Reason::Transport);
+                let reason = if game.config().rules().has(Change::NationWarshipSpareGold36) {
+                    Reason::Invasion
+                } else {
+                    Reason::Transport
+                };
+                self.maybe_retaliate_with_warship(game, ocean_tile, owner, reason);
                 self.dealt_with_transport_ship.insert(transport);
                 break;
             }
@@ -271,10 +294,15 @@ impl NationWarshipBehavior {
             || (difficulty == Difficulty::Hard && self.next_int(0.0, 100.0) < 50.0)
             || (difficulty == Difficulty::Impossible && self.next_int(0.0, 100.0) < 80.0);
         if retaliate {
+            // Stopping an invasion may dip into the gold kept for nukes.
+            let affordable = !game.config().rules().has(Change::NationWarshipSpareGold36)
+                || reason == Reason::Invasion
+                || self.spare_gold(game) >= self.cost(game, UnitType::Warship);
             if game
                 .player(self.player)
                 .can_build(UnitType::Warship, tile, None)
                 .is_none()
+                || !affordable
             {
                 self.maybe_move_warship(game, tile);
                 return;
@@ -344,7 +372,7 @@ impl NationWarshipBehavior {
             for i in 0..builds {
                 total += game.player(self.player).unit_cost(UnitType::Warship, i);
             }
-            if game.player(self.player).gold() < total {
+            if self.spare_gold(game) < total {
                 return;
             }
             if game
@@ -463,7 +491,7 @@ impl NationWarshipBehavior {
         if game.unit_count(UnitType::Warship) <= 10 {
             return false;
         }
-        if self.cost(game, UnitType::Warship) > game.player(self.player).gold() {
+        if self.cost(game, UnitType::Warship) > self.spare_gold(game) {
             return false;
         }
         if game.player(self.player).units_of(UnitType::Port).is_empty() {
@@ -495,9 +523,14 @@ impl NationWarshipBehavior {
     fn find_team_game_warship_target(&self, game: &GameImpl) -> Option<UnitId> {
         // (team, warship count, players) in first-seen order.
         let mut enemy_teams: Vec<(String, usize, Vec<SmallId>)> = Vec::new();
+        let mut own_fleet = 0usize;
+        let count_own = game.config().rules().has(Change::NationWarshipSpareGold36);
         for p in game.players() {
-            // Skip friendly players (our team and allies).
+            // Skip friendly players (our team and allies), but count their warships (v0.36.0 on).
             if game.player(self.player).is_friendly(p, false) || p == self.player {
+                if count_own {
+                    own_fleet += game.player(p).units_of(UnitType::Warship).len();
+                }
                 continue;
             }
             let Some(team) = game.player(p).team().cloned() else {
@@ -516,7 +549,7 @@ impl NationWarshipBehavior {
         }
 
         for (_, count, players) in &enemy_teams {
-            if *count > 15 {
+            if *count > 15 && (!count_own || *count > own_fleet) {
                 // The player of that team with the most warships.
                 let mut most: Option<SmallId> = None;
                 for &p in players {

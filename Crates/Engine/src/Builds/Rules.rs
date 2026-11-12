@@ -142,6 +142,8 @@ pub enum Change {
     TribeMapData36,
     /// v0.36.1: tribe themes of four more maps (Ottoman Empire, Turkiye, World Inverted, Zealandia).
     TribeMapData361,
+    /// v0.36.0: nation warships keep nuke gold, invasions may dip into it, and the enemy fleet must outnumber ours.
+    NationWarshipSpareGold36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -352,6 +354,7 @@ const EDGES: &[Edge] = &[
             Change::TrainSpawnOffRail36,
             Change::MirvTargetGrid36,
             Change::TribeMapData36,
+            Change::NationWarshipSpareGold36,
         ],
         remove: &[],
     },

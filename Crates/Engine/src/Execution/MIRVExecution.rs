@@ -118,7 +118,7 @@ impl MirvExecution {
         let rel_y = y as f64 - self.base_y + RANGE;
         let cx = (rel_x / MINIMUM_SPREAD).floor() as i32;
         let cy = (rel_y / MINIMUM_SPREAD).floor() as i32;
-        if cx < 0 || cx >= GRID_WIDTH || cy < 0 || cy >= GRID_WIDTH {
+        if !(0..GRID_WIDTH).contains(&cx) || !(0..GRID_WIDTH).contains(&cy) {
             return None;
         }
         Some((cx, cy))
@@ -170,11 +170,11 @@ impl MirvExecution {
             return true;
         }
         for gy in (cy - 1)..=(cy + 1) {
-            if gy < 0 || gy >= GRID_WIDTH {
+            if !(0..GRID_WIDTH).contains(&gy) {
                 continue;
             }
             for gx in (cx - 1)..=(cx + 1) {
-                if gx < 0 || gx >= GRID_WIDTH {
+                if !(0..GRID_WIDTH).contains(&gx) {
                     continue;
                 }
                 let base = ((gy * GRID_WIDTH + gx) * 2) as usize;

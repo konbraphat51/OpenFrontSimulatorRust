@@ -760,9 +760,7 @@ fn find_largest_cluster_index(
         } else if cluster_sizes[i] == cluster_sizes[largest] {
             let cur = area(i);
             let best = area(largest);
-            if cur > best {
-                largest = i;
-            } else if cur == best && clusters[i].len() > clusters[largest].len() {
+            if cur > best || (cur == best && clusters[i].len() > clusters[largest].len()) {
                 largest = i;
             }
         }
