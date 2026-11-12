@@ -332,6 +332,89 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[],
     },
+    Edge {
+        class: "C023",
+        add: &[],
+        remove: &[
+            Change::ImpassableTerrain4340,
+            Change::NeighborOrderNswe4495,
+            Change::WarshipVeterancy4433,
+            Change::MirvWarheadsStandard4706,
+            Change::MirvSiloCooldown4707,
+            Change::NukeKeepSrcTile4756,
+            Change::SamTargetingFixes4770,
+            Change::NationSmallLakePorts4429,
+            Change::ReachableShoreTransport4577,
+            Change::TribeNameThemes4647,
+            Change::PirateReachablePort4458,
+            Change::WaterComponentMarkers4479,
+            Change::TradeShipPathReuse4654,
+        ],
+    },
+    Edge {
+        class: "C024",
+        add: &[],
+        remove: &[Change::SpawnTeleportGuard4657],
+    },
+    Edge {
+        class: "C025",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C026",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C027",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C028",
+        add: &[],
+        remove: &[Change::DoomsdayClock4469],
+    },
+    Edge {
+        class: "C029",
+        add: &[],
+        remove: &[
+            Change::ClusterOffsetFromId4426,
+            Change::RandomSpawnIgnoresTile4428,
+            Change::NearbySkipsFallout4422,
+        ],
+    },
+    Edge {
+        class: "C030",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C031",
+        add: &[],
+        remove: &[Change::RailroadMaxSizeDiagonal4406],
+    },
+    Edge {
+        class: "C032",
+        add: &[],
+        remove: &[Change::RailroadMaxSizeLimit4337],
+    },
+    Edge {
+        class: "C033",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C034",
+        add: &[],
+        remove: &[Change::UnitsConstructedOnce4320],
+    },
+    Edge {
+        class: "C035",
+        add: &[],
+        remove: &[Change::AiBoatTroopsUnified4297],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -630,7 +713,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C023"));
+        assert!(!is_ported("C036"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
@@ -667,5 +750,39 @@ mod tests {
         assert!(!rules("2d5baafdd0cc").has(Change::Overtime5062));
         assert!(!rules("e9e10703e818").has(Change::BulkPurchase4640));
         assert!(rules("20c813f06a40").has(Change::BulkPurchase4640));
+    }
+
+    #[test]
+    fn era_f_tail_classes_remove_their_changes() {
+        for n in 23..=35 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c022 = rules("7a7ca5be8ff8");
+        assert!(
+            c022.has(Change::ImpassableTerrain4340) && !c022.has(Change::DoomsdayRotLadder4893)
+        );
+        let c023 = rules("dd1277e245b5");
+        assert!(
+            !c023.has(Change::ImpassableTerrain4340) && !c023.has(Change::NeighborOrderNswe4495)
+        );
+        assert!(
+            !c023.has(Change::SamTargetingFixes4770) && !c023.has(Change::WarshipVeterancy4433)
+        );
+        assert!(c023.has(Change::SpawnTeleportGuard4657));
+        assert!(!rules("b716adb7e2f1").has(Change::SpawnTeleportGuard4657));
+        assert!(!rules("580460c9692a").has(Change::DoomsdayClock4469));
+        assert!(rules("53e1a5b03e35").has(Change::DoomsdayClock4469));
+        let c029 = rules("0c4c7d7993c9");
+        assert!(
+            !c029.has(Change::ClusterOffsetFromId4426) && !c029.has(Change::NearbySkipsFallout4422)
+        );
+        assert!(rules("d7b781f155dc").has(Change::RailroadMaxSizeLimit4337));
+        assert!(!rules("d7b781f155dc").has(Change::RailroadMaxSizeDiagonal4406));
+        assert!(!rules("bb2f2f01ee88").has(Change::RailroadMaxSizeLimit4337));
+        assert!(rules("661d96ba280f").has(Change::RailroadMaxSizeLimit4337));
+        assert!(!rules("305534cc6579").has(Change::UnitsConstructedOnce4320));
+        assert!(!rules("5be72db060fc").has(Change::AiBoatTroopsUnified4297));
+        assert!(!is_ported("C036"));
     }
 }

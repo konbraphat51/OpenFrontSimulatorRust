@@ -12,7 +12,24 @@ use std::path::Path;
 pub fn trace(record: &Path, maps: &Path, out: &Path, until: Option<u32>) -> Result<String> {
     let mut file = std::io::BufWriter::new(std::fs::File::create(out)?);
     let mut write_error: Option<std::io::Error> = None;
+    // Optional per-tick unit dumps (`OFSIM_TRACE_UNITS_AT=t1,t2`), in the shape of the reference `--full-at` units.
+    let unit_ticks: Vec<u32> = std::env::var("OFSIM_TRACE_UNITS_AT")
+        .map(|v| v.split(',').filter_map(|x| x.trim().parse().ok()).collect())
+        .unwrap_or_default();
+    let mut units_file = if unit_ticks.is_empty() {
+        None
+    } else {
+        Some(std::io::BufWriter::new(std::fs::File::create(format!(
+            "{}.full.ndjson",
+            out.display()
+        ))?))
+    };
     let outcome = replay(record, maps, until, &mut |runner, info| {
+        if let Some(f) = units_file.as_mut()
+            && unit_ticks.contains(&info.tick)
+        {
+            let _ = f.write_all(units_line(&runner.game, info.tick).as_bytes());
+        }
         let line = trace_line(&runner.game, info.tick, info.turn.hash);
         if let Err(e) = file.write_all(line.as_bytes()) {
             write_error = Some(e);
@@ -31,6 +48,30 @@ pub fn trace(record: &Path, maps: &Path, out: &Path, until: Option<u32>) -> Resu
         ),
         other => format!("{other:?} ({} ticks written)", outcome.ticks_run),
     })
+}
+
+fn units_line(game: &GameImpl, tick: u32) -> String {
+    let mut units: Vec<String> = Vec::new();
+    for id in game.all_players() {
+        for &u in game.player(id).units() {
+            let unit = game.unit_any(u);
+            units.push(format!(
+                "{{\"id\":{},\"type\":\"{:?}\",\"owner\":{},\"tile\":{},\"troops\":{},\"level\":{},\"active\":{},\"hash\":{}}}",
+                u,
+                unit.unit_type(),
+                unit.owner_id(),
+                unit.tile(),
+                js_number_to_string(unit.troops()),
+                unit.level(),
+                unit.is_active(),
+                js_number_to_string(unit.hash())
+            ));
+        }
+    }
+    format!(
+        "{{\"tick\":{tick},\"full\":{{\"units\":[{}]}}}}\n",
+        units.join(",")
+    )
 }
 
 /// One NDJSON trace line (with trailing newline) of the game state after tick `tick`.
