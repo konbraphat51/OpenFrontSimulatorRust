@@ -3,15 +3,135 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::NationBehaviorPorts::{Decision, DecisionLog, EmojiPort};
+use super::NationUtils::rand_territory_tile_array;
 use super::SharedRandom;
+use crate::Builds::Rules::Change;
+use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Util::calculate_territory_center;
-use crate::Game::Game::{Difficulty, Gold, PlayerType, SmallId, UnitType};
+use crate::Game::Game::{Difficulty, Gold, PlayerType, SmallId, UnitId, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 /// 30 seconds at 10 ticks/second.
 const MIRV_COOLDOWN_TICKS: f64 = 300.0;
+
+/// Share of a MIRV's warheads that must get past SAMs for it to be worth saving for or launching.
+fn min_mirv_leak_share(difficulty: Difficulty) -> f64 {
+    match difficulty {
+        Difficulty::Easy => 0.0, // Never checks
+        Difficulty::Medium => 0.1,
+        Difficulty::Hard => 0.2,
+        Difficulty::Impossible => 0.25,
+    }
+}
+
+/// `MirvExecution`'s warhead cap.
+const MIRV_MAX_WARHEADS: f64 = 350.0;
+/// Target land per warhead its spacing works out to.
+const LAND_TILES_PER_MIRV_WARHEAD: f64 = 2000.0;
+/// Hard and Impossible MIRV a bordering rival with at least this share of their land, ahead of a land attack.
+const RIVAL_MIN_TILE_RATIO: f64 = 0.5;
+/// Target tiles sampled to estimate SAM coverage.
+const MIRV_COVERAGE_SAMPLES: usize = 40;
+
+/// `mirvLeakShare(game, attacker, target)`: estimated share of a MIRV's warheads at `target` that SAMs would miss.
+pub fn mirv_leak_share(game: &GameImpl, attacker: SmallId, target: SmallId) -> f64 {
+    let warheads = f64::min(
+        MIRV_MAX_WARHEADS,
+        f64::max(
+            1.0,
+            game.player(target).num_tiles_owned() as f64 / LAND_TILES_PER_MIRV_WARHEAD,
+        ),
+    );
+    // Own seed, so the estimate is a pure function of the game state.
+    let mut random = PseudoRandom::new((game.ticks() as f64) * 1024.0 + target as f64);
+    let samples = rand_territory_tile_array(&mut random, game, target, MIRV_COVERAGE_SAMPLES);
+    if samples.is_empty() {
+        return 1.0;
+    }
+    let config = game.config();
+    let warheads_per_sample = warheads / samples.len() as f64;
+    let mut warheads_in_range: Vec<(UnitId, f64)> = Vec::new();
+    let mut covered_samples = 0.0;
+    for &tile in &samples {
+        let mut covered = false;
+        for (sam, dist_squared) in game.nearby_units(
+            tile,
+            config.max_sam_range(),
+            &[UnitType::SAMLauncher],
+            None,
+            false,
+        ) {
+            let unit = game.unit_any(sam);
+            let owner = unit.owner;
+            if owner == attacker || game.player(owner).is_friendly(attacker, false) {
+                continue;
+            }
+            let range = config.sam_range(unit.level as f64);
+            if dist_squared > range * range {
+                continue;
+            }
+            match warheads_in_range.iter_mut().find(|(s, _)| *s == sam) {
+                Some(entry) => entry.1 += warheads_per_sample,
+                None => warheads_in_range.push((sam, 0.0 + warheads_per_sample)),
+            }
+            covered = true;
+        }
+        if covered {
+            covered_samples += 1.0;
+        }
+    }
+
+    let mut shots = 0.0;
+    for (sam, in_range) in &warheads_in_range {
+        shots += f64::min(game.unit_any(*sam).level as f64, *in_range);
+    }
+    let intercepted = f64::min(covered_samples * warheads_per_sample, shots);
+    1.0 - intercepted / warheads
+}
+
+/// `mirvGetsThrough(game, attacker, target)`: enough warheads would get past the SAMs at `target`; Easy does not check.
+pub fn mirv_gets_through(game: &GameImpl, attacker: SmallId, target: SmallId) -> bool {
+    let min_leak_share = min_mirv_leak_share(game.config().game_config().difficulty);
+    min_leak_share == 0.0 || mirv_leak_share(game, attacker, target) >= min_leak_share
+}
+
+/// `isMirvWorthSavingFor(game, player)`: a MIRV would get through at the land or city leader.
+pub fn is_mirv_worth_saving_for(game: &GameImpl, player: SmallId) -> bool {
+    let mut land_leader: Option<SmallId> = None;
+    let mut city_leader: Option<SmallId> = None;
+    for p in valid_mirv_targets(game, player) {
+        if land_leader
+            .is_none_or(|l| game.player(p).num_tiles_owned() > game.player(l).num_tiles_owned())
+        {
+            land_leader = Some(p);
+        }
+        if city_leader.is_none_or(|c| {
+            game.player(p).unit_count(UnitType::City) > game.player(c).unit_count(UnitType::City)
+        }) {
+            city_leader = Some(p);
+        }
+    }
+    if let Some(l) = land_leader
+        && mirv_gets_through(game, player, l)
+    {
+        return true;
+    }
+    city_leader.is_some_and(|c| Some(c) != land_leader && mirv_gets_through(game, player, c))
+}
+
+fn valid_mirv_targets(game: &GameImpl, player: SmallId) -> Vec<SmallId> {
+    game.players()
+        .into_iter()
+        .filter(|&p| {
+            p != player
+                && p != 0
+                && game.player(p).player_type() != PlayerType::Bot
+                && !game.player(player).is_on_same_team(p)
+        })
+        .collect()
+}
 
 /// MIRV decisions of one nation.
 pub struct NationMIRVBehavior {
@@ -98,28 +218,68 @@ impl NationMIRVBehavior {
             return false;
         }
 
+        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
         if let Some(sender) = self.select_counter_mirv_target(game)
-            && !self.was_recently_mirved(game, sender)
+            && self.is_worth_mirving(game, sender, v2)
         {
             self.maybe_send_mirv(game, sender);
             return true;
         }
 
         if let Some(target) = self.select_victory_denial_target(game)
-            && !self.was_recently_mirved(game, target)
+            && self.is_worth_mirving(game, target, v2)
         {
             self.maybe_send_mirv(game, target);
             return true;
         }
 
         if let Some(target) = self.select_steamroll_stop_target(game)
-            && !self.was_recently_mirved(game, target)
+            && self.is_worth_mirving(game, target, v2)
+        {
+            self.maybe_send_mirv(game, target);
+            return true;
+        }
+
+        if v2
+            && let Some(target) = self.select_rival_target(game)
+            && self.is_worth_mirving(game, target, v2)
         {
             self.maybe_send_mirv(game, target);
             return true;
         }
 
         false
+    }
+
+    fn is_worth_mirving(&self, game: &GameImpl, target: SmallId, v2: bool) -> bool {
+        !self.was_recently_mirved(game, target)
+            && (!v2 || mirv_gets_through(game, self.player, target))
+    }
+
+    /// Hard and Impossible: the biggest bordering player about our size, wiped out by a MIRV and our attack when it lands.
+    fn select_rival_target(&self, game: &GameImpl) -> Option<SmallId> {
+        let difficulty = Self::difficulty(game);
+        if difficulty != Difficulty::Hard && difficulty != Difficulty::Impossible {
+            return None;
+        }
+        let min_tiles = game.player(self.player).num_tiles_owned() as f64 * RIVAL_MIN_TILE_RATIO;
+        let mut best: Option<SmallId> = None;
+        for p in self.valid_mirv_target_players(game) {
+            if game.player(self.player).is_friendly(p, false)
+                || (game.player(p).num_tiles_owned() as f64) < min_tiles
+            {
+                continue;
+            }
+            if best.is_some_and(|b| {
+                game.player(p).num_tiles_owned() <= game.player(b).num_tiles_owned()
+            }) {
+                continue;
+            }
+            if game.player(self.player).shares_border_with(p) {
+                best = Some(p);
+            }
+        }
+        best
     }
 
     fn select_counter_mirv_target(&self, game: &GameImpl) -> Option<SmallId> {

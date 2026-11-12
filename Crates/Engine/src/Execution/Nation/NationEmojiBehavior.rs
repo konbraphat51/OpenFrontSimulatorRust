@@ -2,6 +2,7 @@
 //! Port of src/core/execution/nation/NationEmojiBehavior.ts: nation emoji decisions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::FLATTENED_EMOJI_TABLE;
 use crate::Execution::EmojiExecution::EmojiExecution;
@@ -82,6 +83,17 @@ pub fn emoji_love() -> Vec<f64> {
 /// `EMOJI_CONFUSED` as emoji ids.
 pub fn emoji_confused() -> Vec<f64> {
     emoji_ids(&["\u{2753}", "\u{1f921}"])
+}
+
+/// `EMOJI_VICTORY` as emoji ids.
+pub fn emoji_victory() -> Vec<f64> {
+    emoji_ids(&[
+        "\u{1f451}",
+        "\u{1f947}",
+        "\u{1f60e}",
+        "\u{1f4aa}",
+        "\u{1f600}",
+    ])
 }
 
 /// `EMOJI_BRAG` as emoji ids.
@@ -254,10 +266,24 @@ impl NationEmojiBehavior {
             return;
         };
         self.game_over = true;
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            let won = match &winner {
+                Winner::Player(p) => *p == self.player,
+                Winner::Team(t) => game.player(self.player).team() == Some(t),
+            };
+            if won {
+                // Half of the winning nations celebrate.
+                if self.chance(2.0) {
+                    self.send_emoji(game, EmojiRecipient::All, &emoji_victory());
+                }
+                return;
+            }
+        }
         let is_team_game = game.config().game_config().game_mode == GameMode::Team;
         if is_team_game {
             // Do not congratulate our own team.
-            if let Winner::Team(t) = &winner
+            if !game.config().rules().has(Change::NationsLikeHumans5899)
+                && let Winner::Team(t) = &winner
                 && game.player(self.player).team() == Some(t)
             {
                 return;
@@ -314,6 +340,24 @@ impl NationEmojiBehavior {
     }
 
     fn annoy_traitors(&mut self, game: &mut GameImpl) {
+        if game.config().rules().has(Change::NationsLikeHumans5899) {
+            if !self.chance(3.0) {
+                return;
+            }
+            for traitor in game.players() {
+                if game.player(traitor).player_type() != PlayerType::Human
+                    || !game.player(traitor).is_traitor()
+                {
+                    continue;
+                }
+                // Only one nation mocks each traitor, otherwise every nation on the map piles on.
+                if self.traitor_mocker(game, traitor) != Some(self.player) {
+                    continue;
+                }
+                self.send_emoji(game, EmojiRecipient::Player(traitor), &emoji_clown());
+            }
+            return;
+        }
         if !self.chance(40.0) {
             return;
         }
@@ -332,6 +376,24 @@ impl NationEmojiBehavior {
         }
         let traitor = *self.random.borrow_mut().rand_element(&traitors);
         self.send_emoji(game, EmojiRecipient::Player(traitor), &emoji_clown());
+    }
+
+    /// The most hostile nation (usually the betrayed one), first in player order on ties.
+    fn traitor_mocker(&self, game: &GameImpl, traitor: SmallId) -> Option<SmallId> {
+        let mut mocker: Option<SmallId> = None;
+        for p in game.players() {
+            if game.player(p).player_type() != PlayerType::Nation
+                || game.player(p).is_friendly(traitor, false)
+            {
+                continue;
+            }
+            if mocker.is_none_or(|m| {
+                (game.player(p).relation(traitor) as u8) < (game.player(m).relation(traitor) as u8)
+            }) {
+                mocker = Some(p);
+            }
+        }
+        mocker
     }
 
     fn find_rat(&mut self, game: &mut GameImpl) {

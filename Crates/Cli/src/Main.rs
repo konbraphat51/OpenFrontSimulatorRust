@@ -220,6 +220,7 @@ fn resolve_maps(
 }
 
 fn main() -> ExitCode {
+    ofsim_engine::Core::PseudoRandom::init_rng_log();
     let cli = Cli::parse();
     ofsim_engine::Runner::Replay::silence_panics();
     match cli.command {

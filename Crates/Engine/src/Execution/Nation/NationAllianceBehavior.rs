@@ -2,12 +2,13 @@
 //! Port of src/core/execution/nation/NationAllianceBehavior.ts: nation alliance decisions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
 use crate::Execution::Nation::NationEmojiBehavior::{
     NationEmojiBehavior, emoji_confused, emoji_handshake, emoji_love, emoji_scared_of_threat,
 };
-use crate::Execution::Nation::NationUtils::find_juiciest_target;
+use crate::Execution::Nation::NationUtils::{find_juiciest_target, find_runaway_leader};
 use crate::Execution::Nation::{Shared, SharedRandom};
 use crate::Game::Game::{Difficulty, EmojiRecipient, GameMode, PlayerType, Relation, SmallId};
 use crate::Game::GameImpl::GameImpl;
@@ -140,6 +141,12 @@ impl NationAllianceBehavior {
             return false;
         }
         if self.has_too_many_alliances(game, other) {
+            return false;
+        }
+        // Do not help a runaway leader grow even further (Medium and up).
+        if game.config().rules().has(Change::NationsLikeHumans5899)
+            && find_runaway_leader(game) == Some(other)
+        {
             return false;
         }
         // Check whether the other player is a threat before looking at the relation.

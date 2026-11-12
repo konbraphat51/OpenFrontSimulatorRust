@@ -9,6 +9,50 @@ use std::hash::{BuildHasher, Hash};
 /// 36 ** 8, the exclusive bound of [`PseudoRandom::next_id`].
 const POW36_8: f64 = 2_821_109_907_456.0;
 
+/// Debug log of every draw (`OFSIM_RNG_LOG=<file>`, `OFSIM_RNG_STACK_AT=<n>`), for diffing against `Reference/RngLog.ts`.
+mod rng_log {
+    use std::io::Write;
+    use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+    use std::sync::{Mutex, OnceLock};
+
+    pub static ENABLED: AtomicBool = AtomicBool::new(false);
+    static COUNT: AtomicU64 = AtomicU64::new(0);
+    static SINK: OnceLock<Mutex<std::io::BufWriter<std::fs::File>>> = OnceLock::new();
+
+    /// Turns the log on when `OFSIM_RNG_LOG` is set.
+    pub fn init() {
+        if let Ok(path) = std::env::var("OFSIM_RNG_LOG")
+            && let Ok(file) = std::fs::File::create(path)
+        {
+            let _ = SINK.set(Mutex::new(std::io::BufWriter::new(file)));
+            ENABLED.store(true, Ordering::Relaxed);
+        }
+    }
+
+    /// Writes one draw: the stream's counter word before the draw and the raw 32-bit value.
+    pub fn log(s3: i32, t: u32) {
+        let n = COUNT.fetch_add(1, Ordering::Relaxed);
+        if let Some(sink) = SINK.get() {
+            let mut w = sink.lock().expect("log lock");
+            let _ = writeln!(w, "{} {}", s3, t);
+            if std::env::var("OFSIM_RNG_STACK_AT")
+                .ok()
+                .and_then(|v| v.parse::<u64>().ok())
+                == Some(n)
+            {
+                let _ = w.flush();
+                eprintln!("{}", std::backtrace::Backtrace::force_capture());
+                std::process::exit(3);
+            }
+        }
+    }
+}
+
+/// Starts the optional draw log (see `rng_log`).
+pub fn init_rng_log() {
+    rng_log::init();
+}
+
 /// Seeded sfc32 generator; every draw order must match upstream exactly.
 #[derive(Clone, Debug)]
 pub struct PseudoRandom {
@@ -45,6 +89,9 @@ impl PseudoRandom {
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> f64 {
         let t = self.s0.wrapping_add(self.s1).wrapping_add(self.s3);
+        if rng_log::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
+            rng_log::log(self.s3, t as u32);
+        }
         self.s3 = self.s3.wrapping_add(1);
         self.s0 = self.s1 ^ (((self.s1 as u32) >> 9) as i32);
         self.s1 = self.s2.wrapping_add(self.s2.wrapping_shl(3));
