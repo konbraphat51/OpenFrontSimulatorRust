@@ -65,6 +65,17 @@ fn map_entry(map: GameMapType, rules: &Rules) -> (Option<Vec<String>>, Option<Ve
     if name == "Channel Islands" && !rules.has(Change::ChannelIslandsTribes5564) {
         return (Some(vec!["north_america".to_string()]), None);
     }
+    if rules.has(Change::NewMapThemes5547) {
+        let theme = match name {
+            "Canary Islands" => Some("africa"),
+            "New Zealand" => Some("oceania"),
+            "Pulicat Lake" => Some("asia"),
+            _ => None,
+        };
+        if let Some(theme) = theme {
+            return (Some(vec![theme.to_string()]), None);
+        }
+    }
     match tables().maps.get(name) {
         Some(info) => (info.themes.clone(), info.custom_tribes.clone()),
         None => (None, None),

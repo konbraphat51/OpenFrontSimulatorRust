@@ -34,6 +34,8 @@ pub enum Change {
     AttackSpeedDivisor5425,
     /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
     ChannelIslandsTribes5564,
+    /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
+    NewMapThemes5547,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -130,6 +132,11 @@ const EDGES: &[Edge] = &[
         class: "C011",
         add: &[],
         remove: &[Change::TeamCountMinTwo5436, Change::AttackSpeedDivisor5425],
+    },
+    Edge {
+        class: "C012",
+        add: &[Change::NewMapThemes5547],
+        remove: &[],
     },
 ];
 
