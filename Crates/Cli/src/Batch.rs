@@ -17,6 +17,8 @@ pub struct BatchArgs<'a> {
     pub records: &'a str,
     /// Map resources directory.
     pub maps: &'a Path,
+    /// Upstream clone, read for builds whose map files differ from the baseline.
+    pub upstream: &'a Path,
     /// Output root; one subdirectory per record.
     pub out: &'a Path,
     /// Snapshot interval.
@@ -100,8 +102,10 @@ fn run_one(path: &Path, args: &BatchArgs) -> String {
     }
     let started = Instant::now();
     let work = catch_unwind(AssertUnwindSafe(|| -> Result<String> {
+        let record = GameRecord::load_decompressed(path)?;
+        let maps = ofsim_engine::Builds::Maps::maps_root_for(&record, args.maps, args.upstream)?;
         if args.verify_only {
-            let report = verify(path, args.maps, None)?;
+            let report = verify(path, &maps, None)?;
             let secs = started.elapsed().as_secs_f64();
             let status = match report.verdict {
                 Verdict::Ok => "ok",
@@ -120,8 +124,7 @@ fn run_one(path: &Path, args: &BatchArgs) -> String {
             }
             return Ok(line(&name, status, report.ticks_run, secs, &extra));
         }
-        let record = GameRecord::load_decompressed(path)?;
-        let result = dump(&record, args.maps, &out, args.every)?;
+        let result = dump(&record, &maps, &out, args.every)?;
         let secs = started.elapsed().as_secs_f64();
         let mut extra = format!(
             ",\"hashesChecked\":{},\"snapshots\":{}",

@@ -74,7 +74,14 @@ pub fn maps_root_for_commit(
     if root.join(&key).join("manifest.json").exists() {
         return Ok(root);
     }
-    std::fs::create_dir_all(&base)?;
+    // Extract into a private directory and rename it into place, so parallel replays never read a half-written map.
+    static NEXT: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    let staging = base.join(format!(
+        ".staging-{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed)
+    ));
+    std::fs::create_dir_all(&staging)?;
     let archive = git_output(
         upstream,
         &["archive", commit, &format!("resources/maps/{key}")],
@@ -83,7 +90,7 @@ pub fn maps_root_for_commit(
     let mut tar = Command::new("tar")
         .arg("-x")
         .arg("-C")
-        .arg(&base)
+        .arg(&staging)
         .stdin(std::process::Stdio::piped())
         .spawn()
         .context("spawning tar")?;
@@ -94,6 +101,17 @@ pub fn maps_root_for_commit(
     if !tar.wait()?.success() {
         bail!("tar failed extracting maps/{key} of {commit12}");
     }
+    std::fs::create_dir_all(&root)?;
+    let staged = staging.join("resources").join("maps").join(&key);
+    if std::fs::rename(&staged, root.join(&key)).is_err()
+        && !root.join(&key).join("manifest.json").exists()
+    {
+        bail!(
+            "could not move maps/{key} of {commit12} into {}",
+            root.display()
+        );
+    }
+    let _ = std::fs::remove_dir_all(&staging);
     Ok(root)
 }
 

@@ -188,6 +188,9 @@ enum Command {
         /// Directory of upstream map resources
         #[arg(long)]
         maps: PathBuf,
+        /// Upstream clone, read for the maps of builds whose map files differ from the baseline
+        #[arg(long, default_value = "Cache/OpenFrontIO")]
+        upstream: PathBuf,
         /// Output root (one subdirectory per record)
         #[arg(long)]
         out: PathBuf,
@@ -342,11 +345,14 @@ fn main() -> ExitCode {
         Command::Replay {
             record,
             maps,
+            upstream,
             out,
             every,
         } => {
-            let run = ofsim_record::Records::GameRecord::load_decompressed(&record)
-                .and_then(|r| Dump::dump(&r, &maps, &out, every));
+            let run = ofsim_record::Records::GameRecord::load_decompressed(&record).and_then(|r| {
+                let maps = ofsim_engine::Builds::Maps::maps_root_for(&r, &maps, &upstream)?;
+                Dump::dump(&r, &maps, &out, every)
+            });
             match run {
                 Ok(result) => {
                     eprintln!(
@@ -372,6 +378,7 @@ fn main() -> ExitCode {
         Command::Batch {
             records,
             maps,
+            upstream,
             out,
             every,
             jobs,
@@ -380,6 +387,7 @@ fn main() -> ExitCode {
         } => match Batch::batch(&Batch::BatchArgs {
             records: &records,
             maps: &maps,
+            upstream: &upstream,
             out: &out,
             every,
             jobs,
