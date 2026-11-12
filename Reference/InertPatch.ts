@@ -6,7 +6,7 @@
  * the record hashes; they only compare the two engines with each other.
  */
 import { AttackExecution } from "../src/core/execution/AttackExecution";
-import { DoomsdayClockExecution } from "../src/core/execution/DoomsdayClockExecution";
+import { createRequire } from "node:module";
 import { Executor } from "../src/core/execution/ExecutionManager";
 import { MirvExecution } from "../src/core/execution/MIRVExecution";
 import { NationExecution } from "../src/core/execution/NationExecution";
@@ -60,6 +60,16 @@ const INERT_BEHAVIOURS: Record<string, [{ prototype: object }, Record<string, un
 /** Executions created from inside ported ones that are made inert (comma list in `OFSIM_INERT_EXECS`: Nuke, Mirv, SAMLauncher, TradeShip, Warship). */
 const INERT_EXECS = new Set((process.env.OFSIM_INERT_EXECS ?? "").split(",").filter((t) => t));
 
+/** The Doomsday Clock execution, or undefined in builds that predate it. */
+function loadDoomsdayClockExecution(): (new (...args: never[]) => object) | undefined {
+  try {
+    const requireModule = createRequire(import.meta.url);
+    return requireModule("../src/core/execution/DoomsdayClockExecution").DoomsdayClockExecution;
+  } catch {
+    return undefined;
+  }
+}
+
 export function applyInertPatch(): void {
   for (const [name, cls] of Object.entries(INERT_EXECUTIONS)) {
     if (!INERT_CLASSES.has(name)) continue;
@@ -92,9 +102,10 @@ export function applyInertPatch(): void {
   const inert = [
     ["Nation", NationExecution],
     ["Tribe", TribeExecution],
-    ["DoomsdayClock", DoomsdayClockExecution],
+    ["DoomsdayClock", loadDoomsdayClockExecution()],
   ] as const;
   for (const [name, cls] of inert) {
+    if (cls === undefined) continue; // builds without the Doomsday Clock (v0.32.6 and older)
     if (PORTED_EXECS.has(name)) continue;
     (cls.prototype as { init: () => void }).init = () => {};
     (cls.prototype as { tick: () => void }).tick = () => {};
