@@ -14,19 +14,35 @@ pub struct DoomsdayClockProfile {
     pub speed: DoomsdayClockSpeed,
     /// True when a side is a team rather than one player.
     pub team_game: bool,
+    /// The 6-wave 55 percent ladder of builds before PR 4893 (otherwise 7 waves up to 35 percent).
+    pub six_waves: bool,
 }
 
 struct WaveSchedule {
     grace_seconds: f64,
-    ramp_seconds: [f64; 7],
-    pause_seconds: [f64; 7],
-    levels: [f64; 7],
+    ramp_seconds: Vec<f64>,
+    pause_seconds: Vec<f64>,
+    levels: Vec<f64>,
 }
 
 const LEVELS: [f64; 7] = [200.0, 400.0, 700.0, 1100.0, 1700.0, 2500.0, 3500.0];
 const LEVELS_TEAM: [f64; 7] = [300.0, 600.0, 1000.0, 1500.0, 2100.0, 2800.0, 3500.0];
 
 fn schedule(profile: &DoomsdayClockProfile) -> WaveSchedule {
+    if profile.six_waves {
+        let (ramp, last_ramp, pause): (f64, f64, f64) = match profile.speed {
+            DoomsdayClockSpeed::Normal => (208.0, 210.0, 50.0),
+            DoomsdayClockSpeed::Slow => (292.0, 290.0, 70.0),
+            DoomsdayClockSpeed::Fast => (125.0, 125.0, 30.0),
+            DoomsdayClockSpeed::VeryFast => (40.0, 40.0, 12.0),
+        };
+        return WaveSchedule {
+            grace_seconds: 600.0,
+            ramp_seconds: vec![ramp, ramp, ramp, ramp, ramp, last_ramp],
+            pause_seconds: vec![pause, pause, pause, pause, pause, 0.0],
+            levels: vec![400.0, 900.0, 1600.0, 2600.0, 4000.0, 5500.0],
+        };
+    }
     let (ramp, pause) = match profile.speed {
         DoomsdayClockSpeed::Normal => (168.0, 54.0),
         DoomsdayClockSpeed::Slow => (240.0, 70.0),
@@ -35,12 +51,12 @@ fn schedule(profile: &DoomsdayClockProfile) -> WaveSchedule {
     };
     WaveSchedule {
         grace_seconds: 600.0,
-        ramp_seconds: [ramp; 7],
-        pause_seconds: [pause, pause, pause, pause, pause, pause, 0.0],
+        ramp_seconds: vec![ramp; 7],
+        pause_seconds: vec![pause, pause, pause, pause, pause, pause, 0.0],
         levels: if profile.team_game {
-            LEVELS_TEAM
+            LEVELS_TEAM.to_vec()
         } else {
-            LEVELS
+            LEVELS.to_vec()
         },
     }
 }
@@ -200,6 +216,7 @@ mod tests {
         DoomsdayClockProfile {
             speed,
             team_game: team,
+            six_waves: false,
         }
     }
 

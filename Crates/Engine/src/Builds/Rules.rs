@@ -322,7 +322,10 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C021",
         add: &[],
-        remove: &[],
+        remove: &[
+            Change::DoomsdayRotLadder4893,
+            Change::DoomsdayIdleOnWinner4953,
+        ],
     },
     Edge {
         class: "C022",
