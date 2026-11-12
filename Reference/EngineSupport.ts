@@ -17,6 +17,9 @@ import { createGameRunner } from "../src/core/GameRunner";
 import { GameRecord, GameStartInfo } from "../src/core/Schemas";
 import * as UtilModule from "../src/core/Util";
 
+// Builds before v0.35.0 that load their config through `getGameLogicConfig` need a bundled game env.
+process.env.GAME_ENV ??= "prod";
+
 const { decompressGameRecord } = UtilModule;
 // Builds before v0.33.13 have no toWireGameStartInfo: their record info is used as is.
 const toWireGameStartInfo: (info: GameStartInfo) => GameStartInfo =
