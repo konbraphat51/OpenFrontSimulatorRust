@@ -2,5 +2,9 @@
 //! Pathfinding: priority queues, grid searches, the water hierarchy, path transformers and steppers.
 
 pub mod Algorithms;
+pub mod Line;
+pub mod PathFinderAir;
+pub mod PathFinderParabola;
+pub mod PathFinderStepper;
 pub mod Transformers;
 pub mod Types;
