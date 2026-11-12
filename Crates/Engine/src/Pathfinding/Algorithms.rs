@@ -2,8 +2,11 @@
 //! Search algorithms: queues, grid BFS, A* variants, the water hierarchy and connected components.
 
 pub mod AStar;
+pub mod AStarAbstractGraph;
 pub mod AStarWater;
 pub mod AStarWaterBounded;
+pub mod AStarWaterHierarchical;
+pub mod AbstractGraph;
 pub mod Bfs;
 pub mod BfsGrid;
 pub mod ConnectedComponents;
