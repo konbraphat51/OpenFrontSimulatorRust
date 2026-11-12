@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Prepares an upstream worktree for the reference tracer. Idempotent.
 # Usage: Reference/Setup.sh <commit> [repo-root]   (repo-root defaults to the simulator checkout root)
-# node_modules (about 400 MB) is symlinked from another worktree with an identical package-lock.json, or from
-# the worktree named by OFSIM_SHARE_NODE_MODULES=<commit12> (the tracer only needs the engine's few dependencies);
-# otherwise `npm ci` runs.
+# node_modules (about 400 MB) is symlinked from the pool Cache/NodeModules/<package-lock hash>/ (filled by `npm ci`
+# once per lock file), or from the worktree named by OFSIM_SHARE_NODE_MODULES=<commit12> when the pool lacks it.
+# Remove a worktree with `git -C Cache/OpenFrontIO worktree remove --force Cache/Worktrees/<commit12>`; the pool stays.
 set -euo pipefail
 commit="${1:?usage: Setup.sh <commit> [repo-root]}"
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,33 +13,30 @@ clone="$root/Cache/OpenFrontIO"
 full="$(git -C "$clone" rev-parse "$commit^{commit}" 2>/dev/null || { git -C "$clone" fetch --all --tags --quiet; git -C "$clone" rev-parse "$commit^{commit}"; })"
 tree="$root/Cache/Worktrees/${full:0:12}"
 [ -d "$tree" ] || git -C "$clone" worktree add --detach "$tree" "$full"
+# Drop a link left dangling by a removed donor worktree.
+[ -L "$tree/node_modules" ] && [ ! -e "$tree/node_modules" ] && rm "$tree/node_modules"
 if [ ! -e "$tree/node_modules" ]; then
-  donor=""
-  if [ -n "${OFSIM_SHARE_NODE_MODULES:-}" ]; then
-    donor="$root/Cache/Worktrees/$OFSIM_SHARE_NODE_MODULES"
-  else
-    for other in "$root"/Cache/Worktrees/*/; do
-      other="${other%/}"
-      if [ "$other" != "$tree" ] && [ -d "$other/node_modules" ] && [ ! -L "$other/node_modules" ] && cmp -s "$other/package-lock.json" "$tree/package-lock.json"; then
-        donor="$other"
-        break
-      fi
-    done
+  # Shared pool keyed by package-lock.json, so removing any worktree never breaks another one.
+  lockhash="$(sha256sum "$tree/package-lock.json" | cut -c1-16)"
+  pool="$root/Cache/NodeModules/$lockhash/node_modules"
+  if [ -n "${OFSIM_SHARE_NODE_MODULES:-}" ] && [ ! -d "$pool" ]; then
+    pool="$root/Cache/Worktrees/$OFSIM_SHARE_NODE_MODULES/node_modules"
   fi
-  if [ -n "$donor" ] && [ -d "$donor/node_modules" ]; then
-    if [ -d "$tree/packages" ]; then
-      # Workspace build: share the packages but link @openfront/* to this worktree's own sources.
-      mkdir "$tree/node_modules"
-      for entry in "$donor"/node_modules/* "$donor"/node_modules/.bin; do
-        [ "$(basename "$entry")" = "@openfront" ] || ln -s "$entry" "$tree/node_modules/$(basename "$entry")"
-      done
-      mkdir "$tree/node_modules/@openfront"
-      for pkg in "$tree"/packages/*/; do ln -s "../../packages/$(basename "$pkg")" "$tree/node_modules/@openfront/$(basename "$pkg")"; done
-    else
-      ln -s "$(cd "$donor" && pwd)/node_modules" "$tree/node_modules"
-    fi
-  else
+  if [ ! -d "$pool" ]; then
     (cd "$tree" && npm ci --ignore-scripts --engine-strict=false)
+    mkdir -p "$(dirname "$pool")"
+    mv "$tree/node_modules" "$pool"
+  fi
+  if [ -d "$tree/packages" ]; then
+    # Workspace build: share the packages but link @openfront/* to this worktree's own sources.
+    mkdir "$tree/node_modules"
+    for entry in "$pool"/* "$pool"/.bin; do
+      [ "$(basename "$entry")" = "@openfront" ] || ln -s "$entry" "$tree/node_modules/$(basename "$entry")"
+    done
+    mkdir "$tree/node_modules/@openfront"
+    for pkg in "$tree"/packages/*/; do ln -s "../../packages/$(basename "$pkg")" "$tree/node_modules/@openfront/$(basename "$pkg")"; done
+  else
+    ln -s "$pool" "$tree/node_modules"
   fi
 fi
 mkdir -p "$tree/ofsim-reference"
