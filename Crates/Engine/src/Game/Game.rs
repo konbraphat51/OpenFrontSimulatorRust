@@ -662,6 +662,29 @@ string_enum! {
         YangtzeRiver = "Yangtze River",
         YellowSea = "Yellow Sea",
         Yenisei = "Yenisei",
+        BabelMandebStrait = "Bab el-Mandeb Strait",
+        Benelux = "Benelux",
+        Brahmaputra = "Brahmaputra",
+        BrainRot = "Brain Rot",
+        Canada = "Canada",
+        CanaryIslands = "Canary Islands",
+        CapeOfGoodHope = "Cape Of Good Hope",
+        HornOfAfrica = "Horn Of Africa",
+        London = "London",
+        Madagascar = "Madagascar",
+        Mexico = "Mexico",
+        NewZealand = "New Zealand",
+        Ommatrypta = "Ommatrypta",
+        OttomanEmpire = "Ottoman Empire",
+        Paris = "Paris",
+        PulicatLake = "Pulicat Lake",
+        RioDeJaneiro = "Rio de Janeiro",
+        Turkiye = "Turkiye",
+        Tutorial = "Tutorial",
+        VancouverIsland = "Vancouver Island",
+        World10000 = "World 10000",
+        World4000 = "World 4000",
+        Zealandia = "Zealandia",
     }
 }
 
@@ -677,7 +700,7 @@ mod tests {
         assert_eq!(UnitType::AtomBomb.as_str(), "Atom Bomb");
         assert_eq!(GameMode::FFA.as_str(), "Free For All");
         assert_eq!(GameMapType::AmazonRiver.as_str(), "Amazon River");
-        assert_eq!(GameMapType::ALL.len(), 123);
+        assert_eq!(GameMapType::ALL.len(), 146);
         assert_eq!(GameMapType::from_str("nope"), None);
         assert_eq!(PlayerType::from_str("NATION"), Some(PlayerType::Nation));
     }
