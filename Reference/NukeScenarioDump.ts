@@ -3,8 +3,8 @@
  * Differential scenario for nukes, SAMs and the Doomsday Clock: warms a record up, gives players
  * structures and gold through the player API, then launches seeded atom bombs, hydrogen bombs and
  * MIRVs by adding the executions directly. `ofsim nuke-scenario` runs the identical program on the
- * Rust engine. Writes the usual NDJSON trace plus `<out>.digest` (per-tick fallout, land and a hash
- * of the packed tile state) so fallout and water conversion are compared too.
+ * Rust engine. Writes the usual NDJSON trace (every `OFSIM_TRACE_EVERY` ticks) plus `<out>.digest` (per tick: fallout, land,
+ * a hash of the packed tile state and the game hash) so fallout and water conversion are compared too.
  *
  * Usage: tsx ofsim-reference/NukeScenarioDump.ts <record> <out.ndjson> <warm> <rounds> <spacing> <tail> [doomsdaySpeed|none] [attackers] [grow] [samMod]
  * Run with OFSIM_PORTED_EXECS=DoomsdayClock (and --inert behaviour via InertPatch) like the other scenarios.
@@ -39,18 +39,24 @@ const game = runner.game;
 const out = fs.openSync(outPath, "w");
 const digest = fs.openSync(`${outPath}.digest`, "w");
 
+const traceEvery = Number(process.env.OFSIM_TRACE_EVERY ?? 1);
+
 function line(tick: number): void {
+  const hash = (game as unknown as { hash(): number }).hash();
+  if (tick % traceEvery === 0) writeTrace(tick, hash);
+  const state = game.map().tileStateBuffer();
+  let h = 2166136261;
+  for (let i = 0; i < state.length; i++) h = Math.imul(h ^ state[i], 16777619) >>> 0;
+  fs.writeSync(digest, `${tick},${game.numTilesWithFallout()},${game.numLandTiles()},${h},${hash}\n`);
+}
+
+function writeTrace(tick: number, hash: number): void {
   const players = game.allPlayers().map((p) => {
     let unitHashSum = 0;
     for (const u of p.units()) unitHashSum += u.hash();
     return [p.smallID(), p.troops(), p.numTilesOwned(), p.gold().toString(), unitHashSum, p.isAlive(), p.units().length];
   });
-  const hash = (game as unknown as { hash(): number }).hash();
   fs.writeSync(out, JSON.stringify({ tick, hash, recordHash: null, players }) + "\n");
-  const state = game.map().tileStateBuffer();
-  let h = 2166136261;
-  for (let i = 0; i < state.length; i++) h = Math.imul(h ^ state[i], 16777619) >>> 0;
-  fs.writeSync(digest, `${tick},${game.numTilesWithFallout()},${game.numLandTiles()},${h}\n`);
 }
 
 let nextTurn = 0;
@@ -98,6 +104,7 @@ alive.forEach((p, index) => {
   if (samMod > 0 && index % samMod === 0) {
     const sam = p.buildUnit(UnitType.SAMLauncher, pick(), {});
     game.addExecution(new SAMLauncherExecution(p, null, sam));
+    if (index % (2 * samMod) === 0) p.upgradeUnit(sam);
   }
   p.buildUnit(UnitType.City, pick(), {});
   p.buildUnit(UnitType.DefensePost, pick(), {});
@@ -108,6 +115,7 @@ alive.forEach((p, index) => {
 tick();
 
 for (let r = 0; r < rounds; r++) {
+  if (r === 10) for (const p of alive) for (const sam of p.units(UnitType.SAMLauncher)) p.upgradeUnit(sam);
   const ai = next();
   const ti = next();
   const ki = next();

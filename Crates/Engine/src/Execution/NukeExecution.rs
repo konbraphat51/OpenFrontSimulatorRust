@@ -32,14 +32,14 @@ pub struct NukeExecution {
 }
 
 impl NukeExecution {
-    /// `new NukeExecution(nukeType, player, dst, src, speed = -1, waitTicks = 0, rocketDirectionUp = true)`.
+    /// `new NukeExecution(nukeType, player, dst, src, speed = -1, waitTicks = 0, rocketDirectionUp = true)`; pass -1 and 0 for the defaults.
     pub fn new(
         nuke_type: UnitType,
         player: SmallId,
         dst: TileRef,
         src: Option<TileRef>,
-        speed: Option<f64>,
-        wait_ticks: Option<f64>,
+        speed: f64,
+        wait_ticks: f64,
         rocket_direction_up: Option<bool>,
     ) -> Self {
         Self {
@@ -48,8 +48,8 @@ impl NukeExecution {
             player,
             dst,
             src,
-            speed: speed.unwrap_or(-1.0),
-            wait_ticks: wait_ticks.unwrap_or(0.0),
+            speed,
+            wait_ticks,
             rocket_direction_up: rocket_direction_up.unwrap_or(true),
             nuke: None,
             path_finder: ParabolaUniversalPathFinder::default(),

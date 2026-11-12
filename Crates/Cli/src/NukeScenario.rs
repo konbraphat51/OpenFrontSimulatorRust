@@ -5,6 +5,7 @@
 use crate::Trace::trace_line;
 use anyhow::Result;
 use ofsim_engine::Builds::Rules::Rules;
+use ofsim_engine::Compat::JsNumber::js_number_to_string;
 use ofsim_engine::Execution::MIRVExecution::MirvExecution;
 use ofsim_engine::Execution::NukeExecution::NukeExecution;
 use ofsim_engine::Execution::SAMLauncherExecution::SAMLauncherExecution;
@@ -74,6 +75,10 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
         trace: std::io::BufWriter::new(std::fs::File::create(a.out)?),
         digest: std::io::BufWriter::new(std::fs::File::create(digest_path)?),
     };
+    let trace_every: u32 = std::env::var("OFSIM_TRACE_EVERY")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(1);
     let mut next_turn = 0u32;
     let mut run_tick = |runner: &mut GameRunner, w: &mut Writers| -> Result<()> {
         let tick = runner.game.ticks();
@@ -89,8 +94,10 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
         next_turn += 1;
         runner.add_turn(turn);
         runner.execute_next_tick();
-        w.trace
-            .write_all(trace_line(&runner.game, tick, None).as_bytes())?;
+        if tick.is_multiple_of(trace_every) {
+            w.trace
+                .write_all(trace_line(&runner.game, tick, None).as_bytes())?;
+        }
         let state = runner.game.map.tile_state_buffer();
         let mut h: u32 = 2166136261;
         for &s in state {
@@ -98,11 +105,12 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
         }
         writeln!(
             w.digest,
-            "{},{},{},{}",
+            "{},{},{},{},{}",
             tick,
             runner.game.map.num_tiles_with_fallout(),
             runner.game.map.num_land_tiles(),
-            h
+            h,
+            js_number_to_string(runner.game.hash())
         )?;
         Ok(())
     };
@@ -160,6 +168,9 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
                 game.player_mut(p)
                     .build_unit(UnitType::SAMLauncher, pick(), UnitParams::default());
             game.add_execution(Box::new(SAMLauncherExecution::new(p, None, Some(sam))));
+            if index % (2 * a.sam_mod) == 0 {
+                game.player_mut(p).upgrade_unit(sam);
+            }
         }
         game.player_mut(p)
             .build_unit(UnitType::City, pick(), UnitParams::default());
@@ -174,7 +185,14 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
     }
     run_tick(&mut runner, &mut w)?;
 
-    for _ in 0..a.rounds {
+    for round in 0..a.rounds {
+        if round == 10 {
+            for &p in &alive {
+                for sam in runner.game.player(p).units_of(UnitType::SAMLauncher) {
+                    runner.game.player_mut(p).upgrade_unit(sam);
+                }
+            }
+        }
         let ai = rng.next() as usize;
         let ti = rng.next() as usize;
         let ki = rng.next() as usize;
@@ -193,8 +211,8 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
                     attacker,
                     tile,
                     None,
-                    None,
-                    None,
+                    -1.0,
+                    0.0,
                     None,
                 )));
             } else if k < 5 {
@@ -203,8 +221,8 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
                     attacker,
                     tile,
                     None,
-                    None,
-                    None,
+                    -1.0,
+                    0.0,
                     None,
                 )));
             } else {

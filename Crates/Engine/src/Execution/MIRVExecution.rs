@@ -136,8 +136,8 @@ impl MirvExecution {
                 self.player,
                 dst,
                 Some(self.separate_dst),
-                Some(warhead_speed + speed_offset),
-                Some(wait_base + self.random.next_int(0.0, 15.0)),
+                warhead_speed + speed_offset,
+                wait_base + self.random.next_int(0.0, 15.0),
                 None,
             )));
             self.warhead_executions.push(execution.clone());
