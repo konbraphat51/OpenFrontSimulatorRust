@@ -5,7 +5,7 @@
 use super::PlayerExecution::PlayerExecution;
 use super::TribeExecution::TribeExecution;
 use super::Util::get_spawn_tiles;
-use crate::Builds::Rules::Change;
+use crate::Builds::Rules::{Change, Rules};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -40,10 +40,11 @@ impl SpawnExecution {
         player_info: PlayerInfo,
         tile: Option<TileRef>,
         from_intent: bool,
+        rules: &Rules,
     ) -> Self {
         let seed = simple_hash(&player_info.id) as f64 + simple_hash(game_id) as f64;
         Self {
-            random: PseudoRandom::new(seed),
+            random: PseudoRandom::for_rules(rules, seed),
             active: true,
             queued_during_spawn_phase: false,
             player_info,
@@ -118,6 +119,10 @@ impl Execution for SpawnExecution {
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.active = false;
 
+        if !game.config().rules().has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
+            return;
+        }
+
         if let Some(t) = self.tile
             && !game.is_valid_ref(t)
         {
@@ -177,7 +182,11 @@ impl Execution for SpawnExecution {
             game.add_execution(Box::new(PlayerExecution::new(player)));
             if game.player(player).player_type() == PlayerType::Bot {
                 let tribe_id = game.player(player).id().to_string();
-                game.add_execution(Box::new(TribeExecution::new(player, &tribe_id)));
+                game.add_execution(Box::new(TribeExecution::new(
+                    player,
+                    &tribe_id,
+                    game.config().rules(),
+                )));
             }
         }
 

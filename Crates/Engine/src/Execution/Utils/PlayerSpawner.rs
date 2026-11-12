@@ -19,6 +19,7 @@ pub fn spawn_players(game: &GameImpl, game_id: &str) -> Vec<SpawnExecution> {
             player.info().clone(),
             None,
             false,
+            game.config().rules(),
         ));
     }
     players

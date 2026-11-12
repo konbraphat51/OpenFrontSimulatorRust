@@ -6,6 +6,7 @@
 //! calls upstream makes to record motion plans are reduced to the freshness check they trigger
 //! (`WaterPathFinder::touch`), because that check advances the rebuild stagger countdown.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{PlayerType, SmallId, Tick, UnitId, UnitParams, UnitType};
@@ -104,7 +105,7 @@ impl Execution for TransportShipExecution {
             }
         }
 
-        if self.target == self.attacker {
+        if self.target == self.attacker && game.config().rules().has(Change::SelfActionGuards4014) {
             self.active = false;
             return;
         }

@@ -58,7 +58,10 @@ impl DonateGoldExecution {
 
 impl Execution for DonateGoldExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        self.random = Some(PseudoRandom::new(game.ticks() as f64));
+        self.random = Some(PseudoRandom::for_rules(
+            game.config().rules(),
+            game.ticks() as f64,
+        ));
         if !game.has_player(&self.recipient_id) {
             self.active = false;
             return;

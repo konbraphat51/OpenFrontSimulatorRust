@@ -86,6 +86,7 @@ impl Executor {
                 game.player(player).info().clone(),
                 Some(*tile),
                 true,
+                game.config().rules(),
             )),
             Intent::Boat { troops, dst } => {
                 Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
@@ -173,7 +174,13 @@ impl Executor {
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
         game.nations()
             .iter()
-            .map(|n| Box::new(NationExecution::new(&self.game_id, n.clone())) as Box<dyn Execution>)
+            .map(|n| {
+                Box::new(NationExecution::new(
+                    &self.game_id,
+                    n.clone(),
+                    game.config().rules(),
+                )) as Box<dyn Execution>
+            })
             .collect()
     }
 }

@@ -848,7 +848,7 @@ impl WarshipExecution {
 impl Execution for WarshipExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.pathfinder = Some(WaterPathFinder::new(&game.water_manager, 0));
-        self.random = PseudoRandom::new(game.ticks() as f64);
+        self.random = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         match self.input {
             Input::Unit(unit) => self.warship = Some(unit),
             Input::Params { owner, patrol_tile } => {

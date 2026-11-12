@@ -26,7 +26,7 @@ Rust のモジュールは、すべての Rust ファイルがヘッダコメン
 Crates/Engine/src/
   Lib.rs
   Compat/        JS のセマンティクス: 数値ヘルパー、挿入順の set と map、安定ソート
-  Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)
+  Core/          PseudoRandom (sfc32 または seedrandom ARC4), DetMath, Util (simpleHash, toInt, ...)
   Configuration/ Config (そのビルドの DefaultConfig の値)、ユニット情報
   Game/          GameMap, TileSet, Game (共有の型と enum), GameImpl, PlayerImpl, UnitImpl,
                  AttackImpl, AllianceImpl, AllianceRequestImpl, UnitGrid, RailNetwork, TeamAssignment,
@@ -89,7 +89,7 @@ pub trait Execution {
 2. **超越関数。** `DetMath` を持つビルドは移植した `Core::DetMath` をビット単位で使う。それ以前のビルドは V8 の `Math.exp/log/pow/atan2/sin/cos` を呼ぶ。これらは V8 の fdlibm (`src/base/ieee754.cc`) から `Compat::V8Math` に移植し、Rust の `f64` メソッドは決して使わない (`sqrt` はどちらでも正確なので Rust のものを使ってよい)。
 3. **反復順序。** JS の `Map` と `Set` は挿入順に反復し、削除して再追加すると末尾に移り、反復中に追加された要素も訪問される。順序が状態に影響しうる箇所では `Compat` の順序付きコレクション (または移植した `TileSet`) を使い、`HashMap`/`HashSet` の反復は使わない。純粋な検索用途なら `HashMap` でよい。
 4. **ソート。** `Array.prototype.sort` は安定である。同じ比較関数で安定ソートを使う。比較関数が不整合になりうる場合 (NaN、何にも決められない同順位) は、同等だと仮定せず V8 の TimSort を移植する (`Compat::JsSort`)。
-5. **乱数。** `PseudoRandom` のインスタンスはすべてアップストリームとまったく同じようにシード (ゲーム、executor、プレイヤー、部族スポーナー、execution ごとに `mg.ticks()` を使うなど) し、同じ順序で引く。引き漏れや余分な引きは、それ以降のすべてを非同期にする。
+5. **乱数。** `PseudoRandom` のインスタンスはすべてアップストリームとまったく同じようにシード (ゲーム、executor、プレイヤー、部族スポーナー、execution ごとに `mg.ticks()` を使うなど) し、同じ順序で引く。引き漏れや余分な引きは、それ以降のすべてを非同期にする。PR 4233 より前のビルド (era S、C036 以前) は npm `seedrandom` (ARC4、`Core/Arc4.rs`) を `String(seed)` でシードして使う。生成器は必ず `PseudoRandom::for_rules(rules, seed)` で作り、`Change::Sfc32PseudoRandom4233` が sfc32 と ARC4 を切り替える。
 6. **文字列。** プレイヤー id、`simpleHash` の入力、`nextID()` の出力はバイト単位で同一でなければならない (`toString(36)`、`padStart`)。`simpleHash` は UTF-16 コードユニットを反復する。
 7. **クライアント専用コードは移植しない。** 描画、クライアントへ送る統計、状態に届かない絵文字やチャットは、シミュレーションのロジックが読む場合を除き移植しない (飛ばす前に確認すること。たとえばネーション AI は絵文字と関係値を読む)。
 8. **エラー。** アップストリームが tick 内で throw する箇所では、ランナーがその tick のエラーを報告する。取り繕ってはならない。

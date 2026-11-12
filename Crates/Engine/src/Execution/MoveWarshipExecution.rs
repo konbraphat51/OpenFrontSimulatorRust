@@ -2,6 +2,7 @@
 //! Port of src/core/execution/MoveWarshipExecution.ts: sets a new patrol tile for the selected warships.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitType};
 use crate::Game::GameImpl::GameImpl;
@@ -49,12 +50,17 @@ impl Execution for MoveWarshipExecution {
             if !unit.is_active() {
                 continue;
             }
-            // A null component never matches (upstream passes it through `!`)
+            // A null component never matches (upstream passes it through `!`); older builds skip the check
             let same_component = component.is_some_and(|c| {
                 game.water_manager
                     .has_water_component(&game.map, unit.tile(), c)
             });
-            if !same_component {
+            if !same_component
+                && game
+                    .config()
+                    .rules()
+                    .has(Change::WarshipPatrolComponent4151)
+            {
                 continue;
             }
             let mut unit = game.unit_mut(warship);

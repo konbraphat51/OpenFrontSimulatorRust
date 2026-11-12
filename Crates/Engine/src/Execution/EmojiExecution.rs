@@ -50,7 +50,10 @@ impl EmojiExecution {
 
 impl Execution for EmojiExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        self.random = Some(PseudoRandom::new(game.ticks() as f64));
+        self.random = Some(PseudoRandom::for_rules(
+            game.config().rules(),
+            game.ticks() as f64,
+        ));
         if self.recipient_id != ALL_PLAYERS && !game.has_player(&self.recipient_id) {
             self.active = false;
             return;

@@ -105,7 +105,10 @@ impl Execution for TrainStationExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.initialised = true;
         if self.spawn_trains {
-            self.random = Some(PseudoRandom::new(game.ticks() as f64));
+            self.random = Some(PseudoRandom::for_rules(
+                game.config().rules(),
+                game.ticks() as f64,
+            ));
         }
     }
 

@@ -140,7 +140,10 @@ impl PortExecution {
 
 impl Execution for PortExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        self.random = Some(PseudoRandom::new(game.ticks() as f64));
+        self.random = Some(PseudoRandom::for_rules(
+            game.config().rules(),
+            game.ticks() as f64,
+        ));
         self.check_offset = game.ticks() % 10;
     }
 

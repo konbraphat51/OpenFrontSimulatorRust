@@ -10,6 +10,7 @@ use super::Game::{
     COLORED_TEAMS, DUOS, HUMANS_VS_NATIONS, PlayerInfo, PlayerType, QUADS, TRIOS, Team,
     TeamCountConfig,
 };
+use crate::Builds::Rules::Rules;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use std::collections::{HashMap, HashSet};
@@ -31,6 +32,7 @@ pub fn assign_teams(
     is_duos_trios_quads: bool,
     max_team_size: Option<usize>,
     friend_groups: bool,
+    rules: &Rules,
 ) -> Vec<(usize, Option<Team>)> {
     let max_team_size =
         max_team_size.unwrap_or_else(|| get_max_team_size(players.len(), teams.len()));
@@ -199,7 +201,8 @@ pub fn assign_teams(
         .filter(|&i| players[i].player_type == PlayerType::Nation)
         .collect();
     if !nation_players.is_empty() {
-        let mut random = PseudoRandom::new(simple_hash(&players[nation_players[0]].id) as f64);
+        let mut random =
+            PseudoRandom::for_rules(rules, simple_hash(&players[nation_players[0]].id) as f64);
         nation_players = random.shuffle_array(&nation_players);
     }
     let other_players: Vec<usize> = non_clan_players
@@ -389,7 +392,7 @@ mod tests {
             info("d", None),
         ];
         let teams = resolve_teams_list(TeamCountConfig::Count(2), 4, true);
-        let result = assign_teams(&players, &teams, false, Some(2), false);
+        let result = assign_teams(&players, &teams, false, Some(2), false, &Rules::baseline());
         let clan: Vec<_> = result.iter().take(3).collect();
         assert_eq!(clan[0].1, clan[1].1);
         assert_eq!(clan[2].1, None);

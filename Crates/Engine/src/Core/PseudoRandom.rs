@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/PseudoRandom.ts: the sfc32 generator seeded through splitmix32.
+//! Port of src/core/PseudoRandom.ts: the sfc32 generator seeded through splitmix32, or the older seedrandom (ARC4) generator.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::{Change, Rules};
 use crate::Compat::JsNumber::{pad_start, to_int32, to_string_radix36};
 use crate::Compat::OrderedSet::OrderedSet;
+use crate::Core::Arc4::Arc4;
 use std::hash::{BuildHasher, Hash};
 
 /// 36 ** 8, the exclusive bound of [`PseudoRandom::next_id`].
@@ -60,10 +62,32 @@ pub struct PseudoRandom {
     s1: i32,
     s2: i32,
     s3: i32,
+    /// Era S backend (`seedrandom(String(seed))`); the sfc32 words are unused when set.
+    arc4: Option<Box<Arc4>>,
 }
 
 impl PseudoRandom {
-    /// Creates a generator; the seed is truncated to 32 bits with JS `| 0`.
+    /// Creates the generator the build's rules select (sfc32, or seedrandom before PR 4233).
+    pub fn for_rules(rules: &Rules, seed: f64) -> Self {
+        if rules.has(Change::Sfc32PseudoRandom4233) {
+            Self::new(seed)
+        } else {
+            Self::new_seedrandom(seed)
+        }
+    }
+
+    /// Creates an era S generator: npm `seedrandom` seeded with `String(seed)`.
+    pub fn new_seedrandom(seed: f64) -> Self {
+        Self {
+            s0: 0,
+            s1: 0,
+            s2: 0,
+            s3: 0,
+            arc4: Some(Box::new(Arc4::new(seed))),
+        }
+    }
+
+    /// Creates an sfc32 generator; the seed is truncated to 32 bits with JS `| 0`.
     pub fn new(seed: f64) -> Self {
         let mut h = to_int32(seed);
         let mut split = || {
@@ -78,7 +102,13 @@ impl PseudoRandom {
         let s1 = split();
         let s2 = split();
         let s3 = split();
-        let mut rng = Self { s0, s1, s2, s3 };
+        let mut rng = Self {
+            s0,
+            s1,
+            s2,
+            s3,
+            arc4: None,
+        };
         for _ in 0..12 {
             rng.next();
         }
@@ -88,6 +118,9 @@ impl PseudoRandom {
     /// Next number in [0, 1).
     #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> f64 {
+        if let Some(arc4) = self.arc4.as_mut() {
+            return arc4.next_double();
+        }
         let t = self.s0.wrapping_add(self.s1).wrapping_add(self.s3);
         if rng_log::ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
             rng_log::log(self.s3, t as u32);
@@ -189,11 +222,29 @@ mod tests {
 
     #[test]
     fn matches_upstream_goldens() {
-        let golden: Value =
-            serde_json::from_str(include_str!("../../Tests/Golden/PseudoRandom.json")).unwrap();
+        check_goldens(
+            include_str!("../../Tests/Golden/PseudoRandom.json"),
+            PseudoRandom::new,
+        );
+    }
+
+    #[test]
+    fn seedrandom_matches_upstream_goldens() {
+        let text = include_str!("../../Tests/Golden/PseudoRandomSeedrandom.json");
+        check_goldens(text, PseudoRandom::new_seedrandom);
+        let golden: Value = serde_json::from_str(text).unwrap();
+        for case in golden.as_array().unwrap() {
+            let mut g = PseudoRandom::new_seedrandom(case["seed"].as_f64().unwrap());
+            let got: Vec<_> = (0..700).map(|_| bits(g.next())).collect();
+            assert_eq!(got, strs(&case["long"]), "long seed {}", case["seed"]);
+        }
+    }
+
+    fn check_goldens(text: &str, make: fn(f64) -> PseudoRandom) {
+        let golden: Value = serde_json::from_str(text).unwrap();
         for case in golden.as_array().unwrap() {
             let seed = case["seed"].as_f64().unwrap();
-            let r = || PseudoRandom::new(seed);
+            let r = || make(seed);
             let ctx = format!("seed {seed}");
 
             let mut g = r();

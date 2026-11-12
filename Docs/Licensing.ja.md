@@ -44,6 +44,7 @@ OfSimRust は OpenFrontIO の `src/core` を Rust に翻訳したものであり
 ## サードパーティコード
 
 - JavaScript と同じ結果を得るために移植した V8 / Sun fdlibm の数学関数: [ThirdPartyNotices/V8.md](../ThirdPartyNotices/V8.md) (BSD-3-Clause と fdlibm の表示)。
+- sfc32 以前のビルド (era S) のために移植した seedrandom (ARC4 生成器): [ThirdPartyNotices/Seedrandom.md](../ThirdPartyNotices/Seedrandom.md) (MIT)。
 - Rust クレートは各自のライセンスを保つ。`deny.toml` は AGPL と互換のものだけを許可する。`cargo deny check licenses` を実行する。
 
 ## ファイルヘッダー

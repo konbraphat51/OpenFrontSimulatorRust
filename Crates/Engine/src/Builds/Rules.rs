@@ -190,6 +190,32 @@ pub enum Change {
     DoomsdayRotLadder4893,
     /// PR 4479: water components use a wide land marker and the HPA node search walks water tiles.
     WaterComponentMarkers4479,
+    /// PR 4239 and 4278: Hard and Impossible nations cap the troops they send and skip attacks under 20 percent of the target's troops.
+    AiTroopCap4239,
+    /// PR 4282: nations are not blocked by PVP immunity (older: they respect it like humans).
+    NationsIgnoreImmunity4282,
+    /// Meta update: atom and hydrogen bombs fly at speed 10 (older: 8).
+    NukeSpeed10Meta,
+    /// Meta update: the trade ship spawn sigmoid midpoint is 400 (older: 200).
+    TradeShipSigmoid400Meta,
+    /// PR 3199: the spawn phase ends through `SpawnTimerExecution` / `endSpawnPhase` (older: while `ticks <= numSpawnPhaseTurns`).
+    SpawnPhaseTimer3199,
+    /// PR 4117: nations track their queued spawn and are created before the tribes (older: they retry every attack tick, after the tribes).
+    NationSpawnRetry4117,
+    /// PR 1563 and 4016: a defense post on captured tiles is destroyed (older: its level drops and it changes hands).
+    DefensePostDestroyed1563,
+    /// PR 4014: self attacks, self donations and `isFriendly(self)` are guarded.
+    SelfActionGuards4014,
+    /// PR 3997: a missile silo execution ends once its silo is gone.
+    SiloInactiveGuard3997,
+    /// PR 4151: a move-warship intent skips warships outside the new patrol tile's water body.
+    WarshipPatrolComponent4151,
+    /// PR 3820: attacks walk neighbours with `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
+    AttackForEachNeighbor3820,
+    /// PR 4079: train stations reach 110 tiles and railroads follow the station range (older: 100 and 120).
+    TrainRange110Pr4079,
+    /// PR 4149: the abstract graph A* uses a min-heap (older: a bucket queue that clamps priorities).
+    AbstractAStarMinHeap4149,
     /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
     NeighborOrderNswe4495,
 }
@@ -534,10 +560,59 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[Change::AiBoatTroopsUnified4297],
     },
+    Edge {
+        class: "C036",
+        add: &[],
+        remove: &[
+            Change::Sfc32PseudoRandom4233,
+            Change::AiTroopCap4239,
+            Change::NationsIgnoreImmunity4282,
+            Change::NukeSpeed10Meta,
+            Change::TradeShipSigmoid400Meta,
+        ],
+    },
+    Edge {
+        class: "C037",
+        add: &[],
+        remove: &[
+            Change::SpawnPhaseTimer3199,
+            Change::NationSpawnRetry4117,
+            Change::DefensePostDestroyed1563,
+            Change::SelfActionGuards4014,
+            Change::SiloInactiveGuard3997,
+            Change::WarshipPatrolComponent4151,
+            Change::AttackForEachNeighbor3820,
+            Change::TrainRange110Pr4079,
+            Change::AbstractAStarMinHeap4149,
+        ],
+    },
+    Edge {
+        class: "C038",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C039",
+        add: &[Change::TradeShipSigmoid400Meta],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[
+    Change::SpawnPhaseTimer3199,
+    Change::NationSpawnRetry4117,
+    Change::DefensePostDestroyed1563,
+    Change::SelfActionGuards4014,
+    Change::SiloInactiveGuard3997,
+    Change::WarshipPatrolComponent4151,
+    Change::AttackForEachNeighbor3820,
+    Change::TrainRange110Pr4079,
+    Change::AbstractAStarMinHeap4149,
+    Change::AiTroopCap4239,
+    Change::NationsIgnoreImmunity4282,
+    Change::NukeSpeed10Meta,
+    Change::TradeShipSigmoid400Meta,
     Change::DetMath5191,
     Change::Sfc32PseudoRandom4233,
     Change::SaturationMidpoints5587,
@@ -832,7 +907,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C036"));
+        assert!(!is_ported("C040"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
@@ -901,6 +976,32 @@ mod tests {
     }
 
     #[test]
+    fn era_s_head_classes_switch_the_generator_and_drop_meta_changes() {
+        for c in ["C036", "C037", "C038", "C039"] {
+            assert!(is_ported(c), "{c}");
+        }
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c036 = rules("26d8a314aec4");
+        assert!(!c036.has(Change::Sfc32PseudoRandom4233) && !c036.has(Change::AiTroopCap4239));
+        assert!(
+            !c036.has(Change::TradeShipSigmoid400Meta) && c036.has(Change::SpawnPhaseTimer3199)
+        );
+        let c039 = rules("f17ca9bd6551");
+        assert!(
+            c039.has(Change::TradeShipSigmoid400Meta) && !c039.has(Change::Sfc32PseudoRandom4233)
+        );
+        let c037 = rules("aeb8d60224e3");
+        assert!(
+            !c037.has(Change::SpawnPhaseTimer3199) && !c037.has(Change::AttackForEachNeighbor3820)
+        );
+        assert!(
+            !c037.has(Change::TradeShipSigmoid400Meta)
+                && !c037.has(Change::AbstractAStarMinHeap4149)
+        );
+        assert!(!rules("5d6c48ebf23f").has(Change::SpawnPhaseTimer3199));
+    }
+
+    #[test]
     fn era_f_tail_classes_remove_their_changes() {
         for n in 23..=35 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
@@ -931,6 +1032,6 @@ mod tests {
         assert!(rules("661d96ba280f").has(Change::RailroadMaxSizeLimit4337));
         assert!(!rules("305534cc6579").has(Change::UnitsConstructedOnce4320));
         assert!(!rules("5be72db060fc").has(Change::AiBoatTroopsUnified4297));
-        assert!(!is_ported("C036"));
+        assert!(!is_ported("C040"));
     }
 }

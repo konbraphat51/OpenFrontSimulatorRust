@@ -6,8 +6,42 @@
 //! until stored, and comparisons read the rounded stored value.
 
 use super::AbstractGraph::AbstractGraph;
-use super::PriorityQueue::{MinHeap, PriorityQueue};
+use super::PriorityQueue::{BucketQueue, MinHeap, PriorityQueue};
 use std::rc::Rc;
+
+/// The open set: a min-heap, or the bucket queue of builds before PR 4149.
+#[derive(Debug)]
+enum OpenQueue {
+    Heap(MinHeap),
+    Bucket(BucketQueue),
+}
+
+impl PriorityQueue for OpenQueue {
+    fn push(&mut self, node: u32, priority: f64) {
+        match self {
+            Self::Heap(q) => q.push(node, priority),
+            Self::Bucket(q) => q.push(node, priority),
+        }
+    }
+    fn pop(&mut self) -> u32 {
+        match self {
+            Self::Heap(q) => q.pop(),
+            Self::Bucket(q) => q.pop(),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        match self {
+            Self::Heap(q) => q.is_empty(),
+            Self::Bucket(q) => q.is_empty(),
+        }
+    }
+    fn clear(&mut self) {
+        match self {
+            Self::Heap(q) => q.clear(),
+            Self::Bucket(q) => q.clear(),
+        }
+    }
+}
 
 /// A* on an [`AbstractGraph`]; ids are node ids.
 #[derive(Debug)]
@@ -18,7 +52,7 @@ pub struct AbstractGraphAStar {
     g_score: Vec<f32>,
     came_from: Vec<i32>,
     start_node: Vec<i32>,
-    queue: MinHeap,
+    queue: OpenQueue,
     graph: Rc<AbstractGraph>,
     heuristic_weight: f64,
     max_iterations: i64,
@@ -32,7 +66,29 @@ impl AbstractGraphAStar {
         max_iterations: Option<i64>,
     ) -> Self {
         let num_nodes = graph.node_count();
-        let queue = MinHeap::new(num_nodes + graph.edge_count() * 2);
+        let weight = heuristic_weight.unwrap_or(1.0);
+        let queue = OpenQueue::Heap(MinHeap::new(num_nodes + graph.edge_count() * 2));
+        Self::with_open_queue(graph, weight, max_iterations, queue)
+    }
+
+    /// Default weight and iterations with the queue of the build (`bucket_queue`: before PR 4149).
+    pub fn with_queue(graph: Rc<AbstractGraph>, bucket_queue: bool) -> Self {
+        if !bucket_queue {
+            return Self::new(graph, None, None);
+        }
+        // Upstream sizes the buckets from the cluster geometry: weight * clusterSize * max(clustersX, 10) * 2.
+        let max_dist = graph.cluster_size as f64 * f64::max(graph.clusters_x as f64, 10.0) * 2.0;
+        let queue = OpenQueue::Bucket(BucketQueue::new((1.0 * max_dist) as usize));
+        Self::with_open_queue(graph, 1.0, None, queue)
+    }
+
+    fn with_open_queue(
+        graph: Rc<AbstractGraph>,
+        heuristic_weight: f64,
+        max_iterations: Option<i64>,
+        queue: OpenQueue,
+    ) -> Self {
+        let num_nodes = graph.node_count();
         Self {
             stamp: 1,
             closed_stamp: vec![0; num_nodes],
@@ -42,7 +98,7 @@ impl AbstractGraphAStar {
             start_node: vec![0; num_nodes],
             queue,
             graph,
-            heuristic_weight: heuristic_weight.unwrap_or(1.0),
+            heuristic_weight,
             max_iterations: max_iterations.unwrap_or(100_000),
         }
     }

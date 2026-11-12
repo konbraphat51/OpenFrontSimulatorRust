@@ -73,8 +73,11 @@ impl ShellExecution {
 
 impl Execution for ShellExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        self.path_finder = Some(AirPathFinder::new(game.ticks()));
-        self.random = Some(PseudoRandom::new(game.ticks() as f64));
+        self.path_finder = Some(AirPathFinder::new_for(game.ticks(), game.config().rules()));
+        self.random = Some(PseudoRandom::for_rules(
+            game.config().rules(),
+            game.ticks() as f64,
+        ));
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {

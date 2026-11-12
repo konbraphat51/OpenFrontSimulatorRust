@@ -2,7 +2,7 @@
 //! Port of src/core/execution/TribeExecution.ts: the AI of a tribe (bot) player.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use crate::Builds::Rules::Change;
+use crate::Builds::Rules::{Change, Rules};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
@@ -30,8 +30,8 @@ pub struct TribeExecution {
 
 impl TribeExecution {
     /// `new TribeExecution(tribe)`; `tribe_id` is the player's string id (the random seed).
-    pub fn new(tribe: SmallId, tribe_id: &str) -> Self {
-        let mut random = PseudoRandom::new(simple_hash(tribe_id) as f64);
+    pub fn new(tribe: SmallId, tribe_id: &str, rules: &Rules) -> Self {
+        let mut random = PseudoRandom::for_rules(rules, simple_hash(tribe_id) as f64);
         let attack_rate = random.next_int(40.0, 80.0);
         let attack_tick = random.next_int(0.0, attack_rate);
         let trigger_ratio = random.next_int(50.0, 60.0) / 100.0;

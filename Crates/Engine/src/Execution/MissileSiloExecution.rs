@@ -2,6 +2,7 @@
 //! Port of src/core/execution/MissileSiloExecution.ts: reloads a silo's missiles after the cooldown.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{Tick, UnitId};
 use crate::Game::GameImpl::GameImpl;
@@ -28,7 +29,7 @@ impl Execution for MissileSiloExecution {
             return;
         }
 
-        if !silo.is_active() {
+        if !silo.is_active() && game.config().rules().has(Change::SiloInactiveGuard3997) {
             self.active = false;
             return;
         }

@@ -722,7 +722,14 @@ impl Execution for PlayerExecution {
             }
             let captor = owner;
             if t == UnitType::DefensePost {
-                game.unit_mut(u).delete(Some(true), Some(captor));
+                if game.config().rules().has(Change::DefensePostDestroyed1563) {
+                    game.unit_mut(u).delete(Some(true), Some(captor));
+                } else {
+                    game.unit_mut(u).decrease_level(Some(captor));
+                    if game.unit(u).is_some() {
+                        game.player_mut(captor).capture_unit(u);
+                    }
+                }
             } else {
                 game.player_mut(captor).capture_unit(u);
             }
