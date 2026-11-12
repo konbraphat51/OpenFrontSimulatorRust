@@ -236,6 +236,7 @@ impl GameImpl {
             &self.player_teams.clone(),
             is_duos_trios_quads,
             None,
+            self.config.rules().has(Change::TeamFriendGroups6259),
         );
         for (i, team) in assignment {
             match team {

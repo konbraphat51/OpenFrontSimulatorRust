@@ -30,6 +30,7 @@ pub fn assign_teams(
     teams: &[Team],
     is_duos_trios_quads: bool,
     max_team_size: Option<usize>,
+    friend_groups: bool,
 ) -> Vec<(usize, Option<Team>)> {
     let max_team_size =
         max_team_size.unwrap_or_else(|| get_max_team_size(players.len(), teams.len()));
@@ -94,7 +95,8 @@ pub fn assign_teams(
         .iter()
         .filter_map(|p| p.client_id.as_deref())
         .collect();
-    let mut friend_graph: HashMap<&str, HashSet<&str>> = HashMap::new();
+    // Insertion-ordered friend sets: the order feeds the friend groups.
+    let mut friend_graph: HashMap<&str, Vec<&str>> = HashMap::new();
     for p in players {
         let Some(cid) = p.client_id.as_deref() else {
             continue;
@@ -103,8 +105,14 @@ pub fn assign_teams(
             if !present.contains(f.as_str()) {
                 continue;
             }
-            friend_graph.entry(cid).or_default().insert(f.as_str());
-            friend_graph.entry(f.as_str()).or_default().insert(cid);
+            let e = friend_graph.entry(cid).or_default();
+            if !e.contains(&f.as_str()) {
+                e.push(f.as_str());
+            }
+            let e = friend_graph.entry(f.as_str()).or_default();
+            if !e.contains(&cid) {
+                e.push(cid);
+            }
         }
     }
 
@@ -115,53 +123,75 @@ pub fn assign_teams(
         }
     }
 
-    let mut place_player = |i: usize, result: &mut Vec<(usize, Option<Team>)>| {
-        let p = &players[i];
-        let my_friends = p.client_id.as_deref().and_then(|cid| friend_graph.get(cid));
-        let mut best_team: Option<&Team> = None;
-        let mut best_friend_count: i64 = -1;
-        let mut best_size: f64 = if is_duos_trios_quads {
-            -1.0
-        } else {
-            f64::INFINITY
-        };
-        for t in teams {
-            let size = team_player_count.get(t).copied().unwrap_or(0);
-            if size >= max_team_size {
-                continue;
-            }
-            let mut friends_on_team = 0i64;
-            if let Some(friends) = my_friends {
-                for f in friends {
-                    if team_by_client_id.get(f) == Some(t) {
-                        friends_on_team += 1;
+    // Groups are computed once, before any player of them is placed.
+    let early_groups: Vec<Vec<usize>> = if friend_groups {
+        let others: Vec<usize> = non_clan_players
+            .iter()
+            .copied()
+            .filter(|&i| players[i].player_type != PlayerType::Nation)
+            .collect();
+        friend_groups_of(players, &others, &friend_graph, &team_by_client_id)
+    } else {
+        Vec::new()
+    };
+
+    let mut place_player =
+        |i: usize, group_left: usize, result: &mut Vec<(usize, Option<Team>)>| {
+            let p = &players[i];
+            let my_friends = p.client_id.as_deref().and_then(|cid| friend_graph.get(cid));
+            let mut best_team: Option<&Team> = None;
+            let mut best_friend_count: i64 = -1;
+            let mut best_group_seats: i64 = -1;
+            let mut best_size: f64 = if is_duos_trios_quads {
+                -1.0
+            } else {
+                f64::INFINITY
+            };
+            for t in teams {
+                let size = team_player_count.get(t).copied().unwrap_or(0);
+                if size >= max_team_size {
+                    continue;
+                }
+                let mut friends_on_team = 0i64;
+                if let Some(friends) = my_friends {
+                    for f in friends {
+                        if team_by_client_id.get(f) == Some(t) {
+                            friends_on_team += 1;
+                        }
                     }
                 }
+                let size_f = size as f64;
+                let group_seats = if friend_groups {
+                    usize::min(group_left, max_team_size - size) as i64
+                } else {
+                    0
+                };
+                let size_better = if is_duos_trios_quads {
+                    size_f > best_size
+                } else {
+                    size_f < best_size
+                };
+                if friends_on_team > best_friend_count
+                    || (friends_on_team == best_friend_count
+                        && (group_seats > best_group_seats
+                            || (group_seats == best_group_seats && size_better)))
+                {
+                    best_friend_count = friends_on_team;
+                    best_group_seats = group_seats;
+                    best_size = size_f;
+                    best_team = Some(t);
+                }
             }
-            let size_f = size as f64;
-            if friends_on_team > best_friend_count
-                || (friends_on_team == best_friend_count
-                    && (if is_duos_trios_quads {
-                        size_f > best_size
-                    } else {
-                        size_f < best_size
-                    }))
-            {
-                best_friend_count = friends_on_team;
-                best_size = size_f;
-                best_team = Some(t);
+            let Some(best) = best_team else {
+                result.push((i, None));
+                return;
+            };
+            *team_player_count.entry(best.clone()).or_insert(0) += 1;
+            result.push((i, Some(best.clone())));
+            if let Some(cid) = p.client_id.as_deref() {
+                team_by_client_id.insert(cid, best.clone());
             }
-        }
-        let Some(best) = best_team else {
-            result.push((i, None));
-            return;
         };
-        *team_player_count.entry(best.clone()).or_insert(0) += 1;
-        result.push((i, Some(best.clone())));
-        if let Some(cid) = p.client_id.as_deref() {
-            team_by_client_id.insert(cid, best.clone());
-        }
-    };
 
     let mut nation_players: Vec<usize> = non_clan_players
         .iter()
@@ -177,10 +207,87 @@ pub fn assign_teams(
         .copied()
         .filter(|&i| players[i].player_type != PlayerType::Nation)
         .collect();
-    for i in other_players.into_iter().chain(nation_players) {
-        place_player(i, &mut result);
+    if friend_groups {
+        // Seat each friend group back to back, so strangers who joined between two friends cannot
+        // fill the first friend's team before the second is placed.
+        for group in early_groups {
+            let len = group.len();
+            for (k, &i) in group.iter().enumerate() {
+                place_player(i, len - k, &mut result);
+            }
+        }
+        for i in nation_players {
+            place_player(i, 1, &mut result);
+        }
+    } else {
+        for i in other_players.into_iter().chain(nation_players) {
+            place_player(i, 1, &mut result);
+        }
     }
     result
+}
+
+/// `friendGroups`: players connected by friend edges, groups with a seated friend first, then largest first.
+fn friend_groups_of(
+    players: &[PlayerInfo],
+    candidates: &[usize],
+    friend_graph: &HashMap<&str, Vec<&str>>,
+    seated: &HashMap<&str, Team>,
+) -> Vec<Vec<usize>> {
+    let mut by_client_id: HashMap<&str, usize> = HashMap::new();
+    for &i in candidates {
+        if let Some(cid) = players[i].client_id.as_deref() {
+            by_client_id.insert(cid, i);
+        }
+    }
+    let has_seated_friend = |i: usize| -> bool {
+        let Some(cid) = players[i].client_id.as_deref() else {
+            return false;
+        };
+        friend_graph
+            .get(cid)
+            .is_some_and(|fs| fs.iter().any(|f| seated.contains_key(f)))
+    };
+    let anchored: Vec<usize> = candidates
+        .iter()
+        .copied()
+        .filter(|&i| has_seated_friend(i))
+        .collect();
+    let mut starts = anchored.clone();
+    starts.extend(
+        candidates
+            .iter()
+            .copied()
+            .filter(|&i| !has_seated_friend(i)),
+    );
+    let mut grouped: HashSet<usize> = HashSet::new();
+    let mut groups: Vec<Vec<usize>> = Vec::new();
+    for start in starts {
+        if !grouped.insert(start) {
+            continue;
+        }
+        let mut group = vec![start];
+        let mut k = 0;
+        while k < group.len() {
+            if let Some(cid) = players[group[k]].client_id.as_deref() {
+                for f in friend_graph.get(cid).into_iter().flatten() {
+                    let Some(&friend) = by_client_id.get(f) else {
+                        continue;
+                    };
+                    if !grouped.insert(friend) {
+                        continue;
+                    }
+                    group.push(friend);
+                }
+            }
+            k += 1;
+        }
+        groups.push(group);
+    }
+    let anchored_starts: HashSet<usize> = anchored.into_iter().collect();
+    let rank = |g: &Vec<usize>| usize::from(anchored_starts.contains(&g[0]));
+    groups.sort_by(|a, b| rank(b).cmp(&rank(a)).then(b.len().cmp(&a.len())));
+    groups
 }
 
 /// `resolveTeamsList`.
@@ -282,7 +389,7 @@ mod tests {
             info("d", None),
         ];
         let teams = resolve_teams_list(TeamCountConfig::Count(2), 4, true);
-        let result = assign_teams(&players, &teams, false, Some(2));
+        let result = assign_teams(&players, &teams, false, Some(2), false);
         let clan: Vec<_> = result.iter().take(3).collect();
         assert_eq!(clan[0].1, clan[1].1);
         assert_eq!(clan[2].1, None);

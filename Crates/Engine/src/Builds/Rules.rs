@@ -54,6 +54,8 @@ pub enum Change {
     TutorialMode6204,
     /// PR 6242: the tutorial's scripted silo, warship and collapse, smaller atom bombs.
     TutorialSilo6242,
+    /// PR 6259 and siblings: friend groups are seated back to back in team assignment.
+    TeamFriendGroups6259,
     /// PR 5719: a train reconciles a split of the railroad it is on.
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
@@ -206,7 +208,7 @@ const EDGES: &[Edge] = &[
     },
     Edge {
         class: "C087",
-        add: &[],
+        add: &[Change::TeamFriendGroups6259],
         remove: &[],
     },
     Edge {
