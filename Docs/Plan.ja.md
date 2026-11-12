@@ -48,5 +48,5 @@ English version: [Plan.md](Plan.md)
 | C012 | v0.34.14 | Canary Islands、New Zealand、Pulicat Lake の部族テーマ | 6/6 |
 | C090 | v0.34.5 | なし (データテーブルとマップのマニフェストのみ。マニフェストは git から読む) | 7 / 7 |
 
-注: 一致数は D1 ブランチの `AiAttackBehavior` のランダムな船の目標の修正 (ネーションの船の目標は `owner.isFriendly(nation)` を使う。コミット 42a1c03) を適用して測定した。これがないと、切断された同盟相手の隣にいるネーションの最初の船で、長いレコード 3 件 (C006、C008、C009) が (ベースラインのコードと同様に) 一致しなくなる。C081 以降 (v0.35.x、ファイルが `packages/engine/src/` に移動) は、リファレンストレーサーと `GenEngineData` を新しい構成に合わせる必要があり未着手。
+注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 以降 (v0.35.x、ファイルが `packages/engine/src/` に移動): リファレンストレーサーと `GenEngineData` はこれらのビルドで動作する。エンジンの変更は未移植 (C081 は短いレコードのみ一致。ネーション AI の書き換えにより難易度 Medium のゲームが tick 210〜970 で分岐し、ランク戦 FFA のレコードは読み込めない)。
 

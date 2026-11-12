@@ -48,5 +48,5 @@ Class ids, parents and builds are in [BuildPlan.md](BuildPlan.md) (status column
 | C012 | v0.34.14 | tribe themes of Canary Islands, New Zealand, Pulicat Lake | 6 of 6 |
 | C090 | v0.34.5 | none (data tables and map manifests only; manifests read from git) | 7 of 7 |
 
-Notes: the passes were measured with the `AiAttackBehavior` random boat target fix of the D1 branch (nation boat targets use `owner.isFriendly(nation)`, commit 42a1c03) applied on top; without it three long records (C006, C008, C009) fail at the first boat of a nation next to a disconnected ally, the same way they fail on baseline code. C081 onward (v0.35.x, files moved into `packages/engine/src/`) needs the reference tracer and `GenEngineData` adapted to the new layout and is not started.
+Notes: the `AiAttackBehavior` random boat target fix (D1, nation boat targets use `owner.isFriendly(nation)`) is merged; the counts above include it. C081 onward (v0.35.x, files moved into `packages/engine/src/`): the reference tracer and `GenEngineData` work on these builds; the engine changes are not ported yet (C081 matches only short records: the nation AI rewrite diverges Medium-difficulty games by tick 210 to 970, and ranked FFA records do not load).
 
