@@ -278,11 +278,6 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[],
     },
-    Edge {
-        class: "C080",
-        add: &[],
-        remove: &[],
-    },
 ];
 
 /// Changes of the baseline class C000.
@@ -582,9 +577,10 @@ mod tests {
 
     #[test]
     fn era_f_classes_are_ported_without_detmath() {
-        for n in (13..=22).chain([80]) {
+        for n in 13..=22 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
+        assert!(!is_ported("C080"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         let c013 = rules("8b45be57542f");
         assert!(!c013.has(Change::DetMath5191) && c013.has(Change::Sfc32PseudoRandom4233));

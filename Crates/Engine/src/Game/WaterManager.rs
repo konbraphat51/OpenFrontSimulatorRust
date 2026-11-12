@@ -427,7 +427,11 @@ impl WaterManager {
 
         // 2. Recompute magnitudes by BFS from the remaining land outward, per crater group
         self.full_scratch.ensure(total_tiles as usize);
-        let groups = compute_crater_groups(&converted, w, MAX_MAG_DIST);
+        let groups = if self.legacy {
+            vec![bounding_box(&converted, w)]
+        } else {
+            compute_crater_groups(&converted, w, MAX_MAG_DIST)
+        };
         for g in &groups {
             let stamp = self.full_scratch.bump();
             recompute_magnitudes_in_box(
@@ -614,6 +618,25 @@ impl WaterManager {
 
         changed_tiles.extend(changed.iter().copied());
     }
+}
+
+/// Bounding box of all converted tiles (the pre-PR-4979 single dirty box).
+fn bounding_box(converted: &OrderedSet<TileRef>, w: u32) -> CraterBounds {
+    let mut b = CraterBounds {
+        min_x: w as i64,
+        max_x: 0,
+        min_y: i64::MAX,
+        max_y: 0,
+    };
+    for &tile in converted.iter() {
+        let x = (tile % w) as i64;
+        let y = (tile / w) as i64;
+        b.min_x = b.min_x.min(x);
+        b.max_x = b.max_x.max(x);
+        b.min_y = b.min_y.min(y);
+        b.max_y = b.max_y.max(y);
+    }
+    b
 }
 
 /// Groups converted tiles into spatially separate craters (cells of `max_mag_dist`, 8-adjacent cells

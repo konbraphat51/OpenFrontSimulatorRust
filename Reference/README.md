@@ -24,7 +24,7 @@ Replays the record exactly as the client/worker does and writes one NDJSON line 
 ### Record to engine wiring
 
 1. `decompressGameRecord(raw)` (`src/core/Util.ts`) fills sparse turns, so `record.turns[i].turnNumber == i`.
-2. `toWireGameStartInfo({gameID, lobbyCreatedAt, config, players, tribes})` (`src/core/Util.ts`) builds the `GameStartInfo`.
+2. `toWireGameStartInfo({gameID, lobbyCreatedAt, config, players, tribes})` (`src/core/Util.ts`) builds the `GameStartInfo`. Builds before v0.33.13 have no such function; the tracer then uses the record info unchanged.
 3. `createGameRunner(gameStart, undefined, mapLoader, callback)` (`src/core/GameRunner.ts`) builds the game and calls `init()`.
 4. For each turn in order: `runner.addTurn(turn)`, then `runner.executeNextTick()`.
 
