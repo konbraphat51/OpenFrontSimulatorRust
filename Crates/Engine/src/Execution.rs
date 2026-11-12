@@ -9,6 +9,8 @@ pub mod MarkDisconnectedExecution;
 pub mod Nation;
 pub mod NoOpExecution;
 pub mod NotPorted;
+pub mod NukeAlliance;
+pub mod NukeExecution;
 pub mod PauseExecution;
 pub mod PlayerExecution;
 pub mod QuickChatExecution;
