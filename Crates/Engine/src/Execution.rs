@@ -6,6 +6,7 @@ pub mod EmojiExecution;
 pub mod Execution;
 pub mod MarkDisconnectedExecution;
 pub mod Nation;
+pub mod NationExecution;
 pub mod NoOpExecution;
 pub mod NotPorted;
 pub mod PauseExecution;
