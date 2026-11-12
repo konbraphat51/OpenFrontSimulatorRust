@@ -138,6 +138,10 @@ pub enum Change {
     TrainSpawnOffRail36,
     /// v0.36.0: MIRV warhead targets come from a clipped box with a spatial overlap grid and a saturation limit.
     MirvTargetGrid36,
+    /// v0.36.0: tribe themes and custom tribes of the maps added or edited since the baseline.
+    TribeMapData36,
+    /// v0.36.1: tribe themes of four more maps (Ottoman Empire, Turkiye, World Inverted, Zealandia).
+    TribeMapData361,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -347,12 +351,13 @@ const EDGES: &[Edge] = &[
             Change::AbstractGraphWideSearch36,
             Change::TrainSpawnOffRail36,
             Change::MirvTargetGrid36,
+            Change::TribeMapData36,
         ],
         remove: &[],
     },
     Edge {
         class: "C089",
-        add: &[],
+        add: &[Change::TribeMapData361],
         remove: &[],
     },
     Edge {
