@@ -97,7 +97,7 @@ impl AttackExecution {
         let deaths = game.attack(attack).troops() * (malus_percent / 100.0);
         if !self.remove_troops && self.source_tile.is_none() {
             let troops = game.attack(attack).troops() - self.start_troops.unwrap_or(0.0);
-            game.attack_mut(attack).set_troops(troops);
+            game.set_attack_troops(attack, troops);
         }
         let survivors = game.attack(attack).troops() - deaths;
         game.player_mut(self.owner).add_troops(survivors);
@@ -220,7 +220,14 @@ impl AttackExecution {
                             return;
                         }
                         let no = game.map.owner_id(neighbor);
-                        if no != 0 && no != target && !game.player(no).is_friendly(target, false) {
+                        if no != 0
+                            && no != target
+                            && (!game
+                                .config()
+                                .rules()
+                                .has(Change::AttackFriendlyNeighbor2954)
+                                || !game.player(no).is_friendly(target, false))
+                        {
                             captured_by = Some(no);
                         }
                     });
@@ -330,13 +337,13 @@ impl Execution for AttackExecution {
                 // The target has an opposing attack: cancel them out.
                 if game.attack(incoming).troops() > game.attack(attack).troops() {
                     let left = game.attack(incoming).troops() - game.attack(attack).troops();
-                    game.attack_mut(incoming).set_troops(left);
+                    game.set_attack_troops(incoming, left);
                     game.delete_attack(attack);
                     self.active = false;
                     return;
                 } else {
                     let left = game.attack(attack).troops() - game.attack(incoming).troops();
-                    game.attack_mut(attack).set_troops(left);
+                    game.set_attack_troops(attack, left);
                     game.delete_attack(incoming);
                 }
             }
@@ -349,7 +356,7 @@ impl Execution for AttackExecution {
                 && game.attack(attack).source_tile().is_none()
             {
                 let sum = game.attack(attack).troops() + game.attack(outgoing).troops();
-                game.attack_mut(attack).set_troops(sum);
+                game.set_attack_troops(attack, sum);
                 game.delete_attack(outgoing);
             }
         }
@@ -488,7 +495,7 @@ impl Execution for AttackExecution {
             };
             tick_budget -= spent;
             troop_count -= attacker_loss;
-            game.attack_mut(attack).set_troops(troop_count);
+            game.set_attack_troops(attack, troop_count);
             if target_is_player {
                 game.player_mut(self.target).remove_troops(defender_loss);
             }

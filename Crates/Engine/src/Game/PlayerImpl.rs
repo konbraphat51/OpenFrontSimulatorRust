@@ -646,7 +646,13 @@ impl<'a> PlayerRef<'a> {
             .incoming_alliance_requests()
             .iter()
             .any(|&r| self.game.alliance_requests[r as usize].requestor == other);
-        if has_incoming {
+        if has_incoming
+            && self
+                .game
+                .config()
+                .rules()
+                .has(Change::AllianceIncomingBypass3092)
+        {
             return true;
         }
         let mut latest: Option<Tick> = None;
@@ -997,7 +1003,13 @@ impl<'a> PlayerRef<'a> {
         if self.gold < cost {
             return false;
         }
-        if unit_type != UnitType::MIRVWarhead && !self.is_alive() {
+        let exempt = unit_type == UnitType::MIRVWarhead
+            && self
+                .game
+                .config()
+                .rules()
+                .has(Change::MirvWarheadsWhenDead3134);
+        if !exempt && !self.is_alive() {
             return false;
         }
         true
@@ -1089,7 +1101,8 @@ impl<'a> PlayerRef<'a> {
             return None;
         }
         let config = mg.config();
-        if config.game_config().game_mode == GameMode::Team
+        if config.rules().has(Change::NukeTeammateStructureGuard3105)
+            && config.game_config().game_mode == GameMode::Team
             && nuke_type != UnitType::MIRV
             && !game_over
         {
@@ -1306,18 +1319,25 @@ impl<'a> PlayerRef<'a> {
     pub fn is_immune(&self) -> bool {
         match self.info.player_type {
             PlayerType::Human => self.game.is_spawn_immunity_active(),
-            PlayerType::Nation => self.game.is_nation_spawn_immunity_active(),
+            PlayerType::Nation
+                if self
+                    .game
+                    .config()
+                    .rules()
+                    .has(Change::NationSpawnImmunity3222) =>
+            {
+                self.game.is_nation_spawn_immunity_active()
+            }
+            PlayerType::Nation => false,
             PlayerType::Bot => false,
         }
     }
 
     /// `canAttackPlayer(player, treatAFKFriendly)`.
     pub fn can_attack_player(&self, player: SmallId, treat_afk_friendly: bool) -> bool {
-        let ignores_immunity = if self
-            .game
-            .config()
-            .rules()
-            .has(Change::NationsIgnoreImmunity4282)
+        let rules = self.game.config().rules();
+        let ignores_immunity = if rules.has(Change::NationsIgnoreImmunity4282)
+            || !rules.has(Change::NationSpawnImmunity3222)
         {
             self.info.player_type != PlayerType::Human
         } else {

@@ -58,9 +58,17 @@ impl TradeShipExecution {
         game.unit_mut(ship).delete(Some(false), None);
         let ship_owner = game.unit_any(ship).owner_id();
         let is_lobby_creator = game.player(ship_owner).is_lobby_creator();
-        let gold = game
-            .config()
-            .trade_ship_gold(self.tiles_traveled, is_lobby_creator);
+        let gold = if game.config().rules().has(Change::TradeShipMeta3232) {
+            game.config()
+                .trade_ship_gold(self.tiles_traveled, is_lobby_creator)
+        } else {
+            let ports = game.player(ship_owner).unit_count(UnitType::Port);
+            game.config().trade_ship_gold_with_ports(
+                self.tiles_traveled,
+                ports as f64,
+                is_lobby_creator,
+            )
+        };
 
         if self.was_captured && ship_owner == self.orig_owner {
             // Retaken by its original owner: the payout stands, but nobody pirated it

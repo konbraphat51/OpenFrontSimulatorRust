@@ -23,10 +23,12 @@ import {
 function captureFull(runner: Awaited<ReturnType<typeof createGameRunner>>, tick: number): string {
   const game = runner.game;
   const map = game.map();
-  // Builds before v0.32 keep the packed tile state in a private array
-  const state: Uint16Array = typeof map.tileStateBuffer === "function" ? map.tileStateBuffer() : (map as unknown as { state: Uint16Array }).state;
-  const owners = new Array<number>(state.length);
-  for (let i = 0; i < state.length; i++) owners[i] = state[i] & 0x0fff;
+  // Builds before the packed tile updates have no tileStateBuffer: read the owners tile by tile.
+  const hasBuffer = typeof (map as { tileStateBuffer?: unknown }).tileStateBuffer === "function";
+  const state = hasBuffer ? map.tileStateBuffer() : new Uint16Array(0);
+  const count = hasBuffer ? state.length : map.width() * map.height();
+  const owners = new Array<number>(count);
+  for (let i = 0; i < count; i++) owners[i] = hasBuffer ? state[i] & 0x0fff : game.ownerID(i);
   const units = game.units().map((u) => ({
     id: u.id(),
     type: u.type(),
@@ -59,7 +61,6 @@ async function main(): Promise<void> {
   }
   const [recordPath, outPath] = positional;
   const fullAt = new Set((options.get("--full-at") ?? "").split(",").filter((s) => s !== "").map(Number));
-  // Loaded on demand: builds without NationExecution cannot import it
   if (options.has("--inert")) (await import("./InertPatch")).applyInertPatch();
   const until = options.has("--until") ? Number(options.get("--until")) : Infinity;
   const worktree = resolveWorktree(import.meta.url);
@@ -82,9 +83,8 @@ async function main(): Promise<void> {
       const tick = game.ticks();
       if (tick > until) break;
       runner.addTurn(turn);
-      // Builds before v0.29.0 return nothing from executeNextTick: only the error callback reports a failure
-      const ran = runner.executeNextTick() as unknown as boolean | undefined;
-      if (ran === false || (ran === undefined && tickError !== null)) throw new Error(tickError ?? `tick ${tick} failed`);
+      // Builds before v0.30 return void from executeNextTick and report failures through the callback only.
+      if (runner.executeNextTick() === false || tickError !== null) throw new Error(tickError ?? `tick ${tick} failed`);
       // State is read after executeNextTick(), i.e. after the tick `tick` ran (ticks() is now tick + 1).
       const hash = game.hash();
       const recordHash = turn.hash ?? null;

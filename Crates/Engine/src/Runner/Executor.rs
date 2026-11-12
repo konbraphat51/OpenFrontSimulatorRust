@@ -9,6 +9,7 @@ use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
+use crate::Execution::Alliance::AllianceRequestReplyExecution::AllianceRequestReplyExecution;
 use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
@@ -89,12 +90,28 @@ impl Executor {
                 true,
                 game.config().rules(),
             )),
-            Intent::Boat { troops, dst } => {
-                Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
+            Intent::Boat {
+                troops,
+                dst,
+                target_id,
+                src,
+            } => {
+                let mut exec = TransportShipExecution::new(player, *dst, Some(*troops));
+                if !game
+                    .config()
+                    .rules()
+                    .has(crate::Builds::Rules::Change::PathfindingRefinements2959)
+                {
+                    exec = exec.with_intent_target(target_id.clone(), *src);
+                }
+                Box::new(exec)
             }
             Intent::AllianceRequest { recipient } => {
                 Box::new(AllianceRequestExecution::new(player, recipient.clone()))
             }
+            Intent::AllianceRequestReply { requestor, accept } => Box::new(
+                AllianceRequestReplyExecution::new(requestor.clone(), player, *accept),
+            ),
             Intent::AllianceReject { requestor } => {
                 Box::new(AllianceRejectExecution::new(requestor.clone(), player))
             }

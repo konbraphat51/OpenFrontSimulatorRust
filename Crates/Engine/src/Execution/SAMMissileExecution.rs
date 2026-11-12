@@ -106,7 +106,7 @@ impl Execution for SAMMissileExecution {
             || target_owner == game.unit_any(missile).owner_id()
             || !listed
         {
-            if target_active {
+            if target_active && game.config().rules().has(Change::SamTargetingFix3223) {
                 game.unit_mut(self.target).set_targeted_by_sam(false);
             }
             game.unit_mut(missile).delete(Some(false), None);

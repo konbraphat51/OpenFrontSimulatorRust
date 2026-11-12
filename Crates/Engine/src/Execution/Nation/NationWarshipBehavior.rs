@@ -281,7 +281,7 @@ impl NationWarshipBehavior {
         reason: Reason,
     ) {
         // Do not retaliate against ourselves (e.g. an own nuke destroyed an own ship).
-        if enemy == self.player {
+        if enemy == self.player && game.config().rules().has(Change::NationBehaviorUpdate3246) {
             return;
         }
         // One of ours already patrols there (sent by any trigger): do not pile up more.
@@ -327,7 +327,9 @@ impl NationWarshipBehavior {
                 &emoji_warship_retaliation(),
             );
             let delta = if reason == Reason::Trade { -7.5 } else { -15.0 };
-            game.player_mut(self.player).update_relation(enemy, delta);
+            if game.config().rules().has(Change::NationBehaviorUpdate3246) {
+                game.player_mut(self.player).update_relation(enemy, delta);
+            }
         }
     }
 

@@ -313,8 +313,10 @@ impl MirvExecution {
             if self.target_player != self.player {
                 game.player_mut(self.target_player)
                     .update_relation(self.player, -100.0);
-                game.player_mut(self.player)
-                    .update_relation(self.target_player, -100.0);
+                if game.config().rules().has(Change::MirvRelationBoth3206) {
+                    game.player_mut(self.player)
+                        .update_relation(self.target_player, -100.0);
+                }
             }
         }
     }
@@ -751,8 +753,10 @@ impl Execution for MirvExecution {
                 if self.target_player != self.player {
                     game.player_mut(self.target_player)
                         .update_relation(self.player, -100.0);
-                    game.player_mut(self.player)
-                        .update_relation(self.target_player, -100.0);
+                    if game.config().rules().has(Change::MirvRelationBoth3206) {
+                        game.player_mut(self.player)
+                            .update_relation(self.target_player, -100.0);
+                    }
                 }
             }
             let x = ((self.base_x + game.x(game.unit_any(nuke).tile()) as f64) / 2.0).floor();

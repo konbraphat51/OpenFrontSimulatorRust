@@ -54,6 +54,11 @@ impl AStarWaterHierarchical {
         }
     }
 
+    /// Builds before PR 2959 size the short path search for 140 tiles instead of 260.
+    pub fn set_short_path_size(&mut self, map: &GameMapImpl, size: usize) {
+        self.local_a_star_short_path = AStarWaterBounded::new(map, size * size, None, None);
+    }
+
     /// Before PR 4479 the nearest-node search walks tiles whose component id is not the land marker (not `isWater`).
     pub fn set_component_filter(&mut self, component_filter: bool) {
         self.component_filter = component_filter;

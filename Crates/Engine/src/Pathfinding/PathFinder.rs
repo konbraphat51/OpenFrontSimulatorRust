@@ -34,20 +34,51 @@ pub type HierarchicalWaterChain = MiniMapTransformer<
 /// Fallback chain for tiny graphs (under 100 nodes) or without a nav mesh: minimap, shore coercion, plain water A*.
 pub type SimpleWaterChain = MiniMapTransformer<ShoreCoercingTransformer<AStarWater>>;
 
+/// Water pathfinding parameters that differ in builds before PRs 2937 and 2959.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct WaterTweaks {
+    /// Shore endpoints coerce to the first water neighbour (older) instead of the best connected one.
+    pub first_shore_neighbor: bool,
+    /// Both smoothing passes use the same minimum magnitude (older).
+    pub single_los_magnitude: bool,
+    /// Edge length of the short path search area (260 now, 140 older).
+    pub short_path_size: usize,
+}
+
+impl Default for WaterTweaks {
+    fn default() -> Self {
+        Self {
+            first_shore_neighbor: false,
+            single_los_magnitude: false,
+            short_path_size: 260,
+        }
+    }
+}
+
 /// Builds the HPA* chain around `hpa` (upstream `buildWaterChain`, hierarchical branch).
 pub fn build_hierarchical_chain(
     mini_map: &GameMapImpl,
-    hpa: AStarWaterHierarchical,
+    mut hpa: AStarWaterHierarchical,
     graph: Rc<AbstractGraph>,
+    tweaks: WaterTweaks,
 ) -> HierarchicalWaterChain {
-    MiniMapTransformer::new(ShoreCoercingTransformer::new(
-        SmoothingWaterTransformer::new(ComponentCheckTransformer::new(hpa, graph), mini_map),
-    ))
+    if tweaks.short_path_size != 260 {
+        hpa.set_short_path_size(mini_map, tweaks.short_path_size);
+    }
+    MiniMapTransformer::new(
+        ShoreCoercingTransformer::new(
+            SmoothingWaterTransformer::new(ComponentCheckTransformer::new(hpa, graph), mini_map)
+                .with_single_magnitude(tweaks.single_los_magnitude),
+        )
+        .with_first_neighbor(tweaks.first_shore_neighbor),
+    )
 }
 
 /// Builds the simple chain around `core` (upstream `buildWaterChain`, fallback branch).
-pub fn build_simple_chain(core: AStarWater) -> SimpleWaterChain {
-    MiniMapTransformer::new(ShoreCoercingTransformer::new(core))
+pub fn build_simple_chain(core: AStarWater, tweaks: WaterTweaks) -> SimpleWaterChain {
+    MiniMapTransformer::new(
+        ShoreCoercingTransformer::new(core).with_first_neighbor(tweaks.first_shore_neighbor),
+    )
 }
 
 /// Swaps the graph inside a hierarchical chain (`AStarWaterHierarchical.setGraph` plus the component check's graph).

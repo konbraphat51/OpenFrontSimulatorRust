@@ -36,6 +36,12 @@ pub enum Intent {
         troops: f64,
         /// Destination tile.
         dst: u32,
+        /// Target player id (builds before PR 2959; null for terra nullius).
+        #[serde(default, rename = "targetID")]
+        target_id: Option<String>,
+        /// Chosen launch tile (builds before PR 2959).
+        #[serde(default)]
+        src: Option<u32>,
     },
     /// `allianceRequest`.
     #[serde(rename = "allianceRequest")]
@@ -48,6 +54,14 @@ pub enum Intent {
     AllianceReject {
         /// Requestor id.
         requestor: String,
+    },
+    /// `allianceRequestReply` (builds before PR 3155 answer a request with accept or reject).
+    #[serde(rename = "allianceRequestReply")]
+    AllianceRequestReply {
+        /// Requestor id.
+        requestor: String,
+        /// True to accept the request.
+        accept: bool,
     },
     /// `breakAlliance`.
     #[serde(rename = "breakAlliance")]
@@ -228,6 +242,7 @@ impl Intent {
             Self::Boat { .. } => "boat",
             Self::AllianceRequest { .. } => "allianceRequest",
             Self::AllianceReject { .. } => "allianceReject",
+            Self::AllianceRequestReply { .. } => "allianceRequestReply",
             Self::BreakAlliance { .. } => "breakAlliance",
             Self::TargetPlayer { .. } => "targetPlayer",
             Self::Emoji { .. } => "emoji",

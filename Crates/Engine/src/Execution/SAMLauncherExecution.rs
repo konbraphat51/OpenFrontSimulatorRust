@@ -418,7 +418,8 @@ impl SamTargetingSystem {
         unit: &crate::Game::UnitImpl::UnitImpl,
     ) -> bool {
         let sam_owner = game.unit_any(self.sam).owner_id();
-        if unit.targeted_by_sam() || unit.owner_id() == sam_owner {
+        let skips_targeted = game.config().rules().has(Change::SamTargetingFix3223);
+        if (skips_targeted && unit.targeted_by_sam()) || unit.owner_id() == sam_owner {
             return false;
         }
         let nuke_owner = unit.owner_id();
@@ -608,6 +609,13 @@ impl SAMLauncherExecution {
             None
         };
         if target.is_none() && warheads.is_empty() {
+            return;
+        }
+        // Before PR 3223 the best target may already be flagged, and then nothing is shot.
+        let target_flagged = target
+            .as_ref()
+            .is_some_and(|t| game.unit_any(t.unit).targeted_by_sam());
+        if warheads.is_empty() && target_flagged {
             return;
         }
         game.unit_mut(sam).launch();

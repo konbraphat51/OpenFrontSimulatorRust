@@ -69,6 +69,9 @@ impl TribeExecution {
     }
 
     fn delete_next_structure(&self, game: &mut GameImpl) {
+        if !game.config().rules().has(Change::BotStructureFarming2895) {
+            return;
+        }
         if !game.player(self.tribe).can_delete_unit() {
             return;
         }

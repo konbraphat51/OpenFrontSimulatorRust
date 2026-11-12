@@ -636,7 +636,13 @@ impl PlayerExecution {
                 game.unit_mut(u).delete(None, None);
             }
         }
-        game.player_mut(player).remove_all_alliances();
+        if game
+            .config()
+            .rules()
+            .has(Change::AllianceRemovedOnDeath3168)
+        {
+            game.player_mut(player).remove_all_alliances();
+        }
     }
 }
 

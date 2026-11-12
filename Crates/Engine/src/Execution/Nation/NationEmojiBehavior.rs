@@ -198,7 +198,7 @@ impl NationEmojiBehavior {
 
     /// `maybeSendCasualEmoji()`.
     pub fn maybe_send_casual_emoji(&mut self, game: &mut GameImpl) {
-        if self.game_over {
+        if self.game_over && game.config().rules().has(Change::NationAiRework2984) {
             return;
         }
         self.check_overwhelmed_by_attacks(game);
@@ -261,7 +261,81 @@ impl NationEmojiBehavior {
         }
     }
 
+    /// `congratulateWinner` before PR 2984: the winner is whoever holds the tile share needed to win.
+    fn congratulate_winner_v29(&mut self, game: &mut GameImpl) {
+        if self.game_over {
+            return;
+        }
+        let percent_to_win = game
+            .config()
+            .percentage_tiles_owned_to_win(game.elapsed_game_seconds());
+        let tiles_without_fallout = game.num_land_tiles() - game.num_tiles_with_fallout();
+        let is_team_game = game.config().game_config().game_mode == GameMode::Team;
+        if is_team_game {
+            let mut team_tiles: Vec<(String, f64)> = Vec::new();
+            for p in game.players() {
+                let Some(team) = game.player(p).team().cloned() else {
+                    continue;
+                };
+                let tiles = game.player(p).num_tiles_owned() as f64;
+                match team_tiles.iter_mut().find(|(t, _)| *t == team) {
+                    Some(entry) => entry.1 += tiles,
+                    None => team_tiles.push((team, tiles)),
+                }
+            }
+            // Stable descending sort: the first team of the maximum wins ties.
+            team_tiles.sort_by(|a, b| b.1.total_cmp(&a.1));
+            let Some((winning_team, winning_tiles)) = team_tiles.first().cloned() else {
+                return;
+            };
+            if (winning_tiles / tiles_without_fallout) * 100.0 < percent_to_win {
+                return;
+            }
+            self.game_over = true;
+            if game.player(self.player).team() == Some(&winning_team) {
+                return;
+            }
+            self.send_emoji(game, EmojiRecipient::All, &emoji_congratulate());
+        } else {
+            let mut sorted = game.players();
+            sorted.sort_by(|&a, &b| {
+                game.player(b)
+                    .num_tiles_owned()
+                    .cmp(&game.player(a).num_tiles_owned())
+            });
+            let Some(&first_place) = sorted.first() else {
+                return;
+            };
+            let first_place_percent =
+                (game.player(first_place).num_tiles_owned() as f64 / tiles_without_fallout) * 100.0;
+            if first_place_percent < percent_to_win {
+                return;
+            }
+            self.game_over = true;
+            if game.player(first_place).player_type() != PlayerType::Human {
+                return;
+            }
+            let nations: Vec<SmallId> = game
+                .players()
+                .into_iter()
+                .filter(|&p| game.player(p).player_type() == PlayerType::Nation)
+                .collect();
+            if most_tiles(game, &nations) != Some(self.player) {
+                return;
+            }
+            self.send_emoji(
+                game,
+                EmojiRecipient::Player(first_place),
+                &emoji_congratulate(),
+            );
+        }
+    }
+
     fn congratulate_winner(&mut self, game: &mut GameImpl) {
+        if !game.config().rules().has(Change::NationAiRework2984) {
+            self.congratulate_winner_v29(game);
+            return;
+        }
         let Some(winner) = game.winner().cloned() else {
             return;
         };
@@ -307,6 +381,9 @@ impl NationEmojiBehavior {
     }
 
     fn brag(&mut self, game: &mut GameImpl) {
+        if self.game_over && !game.config().rules().has(Change::NationAiRework2984) {
+            return;
+        }
         if !self.chance(300.0) {
             return;
         }
@@ -421,6 +498,9 @@ impl NationEmojiBehavior {
     }
 
     fn greet_nearby_players(&mut self, game: &mut GameImpl) {
+        if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+            return;
+        }
         // Only in the first minute.
         if game.ticks() > 600 {
             return;
