@@ -156,12 +156,12 @@ impl AiAttackBehavior {
 
     /// True for builds with the PR 5899 nation behaviour.
     fn v2(game: &GameImpl) -> bool {
-        game.config().rules().has(Change::NationsLikeHumans5899)
+        game.has(Change::NationsLikeHumans5899)
     }
 
     /// True before the v0.31 rework: a chosen attack ends the turn whether or not it was sent.
     pub fn legacy31(game: &GameImpl) -> bool {
-        !game.config().rules().has(Change::AiAttackRework31)
+        !game.has(Change::AiAttackRework31)
     }
 
     /// The result an attack strategy reports: before v0.31 always true once a target was found.
@@ -178,7 +178,7 @@ impl AiAttackBehavior {
     }
 
     fn home_troops_rule(game: &GameImpl) -> bool {
-        game.config().rules().has(Change::NationHomeTroops36)
+        game.has(Change::NationHomeTroops36)
     }
 
     /// `homeTroops()`: our troops once everything sent this tick has left (v0.36.0 on).
@@ -366,7 +366,7 @@ impl AiAttackBehavior {
             return;
         }
         // The maximum number of transport ships may already be out.
-        if game.config().rules().has(Change::NationAiRework2984)
+        if game.has(Change::NationAiRework2984)
             && game.player(self.player).unit_count(UnitType::TransportShip)
                 >= game.config().boat_max_number() as i64
         {
@@ -397,7 +397,7 @@ impl AiAttackBehavior {
             self.send_beachhead(game, owner, dst);
             return;
         }
-        if !game.config().rules().has(Change::AiTroopCap4239) {
+        if !game.has(Change::AiTroopCap4239) {
             // Before PR 4239 the boat always carried a fifth of the troops, unchecked.
             let troops = self.troops(game) / 5.0;
             game.add_execution(Box::new(TransportShipExecution::new(
@@ -409,7 +409,7 @@ impl AiAttackBehavior {
         }
         let cap = if owner != 0 {
             self.troop_send_cap(game, None)
-        } else if game.config().rules().has(Change::NationExpansionCap5290) {
+        } else if game.has(Change::NationExpansionCap5290) {
             self.troop_send_cap_for_expansion(game)
         } else {
             f64::INFINITY
@@ -504,7 +504,7 @@ impl AiAttackBehavior {
         }
         // With high starting gold nations expand slowly and bots steal their structures:
         // attack bots before the ratio checks.
-        if game.config().rules().has(Change::BotStructureFarming2895)
+        if game.has(Change::BotStructureFarming2895)
             && self.has_neighboring_bot_with_structures(game)
             && self.attack_bots(game)
         {
@@ -584,7 +584,7 @@ impl AiAttackBehavior {
 
     fn attack_strategies(game: &GameImpl) -> Vec<Strategy> {
         let mut list = Self::attack_strategy_list(game);
-        if !game.config().rules().has(Change::NationAiRework2984) {
+        if !game.has(Change::NationAiRework2984) {
             list.retain(|s| !matches!(s, Strategy::Donate));
         }
         list
@@ -609,7 +609,7 @@ impl AiAttackBehavior {
                 ],
             };
         }
-        let juicy = game.config().rules().has(Change::NationJuicy5294);
+        let juicy = game.has(Change::NationJuicy5294);
         match game.config().game_config().difficulty {
             Difficulty::Easy => vec![Nuked, Bots, Retaliate, Assist, Betray, Hated, Weakest],
             Difficulty::Medium => vec![
@@ -1201,7 +1201,7 @@ impl AiAttackBehavior {
             pl.troops() / pl.num_tiles_owned() as f64
         };
         let mut sorted_bots = bots;
-        let farming = game.config().rules().has(Change::BotStructureFarming2895);
+        let farming = game.has(Change::BotStructureFarming2895);
         sorted_bots.sort_by(|&a, &b| {
             let a_has = farming && Self::owns_structures(game, a);
             let b_has = farming && Self::owns_structures(game, b);
@@ -1225,7 +1225,7 @@ impl AiAttackBehavior {
     }
 
     fn attack_bots_v2(&mut self, game: &mut GameImpl) -> bool {
-        let overseas = game.config().rules().has(Change::NationOverseasBots36);
+        let overseas = game.has(Change::NationOverseasBots36);
         if overseas {
             self.bot_attack_troops_sent = 0.0;
         }
@@ -1482,7 +1482,7 @@ impl AiAttackBehavior {
     }
 
     fn find_nearest_island_enemy(&mut self, game: &mut GameImpl) -> Option<SmallId> {
-        if !game.config().rules().has(Change::NationAiRework2984) {
+        if !game.has(Change::NationAiRework2984) {
             return self.find_nearest_island_enemy_v29(game);
         }
         if game.config().is_unit_disabled(UnitType::TransportShip) {
@@ -1562,7 +1562,7 @@ impl AiAttackBehavior {
                 continue;
             };
             if can_build_truthy(game, self.player, y) {
-                if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+                if !game.has(Change::NationBehaviorUpdate3246) {
                     return Some(p);
                 }
                 reachable_players.push(p);
@@ -1803,7 +1803,7 @@ impl AiAttackBehavior {
                 } else if !launch.is_some_and(|t| t != 0) {
                     continue;
                 }
-                let troops = if game.config().rules().has(Change::NationExpansionCap5290) {
+                let troops = if game.has(Change::NationExpansionCap5290) {
                     (self.home_troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game))
                 } else {
                     self.home_troops(game) / 5.0
@@ -1827,7 +1827,7 @@ impl AiAttackBehavior {
             || game.player(other).player_type() != PlayerType::Human
             || game.player(other).is_traitor()
             || game.player(self.player).player_type() == PlayerType::Bot
-            || (game.config().rules().has(Change::NationAiRework2984)
+            || (game.has(Change::NationAiRework2984)
                 && game.config().player_teams() == TeamCountConfig::HumansVsNations)
         {
             return true;
@@ -1852,7 +1852,7 @@ impl AiAttackBehavior {
 
     // Hard and Impossible nations in FFA: true when `troops` is under 20% of the target's troops.
     fn is_attack_too_weak(&self, game: &GameImpl, troops: f64, target: SmallId) -> bool {
-        if !game.config().rules().has(Change::AiTroopCap4239) {
+        if !game.has(Change::AiTroopCap4239) {
             return false;
         }
         if game.player(self.player).player_type() == PlayerType::Bot {
@@ -1873,7 +1873,7 @@ impl AiAttackBehavior {
     // Hard and Impossible nations in FFA: the most troops that can be sent without dropping below
     // a fraction of the strongest non-allied, non-bot neighbour (Hard 75%, Impossible 90%).
     fn troop_send_cap(&self, game: &GameImpl, ignore: Option<SmallId>) -> f64 {
-        if !game.config().rules().has(Change::AiTroopCap4239) {
+        if !game.has(Change::AiTroopCap4239) {
             return f64::INFINITY;
         }
         if Self::v2(game) {
@@ -1961,7 +1961,7 @@ impl AiAttackBehavior {
             game.player(self.player).max_troops()
         };
         let target_is_player = target != 0;
-        let bot_with_structures = game.config().rules().has(Change::BotStructureFarming2895)
+        let bot_with_structures = game.has(Change::BotStructureFarming2895)
             && target_is_player
             && game.player(target).player_type() == PlayerType::Bot
             && Self::owns_structures(game, target);
@@ -1994,7 +1994,7 @@ impl AiAttackBehavior {
         // Hard and Impossible: do not drop below the neighbour troop threshold.
         if target_is_player {
             troops = troops.min(self.troop_send_cap(game, opponent));
-        } else if game.config().rules().has(Change::NationExpansionCap5290) {
+        } else if game.has(Change::NationExpansionCap5290) {
             troops = troops.min(self.troop_send_cap_for_expansion(game));
         }
         if troops < 1.0 {
@@ -2014,7 +2014,7 @@ impl AiAttackBehavior {
             emoji.borrow_mut().maybe_send_attack_emoji(game, target);
         }
         // Only troops that will actually be sent, after the cap, are counted.
-        if is_bot_attack && game.config().rules().has(Change::NationExpansionCap5290) {
+        if is_bot_attack && game.has(Change::NationExpansionCap5290) {
             self.bot_attack_troops_sent += troops;
         }
         Some(troops)
@@ -2065,12 +2065,10 @@ impl AiAttackBehavior {
         ) else {
             return false;
         };
-        if game.config().rules().has(Change::NationAiRework2984)
-            && !can_build_truthy(game, self.player, closest_y)
-        {
+        if game.has(Change::NationAiRework2984) && !can_build_truthy(game, self.player, closest_y) {
             return false;
         }
-        let troops = if game.config().rules().has(Change::AiBoatTroopsUnified4297) {
+        let troops = if game.has(Change::AiBoatTroopsUnified4297) {
             self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0, None)
         } else {
             self.legacy_boat_troops(game, target)
@@ -2474,7 +2472,7 @@ impl AiAttackBehavior {
         target: SmallId,
         max_troops: f64,
     ) -> f64 {
-        let old_accounting = !game.config().rules().has(Change::NationExpansionCap5290);
+        let old_accounting = !game.has(Change::NationExpansionCap5290);
         if game.config().game_config().difficulty == Difficulty::Easy {
             if old_accounting {
                 self.bot_attack_troops_sent += max_troops;
@@ -2590,7 +2588,7 @@ impl AiAttackBehavior {
         }
         // Not in public games (to balance HvN).
         if game.config().game_config().game_type == GameType::Public
-            && game.config().rules().has(Change::NoPublicDonation3437)
+            && game.has(Change::NoPublicDonation3437)
         {
             return false;
         }

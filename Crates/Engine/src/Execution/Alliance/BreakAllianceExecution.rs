@@ -41,7 +41,7 @@ impl Execution for BreakAllianceExecution {
         let alliance = game.player(self.requestor).alliance_with(recipient);
         if let Some(alliance) = alliance {
             game.player_mut(self.requestor).break_alliance(alliance);
-            if game.config().rules().has(Change::RelationPenalties28) {
+            if game.has(Change::RelationPenalties28) {
                 game.player_mut(recipient)
                     .update_relation(self.requestor, -200.0);
                 for player in game.players() {

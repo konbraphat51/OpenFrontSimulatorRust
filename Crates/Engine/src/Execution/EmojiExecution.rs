@@ -78,7 +78,7 @@ impl Execution for EmojiExecution {
         {
             game.player_mut(self.requestor)
                 .send_emoji(recipient, emoji_string);
-            if game.config().rules().has(Change::RelationPenalties28) {
+            if game.has(Change::RelationPenalties28) {
                 // Nations only take offence at the middle finger
                 if let EmojiRecipient::Player(r) = recipient
                     && emoji_string == "\u{1f595}"

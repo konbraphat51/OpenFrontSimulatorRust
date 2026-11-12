@@ -401,12 +401,7 @@ impl<'a> PlayerRef<'a> {
         for &u in &self.units {
             let unit = self.game.unit_any(u);
             if unit.unit_type == UnitType::City
-                && (!unit.under_construction
-                    || !self
-                        .game
-                        .config()
-                        .rules()
-                        .has(Change::CityTroopsFinishedOnly31))
+                && (!unit.under_construction || !self.game.has(Change::CityTroopsFinishedOnly31))
             {
                 city_level_sum += unit.level as f64;
             }
@@ -447,12 +442,7 @@ impl<'a> PlayerRef<'a> {
     /// `unitsConstructed(type)`; before PR 4320 buildings under construction count twice.
     pub fn units_constructed(&self, t: UnitType) -> i64 {
         let built = self.num_units_constructed[t.index()];
-        if self
-            .game
-            .config()
-            .rules()
-            .has(Change::UnitsConstructedOnce4320)
-        {
+        if self.game.has(Change::UnitsConstructedOnce4320) {
             return built;
         }
         let constructing = self
@@ -501,11 +491,7 @@ impl<'a> PlayerRef<'a> {
         let mut ns: OrderedSet<SmallId> = OrderedSet::new();
         let map = &self.game.map;
         let small_id = self.small_id;
-        let skip_fallout = self
-            .game
-            .config()
-            .rules()
-            .has(Change::NearbySkipsFallout4422);
+        let skip_fallout = self.game.has(Change::NearbySkipsFallout4422);
         for border in self.border_tiles.iter() {
             map.for_each_neighbor_nswe(border, |neighbor| {
                 if map.is_land(neighbor) && !map.is_impassable(neighbor) {
@@ -519,7 +505,7 @@ impl<'a> PlayerRef<'a> {
                 }
             });
         }
-        if self.game.config().rules().has(Change::AiAttackRework31) {
+        if self.game.has(Change::AiAttackRework31) {
             for n in self.shore_reachable_neighbors().iter() {
                 ns.insert(*n);
             }
@@ -646,13 +632,7 @@ impl<'a> PlayerRef<'a> {
             .incoming_alliance_requests()
             .iter()
             .any(|&r| self.game.alliance_requests[r as usize].requestor == other);
-        if has_incoming
-            && self
-                .game
-                .config()
-                .rules()
-                .has(Change::AllianceIncomingBypass3092)
-        {
+        if has_incoming && self.game.has(Change::AllianceIncomingBypass3092) {
             return true;
         }
         let mut latest: Option<Tick> = None;
@@ -733,8 +713,7 @@ impl<'a> PlayerRef<'a> {
             .relations
             .iter()
             .filter(|(p, _)| {
-                self.game.config().rules().has(Change::RelationPenalties28)
-                    || self.game.player(**p).is_alive()
+                self.game.has(Change::RelationPenalties28) || self.game.player(**p).is_alive()
             })
             .map(|(p, r)| (*p, *r))
             .collect();
@@ -810,7 +789,7 @@ impl<'a> PlayerRef<'a> {
         if recipient == EmojiRecipient::Player(self.id) {
             return false;
         }
-        if self.game.config().rules().has(Change::EmojiBatch5833) {
+        if self.game.has(Change::EmojiBatch5833) {
             let window = self.game.config().emoji_message_window() as f64;
             let ticks = self.game.ticks() as f64;
             let recent = self
@@ -867,7 +846,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `canDonateGold(recipient)`.
     pub fn can_donate_gold(&self, recipient: SmallId) -> bool {
-        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
+        if recipient == self.id && self.game.has(Change::SelfActionGuards4014) {
             return false;
         }
         let r = self.game.player(recipient);
@@ -882,7 +861,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `canDonateTroops(recipient)`.
     pub fn can_donate_troops(&self, recipient: SmallId) -> bool {
-        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
+        if recipient == self.id && self.game.has(Change::SelfActionGuards4014) {
             return false;
         }
         let r = self.game.player(recipient);
@@ -918,13 +897,7 @@ impl<'a> PlayerRef<'a> {
             if self.is_on_same_team(p) {
                 continue;
             }
-            if self
-                .game
-                .config()
-                .rules()
-                .has(Change::EmbargoAllSkipsAllies5919)
-                && self.is_allied_with(p)
-            {
+            if self.game.has(Change::EmbargoAllSkipsAllies5919) && self.is_allied_with(p) {
                 continue;
             }
             return true;
@@ -966,7 +939,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `isFriendly(other, treatAFKFriendly)`.
     pub fn is_friendly(&self, other: SmallId, treat_afk_friendly: bool) -> bool {
-        if other == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
+        if other == self.id && self.game.has(Change::SelfActionGuards4014) {
             return true;
         }
         if self.game.player(other).is_disconnected && !treat_afk_friendly {
@@ -1003,12 +976,8 @@ impl<'a> PlayerRef<'a> {
         if self.gold < cost {
             return false;
         }
-        let exempt = unit_type == UnitType::MIRVWarhead
-            && self
-                .game
-                .config()
-                .rules()
-                .has(Change::MirvWarheadsWhenDead3134);
+        let exempt =
+            unit_type == UnitType::MIRVWarhead && self.game.has(Change::MirvWarheadsWhenDead3134);
         if !exempt && !self.is_alive() {
             return false;
         }
@@ -1080,28 +1049,22 @@ impl<'a> PlayerRef<'a> {
     /// `nukeSpawn(tile, nukeType)`: the nearest ready silo's tile.
     pub fn nuke_spawn(&self, tile: TileRef, nuke_type: UnitType) -> Option<TileRef> {
         let mg = self.game;
-        if mg.is_spawn_immunity_active() && !mg.config().rules().has(Change::ImmunityByConfig28) {
+        if mg.is_spawn_immunity_active() && !mg.has(Change::ImmunityByConfig28) {
             return None;
         }
         if mg.map.is_impassable(tile) {
             return None;
         }
         let owner = mg.owner_id(tile);
-        let game_over = mg
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::AftergameTeammateNukes3410)
+        let game_over = mg.has(Change::AftergameTeammateNukes3410)
             && mg.winner().is_some()
-            && (!mg
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::AftergameSingleplayer5332)
+            && (!mg.has(Change::AftergameSingleplayer5332)
                 || mg.config().game_config().game_type != GameType::Singleplayer);
         if owner != 0 && self.is_on_same_team(owner) && !game_over {
             return None;
         }
         let config = mg.config();
-        if config.rules().has(Change::NukeTeammateStructureGuard3105)
+        if config.has(Change::NukeTeammateStructureGuard3105)
             && config.game_config().game_mode == GameMode::Team
             && nuke_type != UnitType::MIRV
             && !game_over
@@ -1134,7 +1097,7 @@ impl<'a> PlayerRef<'a> {
     /// `portSpawn(tile, validTiles)`.
     pub fn port_spawn(&self, tile: TileRef, valid_tiles: Option<&[TileRef]>) -> Option<TileRef> {
         let mg = self.game;
-        if mg.config().rules().has(Change::PortSpawnFirstShore36) {
+        if mg.has(Change::PortSpawnFirstShore36) {
             let computed;
             let valid: &[TileRef] = match valid_tiles {
                 Some(v) => v,
@@ -1152,7 +1115,7 @@ impl<'a> PlayerRef<'a> {
             .copied()
             .filter(|&t| {
                 mg.map.owner_id(t) == self.id
-                    && if mg.config().rules().has(Change::TradeWaterComponents31) {
+                    && if mg.has(Change::TradeWaterComponents31) {
                         mg.map.is_shore(t)
                     } else {
                         mg.map.is_ocean_shore(t)
@@ -1174,7 +1137,7 @@ impl<'a> PlayerRef<'a> {
     /// `warshipSpawn(tile)`: the closest ready port in the tile's water component.
     pub fn warship_spawn(&self, tile: TileRef) -> Option<TileRef> {
         let mg = self.game;
-        if !mg.config().rules().has(Change::TradeWaterComponents31) {
+        if !mg.has(Change::TradeWaterComponents31) {
             // Before v0.31: the closest port of any water body, as long as the tile is ocean.
             if !mg.map.is_ocean(tile) {
                 return None;
@@ -1302,11 +1265,7 @@ impl<'a> PlayerRef<'a> {
             .iter()
             .copied()
             .filter(|&a| {
-                !self
-                    .game
-                    .config()
-                    .rules()
-                    .has(Change::IncomingAttacksAliveOnly31)
+                !self.game.has(Change::IncomingAttacksAliveOnly31)
                     || self
                         .game
                         .player(self.game.attacks[a as usize].attacker)
@@ -1319,13 +1278,7 @@ impl<'a> PlayerRef<'a> {
     pub fn is_immune(&self) -> bool {
         match self.info.player_type {
             PlayerType::Human => self.game.is_spawn_immunity_active(),
-            PlayerType::Nation
-                if self
-                    .game
-                    .config()
-                    .rules()
-                    .has(Change::NationSpawnImmunity3222) =>
-            {
+            PlayerType::Nation if self.game.has(Change::NationSpawnImmunity3222) => {
                 self.game.is_nation_spawn_immunity_active()
             }
             PlayerType::Nation => false,
@@ -1353,7 +1306,7 @@ impl<'a> PlayerRef<'a> {
     pub fn can_attack(&self, tile: TileRef) -> bool {
         let mg = self.game;
         let owner = mg.owner_id(tile);
-        let by_config = mg.config().rules().has(Change::ImmunityByConfig28);
+        let by_config = mg.has(Change::ImmunityByConfig28);
         if by_config
             && mg.map.has_owner(tile)
             && mg.config().num_spawn_phase_turns() + mg.config().spawn_immunity_duration()
@@ -1548,7 +1501,7 @@ impl PlayerMut<'_> {
 
     /// `donateTroops(recipient, troops)`.
     pub fn donate_troops(&mut self, recipient: SmallId, troops: f64) -> bool {
-        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
+        if recipient == self.id && self.game.has(Change::SelfActionGuards4014) {
             return false;
         }
         if troops <= 0.0 {
@@ -1566,7 +1519,7 @@ impl PlayerMut<'_> {
 
     /// `donateGold(recipient, gold)`.
     pub fn donate_gold(&mut self, recipient: SmallId, gold: Gold) -> bool {
-        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
+        if recipient == self.id && self.game.has(Change::SelfActionGuards4014) {
             return false;
         }
         if gold <= 0 {

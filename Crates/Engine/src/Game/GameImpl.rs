@@ -136,39 +136,32 @@ impl GameImpl {
         team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     ) -> Self {
         let mut spatial = SpatialQuery::new();
-        spatial.set_simple_start(!config.rules().has(Change::NavalInvasionPathing2932));
+        spatial.set_simple_start(!config.has(Change::NavalInvasionPathing2932));
         let unit_grid = UnitGrid::new(&map);
         let mut rail_network = RailNetwork::new();
-        rail_network.legacy_clusters = !config
-            .rules()
-            .has(crate::Builds::Rules::Change::RailSnapOverlap3003);
-        rail_network.leave_same_cluster = !config
-            .rules()
-            .has(crate::Builds::Rules::Change::StationClusterSame5096);
+        rail_network.legacy_clusters = !config.has(Change::RailSnapOverlap3003);
+        rail_network.leave_same_cluster = !config.has(Change::StationClusterSame5096);
         let mut water_manager = WaterManager::new_with(
             mini_map,
             config.disable_nav_mesh(),
-            config.rules().has(Change::WaterGraphEdgeSort5805),
-            !config.rules().has(Change::WaterComponentMarkers4479),
-            config.rules().has(Change::AbstractGraphWideSearch36),
-            !config.rules().has(Change::AbstractAStarMinHeap4149),
+            config.has(Change::WaterGraphEdgeSort5805),
+            !config.has(Change::WaterComponentMarkers4479),
+            config.has(Change::AbstractGraphWideSearch36),
+            !config.has(Change::AbstractAStarMinHeap4149),
             crate::Pathfinding::PathFinder::WaterTweaks {
-                first_shore_neighbor: !config.rules().has(Change::ShoreCoerceBestNeighbor2937),
-                single_los_magnitude: !config.rules().has(Change::PathfindingRefinements2959),
-                short_path_size: if config.rules().has(Change::PathfindingRefinements2959) {
+                first_shore_neighbor: !config.has(Change::ShoreCoerceBestNeighbor2937),
+                single_los_magnitude: !config.has(Change::PathfindingRefinements2959),
+                short_path_size: if config.has(Change::PathfindingRefinements2959) {
                     260
                 } else {
                     140
                 },
-                legacy_naval: !config.rules().has(Change::NavalInvasionPathing2932),
+                legacy_naval: !config.has(Change::NavalInvasionPathing2932),
             },
         );
-        water_manager.set_shared_finder(config.rules().has(Change::WaterHpaSharedFinder4979));
-        water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
-        if !config
-            .rules()
-            .has(crate::Builds::Rules::Change::WaterNukeMinimap4975)
-        {
+        water_manager.set_shared_finder(config.has(Change::WaterHpaSharedFinder4979));
+        water_manager.mini_tile_any_water = config.has(Change::WaterNukeMiniTile6016);
+        if !config.has(Change::WaterNukeMinimap4975) {
             water_manager.set_legacy();
         }
         let tiles = map.width() as usize * map.height() as usize;
@@ -228,7 +221,7 @@ impl GameImpl {
         self.player_teams = resolve_teams_list(
             self.config.player_teams(),
             total,
-            self.config.rules().has(Change::TeamCountMinTwo5436),
+            self.config.has(Change::TeamCountMinTwo5436),
         );
     }
 
@@ -259,13 +252,13 @@ impl GameImpl {
         let is_duos_trios_quads = matches!(
             pt,
             TeamCountConfig::Duos | TeamCountConfig::Trios | TeamCountConfig::Quads
-        ) && self.config.rules().has(Change::TeamAssignDuos4758);
+        ) && self.config.has(Change::TeamAssignDuos4758);
         let assignment = assign_teams(
             &all_players,
             &self.player_teams.clone(),
             is_duos_trios_quads,
             None,
-            self.config.rules().has(Change::TeamFriendGroups6259),
+            self.config.has(Change::TeamFriendGroups6259),
             self.config.rules(),
         );
         for (i, team) in assignment {
@@ -283,6 +276,10 @@ impl GameImpl {
     /// `config()`.
     pub fn config(&self) -> &Config {
         &self.config
+    }
+    /// Whether the build contains the upstream change `change`.
+    pub fn has(&self, change: Change) -> bool {
+        self.config.has(change)
     }
     /// `stats()`.
     pub fn stats(&self) -> &StatsImpl {
@@ -310,7 +307,7 @@ impl GameImpl {
     }
     /// `inSpawnPhase`.
     pub fn in_spawn_phase(&self) -> bool {
-        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+        if !self.config.has(Change::SpawnPhaseTimer3199) {
             return self.ticks <= self.config.num_spawn_phase_turns();
         }
         self.start_tick.is_none()
@@ -488,7 +485,7 @@ impl GameImpl {
     }
     /// `attack.setTroops(troops)`; builds before PR 3176 do not clamp at zero.
     pub fn set_attack_troops(&mut self, id: AttackId, troops: f64) {
-        if self.config.rules().has(Change::NukeExplosionBulk3176) {
+        if self.config.has(Change::NukeExplosionBulk3176) {
             self.attacks[id as usize].set_troops(troops);
         } else {
             self.attacks[id as usize].set_troops_unclamped(troops);
@@ -760,7 +757,7 @@ impl GameImpl {
         for p in &self.players {
             hash += self.player(p.small_id).hash();
         }
-        if self.config.rules().has(Change::RailNetworkHash36) {
+        if self.config.has(Change::RailNetworkHash36) {
             hash += self.rail_network.hash();
         }
         hash
@@ -901,7 +898,7 @@ impl GameImpl {
         self.update_border_status(tile);
         let mut nbuf = [0; 4];
         // Before PR 3124 the border update walked `neighbors()` (N, S, W, E) in every build.
-        let n = if self.config.rules().has(Change::BorderUpdateForEach3124) {
+        let n = if self.config.has(Change::BorderUpdateForEach3124) {
             self.map.neighbors4(tile, &mut nbuf)
         } else {
             self.map.neighbors4_nswe(tile, &mut nbuf)
@@ -986,7 +983,7 @@ impl GameImpl {
             .past_outgoing_alliance_requests
             .push(request);
         // Before PR 3155 the game itself ends the embargoes that were created automatically.
-        if !self.config.rules().has(Change::AllianceRadialAccept3155) {
+        if !self.config.has(Change::AllianceRadialAccept3155) {
             if self.player(requestor).has_embargo_against(recipient) {
                 self.player_mut(requestor).end_temporary_embargo(recipient);
             }
@@ -1082,7 +1079,7 @@ impl GameImpl {
             }
         }
         let attacks_sent = self.stats.attacks_sent(self.player(conquered).client_id());
-        let skip_gold_transfer = self.config.rules().has(Change::ConquerGoldSkipInactive3020)
+        let skip_gold_transfer = self.config.has(Change::ConquerGoldSkipInactive3020)
             && attacks_sent == 0
             && self.player(conquered).player_type() == PlayerType::Human;
         let gold: Gold = if skip_gold_transfer {
@@ -1113,10 +1110,10 @@ impl GameImpl {
 
     /// `isSpawnImmunityActive`.
     pub fn is_spawn_immunity_active(&self) -> bool {
-        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+        if !self.config.has(Change::SpawnPhaseTimer3199) {
             let end = (self.config.num_spawn_phase_turns() as f64)
                 + (self.config.spawn_immunity_duration() as f64);
-            if !self.config.rules().has(Change::NationSpawnImmunity3222) {
+            if !self.config.has(Change::NationSpawnImmunity3222) {
                 return end >= self.ticks as f64;
             }
             return end > self.ticks as f64;
@@ -1127,7 +1124,7 @@ impl GameImpl {
 
     /// `elapsedGameSeconds`.
     pub fn elapsed_game_seconds(&self) -> f64 {
-        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+        if !self.config.has(Change::SpawnPhaseTimer3199) {
             return (self.ticks as f64 - self.config.num_spawn_phase_turns() as f64) / 10.0;
         }
         self.ticks_since_start() / 10.0
@@ -1135,7 +1132,7 @@ impl GameImpl {
 
     /// `isNationSpawnImmunityActive`.
     pub fn is_nation_spawn_immunity_active(&self) -> bool {
-        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+        if !self.config.has(Change::SpawnPhaseTimer3199) {
             return (self.config.num_spawn_phase_turns() as f64)
                 + (self.config.nation_spawn_immunity_duration() as f64)
                 > self.ticks as f64;
@@ -1172,7 +1169,7 @@ impl GameImpl {
 
     /// `teamSpawnArea(team)`.
     pub fn team_spawn_area(&self, team: &str) -> Option<SpawnArea> {
-        if !self.config.rules().has(Change::TeamSpawnAreas3263) {
+        if !self.config.has(Change::TeamSpawnAreas3263) {
             return None;
         }
         let areas_map = self.team_game_spawn_areas.as_ref()?;

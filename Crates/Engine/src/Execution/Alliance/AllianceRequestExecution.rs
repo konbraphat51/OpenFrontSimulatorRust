@@ -4,6 +4,7 @@
 //!
 //! The client messages of `cancelNukesBetweenAlliedPlayers` are dropped; the unit deletions stay.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Execution::Util::would_nuke_break_alliance;
 use crate::Game::AllianceRequestImpl::RequestStatus;
@@ -37,10 +38,7 @@ impl AllianceRequestExecution {
             } else {
                 self.requestor
             };
-            let cancels_mirv = game
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::AllianceCancelMirv5054);
+            let cancels_mirv = game.has(Change::AllianceCancelMirv5054);
             let types: &[UnitType] = if cancels_mirv {
                 &[
                     UnitType::AtomBomb,
@@ -81,11 +79,7 @@ impl AllianceRequestExecution {
                     let Some(t) = target_tile else {
                         continue;
                     };
-                    if !game
-                        .config()
-                        .rules()
-                        .has(crate::Builds::Rules::Change::AllianceNukeCancelBlast31)
-                    {
+                    if !game.has(Change::AllianceNukeCancelBlast31) {
                         if game.owner_id(t) != other {
                             continue;
                         }
@@ -127,11 +121,7 @@ impl Execution for AllianceRequestExecution {
             // The recipient already asked: accept that request instead of creating a new one.
             self.active = false;
             game.accept_request(incoming);
-            if !game
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::AllianceRadialAccept3155)
-            {
+            if !game.has(Change::AllianceRadialAccept3155) {
                 return;
             }
             game.player_mut(self.requestor)

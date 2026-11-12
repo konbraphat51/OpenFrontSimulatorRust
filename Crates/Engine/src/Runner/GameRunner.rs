@@ -189,12 +189,12 @@ impl GameRunner {
     /// `init()`: the executions every game starts with.
     pub fn init(&mut self) {
         if self.game.config().game_config().game_type != GameType::Singleplayer
-            && self.game.config().rules().has(Change::SpawnPhaseTimer3199)
+            && self.game.has(Change::SpawnPhaseTimer3199)
         {
             self.game
                 .add_execution(Box::new(SpawnTimerExecution::new()));
         }
-        let nations_last = !self.game.config().rules().has(Change::NationSpawnRetry4117);
+        let nations_last = !self.game.has(Change::NationSpawnRetry4117);
         if !nations_last && self.game.config().spawn_nations() {
             for e in self.executor.nation_executions(&self.game) {
                 self.game.add_execution(e);
@@ -217,7 +217,7 @@ impl GameRunner {
             }
         }
         self.game.add_execution(Box::new(WinCheckExecution::new()));
-        if self.game.config().rules().has(Change::DoomsdayClock4469)
+        if self.game.has(Change::DoomsdayClock4469)
             && self.game.config().doomsday_clock_config().enabled
         {
             self.game

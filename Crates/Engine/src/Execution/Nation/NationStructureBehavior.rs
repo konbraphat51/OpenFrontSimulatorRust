@@ -288,7 +288,7 @@ impl NationStructureBehavior {
 
     /// True before the v0.31 structure rework (plain build order, defense posts in it).
     fn legacy31(game: &GameImpl) -> bool {
-        !game.config().rules().has(Change::NationStructureRework31)
+        !game.has(Change::NationStructureRework31)
     }
 
     /// `handleStructures()`.
@@ -340,7 +340,7 @@ impl NationStructureBehavior {
             return false;
         }
 
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
         let land_attacks = self.incoming_land_attacks(game, v2);
         if land_attacks.is_empty() {
             return false;
@@ -661,10 +661,8 @@ impl NationStructureBehavior {
         if Self::difficulty(game) == Difficulty::Easy {
             return false;
         }
-        let land_attacks = self.incoming_land_attacks(
-            game,
-            game.config().rules().has(Change::NationsLikeHumans5899),
-        );
+        let land_attacks =
+            self.incoming_land_attacks(game, game.has(Change::NationsLikeHumans5899));
         if land_attacks.is_empty() {
             return false;
         }
@@ -856,7 +854,7 @@ impl NationStructureBehavior {
         if !self.has_high_starting_gold(game) {
             return false;
         }
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             let p = game.player(self.player);
             let info = p.info();
             if game
@@ -890,7 +888,7 @@ impl NationStructureBehavior {
             self.post_save_up_start_tick = Some(game.ticks());
         }
         // Not while the gold covers the target twice, as bulk upgrades leave the target for nukes.
-        if game.config().rules().has(Change::NationsLikeHumans5899)
+        if game.has(Change::NationsLikeHumans5899)
             && game.player(self.player).gold() >= save_up_target * 2
         {
             return false;
@@ -932,7 +930,7 @@ impl NationStructureBehavior {
         }
 
         // On crowded maps the first structure is a port (or factory if landlocked).
-        let own_flag = game.config().rules().has(Change::NationCrowdedFirst5344);
+        let own_flag = game.has(Change::NationCrowdedFirst5344);
         let first_pending = if own_flag {
             !self.built_crowded_map_first_structure
         } else {
@@ -942,7 +940,7 @@ impl NationStructureBehavior {
             && !cities_disabled
             && first_pending
             && (self.is_high_nation_density(game)
-                || (game.config().rules().has(Change::NationsLikeHumans5899)
+                || (game.has(Change::NationsLikeHumans5899)
                     && difficulty != Difficulty::Easy
                     && self.starts_in_team_spawn_area(game)))
         {
@@ -960,8 +958,7 @@ impl NationStructureBehavior {
             }
         }
 
-        if game.config().rules().has(Change::NationsLikeHumans5899)
-            && self.maybe_build_proactive_defense_post(game)
+        if game.has(Change::NationsLikeHumans5899) && self.maybe_build_proactive_defense_post(game)
         {
             return true;
         }
@@ -1024,7 +1021,7 @@ impl NationStructureBehavior {
         if let Some(v) = self.has_high_starting_gold {
             return v;
         }
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             return has_high_starting_gold(game, self.player);
         }
         let info = game.player(self.player).info().clone();
@@ -1066,7 +1063,7 @@ impl NationStructureBehavior {
         has_coastal_tiles: bool,
     ) -> bool {
         let difficulty = Self::difficulty(game);
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             return self.levels_due(game, t, city_count, has_coastal_tiles) > 0.0;
         }
         let Some(config) =
@@ -1157,7 +1154,7 @@ impl NationStructureBehavior {
             return false;
         }
 
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
         // Another SAM would cover nothing new, but a higher level stops more of a salvo.
         if v2 && t == UnitType::SAMLauncher && self.should_upgrade_sam_instead(game) {
             let best = self.sam_protecting_most(game);
@@ -1200,7 +1197,7 @@ impl NationStructureBehavior {
     fn get_perceived_cost(&self, game: &GameImpl, t: UnitType) -> Gold {
         let real_cost = self.cost(game, t);
 
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
         let save_up_target = self.get_save_up_target(game);
         if save_up_target == 0
             || game.player(self.player).gold() >= save_up_target
@@ -1259,7 +1256,7 @@ impl NationStructureBehavior {
 
         // Not for a MIRV that SAMs would shoot down.
         if mirv_enabled
-            && (!game.config().rules().has(Change::NationsLikeHumans5899)
+            && (!game.has(Change::NationsLikeHumans5899)
                 || self.is_mirv_worth_saving_for_memo(game))
         {
             return self.cost(game, UnitType::MIRV) + self.cost(game, UnitType::HydrogenBomb);
@@ -1278,7 +1275,7 @@ impl NationStructureBehavior {
 
     /// Tries to upgrade an existing structure when the density threshold is exceeded.
     fn maybe_upgrade_structure(&mut self, game: &mut GameImpl, structures: &[UnitId]) -> bool {
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             let best = self.find_best_structure_to_upgrade(game, structures);
             return self.upgrade_structure(game, best);
         }
@@ -1420,7 +1417,7 @@ impl NationStructureBehavior {
         let player = game.player(self.player);
         let tiles_owned = player.num_tiles_owned();
         if tiles_owned > 0 {
-            let types: &[UnitType] = if game.config().rules().has(Change::NationsLikeHumans5899) {
+            let types: &[UnitType] = if game.has(Change::NationsLikeHumans5899) {
                 &DENSITY_STRUCTURE_TYPES
             } else {
                 STRUCTURES
@@ -1572,8 +1569,7 @@ impl NationStructureBehavior {
                         continue;
                     }
                     // Skip tiny lakes (not on Easy).
-                    if difficulty != Difficulty::Easy
-                        && game.config().rules().has(Change::NationSmallLakePorts4429)
+                    if difficulty != Difficulty::Easy && game.has(Change::NationSmallLakePorts4429)
                     {
                         let size = game
                             .water_manager

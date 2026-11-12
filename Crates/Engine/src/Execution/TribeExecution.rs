@@ -69,7 +69,7 @@ impl TribeExecution {
     }
 
     fn delete_next_structure(&self, game: &mut GameImpl) {
-        if !game.config().rules().has(Change::BotStructureFarming2895) {
+        if !game.has(Change::BotStructureFarming2895) {
             return;
         }
         if !game.player(self.tribe).can_delete_unit() {
@@ -99,10 +99,9 @@ impl TribeExecution {
 
     fn maybe_attack(&mut self, game: &mut GameImpl) {
         let behavior = self.attack_behavior.as_mut().expect("not initialized");
-        if let Some(to_attack) = behavior.get_neighbor_traitor_to_attack(
-            game,
-            game.config().rules().has(Change::NationAiSplit6087),
-        ) {
+        if let Some(to_attack) =
+            behavior.get_neighbor_traitor_to_attack(game, game.has(Change::NationAiSplit6087))
+        {
             let odds = if game.player(self.tribe).is_friendly(to_attack, false) {
                 6.0
             } else {
@@ -122,7 +121,7 @@ impl TribeExecution {
         }
 
         if self.neighbors_terra_nullius {
-            let borders_free_land = if game.config().rules().has(Change::BotTerraNulliusLand2896) {
+            let borders_free_land = if game.has(Change::BotTerraNulliusLand2896) {
                 game.player(self.tribe).nearby().contains(&0)
             } else {
                 game.player(self.tribe).shares_border_with(0)
@@ -169,7 +168,7 @@ impl Execution for TribeExecution {
             return;
         }
         // The tutorial's tribe only grows into free land and accepts no alliance.
-        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+        if game.has(Change::TutorialMode6204) && game.config().tutorial() {
             self.attack_behavior
                 .as_mut()
                 .expect("set above")

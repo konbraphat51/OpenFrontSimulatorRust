@@ -58,7 +58,7 @@ impl TradeShipExecution {
         game.unit_mut(ship).delete(Some(false), None);
         let ship_owner = game.unit_any(ship).owner_id();
         let is_lobby_creator = game.player(ship_owner).is_lobby_creator();
-        let gold = if game.config().rules().has(Change::TradeShipMeta3232) {
+        let gold = if game.has(Change::TradeShipMeta3232) {
             game.config()
                 .trade_ship_gold(self.tiles_traveled, is_lobby_creator)
         } else {
@@ -92,7 +92,7 @@ impl Execution for TradeShipExecution {
         let stagger = game.trade_ship_stagger % WaterPathFinder::STAGGER_SPREAD;
         game.trade_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
-        if game.config().rules().has(Change::LegacyAStar28) {
+        if game.has(Change::LegacyAStar28) {
             self.legacy_path_finder = Some(LegacyPathFinder::mini(2500.0, true, 20.0));
         }
     }
@@ -163,7 +163,7 @@ impl Execution for TradeShipExecution {
         {
             let my_component = game.water_manager.get_water_component(&game.map, cur_tile);
             let ports = game.player(ship_owner).units_of(UnitType::Port);
-            let reachable = game.config().rules().has(Change::TradeWaterComponents31);
+            let reachable = game.has(Change::TradeWaterComponents31);
             let nearest = find_closest_by(
                 &ports,
                 |&port| {
@@ -243,7 +243,7 @@ impl Execution for TradeShipExecution {
         match result {
             PathResult::Next(node) => {
                 if Some(dst) != self.motion_plan_dst {
-                    if game.config().rules().has(Change::TradeShipPathReuse4654) {
+                    if game.has(Change::TradeShipPathReuse4654) {
                         self.path_finder
                             .as_mut()
                             .expect("set in init")

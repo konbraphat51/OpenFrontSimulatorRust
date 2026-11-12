@@ -64,7 +64,7 @@ impl Execution for DonateTroopsExecution {
         let max_donation = game.player(recipient).max_troops() - game.player(recipient).troops();
         let troops = troops.min(max_donation);
         self.troops = Some(troops);
-        if troops <= 0.0 && game.config().rules().has(Change::DonateTroopZeroInactive31) {
+        if troops <= 0.0 && game.has(Change::DonateTroopZeroInactive31) {
             self.active = false;
         }
     }
@@ -84,7 +84,7 @@ impl Execution for DonateTroopsExecution {
                     .update_relation(self.sender, 50.0);
             }
             if game.player(recipient).player_type() == PlayerType::Nation
-                && !game.config().rules().has(Change::RelationPenalties28)
+                && !game.has(Change::RelationPenalties28)
                 && game
                     .player(recipient)
                     .can_send_emoji(EmojiRecipient::Player(self.sender))

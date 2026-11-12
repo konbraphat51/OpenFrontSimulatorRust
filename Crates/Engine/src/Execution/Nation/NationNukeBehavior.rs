@@ -112,8 +112,8 @@ impl NationNukeBehavior {
         let p = game.player(player);
         let atom_bomb_perceived_cost = p.unit_cost(UnitType::AtomBomb, 0);
         let hydrogen_bomb_perceived_cost = p.unit_cost(UnitType::HydrogenBomb, 0);
-        let is_hydro_nation = !game.config().rules().has(Change::NationsLikeHumans5899)
-            && random.borrow_mut().chance(3.0);
+        let is_hydro_nation =
+            !game.has(Change::NationsLikeHumans5899) && random.borrow_mut().chance(3.0);
         Self {
             random,
             player,
@@ -158,7 +158,7 @@ impl NationNukeBehavior {
     pub fn maybe_send_nuke(&mut self, game: &mut GameImpl) {
         let silos = game.player(self.player).units_of(UnitType::MissileSilo);
         let config = game.config();
-        let legacy = !config.rules().has(Change::NationNukeRework31);
+        let legacy = !config.has(Change::NationNukeRework31);
         if !legacy
             && (silos.is_empty()
                 || config.is_unit_disabled(UnitType::MissileSilo)
@@ -168,7 +168,7 @@ impl NationNukeBehavior {
             return;
         }
 
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             self.maybe_send_nuke_v2(game, silos);
             return;
         }
@@ -264,7 +264,7 @@ impl NationNukeBehavior {
                 best_value = value;
             }
         }
-        let overwhelms_sams = game.config().rules().has(Change::NationBehaviorUpdate3246);
+        let overwhelms_sams = game.has(Change::NationBehaviorUpdate3246);
         if let Some(tile) = best_tile
             && (!overwhelms_sams || best_value > 0.0 || difficulty != Difficulty::Impossible)
         {
@@ -276,12 +276,12 @@ impl NationNukeBehavior {
 
     /// `findBestNukeTarget()`.
     pub fn find_best_nuke_target(&mut self, game: &mut GameImpl) -> Option<SmallId> {
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             return self.find_best_nuke_target_v2(game);
         }
         // On Hard & Impossible with only 2 players left, target the only other one.
         let diff = Self::difficulty(game);
-        if game.config().rules().has(Change::NationBehaviorUpdate3246)
+        if game.has(Change::NationBehaviorUpdate3246)
             && (diff == Difficulty::Hard || diff == Difficulty::Impossible)
             && game.players().len() == 2
             && let Some(other) = game.players().into_iter().find(|&p| p != self.player)
@@ -300,7 +300,7 @@ impl NationNukeBehavior {
 
         // On Impossible, the richest nation hunts very high structure density targets.
         if diff == Difficulty::Impossible
-            && game.config().rules().has(Change::NationNukeRework31)
+            && game.has(Change::NationNukeRework31)
             && self.is_richest_nation(game)
             && self.rnd().chance(2.0)
             && let Some(dense_target) = self.find_high_density_target(game)
@@ -436,7 +436,7 @@ impl NationNukeBehavior {
 
     fn find_ffa_crown_target(&self, game: &GameImpl) -> Option<SmallId> {
         let difficulty = Self::difficulty(game);
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             return self.find_ffa_crown_target_v2(game);
         }
         if Self::game_mode(game) != GameMode::FFA {
@@ -537,7 +537,7 @@ impl NationNukeBehavior {
         }
 
         let target_team_players = team_players.get(&strongest_team).unwrap();
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
 
         // Filter out friendly players.
         let valid_targets: Vec<SmallId> = target_team_players
@@ -582,12 +582,11 @@ impl NationNukeBehavior {
 
     /// Simulates saving up for a MIRV: the cost the nation perceives for a nuke.
     fn get_perceived_nuke_cost(&self, game: &GameImpl, t: UnitType) -> Gold {
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             return self.get_perceived_nuke_cost_v2(game, t);
         }
         // With only 2 players left, use the actual cost (no point saving for a MIRV).
-        if game.config().rules().has(Change::NationBehaviorUpdate3246) && game.players().len() == 2
-        {
+        if game.has(Change::NationBehaviorUpdate3246) && game.players().len() == 2 {
             return self.cost(game, t);
         }
 
@@ -599,7 +598,7 @@ impl NationNukeBehavior {
         let gold = game.player(self.player).gold();
         if Self::game_mode(game) == GameMode::Team
             && (gold > self.cost(game, UnitType::HydrogenBomb)
-                || !game.config().rules().has(Change::NationNukeRework31))
+                || !game.has(Change::NationNukeRework31))
         {
             return self.cost(game, t);
         }
@@ -687,8 +686,8 @@ impl NationNukeBehavior {
             distance_based_height: Some(true),
             direction_up: Some(true),
             ignore_map_bounds: None,
-            legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
-            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            legacy_curve: !game.has(Change::MirvNormalize5188),
+            legacy_reset: !game.has(Change::SamTargetingFixes4770),
             ..Default::default()
         });
         path_finder.find_path(&game.map, from, to)
@@ -766,7 +765,7 @@ impl NationNukeBehavior {
 
     fn is_valid_nuke_tile(&self, game: &GameImpl, t: TileRef, nuke_target: SmallId) -> bool {
         let difficulty = Self::difficulty(game);
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             let owner = game.owner_id(t);
             if owner == nuke_target {
                 return true;
@@ -897,7 +896,7 @@ impl NationNukeBehavior {
     ) {
         let tick = game.ticks();
         self.recently_sent_nukes.push((tick, tile, nuke_type));
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
         let perceived = if v2 {
             self.inflated_nuke_cost(game, nuke_type)
         } else if nuke_type == UnitType::AtomBomb {
@@ -908,7 +907,7 @@ impl NationNukeBehavior {
         if nuke_type == UnitType::AtomBomb {
             self.atom_bombs_launched += 1;
             // +50% each time to simulate saving up for a MIRV (more than hydro, so atom bombs lose appeal late).
-            let percent = if game.config().rules().has(Change::NationBehaviorUpdate3246) {
+            let percent = if game.has(Change::NationBehaviorUpdate3246) {
                 150
             } else {
                 135
@@ -977,7 +976,7 @@ impl NationNukeBehavior {
         for target_sam in sorted_sams {
             let target_tile = game.unit_any(target_sam).tile;
             // Hitting an ally's land would break the alliance.
-            if game.config().rules().has(Change::NationsLikeHumans5899)
+            if game.has(Change::NationsLikeHumans5899)
                 && self.blast_hits_friendly_land(game, target_tile, UnitType::AtomBomb, 0.0)
             {
                 continue;
@@ -1146,7 +1145,7 @@ impl NationNukeBehavior {
 
         // Couldn't destroy any SAM: upgrade silos only if capacity was the bottleneck
         // (if only gold is lacking, don't waste it on upgrades).
-        if game.config().rules().has(Change::NationNukeRework31) {
+        if game.has(Change::NationNukeRework31) {
             if needs_more_silos && let Some(failed) = failed_target {
                 self.maybe_upgrade_helpful_silo(game, &failed);
             }
@@ -1697,7 +1696,7 @@ impl NationNukeBehavior {
 
     /// `followUpStrikes()`, called every tick: attacks a strike's target the moment its bomb, or its MIRV's last warhead, lands.
     pub fn follow_up_strikes(&mut self, game: &mut GameImpl) {
-        if !game.config().rules().has(Change::NationsLikeHumans5899) {
+        if !game.has(Change::NationsLikeHumans5899) {
             return;
         }
         if Self::follows_up_strikes(game) && game.player(self.player).unit_count(UnitType::MIRV) > 0

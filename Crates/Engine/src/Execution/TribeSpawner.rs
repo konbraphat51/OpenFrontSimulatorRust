@@ -38,11 +38,7 @@ impl<'a> TribeSpawner<'a> {
             random: PseudoRandom::for_rules(
                 game.config().rules(),
                 simple_hash(game_id) as f64
-                    + if game
-                        .config()
-                        .rules()
-                        .has(crate::Builds::Rules::Change::BotSpawnerOwnSeed30)
-                    {
+                    + if game.has(Change::BotSpawnerOwnSeed30) {
                         2.0
                     } else {
                         0.0
@@ -78,12 +74,11 @@ impl<'a> TribeSpawner<'a> {
         }
 
         let remaining = num_tribes - tribes.len();
-        let purchased_names: &[String] =
-            if self.game.config().rules().has(Change::TribeNameThemes4647) {
-                purchased_names
-            } else {
-                &[]
-            };
+        let purchased_names: &[String] = if self.game.has(Change::TribeNameThemes4647) {
+            purchased_names
+        } else {
+            &[]
+        };
         let mut purchased_by_slot: OrderedMap<usize, String> = OrderedMap::new();
         if !purchased_names.is_empty() && remaining > 0 {
             let used = &purchased_names[..purchased_names.len().min(remaining)];

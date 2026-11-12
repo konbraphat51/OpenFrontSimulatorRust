@@ -264,8 +264,7 @@ impl WarshipExecution {
                         let component = game
                             .water_manager
                             .get_water_component(&game.map, warship_tile);
-                        let reachable_port_rule =
-                            game.config().rules().has(Change::PirateReachablePort4458);
+                        let reachable_port_rule = game.has(Change::PirateReachablePort4458);
                         let has_reachable_port = if !reachable_port_rule {
                             game.player(owner).unit_count(UnitType::Port) > 0
                         } else {
@@ -302,7 +301,7 @@ impl WarshipExecution {
                     continue;
                 }
                 let patrol_tile = patrol_tile.expect("checked above");
-                if !game.config().rules().has(Change::PirateReachablePort4458) {
+                if !game.has(Change::PirateReachablePort4458) {
                     let component = game
                         .water_manager
                         .get_water_component(&game.map, warship_tile);
@@ -824,7 +823,7 @@ impl WarshipExecution {
                 + self
                     .random
                     .next_int(-warship_patrol_range / 2.0, warship_patrol_range / 2.0);
-            let legacy = !game.config().rules().has(Change::WarshipDocking31);
+            let legacy = !game.has(Change::WarshipDocking31);
             if legacy {
                 // Before v0.31 fractional coordinates pass `isValidCoord`, index no tile and are rejected.
                 let (w, h) = (game.map.width() as f64, game.map.height() as f64);
@@ -845,7 +844,7 @@ impl WarshipExecution {
                 continue;
             }
             let tile = game.tile_ref(x as i32, y as i32);
-            let water = if game.config().rules().has(Change::WarshipDocking31) {
+            let water = if game.has(Change::WarshipDocking31) {
                 game.map.is_water(tile)
             } else {
                 game.map.is_ocean(tile)
@@ -853,7 +852,7 @@ impl WarshipExecution {
             let rejected = !water
                 || (!allow_shoreline && game.map.is_shoreline(tile))
                 // Water component connectivity
-                || (!game.config().rules().has(Change::WarshipLegacy28)) && warship_component.is_some_and(|c| {
+                || (!game.has(Change::WarshipLegacy28)) && warship_component.is_some_and(|c| {
                     !game.water_manager.has_water_component(&game.map, tile, c)
                 });
             if rejected {
@@ -878,7 +877,7 @@ impl WarshipExecution {
 impl Execution for WarshipExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.pathfinder = Some(WaterPathFinder::new(&game.water_manager, 0));
-        if game.config().rules().has(Change::WarshipLegacy28) {
+        if game.has(Change::WarshipLegacy28) {
             self.legacy_pathfinder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
         }
         self.random = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
@@ -906,11 +905,11 @@ impl Execution for WarshipExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        if game.config().rules().has(Change::WarshipLegacy28) {
+        if game.has(Change::WarshipLegacy28) {
             super::WarshipExecutionV28::tick_v28(self, game);
             return;
         }
-        if !game.config().rules().has(Change::WarshipDocking31) {
+        if !game.has(Change::WarshipDocking31) {
             super::WarshipExecutionV30::tick_v30(self, game);
             return;
         }

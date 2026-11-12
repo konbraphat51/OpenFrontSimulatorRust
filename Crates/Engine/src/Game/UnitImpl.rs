@@ -370,13 +370,7 @@ impl UnitMut<'_> {
 
     /// `setTroops`: clamped at 0.
     pub fn set_troops(&mut self, troops: f64) {
-        let next = if troops > 0.0
-            || !self
-                .game
-                .config()
-                .rules()
-                .has(Change::NukeExplosionBulk3176)
-        {
+        let next = if troops > 0.0 || !self.game.has(Change::NukeExplosionBulk3176) {
             troops
         } else {
             0.0

@@ -116,7 +116,7 @@ impl Execution for TransportShipExecution {
         let stagger = game.transport_ship_stagger % WaterPathFinder::STAGGER_SPREAD;
         game.transport_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
-        if game.config().rules().has(Change::LegacyAStar28) {
+        if game.has(Change::LegacyAStar28) {
             self.legacy_path_finder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
         }
 
@@ -130,12 +130,7 @@ impl Execution for TransportShipExecution {
             return;
         }
 
-        if self.target != 0
-            && game
-                .config()
-                .rules()
-                .has(Change::TransportRejectsAlliances31)
-        {
+        if self.target != 0 && game.has(Change::TransportRejectsAlliances31) {
             let target_type = game.player(self.target).player_type();
             if target_type != PlayerType::Bot
                 && game.player(self.attacker).player_type() != PlayerType::Bot
@@ -144,13 +139,13 @@ impl Execution for TransportShipExecution {
             }
         }
 
-        if self.target == self.attacker && game.config().rules().has(Change::SelfActionGuards4014) {
+        if self.target == self.attacker && game.has(Change::SelfActionGuards4014) {
             self.active = false;
             return;
         }
 
         if self.target != 0
-            && !game.config().rules().has(Change::ImmunityByConfig28)
+            && !game.has(Change::ImmunityByConfig28)
             && !game
                 .player(self.attacker)
                 .can_attack_player(self.target, false)
@@ -236,11 +231,7 @@ impl Execution for TransportShipExecution {
             self.motion_plan_dst = None;
         }
 
-        if !game
-            .config()
-            .rules()
-            .has(Change::TransportRetreatNearest3286)
-        {
+        if !game.has(Change::TransportRetreatNearest3286) {
             if game.unit_any(boat).transport_ship_state().is_retreating {
                 // The launch tile is water, so its owner never matches: the spawn is looked up again.
                 let src = self.src.expect("set in init");
@@ -274,10 +265,7 @@ impl Execution for TransportShipExecution {
             self.retreat_dst = None;
         }
 
-        if game
-            .config()
-            .rules()
-            .has(Change::TransportRetreatNearest3286)
+        if game.has(Change::TransportRetreatNearest3286)
             && game.unit_any(boat).transport_ship_state().is_retreating
         {
             // Resolve the retreat destination once, from the boat's location when the retreat begins

@@ -97,11 +97,7 @@ impl Executor {
                 src,
             } => {
                 let mut exec = TransportShipExecution::new(player, *dst, Some(*troops));
-                if !game
-                    .config()
-                    .rules()
-                    .has(crate::Builds::Rules::Change::PathfindingRefinements2959)
-                {
+                if !game.has(Change::PathfindingRefinements2959) {
                     exec = exec.with_intent_target(target_id.clone(), *src);
                 }
                 Box::new(exec)
@@ -152,7 +148,7 @@ impl Executor {
                 UnitType::from_str(unit).unwrap_or_else(|| panic!("unknown unit type {unit}")),
                 *tile,
                 *rocket_direction_up,
-                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
+                amount.filter(|_| game.has(Change::BulkPurchase4640)),
             )),
             Intent::AllianceExtension { recipient } => {
                 Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
@@ -162,7 +158,7 @@ impl Executor {
             } => Box::new(UpgradeStructureExecution::new(
                 player,
                 *unit_id,
-                amount.filter(|_| game.config().rules().has(Change::BulkPurchase4640)),
+                amount.filter(|_| game.has(Change::BulkPurchase4640)),
             )),
             Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
@@ -178,7 +174,7 @@ impl Executor {
 
     /// `spawnTribes(numTribes)`.
     pub fn spawn_tribes(&self, game: &GameImpl, num_tribes: usize) -> Vec<SpawnExecution> {
-        if game.config().rules().has(Change::SpawnByTile28) {
+        if game.has(Change::SpawnByTile28) {
             return TribeSpawner::new(game, &self.game_id, &[]).spawn_bots_v28(num_tribes);
         }
         let nation_cells: Vec<Cell> = game.nations().iter().filter_map(|n| n.spawn_cell).collect();
@@ -188,7 +184,7 @@ impl Executor {
 
     /// `spawnPlayers()`.
     pub fn spawn_players(&self, game: &GameImpl) -> Vec<SpawnExecution> {
-        if game.config().rules().has(Change::SpawnByTile28) {
+        if game.has(Change::SpawnByTile28) {
             return spawn_players_v28(game, &self.game_id);
         }
         spawn_players(game, &self.game_id)
@@ -196,7 +192,7 @@ impl Executor {
 
     /// `nationExecutions()`: one `NationExecution` per nation.
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
-        if game.config().rules().has(Change::FakeHumanNations28) {
+        if game.has(Change::FakeHumanNations28) {
             return game
                 .nations()
                 .iter()

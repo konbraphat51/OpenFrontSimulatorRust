@@ -86,9 +86,7 @@ impl NationExecution {
     fn get_attack_rate(&self, game: &GameImpl) -> u32 {
         let mut random = self.random.borrow_mut();
         let (lo, hi) = match game.config().game_config().difficulty {
-            Difficulty::Easy if game.config().rules().has(Change::NationExecutionTweaks31) => {
-                (65.0, 100.0)
-            }
+            Difficulty::Easy if game.has(Change::NationExecutionTweaks31) => (65.0, 100.0),
             Difficulty::Easy => (65.0, 80.0),
             Difficulty::Medium => (55.0, 70.0),
             Difficulty::Hard => (45.0, 60.0),
@@ -178,7 +176,7 @@ impl NationExecution {
             .collect();
         for other in others {
             let embargo_malus = -20.0;
-            let has = if game.config().rules().has(Change::NationsLikeHumans5899) {
+            let has = if game.has(Change::NationsLikeHumans5899) {
                 game.player(other).has_manual_embargo_against(player)
             } else {
                 game.player(other).has_embargo_against(player)
@@ -208,7 +206,7 @@ impl NationExecution {
         let is_higher_difficulty =
             difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible;
         let team_game = game.config().game_config().game_mode == GameMode::Team
-            && game.config().rules().has(Change::NationExecutionTweaks31);
+            && game.has(Change::NationExecutionTweaks31);
 
         for other in others {
             if team_game
@@ -339,11 +337,7 @@ impl Execution for NationExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, ticks: Tick) {
-        if !game
-            .config()
-            .rules()
-            .has(Change::NationStructureBehavior3152)
-        {
+        if !game.has(Change::NationStructureBehavior3152) {
             self.tick_v29(game, ticks);
             return;
         }
@@ -351,9 +345,9 @@ impl Execution for NationExecution {
         if let (Some(b), Some(player)) = (self.behaviors.as_mut(), self.player)
             && game.player(player).is_alive()
             && game.config().game_config().difficulty != Difficulty::Easy
-            && !(game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial())
+            && !(game.has(Change::TutorialMode6204) && game.config().tutorial())
             && (game.player(player).units_constructed(UnitType::Port) != 0
-                || !game.config().rules().has(Change::NationExecutionTweaks31))
+                || !game.has(Change::NationExecutionTweaks31))
             && !game.config().is_unit_disabled(UnitType::Warship)
         {
             b.warship.track_ships_and_retaliate(game);
@@ -361,7 +355,7 @@ impl Execution for NationExecution {
 
         let Some(player) = self.player else { return };
 
-        let tracks_spawn = game.config().rules().has(Change::NationSpawnRetry4117);
+        let tracks_spawn = game.has(Change::NationSpawnRetry4117);
         if game.in_spawn_phase() {
             if !tracks_spawn {
                 if ticks % self.attack_rate != self.attack_tick {
@@ -424,10 +418,10 @@ impl Execution for NationExecution {
         }
 
         // The tutorial's nations only grow into free land (and, from v0.35.9, script a silo and a warship).
-        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+        if game.has(Change::TutorialMode6204) && game.config().tutorial() {
             let attack = self.behaviors.as_ref().expect("initialized").attack.clone();
             let attack_tick = ticks % self.attack_rate == self.attack_tick;
-            if game.config().rules().has(Change::TutorialSilo6242) {
+            if game.has(Change::TutorialSilo6242) {
                 tutorial_collapse(game, player);
                 if !game.player(player).is_alive() {
                     return;

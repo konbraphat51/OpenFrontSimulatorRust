@@ -55,7 +55,7 @@ impl SpawnExecution {
     }
 
     fn get_spawn(&mut self, game: &GameImpl, center: Option<TileRef>) -> Option<Spawn> {
-        let fifo = game.config().rules().has(Change::BfsFifoOrder36);
+        let fifo = game.has(Change::BfsFifoOrder36);
         if let Some(center) = center {
             let tiles = get_spawn_tiles(&game.map, center, false, fifo).unwrap_or_default();
             if tiles.is_empty() {
@@ -71,9 +71,7 @@ impl SpawnExecution {
             if !game.is_land(center) || game.has_owner(center) || game.map.is_border(center) {
                 continue;
             }
-            if tries <= RELAX_MIN_DIST_AT
-                || !game.config().rules().has(Change::SpawnRelaxMinDist4921)
-            {
+            if tries <= RELAX_MIN_DIST_AT || !game.has(Change::SpawnRelaxMinDist4921) {
                 let min_dist = game.config().min_distance_between_players();
                 let near = game
                     .all_players()
@@ -125,7 +123,7 @@ impl SpawnExecution {
         for &t in &prev_tiles {
             game.player_mut(player).relinquish(t);
         }
-        let fifo = game.config().rules().has(Change::BfsFifoOrder36);
+        let fifo = game.has(Change::BfsFifoOrder36);
         for t in get_spawn_tiles(&game.map, tile, false, fifo).unwrap_or_default() {
             game.player_mut(player).conquer(t);
         }
@@ -215,12 +213,12 @@ impl Execution for SpawnExecution {
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.active = false;
 
-        if game.config().rules().has(Change::SpawnByTile28) {
+        if game.has(Change::SpawnByTile28) {
             self.tick_v28(game);
             return;
         }
 
-        if !game.config().rules().has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
+        if !game.has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
             return;
         }
 
@@ -235,25 +233,25 @@ impl Execution for SpawnExecution {
             None => game.add_player(self.player_info.clone(), None),
         };
 
-        if game.config().rules().has(Change::SpawnIntentGate4867) {
+        if game.has(Change::SpawnIntentGate4867) {
             if self.from_intent && !self.queued_during_spawn_phase {
                 return;
             }
-        } else if game.config().rules().has(Change::SpawnTeleportGuard4657)
+        } else if game.has(Change::SpawnTeleportGuard4657)
             && !game.in_spawn_phase()
             && game.player(player).has_spawned()
         {
             return;
         }
 
-        if game.config().rules().has(Change::RandomSpawnLock2958)
+        if game.has(Change::RandomSpawnLock2958)
             && game.config().is_random_spawn()
             && game.player(player).has_spawned()
         {
             return;
         }
 
-        if !game.config().rules().has(Change::SpawnValidation3009) {
+        if !game.has(Change::SpawnValidation3009) {
             self.spawn_unchecked(game, player);
             return;
         }
@@ -262,20 +260,16 @@ impl Execution for SpawnExecution {
         for &t in &prev_tiles {
             game.player_mut(player).relinquish(t);
         }
-        let requested = if game.config().is_random_spawn()
-            && game
-                .config()
-                .rules()
-                .has(Change::RandomSpawnIgnoresTile4428)
-        {
-            None
-        } else {
-            self.tile
-        };
+        let requested =
+            if game.config().is_random_spawn() && game.has(Change::RandomSpawnIgnoresTile4428) {
+                None
+            } else {
+                self.tile
+            };
         let spawn = self.get_spawn(game, requested);
 
         let Some(spawn) = spawn else {
-            if game.config().rules().has(Change::SpawnRollback5321) {
+            if game.has(Change::SpawnRollback5321) {
                 for &t in &prev_tiles {
                     game.player_mut(player).conquer(t);
                 }

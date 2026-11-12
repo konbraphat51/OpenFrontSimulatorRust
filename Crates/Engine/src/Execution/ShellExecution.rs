@@ -78,7 +78,7 @@ impl ShellExecution {
 impl Execution for ShellExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.path_finder = Some(AirPathFinder::new_for(game.ticks(), game.config().rules()));
-        if game.config().rules().has(Change::LegacyProjectiles28) {
+        if game.has(Change::LegacyProjectiles28) {
             self.legacy_air = Some(LegacyAirPathFinder::new(PseudoRandom::for_rules(
                 game.config().rules(),
                 game.ticks() as f64,

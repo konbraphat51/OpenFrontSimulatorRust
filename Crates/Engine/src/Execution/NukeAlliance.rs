@@ -72,11 +72,7 @@ pub fn list_nuke_break_ally_legacy(
             players.push(player);
         }
     }
-    if !game
-        .config()
-        .rules()
-        .has(Change::NukeBreakAlliedStructures2878)
-    {
+    if !game.has(Change::NukeBreakAlliedStructures2878) {
         return players;
     }
     for (id, _) in game.nearby_units(target_tile, magnitude.outer, STRUCTURES, None, false) {

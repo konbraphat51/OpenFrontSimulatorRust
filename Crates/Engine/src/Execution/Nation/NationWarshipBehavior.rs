@@ -65,7 +65,7 @@ impl NationWarshipBehavior {
     /// `spareGold()`: with atom bombs disabled, silo owners keep a hydrogen bomb's price for nukes (v0.36.0 on).
     fn spare_gold(&self, game: &GameImpl) -> i64 {
         let gold = game.player(self.player).gold();
-        if !game.config().rules().has(Change::NationWarshipSpareGold36) {
+        if !game.has(Change::NationWarshipSpareGold36) {
             return gold;
         }
         let config = game.config();
@@ -132,7 +132,7 @@ impl NationWarshipBehavior {
             }
             let tile = game.tile_ref(rand_x, rand_y);
             // Sanity check
-            let ok = if game.config().rules().has(Change::NationWarshipRework31) {
+            let ok = if game.has(Change::NationWarshipRework31) {
                 game.is_water(tile)
             } else {
                 game.map.is_ocean(tile)
@@ -149,7 +149,7 @@ impl NationWarshipBehavior {
     pub fn track_ships_and_retaliate(&mut self, game: &mut GameImpl) {
         self.track_transport_ships_and_retaliate(game);
         self.track_trade_ships_and_retaliate(game);
-        if game.config().rules().has(Change::NationWarshipRework31) {
+        if game.has(Change::NationWarshipRework31) {
             self.track_incoming_transports_and_retaliate(game);
         }
     }
@@ -261,7 +261,7 @@ impl NationWarshipBehavior {
                 let Some(ocean_tile) = self.warship_spawn_tile(game, target, 30) else {
                     continue;
                 };
-                let reason = if game.config().rules().has(Change::NationWarshipSpareGold36) {
+                let reason = if game.has(Change::NationWarshipSpareGold36) {
                     Reason::Invasion
                 } else {
                     Reason::Transport
@@ -281,12 +281,11 @@ impl NationWarshipBehavior {
         reason: Reason,
     ) {
         // Do not retaliate against ourselves (e.g. an own nuke destroyed an own ship).
-        if enemy == self.player && game.config().rules().has(Change::NationBehaviorUpdate3246) {
+        if enemy == self.player && game.has(Change::NationBehaviorUpdate3246) {
             return;
         }
         // One of ours already patrols there (sent by any trigger): do not pile up more.
-        if game.config().rules().has(Change::NationsLikeHumans5899)
-            && !self.warships_covering(game, tile).is_empty()
+        if game.has(Change::NationsLikeHumans5899) && !self.warships_covering(game, tile).is_empty()
         {
             return;
         }
@@ -302,7 +301,7 @@ impl NationWarshipBehavior {
             || (difficulty == Difficulty::Impossible && self.next_int(0.0, 100.0) < 80.0);
         if retaliate {
             // Stopping an invasion may dip into the gold kept for nukes.
-            let affordable = !game.config().rules().has(Change::NationWarshipSpareGold36)
+            let affordable = !game.has(Change::NationWarshipSpareGold36)
                 || reason == Reason::Invasion
                 || self.spare_gold(game) >= self.cost(game, UnitType::Warship);
             if game
@@ -327,7 +326,7 @@ impl NationWarshipBehavior {
                 &emoji_warship_retaliation(),
             );
             let delta = if reason == Reason::Trade { -7.5 } else { -15.0 };
-            if game.config().rules().has(Change::NationBehaviorUpdate3246) {
+            if game.has(Change::NationBehaviorUpdate3246) {
                 game.player_mut(self.player).update_relation(enemy, delta);
             }
         }
@@ -443,7 +442,7 @@ impl NationWarshipBehavior {
     }
 
     fn maybe_move_warship(&mut self, game: &mut GameImpl, tile: TileRef) {
-        if !game.config().rules().has(Change::NationWarshipRework31) {
+        if !game.has(Change::NationWarshipRework31) {
             return;
         }
         // Make sure we are targeting water.
@@ -536,7 +535,7 @@ impl NationWarshipBehavior {
         // (team, warship count, players) in first-seen order.
         let mut enemy_teams: Vec<(String, usize, Vec<SmallId>)> = Vec::new();
         let mut own_fleet = 0usize;
-        let count_own = game.config().rules().has(Change::NationWarshipSpareGold36);
+        let count_own = game.has(Change::NationWarshipSpareGold36);
         for p in game.players() {
             // Skip friendly players (our team and allies), but count their warships (v0.36.0 on).
             if game.player(self.player).is_friendly(p, false) || p == self.player {

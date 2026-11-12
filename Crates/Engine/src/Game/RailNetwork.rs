@@ -253,7 +253,7 @@ impl RailNetwork {
         from: StationId,
         to: StationId,
     ) -> Vec<StationId> {
-        if game.config().rules().has(Change::LegacyAStar28) {
+        if game.has(Change::LegacyAStar28) {
             return self.find_stations_path_v28(game, from, to);
         }
         find_stations_path(self, game, &[from], to).unwrap_or_default()
@@ -280,7 +280,7 @@ impl RailNetwork {
 
     /// `RailPathFinderServiceImpl.findTilePath`: rail A* on the mini map (empty when none).
     fn find_tile_path(&self, game: &GameImpl, from: TileRef, to: TileRef) -> Vec<TileRef> {
-        if game.config().rules().has(Change::LegacyAStar28) {
+        if game.has(Change::LegacyAStar28) {
             let mini = game.water_manager.mini_map();
             let mut a_star = MiniAStar::new(
                 &game.map,
@@ -304,10 +304,7 @@ impl RailNetwork {
             mini_map: game.water_manager.mini_map(),
         };
         MiniMapTransformer::new(AStarRail {
-            cross_impassable: !game
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::RailNoImpassable4903),
+            cross_impassable: !game.has(Change::RailNoImpassable4903),
         })
         .find_path(&ctx, Source::Single(from), to)
         .unwrap_or_default()
@@ -459,7 +456,7 @@ impl RailNetwork {
             self.station_tile(game, from),
             self.station_tile(game, to),
         );
-        let within_limit = !game.config().rules().has(Change::RailroadMaxSizeLimit4337)
+        let within_limit = !game.has(Change::RailroadMaxSizeLimit4337)
             || (path.len() as f64) < game.config().railroad_max_size();
         if !path.is_empty() && within_limit {
             let railroad = self.new_railroad(from, to, path);

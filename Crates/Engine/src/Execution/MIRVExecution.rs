@@ -114,7 +114,7 @@ impl MirvExecution {
     }
 
     fn grid_rules(game: &GameImpl) -> bool {
-        game.config().rules().has(Change::MirvTargetGrid36)
+        game.has(Change::MirvTargetGrid36)
     }
 
     /// Grid cell offset of a tile, or None when outside the grid.
@@ -303,7 +303,7 @@ impl MirvExecution {
         self.legacy_path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
             increment: Some(self.legacy_speed),
             legacy_curve: true,
-            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            legacy_reset: !game.has(Change::SamTargetingFixes4770),
             ..Default::default()
         });
         if self.target_player != 0 {
@@ -313,7 +313,7 @@ impl MirvExecution {
             if self.target_player != self.player {
                 game.player_mut(self.target_player)
                     .update_relation(self.player, -100.0);
-                if game.config().rules().has(Change::MirvRelationBoth3206) {
+                if game.has(Change::MirvRelationBoth3206) {
                     game.player_mut(self.player)
                         .update_relation(self.target_player, -100.0);
                 }
@@ -471,7 +471,7 @@ impl MirvExecution {
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
             if let Some(silo) = silo
-                && game.config().rules().has(Change::MirvSiloCooldown4707)
+                && game.has(Change::MirvSiloCooldown4707)
             {
                 game.unit_mut(silo).launch();
             }
@@ -704,12 +704,12 @@ impl Execution for MirvExecution {
             ];
             self.build_overlap_grid(game);
         }
-        self.v28 = game.config().rules().has(Change::LegacyProjectiles28);
+        self.v28 = game.has(Change::LegacyProjectiles28);
         if self.v28 {
             self.init_v28(game);
             return;
         }
-        self.legacy = !game.config().rules().has(Change::MirvNormalize5188);
+        self.legacy = !game.has(Change::MirvNormalize5188);
         if self.legacy {
             self.init_legacy(game);
         }
@@ -753,7 +753,7 @@ impl Execution for MirvExecution {
                 if self.target_player != self.player {
                     game.player_mut(self.target_player)
                         .update_relation(self.player, -100.0);
-                    if game.config().rules().has(Change::MirvRelationBoth3206) {
+                    if game.has(Change::MirvRelationBoth3206) {
                         game.player_mut(self.player)
                             .update_relation(self.target_player, -100.0);
                     }

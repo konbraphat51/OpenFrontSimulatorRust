@@ -198,7 +198,7 @@ impl NationEmojiBehavior {
 
     /// `maybeSendCasualEmoji()`.
     pub fn maybe_send_casual_emoji(&mut self, game: &mut GameImpl) {
-        if self.game_over && game.config().rules().has(Change::NationAiRework2984) {
+        if self.game_over && game.has(Change::NationAiRework2984) {
             return;
         }
         self.check_overwhelmed_by_attacks(game);
@@ -332,7 +332,7 @@ impl NationEmojiBehavior {
     }
 
     fn congratulate_winner(&mut self, game: &mut GameImpl) {
-        if !game.config().rules().has(Change::NationAiRework2984) {
+        if !game.has(Change::NationAiRework2984) {
             self.congratulate_winner_v29(game);
             return;
         }
@@ -340,7 +340,7 @@ impl NationEmojiBehavior {
             return;
         };
         self.game_over = true;
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             let won = match &winner {
                 Winner::Player(p) => *p == self.player,
                 Winner::Team(t) => game.player(self.player).team() == Some(t),
@@ -356,7 +356,7 @@ impl NationEmojiBehavior {
         let is_team_game = game.config().game_config().game_mode == GameMode::Team;
         if is_team_game {
             // Do not congratulate our own team.
-            if !game.config().rules().has(Change::NationsLikeHumans5899)
+            if !game.has(Change::NationsLikeHumans5899)
                 && let Winner::Team(t) = &winner
                 && game.player(self.player).team() == Some(t)
             {
@@ -381,7 +381,7 @@ impl NationEmojiBehavior {
     }
 
     fn brag(&mut self, game: &mut GameImpl) {
-        if self.game_over && !game.config().rules().has(Change::NationAiRework2984) {
+        if self.game_over && !game.has(Change::NationAiRework2984) {
             return;
         }
         if !self.chance(300.0) {
@@ -417,7 +417,7 @@ impl NationEmojiBehavior {
     }
 
     fn annoy_traitors(&mut self, game: &mut GameImpl) {
-        if game.config().rules().has(Change::NationsLikeHumans5899) {
+        if game.has(Change::NationsLikeHumans5899) {
             if !self.chance(3.0) {
                 return;
             }
@@ -498,7 +498,7 @@ impl NationEmojiBehavior {
     }
 
     fn greet_nearby_players(&mut self, game: &mut GameImpl) {
-        if !game.config().rules().has(Change::NationBehaviorUpdate3246) {
+        if !game.has(Change::NationBehaviorUpdate3246) {
             return;
         }
         // Only in the first minute.

@@ -370,6 +370,11 @@ impl Config {
         &self.rules
     }
 
+    /// Whether the build contains the upstream change `change`.
+    pub fn has(&self, change: Change) -> bool {
+        self.rules.has(change)
+    }
+
     /// Whether this run is a replay.
     pub fn is_replay(&self) -> bool {
         self.is_replay

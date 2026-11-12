@@ -70,17 +70,11 @@ impl Execution for DonateGoldExecution {
         self.recipient = Some(game.player_id(&self.recipient_id));
         if self.gold.is_none() {
             // Before PR 4892 a missing amount became 0 in the constructor.
-            self.gold = Some(
-                if game
-                    .config()
-                    .rules()
-                    .has(crate::Builds::Rules::Change::DonateGoldKeepNull4892)
-                {
-                    game.player(self.sender).gold() / 3
-                } else {
-                    0
-                },
-            );
+            self.gold = Some(if game.has(Change::DonateGoldKeepNull4892) {
+                game.player(self.sender).gold() / 3
+            } else {
+                0
+            });
         }
     }
 
@@ -98,7 +92,7 @@ impl Execution for DonateGoldExecution {
             }
             // Only AI nations answer with an emoji.
             if game.player(recipient).player_type() == PlayerType::Nation
-                && !game.config().rules().has(Change::RelationPenalties28)
+                && !game.has(Change::RelationPenalties28)
                 && game
                     .player(recipient)
                     .can_send_emoji(EmojiRecipient::Player(self.sender))

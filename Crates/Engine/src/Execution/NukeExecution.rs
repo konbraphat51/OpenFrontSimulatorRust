@@ -108,10 +108,7 @@ impl NukeExecution {
             let cx = map.x(self.dst) as f64;
             let cy = map.y(self.dst) as f64;
             let outer = magnitude.outer;
-            let use_det_math = game
-                .config()
-                .rules()
-                .has(crate::Builds::Rules::Change::DetMath5191);
+            let use_det_math = game.has(Change::DetMath5191);
 
             let mut result = Vec::new();
             let x0 = f64::max(0.0, cx - outer) as i32;
@@ -156,7 +153,7 @@ impl NukeExecution {
                 let d2 = m.euclidean_dist_squared(dst, n) as f64;
                 d2 <= outer2 && (d2 <= inner2 || rand.chance(2.0)) && !m.is_impassable(n)
             };
-            let tiles = if game.config().rules().has(Change::BfsFifoOrder36) {
+            let tiles = if game.has(Change::BfsFifoOrder36) {
                 map.bfs_fifo(dst, filter)
             } else {
                 map.bfs(dst, filter)
@@ -213,7 +210,7 @@ impl NukeExecution {
             return;
         }
         let magnitude = game.config().nuke_magnitudes(nuke_type);
-        let legacy = !game.config().rules().has(Change::NukeBreakAllyList2912);
+        let legacy = !game.has(Change::NukeBreakAllyList2912);
         let to_break = if legacy {
             list_nuke_break_ally_legacy(
                 game,
@@ -353,7 +350,7 @@ impl NukeExecution {
 
     fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId, explosion_tile: TileRef) {
         let magnitude = game.config().nuke_magnitudes(game.unit_any(nuke).unit_type);
-        let to_destroy = if game.config().rules().has(Change::LegacyProjectiles28) {
+        let to_destroy = if game.has(Change::LegacyProjectiles28) {
             let tiles = self.tiles_cached(game);
             self.maybe_break_alliances_v28(game, &tiles);
             tiles
@@ -362,11 +359,11 @@ impl NukeExecution {
         };
 
         let mut tiles_per_player: OrderedMap<SmallId, f64> = OrderedMap::new();
-        if !game.config().rules().has(Change::NukeExplosionBulk3176) {
+        if !game.has(Change::NukeExplosionBulk3176) {
             self.destroy_tiles_per_tile(game, &to_destroy);
         }
         for &tile in &to_destroy {
-            if !game.config().rules().has(Change::NukeExplosionBulk3176) {
+            if !game.has(Change::NukeExplosionBulk3176) {
                 break;
             }
             let owner = game.owner_id(tile);
@@ -433,8 +430,8 @@ impl NukeExecution {
                 let u = game.unit_any(unit);
                 (u.unit_type, u.tile(), u.owner_id())
             };
-            let skips_sam_missile = game.config().rules().has(Change::SamMissileImmunity3167)
-                && t == UnitType::SAMMissile;
+            let skips_sam_missile =
+                game.has(Change::SamMissileImmunity3167) && t == UnitType::SAMMissile;
             if matches!(
                 t,
                 UnitType::AtomBomb
@@ -446,10 +443,7 @@ impl NukeExecution {
                 continue;
             }
             if (game.map.euclidean_dist_squared(dst, tile) as f64) < outer2 {
-                let friendly = game
-                    .config()
-                    .rules()
-                    .has(crate::Builds::Rules::Change::NukeFriendlyKillNoCredit5525)
+                let friendly = game.has(Change::NukeFriendlyKillNoCredit5525)
                     && game.player(self.player).is_friendly(owner, true);
                 game.unit_mut(unit)
                     .delete(Some(true), if friendly { None } else { Some(self.player) });
@@ -467,17 +461,17 @@ impl Execution for NukeExecution {
         if self.speed == -1.0 {
             self.speed = game.config().nuke_speed(self.nuke_type);
         }
-        let standard_warheads = game.config().rules().has(Change::MirvWarheadsStandard4706);
+        let standard_warheads = game.has(Change::MirvWarheadsStandard4706);
         let options = ParabolaOptions {
             increment: Some(self.speed),
             distance_based_height: (!standard_warheads)
                 .then_some(self.nuke_type != UnitType::MIRVWarhead),
             direction_up: Some(self.rocket_direction_up),
-            legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
-            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            legacy_curve: !game.has(Change::MirvNormalize5188),
+            legacy_reset: !game.has(Change::SamTargetingFixes4770),
             ..Default::default()
         };
-        let bounces = game.config().rules().has(Change::BouncingNukes30)
+        let bounces = game.has(Change::BouncingNukes30)
             && PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64).chance(6.0);
         if bounces {
             self.bouncing = Some(BouncingParabolaPathFinder::new(options));
@@ -495,7 +489,7 @@ impl Execution for NukeExecution {
                 self.active = false;
                 return;
             };
-            let src = if game.config().rules().has(Change::NukeKeepSrcTile4756) {
+            let src = if game.has(Change::NukeKeepSrcTile4756) {
                 *self.src.get_or_insert(spawn)
             } else {
                 self.src = Some(spawn);
@@ -507,7 +501,7 @@ impl Execution for NukeExecution {
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
             if let Some(silo) = silo
-                && game.config().rules().has(Change::BulkPurchase4640)
+                && game.has(Change::BulkPurchase4640)
             {
                 let mut last_dep = 0.0;
                 for &launch_tick in game.unit_any(silo).missile_timer_queue() {
@@ -530,7 +524,7 @@ impl Execution for NukeExecution {
             self.nuke = Some(id);
             game.unit_mut(id)
                 .update_nuke_state(None, None, Some(self.wait_ticks));
-            if game.config().rules().has(Change::LegacyProjectiles28) {
+            if game.has(Change::LegacyProjectiles28) {
                 let tiles = self.tiles_cached(game);
                 self.maybe_break_alliances_v28(game, &tiles);
             } else if self.nuke_type != UnitType::MIRVWarhead {
@@ -562,9 +556,7 @@ impl Execution for NukeExecution {
                 .next(&game.map, src, self.dst, Some(self.speed)),
         };
         match step {
-            PathResult::Complete(node)
-                if !game.config().rules().has(Change::SamTargetingFixes4770) =>
-            {
+            PathResult::Complete(node) if !game.has(Change::SamTargetingFixes4770) => {
                 self.detonate(game, nuke, node);
             }
             PathResult::Complete(node) => {
