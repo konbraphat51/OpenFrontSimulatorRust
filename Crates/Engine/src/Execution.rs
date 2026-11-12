@@ -4,6 +4,7 @@
 pub mod Alliance;
 pub mod AttackExecution;
 pub mod BoatRetreatExecution;
+pub mod BotExecutionV28;
 pub mod CityExecution;
 pub mod ConstructionExecution;
 pub mod DefensePostExecution;
@@ -17,6 +18,7 @@ pub mod EmojiExecution;
 #[allow(clippy::module_inception)]
 pub mod Execution;
 pub mod FactoryExecution;
+pub mod FakeHumanExecution;
 #[allow(clippy::upper_case_acronyms)]
 pub mod MIRVExecution;
 pub mod MarkDisconnectedExecution;
