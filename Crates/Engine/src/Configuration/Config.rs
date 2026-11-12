@@ -553,8 +553,10 @@ impl Config {
         let boost = 1.0 + 0.5 * self.exp(-num_train_units / 30.0);
         let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
             560.0
-        } else {
+        } else if self.rules.has(Change::TrainSaturation500Pr5462) {
             500.0
+        } else {
+            300.0
         };
         let damping = 1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 100.0, midpoint);
         let plateau =
