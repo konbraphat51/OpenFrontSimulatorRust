@@ -225,6 +225,7 @@ impl Execution for TransportShipExecution {
             let mut env = WaterStepperEnv {
                 water: &mut game.water_manager,
                 map: &game.map,
+                chain: None,
             };
             path_finder.next(&mut env, boat_tile, dst, None)
         };

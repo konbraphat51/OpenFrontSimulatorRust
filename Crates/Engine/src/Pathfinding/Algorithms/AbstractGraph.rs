@@ -278,6 +278,7 @@ pub struct AbstractGraphBuilder<'a> {
     tile_bfs: &'a mut BfsGrid,
     water_components: Rc<RefCell<ConnectedComponents>>,
     shared_water_components: bool,
+    old_markers: bool,
     old_graph: Option<&'a AbstractGraph>,
     dirty_mini_tiles: Option<&'a [TileRef]>,
 
@@ -323,6 +324,7 @@ impl<'a> AbstractGraphBuilder<'a> {
             tile_bfs,
             water_components,
             shared_water_components: shared,
+            old_markers: false,
             old_graph,
             dirty_mini_tiles,
             graph: AbstractGraph::new(cluster_size, clusters_x, clusters_y),
@@ -335,10 +337,19 @@ impl<'a> AbstractGraphBuilder<'a> {
         }
     }
 
+    /// Labels components the way builds before PR 4479 do (see `ConnectedComponents::set_old_markers`).
+    pub fn with_old_markers(mut self, old_markers: bool) -> Self {
+        self.old_markers = old_markers;
+        self
+    }
+
     /// Builds the graph.
     pub fn build(mut self) -> AbstractGraph {
         if !self.shared_water_components {
-            self.water_components.borrow_mut().initialize(self.map);
+            let mut wc = self.water_components.borrow_mut();
+            wc.set_old_markers(self.old_markers);
+            wc.initialize(self.map);
+            drop(wc);
         }
 
         if self.old_graph.is_some() && self.dirty_mini_tiles.is_some_and(|d| !d.is_empty()) {

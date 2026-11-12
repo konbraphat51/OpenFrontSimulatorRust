@@ -6,6 +6,7 @@ use super::AStarAbstractGraph::AbstractGraphAStar;
 use super::AStarWaterBounded::{AStarWaterBounded, SearchBounds};
 use super::AbstractGraph::{AbstractGraph, AbstractNode};
 use super::BfsGrid::{BfsGrid, Visit};
+use super::ConnectedComponents::LAND_MARKER;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 use std::collections::HashMap;
@@ -20,6 +21,7 @@ pub struct AStarWaterHierarchical {
     local_a_star_short_path: AStarWaterBounded,
     graph: Rc<AbstractGraph>,
     cache_paths: bool,
+    component_filter: bool,
 }
 
 impl AStarWaterHierarchical {
@@ -46,7 +48,13 @@ impl AStarWaterHierarchical {
             ),
             graph,
             cache_paths,
+            component_filter: false,
         }
+    }
+
+    /// Before PR 4479 the nearest-node search walks tiles whose component id is not the land marker (not `isWater`).
+    pub fn set_component_filter(&mut self, component_filter: bool) {
+        self.component_filter = component_filter;
     }
 
     /// Swaps in a rebuilt graph, keeping the map-sized scratch buffers.
@@ -255,6 +263,7 @@ impl AStarWaterHierarchical {
         let max_y = (map.height() - 1).min(min_y + cluster_size - 1);
 
         let graph = Rc::clone(&self.graph);
+        let component_filter = self.component_filter;
         let cluster = graph.get_cluster(cluster_x as i64, cluster_y as i64)?;
         if cluster.node_ids.is_empty() {
             return None;
@@ -272,7 +281,13 @@ impl AStarWaterHierarchical {
             map.height(),
             &[tile],
             max_distance,
-            |t| map.is_water(t),
+            |t| {
+                if component_filter {
+                    graph.get_component_id(t) != LAND_MARKER as u32
+                } else {
+                    map.is_water(t)
+                }
+            },
             |t, _dist| {
                 let tile_x = map.x(t);
                 let tile_y = map.y(t);

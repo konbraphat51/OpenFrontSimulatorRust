@@ -140,7 +140,13 @@ impl GameImpl {
         rail_network.leave_same_cluster = !config
             .rules()
             .has(crate::Builds::Rules::Change::StationClusterSame5096);
-        let mut water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        let mut water_manager = WaterManager::new_with(
+            mini_map,
+            config.disable_nav_mesh(),
+            !config
+                .rules()
+                .has(crate::Builds::Rules::Change::WaterComponentMarkers4479),
+        );
         if !config
             .rules()
             .has(crate::Builds::Rules::Change::WaterNukeMinimap4975)

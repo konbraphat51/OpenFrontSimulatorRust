@@ -336,6 +336,7 @@ fn run_map(entry: &Value) {
                 &mut WaterStepperEnv {
                     water: &mut water,
                     map: &map,
+                    chain: None,
                 },
                 cur,
                 to,
@@ -349,6 +350,7 @@ fn run_map(entry: &Value) {
                             &mut WaterStepperEnv {
                                 water: &mut water,
                                 map: &map,
+                                chain: None,
                             },
                             cur,
                             to,

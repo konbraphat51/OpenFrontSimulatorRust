@@ -3,7 +3,8 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Upstream builds one shared transformer chain per water graph version and caches it on the game;
-//! here the chains are owned by [`WaterManager`] (they have no state that affects results), and the
+//! a finder keeps the chain of the version it was created or refreshed under (staggered ships keep
+//! querying the old graph), so chains are `Rc` handles that [`WaterManager`] hands out, and the
 //! stepping wrappers take a [`WaterStepperEnv`] per call. `PathFinding.Rail`/`Stations`
 //! (`AStarRail`, `StationPathFinder`) belong to the rail phase and are not ported yet.
 //! `WaterPathMemo` is a pure LRU cache of `findPath` answers and is not ported: it cannot change results.
@@ -20,6 +21,7 @@ use super::Transformers::SmoothingWaterTransformer::SmoothingWaterTransformer;
 use super::Types::{PathResult, Source};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Game::WaterManager::WaterManager;
+use std::cell::RefCell;
 use std::rc::Rc;
 
 /// HPA* chain: minimap, shore coercion, smoothing, component check, hierarchical A*.
@@ -48,12 +50,26 @@ pub fn build_simple_chain(core: AStarWater) -> SimpleWaterChain {
     MiniMapTransformer::new(ShoreCoercingTransformer::new(core))
 }
 
-/// Swaps the graph inside a hierarchical chain (`AStarWaterHierarchical.setGraph` plus the component check's graph).
-pub fn set_chain_graph(chain: &mut HierarchicalWaterChain, graph: Rc<AbstractGraph>) {
-    let component_check = chain.inner_mut().inner_mut().inner_mut();
-    component_check.set_graph(Rc::clone(&graph));
-    component_check.inner_mut().set_graph(graph);
+/// The chain of one water graph version (upstream's `_waterChainCache` entry).
+pub struct SharedWaterChain {
+    /// HPA* chain around that version's graph and finder.
+    pub hierarchical: RefCell<HierarchicalWaterChain>,
+    /// False when the graph had under 100 nodes at build time: queries then use the simple chain.
+    pub use_hierarchical: bool,
 }
+
+impl std::fmt::Debug for SharedWaterChain {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "SharedWaterChain(hierarchical: {})",
+            self.use_hierarchical
+        )
+    }
+}
+
+/// Handle to the chain of one graph version.
+pub type ChainRef = Rc<SharedWaterChain>;
 
 /// Everything a water stepper needs per call: the water manager (chains, graph version) and the game map.
 pub struct WaterStepperEnv<'a> {
@@ -61,6 +77,8 @@ pub struct WaterStepperEnv<'a> {
     pub water: &'a mut WaterManager,
     /// The game map.
     pub map: &'a GameMapImpl,
+    /// Chain of the calling finder's graph version; `None` means the current chain.
+    pub chain: Option<ChainRef>,
 }
 
 impl StepperEnv<TileRef> for WaterStepperEnv<'_> {
@@ -81,7 +99,8 @@ impl StepperEnv<TileRef> for WaterStepperEnv<'_> {
     }
 
     fn find_path(&mut self, from: Source, to: TileRef) -> Option<Vec<TileRef>> {
-        self.water.find_water_path(self.map, from, to)
+        self.water
+            .find_water_path_with(self.chain.as_ref(), self.map, from, to)
     }
 }
 
@@ -93,7 +112,15 @@ pub fn find_water_path(
     to: TileRef,
 ) -> Option<Vec<TileRef>> {
     let stepper: PathFinderStepper<TileRef> = PathFinderStepper::new();
-    stepper.find_path(&mut WaterStepperEnv { water, map }, from, to)
+    stepper.find_path(
+        &mut WaterStepperEnv {
+            water,
+            map,
+            chain: None,
+        },
+        from,
+        to,
+    )
 }
 
 /// Env of `PathFinding.Air`: plain equality, no pre-check, the staircase finder.
@@ -125,6 +152,7 @@ pub struct WaterPathFinder {
     stagger_countdown: u32,
     pending_version: i64,
     stagger: u32,
+    chain: Option<ChainRef>,
 }
 
 impl WaterPathFinder {
@@ -140,6 +168,7 @@ impl WaterPathFinder {
             stagger_countdown: 0,
             pending_version: -1,
             stagger,
+            chain: water.current_chain(),
         }
     }
 
@@ -173,6 +202,7 @@ impl WaterPathFinder {
 
         // Swapping in a fresh stepper drops the cached path, forcing an A* run against the new graph
         self.water_graph_version = v;
+        self.chain = water.current_chain();
         self.stepper = PathFinderStepper::new();
         self.rebuilt = true;
     }
@@ -186,6 +216,7 @@ impl WaterPathFinder {
         dist: Option<f64>,
     ) -> PathResult<TileRef> {
         self.ensure_fresh(env.water);
+        env.chain = self.chain.clone();
         self.stepper.next(env, from, to, dist)
     }
 
@@ -197,6 +228,7 @@ impl WaterPathFinder {
         to: TileRef,
     ) -> Option<Vec<TileRef>> {
         self.ensure_fresh(env.water);
+        env.chain = self.chain.clone();
         self.stepper.find_path(env, from, to)
     }
 
@@ -208,6 +240,7 @@ impl WaterPathFinder {
         to: TileRef,
     ) -> Vec<TileRef> {
         self.ensure_fresh(env.water);
+        env.chain = self.chain.clone();
         let path = match self.stepper.path_after_next() {
             Some(path) => Some(path),
             None => self.stepper.find_path(env, Source::Single(from), to),
