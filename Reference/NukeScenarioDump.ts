@@ -112,6 +112,18 @@ alive.forEach((p, index) => {
     for (let i = 0; i < 3; i++) p.buildUnit(UnitType.MissileSilo, pick(), {});
   }
 });
+// Diplomacy: some accepted alliances and some pending requests towards attackers.
+for (let k = 0; k < 10; k++) {
+  const a = attackers[next() % attackers.length];
+  const b = alive[next() % alive.length];
+  if (a === b) continue;
+  if (k < 6) {
+    const request = a.createAllianceRequest(b);
+    if (request !== null) request.accept();
+  } else {
+    b.createAllianceRequest(a);
+  }
+}
 tick();
 
 for (let r = 0; r < rounds; r++) {

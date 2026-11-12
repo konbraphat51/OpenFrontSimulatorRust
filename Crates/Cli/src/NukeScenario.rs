@@ -183,6 +183,23 @@ pub fn nuke_scenario(a: &NukeScenarioArgs) -> Result<()> {
             }
         }
     }
+    // Diplomacy: some accepted alliances and some pending requests towards attackers.
+    for k in 0..10 {
+        let ai = rng.next() as usize;
+        let bi = rng.next() as usize;
+        let game = &mut runner.game;
+        let (pa, pb) = (attackers[ai % attackers.len()], alive[bi % alive.len()]);
+        if pa == pb {
+            continue;
+        }
+        if k < 6 {
+            if let Some(request) = game.player_mut(pa).create_alliance_request(pb) {
+                game.accept_alliance_request(request);
+            }
+        } else {
+            game.player_mut(pb).create_alliance_request(pa);
+        }
+    }
     run_tick(&mut runner, &mut w)?;
 
     for round in 0..a.rounds {

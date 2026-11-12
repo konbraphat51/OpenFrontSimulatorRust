@@ -239,4 +239,40 @@ mod tests {
         assert_eq!(doomsday_clock_troop_floor(1000.0, 90.0, &floor), 50.0);
         assert_eq!(doomsday_clock_rot_quota(100.0, 140.0, 150.0), 10.0);
     }
+
+    // Golden values computed with the upstream functions under tsx.
+    #[test]
+    fn noise_and_curves_match_upstream() {
+        assert_eq!(rot_speckle_noise(0, 0, 1), 40503.0);
+        assert_eq!(rot_speckle_noise(123, 456, 7), 1531.0);
+        assert_eq!(rot_speckle_noise(1999, 1500, 300), 11212.0);
+        assert_eq!(rot_speckle_noise(65535, 3, 2), 55931.0);
+        assert_eq!(rot_front_noise(0, 1), 15680.0);
+        assert_eq!(rot_front_noise(123456, 7), 12141.0);
+        assert_eq!(rot_front_noise(2999999, 300), 46629.0);
+        assert_eq!(rot_front_noise(5, 65535), 50330.0);
+        let warship = DoomsdayClockDrainConfig {
+            drain_start_percent: 1.0,
+            drain_max_percent: 50.0,
+            drain_ramp_seconds: 90.0,
+        };
+        assert_eq!(doomsday_clock_drain(123456.0, 37.0, &warship, 8.0), 1234.0);
+        assert_eq!(doomsday_clock_drain(123456.0, 3.0, &warship, 8.0), 1234.0);
+        let troops = DoomsdayClockDrainConfig {
+            drain_start_percent: 2.0,
+            drain_max_percent: 5.0,
+            drain_ramp_seconds: 90.0,
+        };
+        assert_eq!(doomsday_clock_drain(98765.0, 61.0, &troops, 1.0), 3950.0);
+        let fast_team = p(DoomsdayClockSpeed::Fast, true);
+        assert_eq!(
+            doomsday_clock_required_tiles(&fast_team, 1234567.0, 1013.5),
+            132222.0
+        );
+        let slow = p(DoomsdayClockSpeed::Slow, false);
+        assert_eq!(
+            doomsday_clock_required_tiles(&slow, 987654.0, 1234.0),
+            41185.0
+        );
+    }
 }
