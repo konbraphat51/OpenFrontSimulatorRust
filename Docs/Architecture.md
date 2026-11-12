@@ -1,0 +1,109 @@
+# Architecture
+
+Japanese version: [Architecture.ja.md](Architecture.ja.md)
+
+Responsibility of this file: the design of the simulator and the porting rules every contributor (human or agent) follows. Read it before writing any engine code.
+
+## Goal
+
+Replay any public OpenFront game record from 2025-10-01 onward, tick by tick, with the game state **bit-identical** to the upstream TypeScript engine of the record's `gitCommit`, and do it much faster than the upstream engine. Correctness is proven by the state hash the upstream engine writes into every record every 10 turns (`GameImpl.hash()`), plus a differential trace against the upstream engine for debugging.
+
+## Workspace
+
+| Crate | Path | Responsibility |
+| --- | --- | --- |
+| `openfront-record` | `Crates/OpenFrontRecord` | Record JSON schema (serde), gzip loading, expansion of sparse turns (`decompressGameRecord`), the start info the engine consumes (`toWireGameStartInfo`). No engine logic. |
+| `openfront-map` | `Crates/OpenFrontMap` | Reading a map directory (`map.bin`, `map4x.bin`, `map16x.bin`, `manifest.json`) into plain data, and the `GameMapType` name to directory table. No engine logic. |
+| `openfront-engine` | `Crates/OpenFrontEngine` | The deterministic simulation: game state, executions, pathfinding, AI, hashing, build rules. |
+| `openfront-sim` | `Crates/OpenFrontSim` | The `ofsim` CLI: `verify`, `replay` (snapshots), `trace`, `trace-diff`, `batch`. |
+| reference tracer | `Reference/` | TypeScript scripts copied into an upstream worktree that emit the same trace as `ofsim trace`, for differential debugging. |
+
+## Engine module map
+
+Rust modules mirror upstream `src/core/` so that every Rust file has one upstream counterpart named in its header comment (`//! Port of src/core/game/PlayerImpl.ts`).
+
+```
+Crates/OpenFrontEngine/src/
+  Lib.rs
+  Compat/        JS semantics: number helpers, insertion-ordered sets and maps, stable sort
+  Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)
+  Configuration/ Config (DefaultConfig values of the build), unit infos
+  Game/          GameMap, TileSet, Game (shared types and enums), GameImpl, PlayerImpl, UnitImpl,
+                 AttackImpl, AllianceImpl, AllianceRequestImpl, UnitGrid, RailNetwork, TeamAssignment,
+                 NationCreation, WaterManager, ...
+  Execution/     one file per upstream execution; Nation/ and Alliance/ subfolders as upstream
+  Pathfinding/   as upstream
+  Runner/        GameRunner, Executor (ExecutionManager.ts)
+  Builds/        Rules: which upstream behaviour a given build has
+```
+
+Naming follows the repository convention: directories and files in UpperCamelCase (crate-level `non_snake_case` is allowed for module names); functions, methods and variables in Rust snake_case; types in UpperCamelCase. A module and a type must not share a name inside the same parent module (they share the type namespace), so never `pub use X::X` in the parent of module `X`; import types by their full path instead (`use crate::Game::GameMap::GameMap;`).
+
+## Core data model
+
+The upstream engine is an object graph (players hold units, units hold owners, executions hold everything). Rust uses one owner, `GameImpl`, and integer handles:
+
+| Upstream object | Rust handle | Storage |
+| --- | --- | --- |
+| `TileRef` | `TileRef = u32` | `GameMap` arrays |
+| `Player` / `TerraNullius` | `SmallId = u16` (0 = terra nullius) | `GameImpl.players: Vec<PlayerImpl>`, index `small_id - 1`, in insertion order (players are never removed, so this is also the JS `Map` order) |
+| `Unit` | `UnitId = u32` (upstream `nextUnitID`) | `GameImpl.units` keyed by id; each player keeps its own ordered `Vec<UnitId>` exactly like `PlayerImpl._units` |
+| `Attack` | `AttackId` (arena index) | arena in `GameImpl`; players keep ordered id lists like `_incomingAttacks` |
+| `Alliance`, `AllianceRequest` | arena ids | arenas in `GameImpl`, ordered lists where upstream keeps arrays |
+
+Upstream methods of `PlayerImpl`, `UnitImpl`, `AttackImpl` that touch other objects are ported onto short-lived handles that borrow the game:
+
+```rust
+pub struct PlayerRef<'a> { game: &'a GameImpl, id: SmallId }      // read-only methods
+pub struct PlayerMut<'a> { game: &'a mut GameImpl, id: SmallId }  // mutating methods
+// game.player(id).troops(), game.player_mut(id).conquer(tile)
+```
+
+Method names are the upstream names in snake_case, so ported code reads like the original. The same pattern applies to units (`UnitRef`/`UnitMut`).
+
+## Executions
+
+```rust
+pub trait Execution {
+    fn init(&mut self, game: &mut GameImpl, ticks: Tick);
+    fn tick(&mut self, game: &mut GameImpl, ticks: Tick);
+    fn is_active(&self) -> bool;
+    fn active_during_spawn_phase(&self) -> bool;
+}
+```
+
+`GameImpl` stores `execs: Vec<Box<dyn Execution>>` and `un_init_execs`. `execute_next_tick` takes `execs` out with `std::mem::take` while ticking them, so executions may freely borrow the game mutably; executions added meanwhile go to `un_init_execs`, as upstream. The upstream order of operations in `GameImpl.executeNextTick` (tick active execs, init uninitialised ones, compact, append, player updates, hash every 10 ticks, water manager, `_ticks++`) is reproduced exactly, including its quirks (for example, executions added during an `init` call in the same loop are dropped because upstream reassigns `unInitExecs`). Never "fix" an upstream quirk: a fix is a desync.
+
+## Determinism rules (the porting contract)
+
+1. **Numbers.** A JS `number` is an `f64`. Keep `f64` unless the value is provably an integer that fits the Rust type at every use, and convert exactly where upstream truncates (`Math.floor`, `Math.trunc`, `| 0`, `toInt`). Upstream `bigint` (troops, gold) becomes `i64` or `i128` as range requires. Reproduce bitwise operators with JS `ToInt32`/`ToUint32` semantics (`Compat::JsNumber`). `Math.round` is `floor(x + 0.5)`, not Rust `round`. Keep the upstream order of floating-point operations; `a * b / c` and `a * (b / c)` differ.
+2. **Transcendentals.** Builds with `DetMath` use the ported `Core::DetMath` bit for bit. Builds before it call V8's `Math.exp/log/pow/atan2/sin/cos`; those are ported from V8's fdlibm (`src/base/ieee754.cc`) in `Compat::V8Math`, never Rust `f64` methods (`sqrt` is exact in both and may use Rust).
+3. **Iteration order.** JS `Map` and `Set` iterate in insertion order, a delete plus re-add moves to the end, and entries added during iteration are visited. Use `Compat` ordered collections (or the ported `TileSet`), never `HashMap`/`HashSet` iteration where order can reach the state. `HashMap` is fine for pure lookups.
+4. **Sorting.** `Array.prototype.sort` is stable; use stable sorts with the same comparator. Where a comparator can be inconsistent (NaN, ties broken by nothing), port V8's TimSort (`Compat::JsSort`) instead of assuming equivalence.
+5. **Randomness.** Every `PseudoRandom` instance is seeded exactly as upstream (game, executor, player, tribe spawner, per execution with `mg.ticks()` and so on) and is drawn in the same order. A missed or extra draw desyncs everything after it.
+6. **Strings.** Player ids, `simpleHash` inputs and `nextID()` output must be byte-identical (`toString(36)`, `padStart`). `simpleHash` iterates UTF-16 code units.
+7. **No client-only code.** Rendering, stats sent to the client, emojis and chat that never reach the state are not ported, unless simulation logic reads them (check before skipping: for example nation AI reads emojis and relations).
+8. **Errors.** Where upstream throws inside a tick, the runner reports the error for that tick; do not paper over it.
+
+## Build rules (versions)
+
+Every record carries the upstream `gitCommit` of the server that played it. `Builds/Rules.rs` maps a commit to a `Rules` value: a set of named upstream changes (`Change::DetMath5191`, named after the upstream PR) that this build contains. Release branches receive cherry-picks, so membership is per build, not a linear version order; the table is generated from the upstream clone (`git merge-base --is-ancestor` plus patch-id matching for cherry-picks) into `Builds/Builds.toml`, which is checked in.
+
+Engine code branches on `game.rules().has(Change::X)` at the exact place upstream changed. When a subsystem was rewritten wholesale (for example pathfinding), the old and new implementations live side by side (`AStarWaterV1.rs`, `AStarWaterV2.rs`) behind one trait. Configuration constants that change between builds live in `Configuration` and are selected by `Rules`. The baseline build is v0.34.22 (`4e837520e886`); other builds are added by diffing upstream `src/core` against it.
+
+Maps also change between builds. The engine reads the map files of the record's commit, which `ofsim` resolves from an upstream checkout.
+
+## Verification
+
+- `ofsim verify <record>` replays and compares the computed hash with the record at every turn that has one (every 10 turns). A record passes when every hash matches through its last turn.
+- `Reference/TraceDumper.ts` runs the upstream engine and `ofsim trace` runs ours; both write one NDJSON line per tick (hash and per-player troops, tiles, gold and unit hash; optionally full tile owners at chosen ticks). `ofsim trace-diff` reports the first tick and the first player or unit that differ, which is where to look.
+- Unit tests port upstream tests where they exist (`tests/` in the upstream repository) and check `Compat` and `Core` against values computed with node.
+- Real records are never committed (they contain usernames). Tests that need them read a local cache directory and are skipped when it is absent.
+
+## Output
+
+`ofsim replay --every N` writes the same files as the upstream-based replay dumper of the OpenFrontDs project, so consumers can switch engines: `Tiles/T{tick:06}.u16.zst` (zstd little-endian `u16` tile state), `Entities.ndjson` (players, units, attacks and alliances per snapshot; no human names) and `Result.json` (verdict, hashes checked, first mismatch).
+
+## Licensing
+
+The engine is a port of the AGPL-3.0 OpenFrontIO code, so the whole repository is AGPL-3.0-only. Map files and records are not redistributed here.

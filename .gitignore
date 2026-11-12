@@ -1,0 +1,18 @@
+# Build output
+/target/
+
+# Local caches: upstream checkouts, fetched records and run outputs (never committed)
+/Cache/
+/Out/
+
+# Node (reference tracer dependencies come from the upstream worktree)
+node_modules/
+
+# Environment
+.env
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

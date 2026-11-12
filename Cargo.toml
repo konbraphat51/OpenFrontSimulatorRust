@@ -1,0 +1,40 @@
+[workspace]
+resolver = "3"
+members = ["Crates/OpenFrontRecord", "Crates/OpenFrontMap", "Crates/OpenFrontEngine", "Crates/OpenFrontSim"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "AGPL-3.0-only"
+repository = "https://github.com/konbraphat51/OpenFrontSimulatorRust"
+rust-version = "1.90"
+
+[workspace.dependencies]
+openfront-record = { path = "Crates/OpenFrontRecord" }
+openfront-map = { path = "Crates/OpenFrontMap" }
+openfront-engine = { path = "Crates/OpenFrontEngine" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+flate2 = "1"
+zstd = "0.13"
+anyhow = "1"
+thiserror = "2"
+clap = { version = "4", features = ["derive"] }
+rayon = "1"
+toml = "0.8"
+
+[workspace.lints.rust]
+non_snake_case = "allow"
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+lto = "fat"
+codegen-units = 1
+panic = "unwind"
+debug = "line-tables-only"
+
+[profile.dev]
+opt-level = 1

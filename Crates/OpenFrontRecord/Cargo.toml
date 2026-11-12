@@ -1,0 +1,19 @@
+[package]
+name = "openfront-record"
+description = "OpenFront game record schema, loading and turn expansion"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/Lib.rs"
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+flate2.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

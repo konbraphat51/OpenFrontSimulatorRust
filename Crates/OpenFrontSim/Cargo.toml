@@ -1,0 +1,24 @@
+[package]
+name = "openfront-sim"
+description = "Command-line replayer: hash verification, state snapshots and batch runs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "ofsim"
+path = "src/Main.rs"
+
+[dependencies]
+openfront-record.workspace = true
+openfront-engine.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+zstd.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+rayon.workspace = true
+
+[lints]
+workspace = true
