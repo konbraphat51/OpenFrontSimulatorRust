@@ -74,6 +74,11 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[],
     },
+    Edge {
+        class: "C004",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
