@@ -13,6 +13,10 @@ import { TribeExecution } from "../src/core/execution/TribeExecution";
 
 /** Intents whose executions are ported on the Rust side; extend as executions land. */
 const PORTED_INTENTS = new Set(["spawn", "emoji", "quick_chat", "mark_disconnected", "toggle_pause"]);
+/** Extra ported intent types for a work-in-progress branch (comma list in `OFSIM_PORTED_INTENTS`). */
+for (const t of (process.env.OFSIM_PORTED_INTENTS ?? "").split(",")) if (t) PORTED_INTENTS.add(t);
+/** Engine-created executions kept active (comma list in `OFSIM_PORTED_EXECS`: Nation, Tribe, DoomsdayClock). */
+const PORTED_EXECS = new Set((process.env.OFSIM_PORTED_EXECS ?? "").split(",").filter((t) => t));
 
 export function applyInertPatch(): void {
   const original = Executor.prototype.createExec;
@@ -20,7 +24,13 @@ export function applyInertPatch(): void {
     const exec = original.call(this, intent);
     return PORTED_INTENTS.has(intent.type) ? exec : new NoOpExecution();
   };
-  for (const cls of [NationExecution, TribeExecution, DoomsdayClockExecution]) {
+  const inert = [
+    ["Nation", NationExecution],
+    ["Tribe", TribeExecution],
+    ["DoomsdayClock", DoomsdayClockExecution],
+  ] as const;
+  for (const [name, cls] of inert) {
+    if (PORTED_EXECS.has(name)) continue;
     (cls.prototype as { init: () => void }).init = () => {};
     (cls.prototype as { tick: () => void }).tick = () => {};
   }

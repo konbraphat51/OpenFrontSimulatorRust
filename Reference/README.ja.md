@@ -53,6 +53,8 @@ npx tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-a
 
 `--inert 1` (`InertPatch.ts`) は、Rust エンジンが未移植の Execution (`PORTED_INTENTS` 以外の intent、`NationExecution`、`TribeExecution`、`DoomsdayClockExecution`) をアップストリームのエンジンでも無効化する。`ofsim` は `OFSIM_INERT=1` で同じ動作になり、`Tools/TraceCompare.sh <record> <until> --inert` で比較する。このトレースはレコードのハッシュとは一致しない。`ScenarioDump.ts` はシード付きの領土ファズ (占領、放棄、囲い込み) を実行し、`ofsim scenario` と比較する。
 
+作業中のブランチでは、追加で移植済みの intent 種別を `OFSIM_PORTED_INTENTS` (カンマ区切り、例 `attack,boat`)、有効のままにするエンジン生成の Execution を `OFSIM_PORTED_EXECS` (`Nation`、`Tribe`、`DoomsdayClock`) で指定する。これで共有ファイルを変更せずに済む。移植済み Execution の内部から生成される Execution (例: tribe が出す攻撃) は対象外なので、両側で移植済みにするか、最初の発生までだけを比較する。
+
 ## TraceDiff
 
 ```sh
