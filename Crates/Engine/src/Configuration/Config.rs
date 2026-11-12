@@ -8,6 +8,7 @@
 //! upstream message; the runner reports them as tick errors.
 
 use crate::Builds::Rules::{Change, Rules};
+use crate::Compat::HostMath::{self, PowKind};
 use crate::Compat::JsNumber::{max as js_max, min as js_min};
 use crate::Core::{DetMath, Util};
 use crate::Game::Game::{
@@ -210,6 +211,8 @@ const SPEED_COST_DIVISOR: f64 = 8.55;
 /// Speed divisor before PR 5425.
 const SPEED_COST_DIVISOR_OLD: f64 = 7.77;
 const LARGE_ATTACKER_SPEED_DEPTH: f64 = 0.73;
+const DEFENSE_DEBUFF_MIDPOINT: f64 = 150_000.0;
+const DEFENSE_DEBUFF_DECAY_RATE: f64 = std::f64::consts::LN_2 / 50000.0;
 
 /// Attacker side of `attackLogic`.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -265,6 +268,17 @@ pub struct AttackLogicResult {
     pub tick_fraction: f64,
 }
 
+/// Output of the pre-rework `attackLogic`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct LegacyAttackResult {
+    /// Troops the attacker loses.
+    pub attacker_troop_loss: f64,
+    /// Troops the defender loses.
+    pub defender_troop_loss: f64,
+    /// Budget (in tiles per tick units) the tile consumes.
+    pub tiles_per_tick_used: f64,
+}
+
 /// Inner and outer blast radius of a nuke.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct NukeMagnitude {
@@ -316,12 +330,21 @@ pub struct CostContext<'a> {
     pub mirvs_launched: i64,
 }
 
+/// `Math.pow` of pre-DetMath builds; `OFSIM_POW=fdlibm|platform` overrides it for experiments.
+fn default_pow_kind() -> PowKind {
+    match std::env::var("OFSIM_POW").as_deref() {
+        Ok("fdlibm") => PowKind::Fdlibm,
+        _ => PowKind::Platform,
+    }
+}
+
 /// Build configuration: tunables and formulas of one upstream build.
 #[derive(Clone, Debug)]
 pub struct Config {
     game_config: GameConfig,
     is_replay: bool,
     rules: Rules,
+    pow_kind: PowKind,
 }
 
 impl Config {
@@ -331,6 +354,7 @@ impl Config {
             game_config,
             is_replay,
             rules,
+            pow_kind: default_pow_kind(),
         }
     }
 
@@ -349,31 +373,42 @@ impl Config {
         self.is_replay
     }
 
-    fn det_math(&self) {
-        assert!(
-            self.rules.has(Change::DetMath5191),
-            "V8Math (pre-DetMath transcendentals) is not ported yet"
-        );
+    /// `Math.pow` implementation of pre-DetMath builds (see `HostMath`).
+    pub fn pow_kind(&self) -> PowKind {
+        self.pow_kind
     }
 
     fn exp(&self, x: f64) -> f64 {
-        self.det_math();
-        DetMath::exp(x)
+        if self.rules.has(Change::DetMath5191) {
+            DetMath::exp(x)
+        } else {
+            HostMath::exp(x)
+        }
     }
 
     fn log(&self, x: f64) -> f64 {
-        self.det_math();
-        DetMath::log(x)
+        if self.rules.has(Change::DetMath5191) {
+            DetMath::log(x)
+        } else {
+            HostMath::log(x)
+        }
     }
 
-    fn pow(&self, x: f64, y: f64) -> f64 {
-        self.det_math();
-        DetMath::pow(x, y)
+    /// `Math.pow(x, y)` of the build.
+    pub fn pow(&self, x: f64, y: f64) -> f64 {
+        if self.rules.has(Change::DetMath5191) {
+            DetMath::pow(x, y)
+        } else {
+            HostMath::pow(self.pow_kind, x, y)
+        }
     }
 
     fn pow2(&self, n: f64) -> f64 {
-        self.det_math();
-        DetMath::pow2(n)
+        if self.rules.has(Change::DetMath5191) {
+            DetMath::pow2(n)
+        } else {
+            HostMath::pow(self.pow_kind, 2.0, n)
+        }
     }
 
     fn sigmoid(&self, value: f64, decay_rate: f64, midpoint: f64) -> f64 {
@@ -569,6 +604,9 @@ impl Config {
     /// Odds denominator of a train spawn.
     pub fn train_spawn_rate(&self, num_player_factories: f64, num_train_units: f64) -> f64 {
         let rate = (num_player_factories + 10.0) * 15.0;
+        if !self.rules.has(Change::TradeTrainSaturation5302) {
+            return rate;
+        }
         js_max(1.0, (rate / self.train_saturation(num_train_units)).floor())
     }
 
@@ -635,6 +673,11 @@ impl Config {
         num_trade_ships: f64,
     ) -> f64 {
         let rejection_modifier = 1.0 / (trade_ship_spawn_rejections + 1.0);
+        if !self.rules.has(Change::TradeTrainSaturation5302) {
+            let decay_rate = std::f64::consts::LN_2 / 50.0;
+            let base_spawn_rate = 1.0 - self.sigmoid(num_trade_ships, decay_rate, 400.0);
+            return ((100.0 * rejection_modifier) / base_spawn_rate).floor();
+        }
         js_max(
             1.0,
             ((100.0 * rejection_modifier) / self.trade_ship_saturation(num_trade_ships)).floor(),
@@ -870,9 +913,15 @@ impl Config {
 
     /// Share of land (percent) a side needs to win after `elapsed_game_seconds`.
     pub fn percentage_tiles_owned_to_win(&self, elapsed_game_seconds: f64) -> f64 {
-        let base = PERCENT_TILES_OWNED_TO_WIN;
+        let base = if !self.rules.has(Change::WinThresholdSame5223)
+            && self.game_config.game_mode == GameMode::Team
+        {
+            95.0
+        } else {
+            PERCENT_TILES_OWNED_TO_WIN
+        };
         let sd = self.overtime_config();
-        if !sd.enabled {
+        if !sd.enabled || !self.rules.has(Change::Overtime5062) {
             return base;
         }
         let seconds_past_start = elapsed_game_seconds.floor() - sd.start_minutes * 60.0;
@@ -903,7 +952,11 @@ impl Config {
         if self.is_random_spawn() {
             return 150;
         }
-        200
+        if self.rules.has(Change::SpawnPhase20s5347) {
+            200
+        } else {
+            300
+        }
     }
     /// Number of bots.
     pub fn num_bots(&self) -> u32 {
@@ -1011,6 +1064,115 @@ impl Config {
                 * large_defender_bonus
                 * traitor_cost_mod)
                 / input.border_size,
+        }
+    }
+
+    /// Pre-PR-5173 `attackLogic(gm, attackTroops, attacker, defender, tile)`; `border_size` is unused.
+    pub fn attack_logic_legacy(&self, input: &AttackLogicInput) -> LegacyAttackResult {
+        let attack_troops = input.attack_troops;
+        let attacker = input.attacker;
+        let (mut mag, mut speed) = match input.terrain {
+            TerrainType::Plains => (80.0, 16.5),
+            TerrainType::Highland => (100.0, 20.0),
+            TerrainType::Mountain => (120.0, 25.0),
+            TerrainType::Impassable => panic!("impassable terrain cannot be attacked"),
+            TerrainType::Ocean => panic!("terrain type {} not supported", TerrainType::Ocean as u8),
+        };
+        if input.defender.is_some() && input.defender_has_defense_post {
+            mag *= self.defense_post_defense_bonus();
+            speed *= self.defense_post_speed_bonus();
+        }
+        if let Some(ratio) = input.fallout_ratio {
+            mag *= self.fallout_defense_modifier(ratio);
+            speed *= self.fallout_defense_modifier(ratio);
+        }
+        if let Some(defender) = input.defender {
+            if defender.is_disconnected_teammate {
+                mag = 0.0;
+            }
+            if (attacker.player_type == PlayerType::Human
+                || attacker.player_type == PlayerType::Nation)
+                && defender.player_type == PlayerType::Bot
+            {
+                mag *= 0.7;
+            }
+        }
+        let Some(defender) = input.defender else {
+            return LegacyAttackResult {
+                attacker_troop_loss: if attacker.player_type == PlayerType::Bot {
+                    mag / 10.0
+                } else {
+                    mag / 5.0
+                },
+                defender_troop_loss: 0.0,
+                tiles_per_tick_used: Util::within(
+                    (2000.0 * js_max(10.0, speed)) / attack_troops,
+                    5.0,
+                    100.0,
+                ),
+            };
+        };
+        let defense_sig = 1.0
+            - self.sigmoid(
+                defender.num_tiles,
+                DEFENSE_DEBUFF_DECAY_RATE,
+                DEFENSE_DEBUFF_MIDPOINT,
+            );
+        let large_defender_speed_debuff = 0.7 + 0.3 * defense_sig;
+        let large_defender_attack_debuff = 0.7 + 0.3 * defense_sig;
+
+        let mut large_attack_bonus = 1.0;
+        if attacker.num_tiles > 100_000.0 {
+            large_attack_bonus = self.pow((100_000.0 / attacker.num_tiles).sqrt(), 0.7);
+        }
+        let mut large_attacker_speed_bonus = 1.0;
+        if attacker.num_tiles > 100_000.0 {
+            large_attacker_speed_bonus = self.pow(100_000.0 / attacker.num_tiles, 0.6);
+        }
+
+        let defender_troop_loss = defender.troops / defender.num_tiles;
+        let traitor_mod = if defender.is_traitor {
+            self.traitor_defense_debuff()
+        } else {
+            1.0
+        };
+        let current_attacker_loss = Util::within(defender.troops / attack_troops, 0.6, 2.0)
+            * mag
+            * 0.8
+            * large_defender_attack_debuff
+            * large_attack_bonus
+            * traitor_mod;
+        let alt_attacker_loss = 1.3 * defender_troop_loss * (mag / 100.0) * traitor_mod;
+        let attacker_troop_loss = 0.6 * current_attacker_loss + 0.4 * alt_attacker_loss;
+        LegacyAttackResult {
+            attacker_troop_loss,
+            defender_troop_loss,
+            tiles_per_tick_used: Util::within(defender.troops / (5.0 * attack_troops), 0.2, 1.5)
+                * speed
+                * large_defender_speed_debuff
+                * large_attacker_speed_bonus
+                * if defender.is_traitor {
+                    self.traitor_speed_debuff()
+                } else {
+                    1.0
+                },
+        }
+    }
+
+    /// Pre-PR-5172 `attackTilesPerTick`; `defender_troops` is `None` for terra nullius.
+    pub fn attack_tiles_per_tick_legacy(
+        &self,
+        attack_troops: f64,
+        defender_troops: Option<f64>,
+        num_adjacent_tiles_with_enemy: f64,
+    ) -> f64 {
+        match defender_troops {
+            Some(troops) => {
+                Util::within(((5.0 * attack_troops) / troops) * 2.0, 0.01, 0.5)
+                    * num_adjacent_tiles_with_enemy
+                    * 3.0
+            }
+            None => num_adjacent_tiles_with_enemy * 2.0,
         }
     }
 

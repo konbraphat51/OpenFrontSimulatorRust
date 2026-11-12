@@ -75,6 +75,7 @@ pub struct WaterManager {
     hierarchical_chain: Option<RefCell<HierarchicalWaterChain>>,
     simple_chain: RefCell<Option<SimpleWaterChain>>,
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
+    legacy: bool,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
     water_graph_dirty: bool,
@@ -95,6 +96,7 @@ impl WaterManager {
             hierarchical_chain: None,
             simple_chain: RefCell::new(None),
             mini_water_cc: None,
+            legacy: false,
             builder_bfs: None,
             water_graph_version: 0,
             water_graph_dirty: false,
@@ -132,6 +134,13 @@ impl WaterManager {
             manager.mini_water_graph = Some(graph);
         }
         manager
+    }
+
+    /// Switches to the pre-PR-4975 behaviour: fresh components per graph rebuild, no mini map
+    /// ocean/magnitude fix, and a rebuild may share the tick of a conversion.
+    pub fn set_legacy(&mut self) {
+        self.legacy = true;
+        self.mini_water_cc = None;
     }
 
     /// The mini map (2x down-scaled game map) used for pathfinding.
@@ -173,7 +182,7 @@ impl WaterManager {
         // Throttled rebuild: at most once every 20 ticks, never in the tick of a conversion
         if self.water_graph_dirty
             && !self.disable_nav_mesh
-            && !converted_this_tick
+            && (self.legacy || !converted_this_tick)
             && current_tick.wrapping_sub(self.water_graph_last_rebuild_tick)
                 >= WATER_GRAPH_REBUILD_INTERVAL
         {
@@ -418,7 +427,11 @@ impl WaterManager {
 
         // 2. Recompute magnitudes by BFS from the remaining land outward, per crater group
         self.full_scratch.ensure(total_tiles as usize);
-        let groups = compute_crater_groups(&converted, w, MAX_MAG_DIST);
+        let groups = if self.legacy {
+            vec![bounding_box(&converted, w)]
+        } else {
+            compute_crater_groups(&converted, w, MAX_MAG_DIST)
+        };
         for g in &groups {
             let stamp = self.full_scratch.bump();
             recompute_magnitudes_in_box(
@@ -523,7 +536,7 @@ impl WaterManager {
         }
 
         // 4b. Fix the mini map ocean bit and magnitude of converted tiles (setWater zeroes both)
-        if !converted_mini_tiles.is_empty() {
+        if !self.legacy && !converted_mini_tiles.is_empty() {
             let mini_w = self.mini_map.width();
             let mini_h = self.mini_map.height();
 
@@ -605,6 +618,25 @@ impl WaterManager {
 
         changed_tiles.extend(changed.iter().copied());
     }
+}
+
+/// Bounding box of all converted tiles (the pre-PR-4979 single dirty box).
+fn bounding_box(converted: &OrderedSet<TileRef>, w: u32) -> CraterBounds {
+    let mut b = CraterBounds {
+        min_x: w as i64,
+        max_x: 0,
+        min_y: i64::MAX,
+        max_y: 0,
+    };
+    for &tile in converted.iter() {
+        let x = (tile % w) as i64;
+        let y = (tile / w) as i64;
+        b.min_x = b.min_x.min(x);
+        b.max_x = b.max_x.max(x);
+        b.min_y = b.min_y.min(y);
+        b.max_y = b.max_y.max(y);
+    }
+    b
 }
 
 /// Groups converted tiles into spatially separate craters (cells of `max_mag_dist`, 8-adjacent cells

@@ -136,7 +136,17 @@ impl GameImpl {
         team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     ) -> Self {
         let unit_grid = UnitGrid::new(&map);
-        let water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        let mut rail_network = RailNetwork::new();
+        rail_network.leave_same_cluster = !config
+            .rules()
+            .has(crate::Builds::Rules::Change::StationClusterSame5096);
+        let mut water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
+        if !config
+            .rules()
+            .has(crate::Builds::Rules::Change::WaterNukeMinimap4975)
+        {
+            water_manager.set_legacy();
+        }
         let tiles = map.width() as usize * map.height() as usize;
         let mut game = Self {
             ticks: 0,
@@ -158,7 +168,7 @@ impl GameImpl {
             map,
             config,
             stats: StatsImpl::default(),
-            rail_network: RailNetwork::new(),
+            rail_network,
             water_manager,
             shared_water_cache: SharedWaterCache::new(),
             recent_mirv_targets: HashMap::new(),
@@ -225,7 +235,7 @@ impl GameImpl {
         let is_duos_trios_quads = matches!(
             pt,
             TeamCountConfig::Duos | TeamCountConfig::Trios | TeamCountConfig::Quads
-        );
+        ) && self.config.rules().has(Change::TeamAssignDuos4758);
         let assignment = assign_teams(
             &all_players,
             &self.player_teams.clone(),

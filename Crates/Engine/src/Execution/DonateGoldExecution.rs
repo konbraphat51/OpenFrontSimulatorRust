@@ -65,7 +65,18 @@ impl Execution for DonateGoldExecution {
         }
         self.recipient = Some(game.player_id(&self.recipient_id));
         if self.gold.is_none() {
-            self.gold = Some(game.player(self.sender).gold() / 3);
+            // Before PR 4892 a missing amount became 0 in the constructor.
+            self.gold = Some(
+                if game
+                    .config()
+                    .rules()
+                    .has(crate::Builds::Rules::Change::DonateGoldKeepNull4892)
+                {
+                    game.player(self.sender).gold() / 3
+                } else {
+                    0
+                },
+            );
         }
     }
 

@@ -12,7 +12,18 @@
     "C009": "ported; 6/6 sampled records pass",
     "C010": "ported; 18/18 sampled records pass",
     "C011": "ported; 12/12 sampled records pass",
-    "C012": "ported; 6/6 sampled records pass"
+    "C012": "ported; 6/6 sampled records pass",
+    "C013": "ported; 49/49 sampled records pass",
+    "C014": "ported; 50/50 sampled records pass",
+    "C015": "ported; 13/13 sampled records pass",
+    "C016": "ported; 15/15 sampled records pass",
+    "C017": "ported; 8/8 sampled records pass (Doomsday Clock team ladder and wasteland removed)",
+    "C018": "ported; 20/20 sampled records pass",
+    "C019": "ported; 14/14 sampled records pass",
+    "C020": "ported; 15/15 sampled records pass",
+    "C021": "ported; 16/16 sampled records pass (Doomsday Clock variants not ported)",
+    "C022": "ported; 2/3 sampled records pass (xQ449cAw fails in the upstream engine too)",
+    "C080": "not ported; its one sampled record carries no hashes, flags not derived"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -27,6 +38,17 @@
     "C009": "移植済み; 6/6 件のサンプルが一致",
     "C010": "移植済み; 18/18 件のサンプルが一致",
     "C011": "移植済み; 12/12 件のサンプルが一致",
-    "C012": "移植済み; 6/6 件のサンプルが一致"
+    "C012": "移植済み; 6/6 件のサンプルが一致",
+    "C013": "移植済み; 49/49 件のサンプルが一致",
+    "C014": "移植済み; 50/50 件のサンプルが一致",
+    "C015": "移植済み; 13/13 件のサンプルが一致",
+    "C016": "移植済み; 15/15 件のサンプルが一致",
+    "C017": "移植済み; 8/8 件のサンプルが一致 (Doomsday Clock のチーム用段階と荒地化を除去)",
+    "C018": "移植済み; 20/20 件のサンプルが一致",
+    "C019": "移植済み; 14/14 件のサンプルが一致",
+    "C020": "移植済み; 15/15 件のサンプルが一致",
+    "C021": "移植済み; 16/16 件のサンプルが一致 (Doomsday Clock の旧版は未移植)",
+    "C022": "移植済み; 2/3 件のサンプルが一致 (xQ449cAw はアップストリームのエンジンでも一致しない)",
+    "C080": "未移植; 唯一のサンプルにハッシュがなく、フラグは未導出"
   }
 }

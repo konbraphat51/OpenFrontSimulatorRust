@@ -5,6 +5,7 @@
 //! Players are small ids with `0` standing for terra nullius. Upstream shares one `PseudoRandom`
 //! and the nation behaviours between the owner execution and this object, hence the `Rc`s.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::{bounding_box_center, calculate_bounding_box_center};
@@ -208,8 +209,10 @@ impl AiAttackBehavior {
         let owner = game.owner_id(dst);
         let cap = if owner != 0 {
             self.troop_send_cap(game)
-        } else {
+        } else if game.config().rules().has(Change::NationExpansionCap5290) {
             self.troop_send_cap_for_expansion(game)
+        } else {
+            f64::INFINITY
         };
         let troops = (self.troops(game) / 5.0).min(cap);
         if troops < 1.0 {
@@ -320,11 +323,20 @@ impl AiAttackBehavior {
 
     fn attack_strategies(game: &GameImpl) -> Vec<Strategy> {
         use Strategy::*;
+        let juicy = game.config().rules().has(Change::NationJuicy5294);
         match game.config().game_config().difficulty {
             Difficulty::Easy => vec![Nuked, Bots, Retaliate, Assist, Betray, Hated, Weakest],
             Difficulty::Medium => vec![
                 Bots, Nuked, Retaliate, Assist, Betray, Hated, Afk, Traitor, Weakest, Island,
                 Donate,
+            ],
+            Difficulty::Hard if !juicy => vec![
+                Bots, Retaliate, Assist, Betray, Nuked, Traitor, Afk, Hated, VeryWeak, Victim,
+                Weakest, Island, Donate,
+            ],
+            Difficulty::Impossible if !juicy => vec![
+                Retaliate, Bots, VeryWeak, Assist, Traitor, Afk, Betray, Victim, Nuked, Hated,
+                Weakest, Island, Donate,
             ],
             Difficulty::Hard => vec![
                 Bots, Retaliate, Assist, Betray, Nuked, Traitor, Afk, Hated, VeryWeak, Juicy,
@@ -939,7 +951,11 @@ impl AiAttackBehavior {
                 if !can_build_truthy(game, self.player, tile) {
                     continue;
                 }
-                let troops = (self.troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game));
+                let troops = if game.config().rules().has(Change::NationExpansionCap5290) {
+                    (self.troops(game) / 5.0).min(self.troop_send_cap_for_expansion(game))
+                } else {
+                    self.troops(game) / 5.0
+                };
                 if troops < 1.0 {
                     return false;
                 }
@@ -1079,11 +1095,11 @@ impl AiAttackBehavior {
         };
 
         // Hard and Impossible: do not drop below the neighbour troop threshold.
-        troops = troops.min(if target_is_player {
-            self.troop_send_cap(game)
-        } else {
-            self.troop_send_cap_for_expansion(game)
-        });
+        if target_is_player {
+            troops = troops.min(self.troop_send_cap(game));
+        } else if game.config().rules().has(Change::NationExpansionCap5290) {
+            troops = troops.min(self.troop_send_cap_for_expansion(game));
+        }
         if troops < 1.0 {
             return None;
         }
@@ -1095,7 +1111,7 @@ impl AiAttackBehavior {
             emoji.borrow_mut().maybe_send_attack_emoji(game, target);
         }
         // Only troops that will actually be sent, after the cap, are counted.
-        if is_bot_attack {
+        if is_bot_attack && game.config().rules().has(Change::NationExpansionCap5290) {
             self.bot_attack_troops_sent += troops;
         }
         Some(troops)
@@ -1148,12 +1164,16 @@ impl AiAttackBehavior {
     }
 
     fn calculate_bot_attack_troops(
-        &self,
+        &mut self,
         game: &GameImpl,
         target: SmallId,
         max_troops: f64,
     ) -> f64 {
+        let old_accounting = !game.config().rules().has(Change::NationExpansionCap5290);
         if game.config().game_config().difficulty == Difficulty::Easy {
+            if old_accounting {
+                self.bot_attack_troops_sent += max_troops;
+            }
             return max_troops;
         }
         let target_troops = game.player(target).troops();
@@ -1166,6 +1186,9 @@ impl AiAttackBehavior {
             } else {
                 troops = max_troops;
             }
+        }
+        if old_accounting {
+            self.bot_attack_troops_sent += troops;
         }
         troops
     }

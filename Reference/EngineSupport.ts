@@ -15,7 +15,13 @@ import type { GameMapLoader, MapData } from "../src/core/game/GameMapLoader";
 import type { MapManifest } from "../src/core/game/TerrainMapLoader";
 import { createGameRunner } from "../src/core/GameRunner";
 import { GameRecord, GameStartInfo } from "../src/core/Schemas";
-import { decompressGameRecord, toWireGameStartInfo } from "../src/core/Util";
+import * as UtilModule from "../src/core/Util";
+
+const { decompressGameRecord } = UtilModule;
+// Builds before v0.33.13 have no toWireGameStartInfo: their record info is used as is.
+const toWireGameStartInfo: (info: GameStartInfo) => GameStartInfo =
+  (UtilModule as unknown as { toWireGameStartInfo?: (info: GameStartInfo) => GameStartInfo })
+    .toWireGameStartInfo ?? ((info) => info);
 
 /** Reads map files from the worktree's resources directory. */
 export class FileSystemMapLoader implements GameMapLoader {

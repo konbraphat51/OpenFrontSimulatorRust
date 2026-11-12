@@ -41,6 +41,8 @@ pub struct RailNetwork {
     pub(crate) clusters: Vec<Cluster>,
     grid: RailSpatialGrid,
     dirty_clusters: OrderedSet<ClusterId>,
+    /// Leaving a cluster also happens when the new cluster is the same one (PR 5096 not yet applied).
+    pub(crate) leave_same_cluster: bool,
 }
 
 impl Default for RailNetwork {
@@ -61,6 +63,7 @@ impl RailNetwork {
             clusters: Vec::new(),
             grid: RailSpatialGrid::new(GRID_CELL_SIZE),
             dirty_clusters: OrderedSet::new(),
+            leave_same_cluster: false,
         }
     }
 
@@ -195,9 +198,14 @@ impl RailNetwork {
             map: &game.map,
             mini_map: game.water_manager.mini_map(),
         };
-        MiniMapTransformer::new(AStarRail)
-            .find_path(&ctx, Source::Single(from), to)
-            .unwrap_or_default()
+        MiniMapTransformer::new(AStarRail {
+            cross_impassable: !game
+                .config()
+                .rules()
+                .has(crate::Builds::Rules::Change::RailNoImpassable4903),
+        })
+        .find_path(&ctx, Source::Single(from), to)
+        .unwrap_or_default()
     }
 
     fn new_railroad(&mut self, from: StationId, to: StationId, tiles: Vec<TileRef>) -> RailId {

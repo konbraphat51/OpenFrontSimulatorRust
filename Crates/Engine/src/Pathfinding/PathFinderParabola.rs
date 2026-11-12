@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::Line::{DistanceBasedBezierCurve, Point};
+use super::LineLegacy::LegacyBezierCurve;
 use super::Types::PathResult;
 use crate::Core::Util::within;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
@@ -18,6 +19,38 @@ pub struct ParabolaOptions {
     pub direction_up: Option<bool>,
     /// Do not clamp control points to the map (default false).
     pub ignore_map_bounds: Option<bool>,
+    /// Sample the curve with the pre-PR-5188 floating-point table.
+    pub legacy_curve: bool,
+}
+
+/// The curve of either generation.
+#[derive(Clone, Debug)]
+enum Curve {
+    Fixed(DistanceBasedBezierCurve),
+    Legacy(LegacyBezierCurve),
+}
+
+impl Curve {
+    fn points(&self) -> &[Point] {
+        match self {
+            Curve::Fixed(c) => c.get_all_points(),
+            Curve::Legacy(c) => c.get_all_points(),
+        }
+    }
+
+    fn increment(&mut self, distance: f64) -> Option<Point> {
+        match self {
+            Curve::Fixed(c) => c.increment(distance),
+            Curve::Legacy(c) => c.increment(distance),
+        }
+    }
+
+    fn current_index(&self) -> usize {
+        match self {
+            Curve::Fixed(c) => c.get_current_index(),
+            Curve::Legacy(c) => c.get_current_index(),
+        }
+    }
 }
 
 const PARABOLA_MIN_HEIGHT: f64 = 50.0;
@@ -78,7 +111,7 @@ pub fn get_parabola_control_points(
 /// Stepping path finder along a Bezier arc.
 #[derive(Clone, Debug, Default)]
 pub struct ParabolaUniversalPathFinder {
-    curve: Option<DistanceBasedBezierCurve>,
+    curve: Option<Curve>,
     last_to: Option<TileRef>,
     options: ParabolaOptions,
 }
@@ -93,22 +126,21 @@ impl ParabolaUniversalPathFinder {
         }
     }
 
-    fn create_curve(
-        &self,
-        map: &GameMapImpl,
-        from: TileRef,
-        to: TileRef,
-    ) -> DistanceBasedBezierCurve {
+    fn create_curve(&self, map: &GameMapImpl, from: TileRef, to: TileRef) -> Curve {
         let increment = self.options.increment.unwrap_or(3.0);
         let [p0, p1, p2, p3] = get_parabola_control_points(map, from, to, &self.options);
-        DistanceBasedBezierCurve::new(p0, p1, p2, p3, increment)
+        if self.options.legacy_curve {
+            Curve::Legacy(LegacyBezierCurve::new(p0, p1, p2, p3, increment))
+        } else {
+            Curve::Fixed(DistanceBasedBezierCurve::new(p0, p1, p2, p3, increment))
+        }
     }
 
     /// Every sampled tile of the arc (does not touch the stepping state).
     pub fn find_path(&self, map: &GameMapImpl, from: TileRef, to: TileRef) -> Vec<TileRef> {
         let curve = self.create_curve(map, from, to);
         curve
-            .get_all_points()
+            .points()
             .iter()
             .map(|p| map.tile_ref(p.x.floor() as i32, p.y.floor() as i32))
             .collect()
@@ -146,6 +178,6 @@ impl ParabolaUniversalPathFinder {
 
     /// Index of the current curve point.
     pub fn current_index(&self) -> usize {
-        self.curve.as_ref().map_or(0, |c| c.get_current_index())
+        self.curve.as_ref().map_or(0, |c| c.current_index())
     }
 }

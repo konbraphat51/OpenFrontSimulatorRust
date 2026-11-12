@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! JS semantics the engine must reproduce: number conversions, ordered collections, V8 math.
 
+pub mod HostMath;
 pub mod JsNumber;
 pub mod OrderedMap;
 pub mod OrderedSet;

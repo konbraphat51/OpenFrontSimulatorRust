@@ -4,6 +4,7 @@
 
 use super::NationBehaviorPorts::{Decision, DecisionLog, EmojiPort};
 use super::SharedRandom;
+use crate::Builds::Rules::Change;
 use crate::Execution::Util::calculate_territory_center;
 use crate::Game::Game::{Difficulty, Gold, PlayerType, SmallId, UnitType};
 use crate::Game::GameImpl::GameImpl;
@@ -145,7 +146,17 @@ impl NationMIRVBehavior {
             return None;
         }
         // Compared against tiles * 100; severity ranks by tile count.
+        let percent = game
+            .config()
+            .rules()
+            .has(Change::NationVictoryDenialPercent5223);
         let scaled_threshold = total_land * Self::victory_denial_threshold_percent(game);
+        let (team_share_limit, solo_share_limit) = match Self::difficulty(game) {
+            Difficulty::Easy => (0.9, 0.75),
+            Difficulty::Medium => (0.8, 0.65),
+            Difficulty::Hard => (0.7, 0.55),
+            Difficulty::Impossible => (0.6, 0.4),
+        };
         let mut best: Option<(SmallId, f64)> = None;
         for p in self.valid_mirv_target_players(game) {
             let mut severity = 0.0;
@@ -159,7 +170,13 @@ impl NationMIRVBehavior {
                 for &x in &team_members {
                     team_territory += game.player(x).num_tiles_owned() as f64;
                 }
-                if team_territory * 100.0 >= scaled_threshold {
+                let team_share = team_territory / total_land;
+                let over = if percent {
+                    team_territory * 100.0 >= scaled_threshold
+                } else {
+                    team_share >= team_share_limit
+                };
+                if over {
                     // Only the largest team member is a target when the team exceeds the threshold.
                     let mut largest_member: Option<SmallId> = None;
                     let mut largest_tiles = -1.0;
@@ -171,15 +188,20 @@ impl NationMIRVBehavior {
                         }
                     }
                     severity = if largest_member == Some(p) {
-                        team_territory
+                        if percent { team_territory } else { team_share }
                     } else {
                         0.0
                     };
                 }
             } else {
                 let tiles = game.player(p).num_tiles_owned() as f64;
-                if tiles * 100.0 >= scaled_threshold {
-                    severity = tiles;
+                let share = tiles / total_land;
+                if percent {
+                    if tiles * 100.0 >= scaled_threshold {
+                        severity = tiles;
+                    }
+                } else if share >= solo_share_limit {
+                    severity = share;
                 }
             }
             if severity > 0.0 && best.is_none_or(|(_, s)| severity > s) {

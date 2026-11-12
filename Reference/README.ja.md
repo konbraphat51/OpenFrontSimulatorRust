@@ -24,7 +24,7 @@ npx tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-a
 ### レコードからエンジンへの配線
 
 1. `decompressGameRecord(raw)` (`src/core/Util.ts`) が疎なターンを埋めるので、`record.turns[i].turnNumber == i`。
-2. `toWireGameStartInfo({gameID, lobbyCreatedAt, config, players, tribes})` (`src/core/Util.ts`) が `GameStartInfo` を作る。
+2. `toWireGameStartInfo({gameID, lobbyCreatedAt, config, players, tribes})` (`src/core/Util.ts`) が `GameStartInfo` を作る。 v0.33.13 より前のビルドにはこの関数がなく、その場合トレーサーはレコードの info をそのまま使う。
 3. `createGameRunner(gameStart, undefined, mapLoader, callback)` (`src/core/GameRunner.ts`) がゲームを構築し `init()` を呼ぶ。
 4. 各ターンを順に: `runner.addTurn(turn)`、続けて `runner.executeNextTick()`。
 

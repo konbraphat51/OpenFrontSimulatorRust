@@ -5,6 +5,7 @@
 //! The stats calls (`goldWork`, `recordDeathPosition`, `playerKilled`) are record-keeping only
 //! and dropped. Flood fills use the game's shared generation-stamped scratch like upstream.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::Util::{get_mode, simple_hash};
 use crate::Execution::Execution::Execution;
@@ -297,7 +298,7 @@ impl PlayerExecution {
         let my_small_id = self.player;
         let mut nbuf = [0; 4];
         for &tile in cluster {
-            if map.is_ocean_shore(tile) || map.is_on_edge_of_map(tile) {
+            if map.is_ocean_shore(tile) || self.on_edge(game, tile) {
                 return None;
             }
             let n_neighbors = map.neighbors4(tile, &mut nbuf);
@@ -351,7 +352,7 @@ impl PlayerExecution {
         let my_small_id = self.player;
         let mut nbuf = [0; 4];
         for &tr in cluster {
-            if map.is_shore(tr) || map.is_on_edge_of_map(tr) {
+            if map.is_shore(tr) || self.on_edge(game, tr) {
                 return false;
             }
             let n_neighbors = map.neighbors4(tr, &mut nbuf);
@@ -387,7 +388,9 @@ impl PlayerExecution {
         let Some(&first_tile) = cluster.first() else {
             return;
         };
-        if !self.is_enclosed(game, first_tile) {
+        if game.config().rules().has(Change::AnnexEnclosedOnly5027)
+            && !self.is_enclosed(game, first_tile)
+        {
             return;
         }
         let tiles = {
@@ -410,6 +413,15 @@ impl PlayerExecution {
         }
         for tile in tiles {
             game.player_mut(capturing).conquer(tile);
+        }
+    }
+
+    /// `isOnEdgeOfMap`: impassable neighbours count only since PR 5027.
+    fn on_edge(&self, game: &GameImpl, tile: TileRef) -> bool {
+        if game.config().rules().has(Change::AnnexEnclosedOnly5027) {
+            game.map.is_on_edge_of_map(tile)
+        } else {
+            game.map.is_on_map_boundary(tile)
         }
     }
 

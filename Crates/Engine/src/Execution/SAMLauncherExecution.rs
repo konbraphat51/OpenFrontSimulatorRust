@@ -2,6 +2,7 @@
 //! Port of src/core/execution/SAMLauncherExecution.ts: SAM launcher targeting and missile launches.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Execution::SAMMissileExecution::SAMMissileExecution;
 use crate::Game::Game::{GameType, SmallId, Tick, UnitId, UnitParams, UnitType};
@@ -29,9 +30,13 @@ struct CachedInterception {
     last_seen_tick: f64,
 }
 
+/// Interception state of the pre-PR-5197 targeting: `None` means no tile in range.
+type LegacyCache = HashMap<UnitId, Option<InterceptionTile>>;
+
 /// Smart SAM targeting system pre-shooting nukes so its range is strictly enforced.
 struct SamTargetingSystem {
     precomputed_nukes: HashMap<UnitId, CachedInterception>,
+    legacy_nukes: LegacyCache,
     missile_speed: f64,
     sam: UnitId,
 }
@@ -40,6 +45,7 @@ impl SamTargetingSystem {
     fn new(game: &GameImpl, sam: UnitId) -> Self {
         Self {
             precomputed_nukes: HashMap::new(),
+            legacy_nukes: HashMap::new(),
             missile_speed: game.config().default_sam_missile_speed(),
             sam,
         }
@@ -178,6 +184,124 @@ impl SamTargetingSystem {
         }
     }
 
+    /// Pre-PR-5197 `computeInterceptionTile`.
+    fn legacy_interception_tile(
+        &self,
+        game: &GameImpl,
+        unit: UnitId,
+        sam_tile: TileRef,
+        range_squared: f64,
+    ) -> Option<InterceptionTile> {
+        let state = game.unit_any(unit).nuke_state();
+        let trajectory = &state.trajectory;
+        let current_index = state.trajectory_index as i64;
+        // The nuke executes before SAM missiles, so the final tick cannot be intercepted.
+        let max_interception_index = trajectory.len() as i64 - 2;
+        let mut i = current_index;
+        while i <= max_interception_index {
+            let tile = trajectory[i as usize];
+            if tile.targetable
+                && (game.map.euclidean_dist_squared(sam_tile, tile.tile) as f64) <= range_squared
+            {
+                let nuke_tick_to_reach = (i - current_index) as f64;
+                let sam_tick_to_reach = self.tick_to_reach(game, sam_tile, tile.tile);
+                let tick_before_shooting = nuke_tick_to_reach - sam_tick_to_reach;
+                if tick_before_shooting >= 0.0 {
+                    return Some(InterceptionTile {
+                        tick: tick_before_shooting,
+                        tile: tile.tile,
+                    });
+                }
+            }
+            i += 1;
+        }
+        let final_tile = trajectory.last()?;
+        if final_tile.targetable
+            && (game.map.euclidean_dist_squared(sam_tile, final_tile.tile) as f64) <= range_squared
+        {
+            let in_flight = usize::try_from(max_interception_index)
+                .ok()
+                .and_then(|i| trajectory.get(i))?;
+            if in_flight.targetable {
+                let nuke_tick_to_reach = (max_interception_index - current_index) as f64;
+                let sam_tick_to_reach = self.tick_to_reach(game, sam_tile, in_flight.tile);
+                let tick_before_shooting = nuke_tick_to_reach - sam_tick_to_reach;
+                if tick_before_shooting >= 0.0 {
+                    return Some(InterceptionTile {
+                        tick: tick_before_shooting,
+                        tile: in_flight.tile,
+                    });
+                }
+            }
+        }
+        None
+    }
+
+    /// Pre-PR-5197 `getValidTargets`.
+    fn legacy_valid_targets(&mut self, game: &GameImpl, ticks: f64) -> Vec<Target> {
+        let sam_tile = game.unit_any(self.sam).tile();
+        let range = game
+            .config()
+            .sam_range(game.unit_any(self.sam).level() as f64);
+        let range_squared = range * range;
+        let detection_range = game.config().max_sam_range() * 4.0;
+        let nukes = game.nearby_units(
+            sam_tile,
+            detection_range,
+            &[
+                UnitType::AtomBomb,
+                UnitType::HydrogenBomb,
+                UnitType::MIRVWarhead,
+            ],
+            Some(&mut |unit, _| self.is_valid_nuke_target(game, unit)),
+            false,
+        );
+        self.legacy_nukes
+            .retain(|id, _| nukes.iter().any(|(n, _)| n == id));
+
+        let mut targets: Vec<Target> = Vec::new();
+        for (id, _) in nukes {
+            if let Some(cached) = self.legacy_nukes.get(&id) {
+                match cached {
+                    None => continue,
+                    Some(c) if c.tick == ticks || c.tick == ticks + 1.0 => {
+                        targets.push(Target {
+                            tile: c.tile,
+                            unit: id,
+                            score: 0.0,
+                        });
+                        self.legacy_nukes.remove(&id);
+                        continue;
+                    }
+                    Some(c) if c.tick > ticks => continue,
+                    Some(_) => {
+                        self.legacy_nukes.remove(&id);
+                    }
+                }
+            }
+            match self.legacy_interception_tile(game, id, sam_tile, range_squared) {
+                Some(hit) if hit.tick <= 1.0 => targets.push(Target {
+                    unit: id,
+                    tile: hit.tile,
+                    score: 0.0,
+                }),
+                Some(hit) => {
+                    self.legacy_nukes.insert(
+                        id,
+                        Some(InterceptionTile {
+                            tick: hit.tick + ticks,
+                            tile: hit.tile,
+                        }),
+                    );
+                }
+                None => {
+                    self.legacy_nukes.insert(id, None);
+                }
+            }
+        }
+        self.sort_targets(game, targets)
+    }
+
     fn is_valid_nuke_target(
         &self,
         game: &GameImpl,
@@ -190,7 +314,8 @@ impl SamTargetingSystem {
         let nuke_owner = unit.owner_id();
         if game.player(sam_owner).is_friendly(nuke_owner, false) {
             let game_over = game.winner().is_some()
-                && game.config().game_config().game_type != GameType::Singleplayer;
+                && (!game.config().rules().has(Change::AftergameSingleplayer5332)
+                    || game.config().game_config().game_type != GameType::Singleplayer);
             return game_over && game.player(sam_owner).is_on_same_team(nuke_owner);
         }
         true
@@ -351,8 +476,9 @@ impl Execution for SAMLauncherExecution {
             self.targeting_system = Some(SamTargetingSystem::new(game, sam));
         }
 
+        let modern = game.config().rules().has(Change::SamTargeting5197);
         let level = game.unit_any(sam).level();
-        if self.last_level != level {
+        if modern && self.last_level != level {
             self.last_level = level;
             self.targeting_system
                 .as_mut()
@@ -380,22 +506,26 @@ impl Execution for SAMLauncherExecution {
                 break;
             }
             game.unit_mut(sam).reload_missile();
+            if !modern {
+                break;
+            }
         }
         if game.unit_any(sam).is_in_cooldown() {
             return;
         }
 
-        if game.unit_count(UnitType::AtomBomb) == 0
-            && game.unit_count(UnitType::HydrogenBomb) == 0
-            && game.unit_count(UnitType::MIRVWarhead) == 0
-        {
-            return;
-        }
-        let targets = self
-            .targeting_system
-            .as_mut()
-            .expect("set above")
-            .get_valid_targets(game, ticks as f64);
+        let targeting = self.targeting_system.as_mut().expect("set above");
+        let targets = if modern {
+            if game.unit_count(UnitType::AtomBomb) == 0
+                && game.unit_count(UnitType::HydrogenBomb) == 0
+                && game.unit_count(UnitType::MIRVWarhead) == 0
+            {
+                return;
+            }
+            targeting.get_valid_targets(game, ticks as f64)
+        } else {
+            targeting.legacy_valid_targets(game, ticks as f64)
+        };
         for target in targets {
             if game.unit_any(sam).is_in_cooldown() {
                 break;

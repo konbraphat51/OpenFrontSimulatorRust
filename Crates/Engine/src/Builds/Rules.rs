@@ -36,6 +36,66 @@ pub enum Change {
     ChannelIslandsTribes5564,
     /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
     NewMapThemes5547,
+    /// PR 5173 and siblings: `attackLogic` is pure with per-tile tick fractions (older builds use `attackTilesPerTick`).
+    AttackLogicRework5173,
+    /// PR 5111: an attack holds the troops actually deducted from its owner.
+    AttackTroopsDeducted5111,
+    /// PR 4890: `handleDeadDefender` converges over up to 100 passes (older builds do exactly 10).
+    AnnexConvergeLoop4890,
+    /// PR 5027: annexing needs an enclosed territory; impassable tiles count as map edge.
+    AnnexEnclosedOnly5027,
+    /// PR 4892: a donate-gold intent without an amount keeps its null gold.
+    DonateGoldKeepNull4892,
+    /// PR 4953: the Doomsday Clock execution goes inactive once a winner is set.
+    DoomsdayIdleOnWinner4953,
+    /// PR 4867: a client spawn intent is gated on the phase it was queued in.
+    SpawnIntentGate4867,
+    /// PR 4921: spawn retries beyond 750 ignore the minimum distance between players.
+    SpawnRelaxMinDist4921,
+    /// PR 5321: a failed spawn restores the player's previous tiles.
+    SpawnRollback5321,
+    /// PR 5347: multiplayer spawn phase 200 turns (older builds 300).
+    SpawnPhase20s5347,
+    /// PR 5200: a train re-resolves a split railroad instead of despawning.
+    TrainSplitResolve5200,
+    /// PR 5302: trade ship and train spawn rates are throttled by saturation curves.
+    TradeTrainSaturation5302,
+    /// PR 5223: the win bar is 80 percent in team games too and the win test is cross-multiplied.
+    WinThresholdSame5223,
+    /// PR 5054: an alliance cancels in-flight MIRVs and warheads too.
+    AllianceCancelMirv5054,
+    /// PR 5188 and 4927: fixed-point Bezier curve, normalised MIRV flight and staged warheads.
+    MirvNormalize5188,
+    /// PR 5197 and 5040: cached SAM interception states and dynamic range on upgrade.
+    SamTargeting5197,
+    /// PR 5332: no teammate aftergame nuking in singleplayer.
+    AftergameSingleplayer5332,
+    /// PR 5330: smarter betrayal logic for Hard and Impossible nations.
+    NationBetray5330,
+    /// PR 5294: the juicy attack strategy of nations.
+    NationJuicy5294,
+    /// PR 5290: nations expanding into terra nullius keep a troop send cap floor.
+    NationExpansionCap5290,
+    /// PR 5344: crowded-map first structure uses its own one-shot flag.
+    NationCrowdedFirst5344,
+    /// PR 5223: nation victory denial thresholds as whole percents (one ladder).
+    NationVictoryDenialPercent5223,
+    /// PR 4758: duo/trio/quad team forming prefers the fullest team.
+    TeamAssignDuos4758,
+    /// PR 4903: rails cannot start on or cross impassable terrain.
+    RailNoImpassable4903,
+    /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
+    WaterNukeMinimap4975,
+    /// PR 5096: a station set to its own cluster does not leave it first.
+    StationClusterSame5096,
+    /// PR 5062: overtime lowers the win bar late in a game.
+    Overtime5062,
+    /// PR 4640: build and upgrade intents carry an amount (stacked purchases).
+    BulkPurchase4640,
+    /// PR 5030: team modes climb a higher Doomsday Clock ladder.
+    DoomsdayTeamLevels5030,
+    /// PR 5052: rotted territory becomes fallout wasteland.
+    DoomsdayRotWasteland5052,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -143,6 +203,86 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[],
     },
+    Edge {
+        class: "C013",
+        add: &[],
+        remove: &[
+            Change::DetMath5191,
+            Change::AttackLogicRework5173,
+            Change::AttackTroopsDeducted5111,
+            Change::AnnexConvergeLoop4890,
+            Change::AnnexEnclosedOnly5027,
+            Change::DonateGoldKeepNull4892,
+            Change::DoomsdayIdleOnWinner4953,
+            Change::SpawnIntentGate4867,
+            Change::SpawnRelaxMinDist4921,
+            Change::SpawnRollback5321,
+            Change::SpawnPhase20s5347,
+            Change::TrainSplitResolve5200,
+            Change::TradeTrainSaturation5302,
+            Change::WinThresholdSame5223,
+            Change::AllianceCancelMirv5054,
+            Change::MirvNormalize5188,
+            Change::SamTargeting5197,
+            Change::AftergameSingleplayer5332,
+            Change::NationBetray5330,
+            Change::NationJuicy5294,
+            Change::NationExpansionCap5290,
+            Change::NationCrowdedFirst5344,
+            Change::NationVictoryDenialPercent5223,
+            Change::TeamAssignDuos4758,
+            Change::RailNoImpassable4903,
+            Change::WaterNukeMinimap4975,
+        ],
+    },
+    Edge {
+        class: "C014",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C015",
+        add: &[],
+        remove: &[Change::StationClusterSame5096],
+    },
+    Edge {
+        class: "C016",
+        add: &[],
+        remove: &[Change::Overtime5062],
+    },
+    Edge {
+        class: "C017",
+        add: &[],
+        remove: &[
+            Change::DoomsdayTeamLevels5030,
+            Change::DoomsdayRotWasteland5052,
+        ],
+    },
+    Edge {
+        class: "C018",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C019",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C020",
+        add: &[],
+        remove: &[Change::BulkPurchase4640],
+    },
+    Edge {
+        class: "C021",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C022",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -156,6 +296,36 @@ const ROOT_CHANGES: &[Change] = &[
     Change::TeamCountMinTwo5436,
     Change::AttackSpeedDivisor5425,
     Change::ChannelIslandsTribes5564,
+    Change::AttackLogicRework5173,
+    Change::AttackTroopsDeducted5111,
+    Change::AnnexConvergeLoop4890,
+    Change::AnnexEnclosedOnly5027,
+    Change::DonateGoldKeepNull4892,
+    Change::DoomsdayIdleOnWinner4953,
+    Change::SpawnIntentGate4867,
+    Change::SpawnRelaxMinDist4921,
+    Change::SpawnRollback5321,
+    Change::SpawnPhase20s5347,
+    Change::TrainSplitResolve5200,
+    Change::TradeTrainSaturation5302,
+    Change::WinThresholdSame5223,
+    Change::AllianceCancelMirv5054,
+    Change::MirvNormalize5188,
+    Change::SamTargeting5197,
+    Change::AftergameSingleplayer5332,
+    Change::NationBetray5330,
+    Change::NationJuicy5294,
+    Change::NationExpansionCap5290,
+    Change::NationCrowdedFirst5344,
+    Change::NationVictoryDenialPercent5223,
+    Change::TeamAssignDuos4758,
+    Change::RailNoImpassable4903,
+    Change::WaterNukeMinimap4975,
+    Change::StationClusterSame5096,
+    Change::Overtime5062,
+    Change::BulkPurchase4640,
+    Change::DoomsdayTeamLevels5030,
+    Change::DoomsdayRotWasteland5052,
 ];
 
 /// Commit of the baseline build v0.34.22.
@@ -242,6 +412,7 @@ impl Rules {
                 changes.remove(removed);
             }
         }
+        toggle_for_debugging(&mut changes);
         Some(Self {
             class: class.to_string(),
             changes,
@@ -285,6 +456,21 @@ impl Rules {
     /// True when the build contains `change`.
     pub fn has(&self, change: Change) -> bool {
         self.changes.contains(&change)
+    }
+}
+
+/// `OFSIM_TOGGLE=Name,Name` flips the named changes of every rule set (bisecting a failing record).
+fn toggle_for_debugging(changes: &mut BTreeSet<Change>) {
+    let Ok(names) = std::env::var("OFSIM_TOGGLE") else {
+        return;
+    };
+    let all: Vec<Change> = ROOT_CHANGES.to_vec();
+    for name in names.split(',') {
+        if let Some(&change) = all.iter().find(|c| format!("{c:?}") == name.trim())
+            && !changes.remove(&change)
+        {
+            changes.insert(change);
+        }
     }
 }
 
@@ -372,7 +558,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C013"));
+        assert!(!is_ported("C023"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
@@ -392,5 +578,22 @@ mod tests {
         let c012 = rules("e910d727d2dd");
         assert!(c012.has(Change::NewMapThemes5547) && c012.has(Change::ChannelIslandsTribes5564));
         assert!(!rules("4e837520e886").has(Change::NewMapThemes5547));
+    }
+
+    #[test]
+    fn era_f_classes_are_ported_without_detmath() {
+        for n in 13..=22 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        assert!(!is_ported("C080"));
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c013 = rules("8b45be57542f");
+        assert!(!c013.has(Change::DetMath5191) && c013.has(Change::Sfc32PseudoRandom4233));
+        assert!(!c013.has(Change::AttackLogicRework5173) && !c013.has(Change::SpawnPhase20s5347));
+        assert!(c013.has(Change::StationClusterSame5096) && c013.has(Change::Overtime5062));
+        assert!(!rules("0cb90ccb7478").has(Change::StationClusterSame5096));
+        assert!(!rules("2d5baafdd0cc").has(Change::Overtime5062));
+        assert!(!rules("e9e10703e818").has(Change::BulkPurchase4640));
+        assert!(rules("20c813f06a40").has(Change::BulkPurchase4640));
     }
 }

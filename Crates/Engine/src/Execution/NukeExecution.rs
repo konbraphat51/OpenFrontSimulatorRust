@@ -6,6 +6,7 @@
 //! `touch`) and record-keeping stats are skipped; `recordMotionPlan` replays a separate pathfinder
 //! and has no effect on the state.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::DetMath;
 use crate::Core::PseudoRandom::PseudoRandom;
@@ -337,6 +338,7 @@ impl Execution for NukeExecution {
         self.path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
             increment: Some(self.speed),
             direction_up: Some(self.rocket_direction_up),
+            legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
             ..Default::default()
         });
     }
@@ -356,7 +358,9 @@ impl Execution for NukeExecution {
                 .units_of(UnitType::MissileSilo)
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
-            if let Some(silo) = silo {
+            if let Some(silo) = silo
+                && game.config().rules().has(Change::BulkPurchase4640)
+            {
                 let mut last_dep = 0.0;
                 for &launch_tick in game.unit_any(silo).missile_timer_queue() {
                     last_dep = f64::max(launch_tick + 1.0, last_dep + 1.0);

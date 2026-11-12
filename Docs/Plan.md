@@ -47,6 +47,18 @@ Class ids, parents and builds are in [BuildPlan.md](BuildPlan.md) (status column
 | C011 | v0.34.0, v0.34.1 | PR 5425 attack speed divisor 7.77, PR 5436 team count without the minimum of 2 | 12 of 12 |
 | C012 | v0.34.14 | tribe themes of Canary Islands, New Zealand, Pulicat Lake | 6 of 6 |
 | C090 | v0.34.5 | none (data tables and map manifests only; manifests read from git) | 7 of 7 |
+| C013 | v0.33.13, v0.33.14 | host `Math.*` instead of DetMath; old attack logic (PR 5173 family), old SAM targeting (5197), old MIRV and float Bezier curve (5188), spawn gates (4867, 4921, 5321, 5347), no train/trade saturation (5302), win bar 95 percent in teams (5223), no MIRV cancel on alliance (5054), no annex enclosure test (5027), no train split resolve (5200), old nation behaviour (5330, 5294, 5290, 5344), duo/trio team fill (4758), rails over impassable land (4903), water nukes without minimap fix (4975) | 49 of 49 |
+| C014 | v0.33.12 | none (schemas only) | 50 of 50 |
+| C015 | v0.33.11 | PR 5096 a station set to its own cluster leaves it first | 13 of 13 |
+| C016 | v0.33.7 to v0.33.10 | no overtime (PR 5062) | 15 of 15 |
+| C017 | v0.33.6 | Doomsday Clock without team ladder (5030) and wasteland (5052) | 8 of 8 |
+| C018 | v0.33.5 | none (map manifest) | 20 of 20 |
+| C019 | v0.33.4 | none | 14 of 14 |
+| C020 | v0.33.2, v0.33.3 | no bulk purchase amounts (PR 4640) | 15 of 15 |
+| C021 | v0.33.1 | older Doomsday Clock without territory rot: not ported (no sampled record uses it) | 16 of 16 |
+| C022 | v0.33.0 | none | 2 of 3 (xQ449cAw fails in the upstream engine too) |
+
+Era F math: builds before PR 5191 call the host `Math.exp/log/pow/atan2`. `Compat/HostMath.rs` runs V8's fdlibm port for `exp`, `log` and `atan2` and lets `Config` pick `Math.pow` between the V8 fdlibm port and the platform `powf` (`OFSIM_POW=fdlibm|platform`, default platform). All sampled records of C013 to C022 match with either pow, so the records do not separate them; the default follows the V8 13.3+ `std::pow` finding of [BuildPlan.md](BuildPlan.md). Differential runs against the upstream engine (Node 22, fdlibm pow) on records rewritten to enable nations at Hard and Impossible with large starting gold, water nukes and Duos/Quads teams (about 25 runs of 1,500 to 3,700 ticks) are identical tick by tick, except a stress run with 900M starting gold and water nukes on C013 that diverges at tick 2224 (one trade ship routed differently after repeated water conversions). `OFSIM_TOGGLE=<Change>,...` flips named changes of every rule set for bisecting. C080 (a test release between C013 and the baseline) is not ported: its only sampled record has no hashes. The Doomsday Clock of C021 (older, no territory rot) is not ported either.
 
 Notes: the `AiAttackBehavior` random boat target fix (D1, nation boat targets use `owner.isFriendly(nation)`) is merged; the counts above include it. C081 onward (v0.35.x, files moved into `packages/engine/src/`): the reference tracer and `GenEngineData` work on these builds; the engine changes are not ported yet (C081 matches only short records: the nation AI rewrite diverges Medium-difficulty games by tick 210 to 970, and ranked FFA records do not load).
 
