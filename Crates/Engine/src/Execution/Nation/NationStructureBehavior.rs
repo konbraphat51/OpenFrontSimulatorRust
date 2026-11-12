@@ -4,6 +4,7 @@
 
 use super::NationBehaviorPorts::{Decision, DecisionLog};
 use super::NationUtils::rand_territory_tile_array;
+use super::SharedRandom;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Configuration::Config::TrainRelation;
 use crate::Core::PseudoRandom::PseudoRandom;
@@ -13,9 +14,7 @@ use crate::Game::Game::{
 };
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
-use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
 
 /// SAM launcher ratio per city, by difficulty.
 fn sam_ratio(difficulty: Difficulty) -> f64 {
@@ -124,7 +123,7 @@ enum SpawnValue {
 
 /// Structure placement decisions of one nation.
 pub struct NationStructureBehavior {
-    random: Rc<RefCell<PseudoRandom>>,
+    random: SharedRandom,
     player: SmallId,
     reachable_stations_cache: Option<Vec<StationEntry>>,
     shared_water_components: Option<HashSet<i64>>,
@@ -139,7 +138,7 @@ pub struct NationStructureBehavior {
 
 impl NationStructureBehavior {
     /// `new NationStructureBehavior(random, game, player)`.
-    pub fn new(random: Rc<RefCell<PseudoRandom>>, player: SmallId) -> Self {
+    pub fn new(random: SharedRandom, _game: &GameImpl, player: SmallId) -> Self {
         Self {
             random,
             player,

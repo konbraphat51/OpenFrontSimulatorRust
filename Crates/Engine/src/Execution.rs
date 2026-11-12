@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! The `Execution` trait and the ported executions (one file per upstream execution).
 
+pub mod Alliance;
 pub mod ConstructionExecution;
 pub mod EmojiExecution;
 #[allow(clippy::module_inception)]
@@ -9,6 +10,7 @@ pub mod Execution;
 pub mod MIRVExecution;
 pub mod MarkDisconnectedExecution;
 pub mod Nation;
+pub mod NationExecution;
 pub mod NoOpExecution;
 pub mod NotPorted;
 pub mod NukeExecution;

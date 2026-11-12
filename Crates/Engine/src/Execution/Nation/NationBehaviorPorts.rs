@@ -4,7 +4,7 @@
 //! The upstream classes are shared objects; here the N2 behaviours hold them as `Rc<RefCell<dyn ..>>`,
 //! so the real behaviours and the test doubles of the unit tests plug in the same way.
 
-use super::NationEmojiBehavior::{EMOJI_NUKE, NationEmojiBehavior, respond_to_mirv};
+use super::NationEmojiBehavior::{NationEmojiBehavior, emoji_nuke, respond_to_mirv};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::ConstructionExecution::ConstructionExecution;
 use crate::Execution::Execution::Execution;
@@ -33,10 +33,10 @@ impl EmojiPort for NationEmojiBehavior {
         NationEmojiBehavior::maybe_send_attack_emoji(self, game, enemy);
     }
     fn maybe_send_nuke_emoji(&mut self, game: &mut GameImpl, target: SmallId) {
-        self.maybe_send_emoji(game, target, EMOJI_NUKE);
+        self.maybe_send_emoji(game, EmojiRecipient::Player(target), &emoji_nuke());
     }
     fn send_nuke_emoji_to_all(&mut self, game: &mut GameImpl) {
-        self.send_emoji(game, EmojiRecipient::All, EMOJI_NUKE);
+        self.send_emoji(game, EmojiRecipient::All, &emoji_nuke());
     }
     fn respond_to_mirv(&mut self, game: &mut GameImpl, random: &mut PseudoRandom, enemy: SmallId) {
         respond_to_mirv(game, random, enemy);

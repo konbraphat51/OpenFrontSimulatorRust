@@ -4,6 +4,7 @@
 
 use super::NationBehaviorPorts::{AttackPort, Decision, DecisionLog, EmojiPort};
 use super::NationUtils::rand_territory_tile_array;
+use super::SharedRandom;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::bounding_box_tiles;
@@ -47,7 +48,7 @@ struct AvailableSilo {
 
 /// Nuke decisions of one nation.
 pub struct NationNukeBehavior {
-    random: Rc<RefCell<PseudoRandom>>,
+    random: SharedRandom,
     player: SmallId,
     attack_behavior: Rc<RefCell<dyn AttackPort>>,
     emoji_behavior: Rc<RefCell<dyn EmojiPort>>,
@@ -65,8 +66,8 @@ pub struct NationNukeBehavior {
 impl NationNukeBehavior {
     /// `new NationNukeBehavior(random, game, player, attackBehavior, emojiBehavior)`; draws the hydro-nation flag.
     pub fn new(
+        random: SharedRandom,
         game: &GameImpl,
-        random: Rc<RefCell<PseudoRandom>>,
         player: SmallId,
         attack_behavior: Rc<RefCell<dyn AttackPort>>,
         emoji_behavior: Rc<RefCell<dyn EmojiPort>>,

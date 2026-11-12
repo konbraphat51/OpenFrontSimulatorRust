@@ -4,6 +4,7 @@
 //! STUB(owner=A3): replaced at merge.
 
 use crate::Execution::Execution::Execution;
+use crate::Execution::NotPorted::inert_mode;
 use crate::Game::Game::{SmallId, Tick, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
@@ -13,29 +14,27 @@ pub struct ConstructionExecution;
 
 impl ConstructionExecution {
     /// `new ConstructionExecution(player, constructionType, tile, rocketDirectionUp?, amount?)`.
-    #[allow(unused_variables, clippy::too_many_arguments)]
     pub fn new(
-        player: SmallId,
-        construction_type: UnitType,
-        tile: TileRef,
-        rocket_direction_up: Option<bool>,
-        amount: Option<f64>,
+        _player: SmallId,
+        _construction_type: UnitType,
+        _tile: TileRef,
+        _rocket_direction_up: Option<bool>,
+        _amount: Option<f64>,
     ) -> Self {
-        panic!("not ported: ConstructionExecution")
+        if !inert_mode() {
+            panic!("not ported: ConstructionExecution");
+        }
+        Self
     }
 }
 
 impl Execution for ConstructionExecution {
-    fn init(&mut self, _game: &mut GameImpl, _ticks: Tick) {
-        panic!("not ported: ConstructionExecution")
-    }
-    fn tick(&mut self, _game: &mut GameImpl, _ticks: Tick) {
-        panic!("not ported: ConstructionExecution")
-    }
+    fn init(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
+    fn tick(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
     fn is_active(&self) -> bool {
-        panic!("not ported: ConstructionExecution")
+        false
     }
     fn active_during_spawn_phase(&self) -> bool {
-        panic!("not ported: ConstructionExecution")
+        false
     }
 }

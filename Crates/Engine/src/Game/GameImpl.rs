@@ -99,6 +99,8 @@ pub struct GameImpl {
     /// Water manager (stub until p2-path lands).
     pub water_manager: WaterManager,
     shared_water_cache: SharedWaterCache,
+    /// Upstream's static `NationMIRVBehavior.recentMirvTargets` (kept per game): player id to the last tick a MIRV was sent at it.
+    pub recent_mirv_targets: HashMap<String, Tick>,
     humans: Vec<PlayerInfo>,
     nations: Vec<Nation>,
     player_teams: Vec<Team>,
@@ -148,6 +150,7 @@ impl GameImpl {
             rail_network: RailNetwork::new(),
             water_manager,
             shared_water_cache: SharedWaterCache::new(),
+            recent_mirv_targets: HashMap::new(),
             humans,
             nations,
             player_teams: Vec::new(),

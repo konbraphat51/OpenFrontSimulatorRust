@@ -3,30 +3,19 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::NationBehaviorPorts::{Decision, DecisionLog, EmojiPort};
-use crate::Core::PseudoRandom::PseudoRandom;
+use super::SharedRandom;
 use crate::Execution::Util::calculate_territory_center;
-use crate::Game::Game::{Difficulty, Gold, PlayerType, SmallId, Tick, UnitType};
+use crate::Game::Game::{Difficulty, Gold, PlayerType, SmallId, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 /// 30 seconds at 10 ticks/second.
 const MIRV_COOLDOWN_TICKS: f64 = 300.0;
 
-thread_local! {
-    /// Upstream's static `recentMirvTargets`: last tick a MIRV was sent at each player id, shared by every nation.
-    static RECENT_MIRV_TARGETS: RefCell<HashMap<String, Tick>> = RefCell::new(HashMap::new());
-}
-
-/// Forgets every recorded MIRV target (upstream never clears its static map; for tests only).
-pub fn clear_recent_mirv_targets() {
-    RECENT_MIRV_TARGETS.with(|m| m.borrow_mut().clear());
-}
-
 /// MIRV decisions of one nation.
 pub struct NationMIRVBehavior {
-    random: Rc<RefCell<PseudoRandom>>,
+    random: SharedRandom,
     player: SmallId,
     emoji_behavior: Rc<RefCell<dyn EmojiPort>>,
     /// Test hook: records the MIRV launches instead of queueing them.
@@ -36,7 +25,8 @@ pub struct NationMIRVBehavior {
 impl NationMIRVBehavior {
     /// `new NationMIRVBehavior(random, game, player, emojiBehavior)`.
     pub fn new(
-        random: Rc<RefCell<PseudoRandom>>,
+        random: SharedRandom,
+        _game: &GameImpl,
         player: SmallId,
         emoji_behavior: Rc<RefCell<dyn EmojiPort>>,
     ) -> Self {
@@ -234,17 +224,16 @@ impl NationMIRVBehavior {
     }
 
     fn was_recently_mirved(&self, game: &GameImpl, target: SmallId) -> bool {
-        let id = game.player(target).id().to_string();
-        let last = RECENT_MIRV_TARGETS.with(|m| m.borrow().get(&id).copied());
-        match last {
+        match game.recent_mirv_targets.get(game.player(target).id()) {
             None => false,
-            Some(last_tick) => (game.ticks() as f64) - (last_tick as f64) < MIRV_COOLDOWN_TICKS,
+            Some(&last_tick) => (game.ticks() as f64) - (last_tick as f64) < MIRV_COOLDOWN_TICKS,
         }
     }
 
-    fn record_mirv_hit(&self, game: &GameImpl, target: SmallId) {
+    fn record_mirv_hit(&self, game: &mut GameImpl, target: SmallId) {
         let id = game.player(target).id().to_string();
-        RECENT_MIRV_TARGETS.with(|m| m.borrow_mut().insert(id, game.ticks()));
+        let tick = game.ticks();
+        game.recent_mirv_targets.insert(id, tick);
     }
 
     fn valid_mirv_target_players(&self, game: &GameImpl) -> Vec<SmallId> {
