@@ -19,7 +19,7 @@ pub struct NotPorted {
 /// Debug switch: with `OFSIM_INERT` set, not-ported executions do nothing instead of panicking.
 /// Only for differential tests against the reference tracer run with `--inert 1`, which patches
 /// the same executions out of the upstream engine; never use it to claim a record verifies.
-fn inert_mode() -> bool {
+pub fn inert_mode() -> bool {
     std::env::var_os("OFSIM_INERT").is_some()
 }
 
@@ -41,6 +41,13 @@ impl Execution for Inert {
 }
 
 impl NotPorted {
+    /// For stub constructors of executions owned by another agent: panics unless `OFSIM_INERT` is set.
+    pub fn require_inert(name: &'static str) {
+        if !inert_mode() {
+            panic!("not ported: {name}");
+        }
+    }
+
     /// Panics right away with `not ported: <name>`.
     pub fn at_creation(name: &'static str) -> Box<dyn Execution> {
         if inert_mode() {

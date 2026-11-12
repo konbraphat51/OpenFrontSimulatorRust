@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `ofsim`: command-line replayer for OpenFront game records (unofficial port, see NOTICE).
 
+mod Naval;
 mod NukeScenario;
 mod Scenario;
 mod Trace;
@@ -93,6 +94,28 @@ enum Command {
         /// Manhattan radius of the wall
         #[arg(long, default_value_t = 8)]
         radius: i32,
+    },
+    /// Scripted port, warship and boat scenario for differential tests (see Reference/NavalScenarioDump.ts)
+    #[command(hide = true)]
+    NavalScenario {
+        /// Game record (.json.gz)
+        #[arg(long)]
+        record: PathBuf,
+        /// Directory of upstream map resources
+        #[arg(long)]
+        maps: PathBuf,
+        /// Output NDJSON file
+        #[arg(long)]
+        out: PathBuf,
+        /// Ticks of the record to run first
+        #[arg(long)]
+        warm: u32,
+        /// Ticks to run after the setup
+        #[arg(long)]
+        ticks: u32,
+        /// Number of players that get a port and a warship
+        #[arg(long, default_value_t = 6)]
+        players: usize,
     },
     /// Seeded nuke, SAM and doomsday program for differential tests (see Reference/NukeScenarioDump.ts)
     #[command(hide = true)]
@@ -212,6 +235,20 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
                 eprintln!("ofsim scenario: {e:#}");
+                ExitCode::from(2)
+            }
+        },
+        Command::NavalScenario {
+            record,
+            maps,
+            out,
+            warm,
+            ticks,
+            players,
+        } => match Naval::naval_scenario(&record, &maps, &out, warm, ticks, players) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("ofsim naval-scenario: {e:#}");
                 ExitCode::from(2)
             }
         },

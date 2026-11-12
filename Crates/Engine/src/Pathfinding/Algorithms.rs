@@ -3,6 +3,7 @@
 
 pub mod AStar;
 pub mod AStarAbstractGraph;
+pub mod AStarRail;
 pub mod AStarWater;
 pub mod AStarWaterBounded;
 pub mod AStarWaterHierarchical;

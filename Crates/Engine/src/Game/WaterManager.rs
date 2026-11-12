@@ -71,8 +71,9 @@ pub struct WaterManager {
     disable_nav_mesh: bool,
     mini_water_graph: Option<Rc<AbstractGraph>>,
     // Present exactly when the nav mesh is enabled (upstream `_miniWaterHPA`)
-    hierarchical_chain: Option<HierarchicalWaterChain>,
-    simple_chain: Option<SimpleWaterChain>,
+    // Chains keep search scratch only; RefCell lets `&GameImpl` queries (canBuild) run them
+    hierarchical_chain: Option<RefCell<HierarchicalWaterChain>>,
+    simple_chain: RefCell<Option<SimpleWaterChain>>,
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
@@ -92,7 +93,7 @@ impl WaterManager {
             disable_nav_mesh,
             mini_water_graph: None,
             hierarchical_chain: None,
-            simple_chain: None,
+            simple_chain: RefCell::new(None),
             mini_water_cc: None,
             builder_bfs: None,
             water_graph_version: 0,
@@ -121,8 +122,11 @@ impl WaterManager {
                 .build(),
             );
             let hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
-            manager.hierarchical_chain =
-                Some(build_hierarchical_chain(mini, hpa, Rc::clone(&graph)));
+            manager.hierarchical_chain = Some(RefCell::new(build_hierarchical_chain(
+                mini,
+                hpa,
+                Rc::clone(&graph),
+            )));
             manager.mini_water_cc = Some(cc);
             manager.builder_bfs = Some(bfs);
             manager.mini_water_graph = Some(graph);
@@ -189,7 +193,7 @@ impl WaterManager {
                 Rc::new(builder.build())
             };
             self.dirty_mini_tiles.clear();
-            if let Some(chain) = self.hierarchical_chain.as_mut() {
+            if let Some(chain) = self.hierarchical_chain.as_mut().map(RefCell::get_mut) {
                 // Reuse the map-sized scratch buffers; only swap the graph
                 crate::Pathfinding::PathFinder::set_chain_graph(chain, Rc::clone(&graph));
             }
@@ -219,7 +223,7 @@ impl WaterManager {
     ///
     /// Picks the HPA* chain when the graph has at least 100 nodes, else the plain A* chain on the mini map.
     pub fn find_water_path(
-        &mut self,
+        &self,
         map: &GameMapImpl,
         from: Source,
         to: TileRef,
@@ -234,8 +238,9 @@ impl WaterManager {
                 mini_map: &self.mini_map,
             };
             self.hierarchical_chain
-                .as_mut()
+                .as_ref()
                 .expect("checked above")
+                .borrow_mut()
                 .find_path(&ctx, from, to)
         } else {
             self.find_water_path_simple(map, from, to)
@@ -244,7 +249,7 @@ impl WaterManager {
 
     /// Water path through the simple chain (plain A* on the mini map), as used without a nav mesh.
     pub fn find_water_path_simple(
-        &mut self,
+        &self,
         map: &GameMapImpl,
         from: Source,
         to: TileRef,
@@ -255,6 +260,7 @@ impl WaterManager {
         };
         let mini = &self.mini_map;
         self.simple_chain
+            .borrow_mut()
             .get_or_insert_with(|| build_simple_chain(AStarWater::new(mini, None, None)))
             .find_path(&ctx, from, to)
     }

@@ -28,7 +28,9 @@ use super::WaterManager::WaterManager;
 use crate::Configuration::Config::Config;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
+use crate::Pathfinding::Spatial::SpatialQuery::SpatialQuery;
 use ofsim_map::SpawnArea;
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 /// Winner of a game: a player or a team.
@@ -93,7 +95,7 @@ pub struct GameImpl {
     pub map: GameMapImpl,
     config: Config,
     stats: StatsImpl,
-    /// Rail network (stub until the train phase).
+    /// Rail network (`railNetwork()`).
     pub rail_network: RailNetwork,
     /// Water manager (stub until p2-path lands).
     pub water_manager: WaterManager,
@@ -110,6 +112,12 @@ pub struct GameImpl {
     territory_version: u32,
     /// Shared tile traversal scratch.
     pub scratch: TileTraversalScratch,
+    /// Shore queries for boats (upstream builds one per call; its caches are pure).
+    pub spatial: RefCell<SpatialQuery>,
+    /// `TransportShipExecution._staggerCounter` (static upstream, one game per process there).
+    pub transport_ship_stagger: u32,
+    /// `TradeShipExecution._staggerCounter`.
+    pub trade_ship_stagger: u32,
 }
 
 impl GameImpl {
@@ -163,6 +171,9 @@ impl GameImpl {
                 cluster_index_map: vec![0; tiles],
                 gen_: 0,
             },
+            spatial: RefCell::new(SpatialQuery::new()),
+            transport_ship_stagger: 0,
+            trade_ship_stagger: 0,
         };
         if game.config.game_config().game_mode == GameMode::Team {
             game.populate_teams();
@@ -528,8 +539,19 @@ impl GameImpl {
         self.unit_grid.remove_unit(&self.map, id, t, tile);
         self.units[id as usize - 1].in_unit_map = false;
         if has_station {
-            self.rail_network.remove_station(id);
+            self.with_rail_network(|rail, game| rail.remove_station(game, id));
         }
+    }
+
+    /// Runs `f` with the rail network taken out of the game, so it can borrow the game mutably.
+    pub fn with_rail_network<R>(
+        &mut self,
+        f: impl FnOnce(&mut RailNetwork, &mut GameImpl) -> R,
+    ) -> R {
+        let mut rail = std::mem::take(&mut self.rail_network);
+        let result = f(&mut rail, self);
+        self.rail_network = rail;
+        result
     }
     /// `updateUnitTile`.
     pub fn update_unit_tile(&mut self, id: UnitId) {

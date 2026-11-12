@@ -2,21 +2,37 @@
 //! Port of src/core/execution/ExecutionManager.ts: turns intents into executions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
-//! Executions that are not ported yet are created as [`NotPorted`], which panics with
-//! `not ported: <Name>` the moment it is created. Replace the arm of the matching intent when an
-//! execution lands. `Executor.random` is seeded but never drawn from upstream, so it is not kept.
+//! Every intent of the baseline build maps to a ported execution. `Executor.random` is seeded but
+//! never drawn from upstream, so it is not kept.
 
+use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
+use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
+use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
+use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
+use crate::Execution::AttackExecution::AttackExecution;
+use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
+use crate::Execution::ConstructionExecution::ConstructionExecution;
+use crate::Execution::DeleteUnitExecution::DeleteUnitExecution;
+use crate::Execution::DonateGoldExecution::DonateGoldExecution;
+use crate::Execution::DonateTroopExecution::DonateTroopsExecution;
+use crate::Execution::EmbargoAllExecution::EmbargoAllExecution;
+use crate::Execution::EmbargoExecution::EmbargoExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
+use crate::Execution::MoveWarshipExecution::MoveWarshipExecution;
+use crate::Execution::NationExecution::NationExecution;
 use crate::Execution::NoOpExecution::NoOpExecution;
-use crate::Execution::NotPorted::NotPorted;
 use crate::Execution::PauseExecution::PauseExecution;
 use crate::Execution::QuickChatExecution::QuickChatExecution;
+use crate::Execution::RetreatExecution::RetreatExecution;
 use crate::Execution::SpawnExecution::SpawnExecution;
+use crate::Execution::TargetPlayerExecution::TargetPlayerExecution;
+use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
+use crate::Execution::UpgradeStructureExecution::UpgradeStructureExecution;
 use crate::Execution::Utils::PlayerSpawner::spawn_players;
-use crate::Game::Game::Cell;
+use crate::Game::Game::{Cell, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use ofsim_record::Intents::{Intent, StampedIntent};
 use ofsim_record::Records::Turn;
@@ -50,36 +66,81 @@ impl Executor {
             return Box::new(NoOpExecution);
         };
         match &intent.intent {
-            Intent::Attack { .. } => NotPorted::at_creation("AttackExecution"),
-            Intent::CancelAttack { .. } => NotPorted::at_creation("RetreatExecution"),
-            Intent::CancelBoat { .. } => NotPorted::at_creation("BoatRetreatExecution"),
-            Intent::MoveWarship { .. } => NotPorted::at_creation("MoveWarshipExecution"),
+            Intent::Attack { target_id, troops } => Box::new(AttackExecution::new(
+                *troops,
+                player,
+                target_id.clone(),
+                None,
+                true,
+            )),
+            Intent::CancelAttack { attack_id } => {
+                Box::new(RetreatExecution::new(player, attack_id.clone()))
+            }
+            Intent::CancelBoat { unit_id } => Box::new(BoatRetreatExecution::new(player, *unit_id)),
+            Intent::MoveWarship { unit_ids, tile } => {
+                Box::new(MoveWarshipExecution::new(player, unit_ids.clone(), *tile))
+            }
             Intent::Spawn { tile } => Box::new(SpawnExecution::new(
                 &self.game_id,
                 game.player(player).info().clone(),
                 Some(*tile),
                 true,
             )),
-            Intent::Boat { .. } => NotPorted::at_creation("TransportShipExecution"),
-            Intent::AllianceRequest { .. } => NotPorted::at_creation("AllianceRequestExecution"),
-            Intent::AllianceReject { .. } => NotPorted::at_creation("AllianceRejectExecution"),
-            Intent::BreakAlliance { .. } => NotPorted::at_creation("BreakAllianceExecution"),
-            Intent::TargetPlayer { .. } => NotPorted::at_creation("TargetPlayerExecution"),
+            Intent::Boat { troops, dst } => {
+                Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
+            }
+            Intent::AllianceRequest { recipient } => {
+                Box::new(AllianceRequestExecution::new(player, recipient.clone()))
+            }
+            Intent::AllianceReject { requestor } => {
+                Box::new(AllianceRejectExecution::new(requestor.clone(), player))
+            }
+            Intent::BreakAlliance { recipient } => {
+                Box::new(BreakAllianceExecution::new(player, recipient.clone()))
+            }
+            Intent::TargetPlayer { target } => {
+                Box::new(TargetPlayerExecution::new(player, target.clone()))
+            }
             Intent::Emoji { recipient, emoji } => Box::new(EmojiExecution::new(
                 player,
                 recipient.clone(),
                 *emoji as f64,
             )),
-            Intent::DonateTroops { .. } => NotPorted::at_creation("DonateTroopsExecution"),
-            Intent::DonateGold { .. } => NotPorted::at_creation("DonateGoldExecution"),
-            Intent::Embargo { .. } => NotPorted::at_creation("EmbargoExecution"),
-            Intent::EmbargoAll { .. } => NotPorted::at_creation("EmbargoAllExecution"),
-            Intent::BuildUnit { .. } => NotPorted::at_creation("ConstructionExecution"),
-            Intent::AllianceExtension { .. } => {
-                NotPorted::at_creation("AllianceExtensionExecution")
+            Intent::DonateTroops { recipient, troops } => Box::new(DonateTroopsExecution::new(
+                player,
+                recipient.clone(),
+                *troops,
+            )),
+            Intent::DonateGold { recipient, gold } => {
+                Box::new(DonateGoldExecution::new(player, recipient.clone(), *gold))
             }
-            Intent::UpgradeStructure { .. } => NotPorted::at_creation("UpgradeStructureExecution"),
-            Intent::DeleteUnit { .. } => NotPorted::at_creation("DeleteUnitExecution"),
+            Intent::Embargo { target_id, action } => Box::new(EmbargoExecution::new(
+                player,
+                target_id.clone(),
+                action.clone(),
+            )),
+            Intent::EmbargoAll { action } => {
+                Box::new(EmbargoAllExecution::new(player, action.clone()))
+            }
+            Intent::BuildUnit {
+                unit,
+                tile,
+                rocket_direction_up,
+                amount,
+            } => Box::new(ConstructionExecution::new(
+                player,
+                UnitType::from_str(unit).unwrap_or_else(|| panic!("unknown unit type {unit}")),
+                *tile,
+                *rocket_direction_up,
+                *amount,
+            )),
+            Intent::AllianceExtension { recipient } => {
+                Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
+            }
+            Intent::UpgradeStructure {
+                unit_id, amount, ..
+            } => Box::new(UpgradeStructureExecution::new(player, *unit_id, *amount)),
+            Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
                 Box::new(QuickChatExecution::new(player, recipient.clone()))
             }
@@ -103,11 +164,11 @@ impl Executor {
         spawn_players(game, &self.game_id)
     }
 
-    /// `nationExecutions()`: one `NationExecution` per nation (not ported: panics when initialised).
+    /// `nationExecutions()`: one `NationExecution` per nation.
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
         game.nations()
             .iter()
-            .map(|_| NotPorted::at_init("NationExecution", true))
+            .map(|n| Box::new(NationExecution::new(&self.game_id, n.clone())) as Box<dyn Execution>)
             .collect()
     }
 }
