@@ -84,6 +84,8 @@ pub enum Decision {
     Upgrade {
         /// Unit to upgrade.
         unit: UnitId,
+        /// Levels to buy.
+        amount: u32,
     },
     /// `new NukeExecution(type, player, tile, null, -1, waitTicks)`.
     Nuke {
@@ -129,8 +131,8 @@ impl DecisionLog {
             Decision::Construct { unit_type, tile } => Box::new(ConstructionExecution::new(
                 player, unit_type, tile, None, None,
             )),
-            Decision::Upgrade { unit } => {
-                Box::new(UpgradeStructureExecution::new(player, unit, Some(1)))
+            Decision::Upgrade { unit, amount } => {
+                Box::new(UpgradeStructureExecution::new(player, unit, Some(amount)))
             }
             Decision::Nuke {
                 nuke_type,

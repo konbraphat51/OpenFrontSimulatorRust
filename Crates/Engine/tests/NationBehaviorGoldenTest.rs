@@ -78,6 +78,12 @@ impl AttackPort for AttackDouble {
     fn find_incoming_attack_player(&mut self, _game: &mut GameImpl) -> Option<SmallId> {
         self.incoming
     }
+    fn strike_troops(&self, _game: &GameImpl, _target: SmallId) -> f64 {
+        0.0
+    }
+    fn strike(&mut self, _game: &mut GameImpl, _target: SmallId) -> bool {
+        false
+    }
 }
 
 enum Behavior {
@@ -89,7 +95,7 @@ enum Behavior {
 fn decision_json(d: &Decision) -> Value {
     match d {
         Decision::Construct { unit_type, tile } => json!(["construct", unit_type.as_str(), tile]),
-        Decision::Upgrade { unit } => json!(["upgrade", unit]),
+        Decision::Upgrade { unit, .. } => json!(["upgrade", unit]),
         Decision::Nuke {
             nuke_type,
             tile,
@@ -247,7 +253,9 @@ fn run_spec(spec: &Value, maps: &Path) -> Vec<Value> {
                                     UnitParams::default(),
                                 );
                             }
-                            Decision::Upgrade { unit } => game.player_mut(p).upgrade_unit(*unit),
+                            Decision::Upgrade { unit, .. } => {
+                                game.player_mut(p).upgrade_unit(*unit)
+                            }
                             _ => {}
                         }
                     }

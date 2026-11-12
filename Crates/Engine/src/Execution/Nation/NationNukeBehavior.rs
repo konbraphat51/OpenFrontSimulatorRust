@@ -1223,8 +1223,14 @@ impl NationNukeBehavior {
         }
 
         if let Some(silo) = best_silo {
-            self.log
-                .queue(game, self.player, Decision::Upgrade { unit: silo });
+            self.log.queue(
+                game,
+                self.player,
+                Decision::Upgrade {
+                    unit: silo,
+                    amount: 1,
+                },
+            );
         }
     }
 
@@ -1720,17 +1726,13 @@ impl NationNukeBehavior {
     }
 
     fn find_strike_nuke(&self, game: &GameImpl, tile: TileRef) -> Option<UnitId> {
-        for nuke in game
-            .player(self.player)
+        game.player(self.player)
             .units_of_types(&[UnitType::AtomBomb, UnitType::HydrogenBomb])
-        {
-            if game.unit_any(nuke).target_tile() == Some(tile)
-                && !self.strikes.iter().any(|s| s.nuke == Some(nuke))
-            {
-                return Some(nuke);
-            }
-        }
-        None
+            .into_iter()
+            .find(|&nuke| {
+                game.unit_any(nuke).target_tile() == Some(tile)
+                    && !self.strikes.iter().any(|s| s.nuke == Some(nuke))
+            })
     }
 
     fn troops_attacking(&self, game: &GameImpl, target: SmallId) -> f64 {

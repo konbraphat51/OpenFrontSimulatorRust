@@ -222,13 +222,6 @@ impl AiAttackBehavior {
     }
 
     fn choose_attack(&mut self, game: &mut GameImpl) {
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!(
-                "DBG tick {} choose_attack p43 troops {}",
-                game.ticks(),
-                self.troops(game)
-            );
-        }
         assert!(self.alliance_behavior.is_some(), "not initialized");
 
         // The set's insertion order feeds the stable troop sort below.
@@ -281,31 +274,11 @@ impl AiAttackBehavior {
         // Terra nullius, but not nuked territory (direct border or across a river).
         let has_non_nuked_terra_nullius =
             border_has_non_nuked_terra_nullius || player_neighbors.contains(&0);
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!(
-                "DBG tn {} hasland {}",
-                has_non_nuked_terra_nullius,
-                self.has_land_border_with_terra_nullius(game)
-            );
-        }
-        if has_non_nuked_terra_nullius {
-            let r = self.send_attack(game, 0, false);
-            if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-                eprintln!("DBG send_attack tn -> {}", r);
-            }
-            if r {
-                return;
-            }
+        if has_non_nuked_terra_nullius && self.send_attack(game, 0, false) {
+            return;
         }
 
         let hold_boats = Self::v2(game) && self.holds_boats_under_attack(game);
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!(
-                "DBG hold_boats {} enemies {}",
-                hold_boats,
-                bordering_enemies.len()
-            );
-        }
         if bordering_enemies.is_empty() {
             if !hold_boats && self.chance(5.0) {
                 self.attack_with_random_boat(game, &[]);
@@ -325,9 +298,6 @@ impl AiAttackBehavior {
     }
 
     fn attack_with_random_boat(&mut self, game: &mut GameImpl, bordering_enemies: &[SmallId]) {
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!("DBG attack_with_random_boat");
-        }
         if game.config().is_unit_disabled(UnitType::TransportShip) {
             return;
         }
@@ -353,14 +323,6 @@ impl AiAttackBehavior {
         }
         let (dst, launch) = found.expect("checked");
         let v2 = Self::v2(game);
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!(
-                "DBG random boat dst {} launch {} sail {:?}",
-                dst,
-                launch,
-                self.sail(game, launch, dst, None)
-            );
-        }
         if v2 && self.sail(game, launch, dst, None).1.is_some() {
             return;
         }
@@ -724,10 +686,7 @@ impl AiAttackBehavior {
         let easy = game.config().game_config().difficulty == Difficulty::Easy;
         for group in self.target_groups(game, bordering_enemies, groups) {
             let mut pool = group;
-            loop {
-                let Some(target) = self.run_finder(game, finder, &pool) else {
-                    break;
-                };
+            while let Some(target) = self.run_finder(game, finder, &pool) {
                 if easy || self.can_reach(game, target) {
                     return Some(target);
                 }
@@ -1540,9 +1499,6 @@ impl AiAttackBehavior {
     // Scans shore border tiles (every 10th) for unowned land 5 tiles away across water in each
     // cardinal direction and sends a transport ship to the first match.
     fn send_boat_attack_to_nearby_terra_nullius(&mut self, game: &mut GameImpl) -> bool {
-        if std::env::var("OFSIM_DBG").is_ok() && self.player == 43 {
-            eprintln!("DBG tick {} boat TN", game.ticks());
-        }
         if game.config().is_unit_disabled(UnitType::TransportShip) {
             return false;
         }

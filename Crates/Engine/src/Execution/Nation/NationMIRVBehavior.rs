@@ -36,6 +36,7 @@ const RIVAL_MIN_TILE_RATIO: f64 = 0.5;
 const MIRV_COVERAGE_SAMPLES: usize = 40;
 
 /// `mirvLeakShare(game, attacker, target)`: estimated share of a MIRV's warheads at `target` that SAMs would miss.
+#[allow(clippy::manual_clamp)]
 pub fn mirv_leak_share(game: &GameImpl, attacker: SmallId, target: SmallId) -> f64 {
     let warheads = f64::min(
         MIRV_MAX_WARHEADS,
