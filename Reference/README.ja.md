@@ -55,6 +55,8 @@ npx tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-a
 
 作業中のブランチでは、追加で移植済みの intent 種別を `OFSIM_PORTED_INTENTS` (カンマ区切り、例 `attack,boat`)、有効のままにするエンジン生成の Execution を `OFSIM_PORTED_EXECS` (`Nation`、`Tribe`、`DoomsdayClock`) で指定する。これで共有ファイルを変更せずに済む。移植済み Execution の内部から生成される Execution (例: tribe が出す攻撃) は対象外なので、両側で移植済みにするか、最初の発生までだけを比較する。
 
+`OFSIM_INERT_CLASSES` (カンマ区切り) は、Rust 側がスタブ (`OFSIM_INERT` では不活性) しか持たないクラスを TypeScript 側で個別に不活性にする。移植済みコードの内部から生成される Execution (`AllianceRequestExecution`、`AllianceExtensionExecution`、`ConstructionExecution`: `init` と `tick` は何もしない) と behaviour (`AiAttackBehavior`、`NationStructureBehavior`、`NationMIRVBehavior`、`NationNukeBehavior`: 判断メソッドは既定値を返す) が対象。新しいスタブが必要とするときは `InertPatch.ts` の表を拡張する。
+
 ## TraceDiff
 
 ```sh
