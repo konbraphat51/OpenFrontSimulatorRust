@@ -6,6 +6,7 @@
 //! upstream's `warship?.isActive()`. It re-checks the unit at the start of every tick instead; a
 //! warship destroyed mid-tick is therefore dropped one tick later than upstream (no state change).
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::find_minimum_by;
 use crate::Execution::Execution::Execution;
@@ -255,22 +256,28 @@ impl WarshipExecution {
                         let component = game
                             .water_manager
                             .get_water_component(&game.map, warship_tile);
-                        let has_reachable_port = component.is_some_and(|c| {
-                            game.player(owner)
-                                .units_of(UnitType::Port)
-                                .iter()
-                                .any(|&p| {
-                                    let port = game.unit_any(p);
-                                    port.is_active()
-                                        && !port.is_marked_for_deletion()
-                                        && !port.is_under_construction()
-                                        && game.water_manager.has_water_component(
-                                            &game.map,
-                                            port.tile(),
-                                            c,
-                                        )
-                                })
-                        });
+                        let reachable_port_rule =
+                            game.config().rules().has(Change::PirateReachablePort4458);
+                        let has_reachable_port = if !reachable_port_rule {
+                            game.player(owner).unit_count(UnitType::Port) > 0
+                        } else {
+                            component.is_some_and(|c| {
+                                game.player(owner)
+                                    .units_of(UnitType::Port)
+                                    .iter()
+                                    .any(|&p| {
+                                        let port = game.unit_any(p);
+                                        port.is_active()
+                                            && !port.is_marked_for_deletion()
+                                            && !port.is_under_construction()
+                                            && game.water_manager.has_water_component(
+                                                &game.map,
+                                                port.tile(),
+                                                c,
+                                            )
+                                    })
+                            })
+                        };
                         (
                             has_reachable_port,
                             self.patrol_tile(game),
@@ -287,6 +294,18 @@ impl WarshipExecution {
                     continue;
                 }
                 let patrol_tile = patrol_tile.expect("checked above");
+                if !game.config().rules().has(Change::PirateReachablePort4458) {
+                    let component = game
+                        .water_manager
+                        .get_water_component(&game.map, warship_tile);
+                    if component.is_some_and(|c| {
+                        !game
+                            .water_manager
+                            .has_water_component(&game.map, unit.tile(), c)
+                    }) {
+                        continue;
+                    }
+                }
                 if game.map.euclidean_dist_squared(patrol_tile, unit.tile()) as f64
                     > patrol_range_squared
                 {
@@ -739,6 +758,7 @@ impl WarshipExecution {
         let mut env = WaterStepperEnv {
             water: &mut game.water_manager,
             map: &game.map,
+            chain: None,
         };
         self.pathfinder
             .as_mut()

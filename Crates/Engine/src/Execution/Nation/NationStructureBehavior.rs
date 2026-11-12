@@ -672,7 +672,7 @@ impl NationStructureBehavior {
         game.player(self.player)
             .border_tiles()
             .for_each(|border_tile| {
-                let n = game.map.neighbors4(border_tile, &mut nbuf);
+                let n = game.map.neighbors4_nswe(border_tile, &mut nbuf);
                 for &neighbor in &nbuf[..n] {
                     if attackers.contains(&game.owner_id(neighbor)) {
                         front_tiles.push(border_tile);
@@ -1506,7 +1506,9 @@ impl NationStructureBehavior {
                         continue;
                     }
                     // Skip tiny lakes (not on Easy).
-                    if difficulty != Difficulty::Easy {
+                    if difficulty != Difficulty::Easy
+                        && game.config().rules().has(Change::NationSmallLakePorts4429)
+                    {
                         let size = game
                             .water_manager
                             .get_water_component_size(&game.map, neighbor);

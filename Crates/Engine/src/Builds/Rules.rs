@@ -122,6 +122,52 @@ pub enum Change {
     NationsLikeHumans5899,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
+    /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
+    ImpassableTerrain4340,
+    /// PR 4433: warships gain veterancy (more health and shell damage) from kills and captures.
+    WarshipVeterancy4433,
+    /// PR 4706: MIRV warheads are standard nukes (per-type speeds 15 and 22, real flight, SAM interception).
+    MirvWarheadsStandard4706,
+    /// PR 4707: launching a MIRV puts the silo on cooldown.
+    MirvSiloCooldown4707,
+    /// PR 4756: a nuke execution keeps a given launch tile (MIRV warheads start at the separation point).
+    NukeKeepSrcTile4756,
+    /// PR 4770: SAM targeting fixes (multi-target scoring, final-tick interception) and a SAM missile that moves on init.
+    SamTargetingFixes4770,
+    /// PR 4429: nations skip ports on lakes below 3000 water tiles (not on Easy).
+    NationSmallLakePorts4429,
+    /// PR 4654: trade ship motion plans reuse the stepper's cached path (older builds run a one-shot query).
+    TradeShipPathReuse4654,
+    /// PR 4577: transport ships only target shores on water reachable from their own shoreline.
+    ReachableShoreTransport4577,
+    /// PR 4647: per-map tribe name themes and custom tribes.
+    TribeNameThemes4647,
+    /// PR 4458: pirating needs a port in the warship's water body.
+    PirateReachablePort4458,
+    /// PR 4657: a spawn intent after the spawn phase is ignored for an already spawned player.
+    SpawnTeleportGuard4657,
+    /// PR 4426: the cluster recalculation offset is seeded from the player id (older builds: the name).
+    ClusterOffsetFromId4426,
+    /// PR 4428: random spawn ignores the requested tile in `SpawnExecution`.
+    RandomSpawnIgnoresTile4428,
+    /// PR 4422: `nearby()` skips unowned tiles with fallout.
+    NearbySkipsFallout4422,
+    /// PR 4406: the longest railroad is 1.4142 times the station range (older: the range itself).
+    RailroadMaxSizeDiagonal4406,
+    /// PR 4337: railroads longer than `railroadMaxSize` are not built.
+    RailroadMaxSizeLimit4337,
+    /// PR 4320: `unitsConstructed` does not count buildings under construction twice.
+    UnitsConstructedOnce4320,
+    /// PR 4297: nation land and boat attacks share one troop calculation.
+    AiBoatTroopsUnified4297,
+    /// PR 4469: the Doomsday Clock game mode exists (later builds only).
+    DoomsdayClock4469,
+    /// PR 4893: Doomsday Clock territory rot, decaying troop floor, 7-wave 35 percent ladder and idle-on-winner.
+    DoomsdayRotLadder4893,
+    /// PR 4479: water components use a wide land marker and the HPA node search walks water tiles.
+    WaterComponentMarkers4479,
+    /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
+    NeighborOrderNswe4495,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -349,12 +395,98 @@ const EDGES: &[Edge] = &[
     Edge {
         class: "C021",
         add: &[],
-        remove: &[],
+        remove: &[
+            Change::DoomsdayRotLadder4893,
+            Change::DoomsdayIdleOnWinner4953,
+        ],
     },
     Edge {
         class: "C022",
         add: &[],
         remove: &[],
+    },
+    Edge {
+        class: "C023",
+        add: &[],
+        remove: &[
+            Change::ImpassableTerrain4340,
+            Change::NeighborOrderNswe4495,
+            Change::WarshipVeterancy4433,
+            Change::MirvWarheadsStandard4706,
+            Change::MirvSiloCooldown4707,
+            Change::NukeKeepSrcTile4756,
+            Change::SamTargetingFixes4770,
+            Change::NationSmallLakePorts4429,
+            Change::ReachableShoreTransport4577,
+            Change::TribeNameThemes4647,
+            Change::PirateReachablePort4458,
+            Change::WaterComponentMarkers4479,
+            Change::TradeShipPathReuse4654,
+        ],
+    },
+    Edge {
+        class: "C024",
+        add: &[],
+        remove: &[Change::SpawnTeleportGuard4657],
+    },
+    Edge {
+        class: "C025",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C026",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C027",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C028",
+        add: &[],
+        remove: &[Change::DoomsdayClock4469],
+    },
+    Edge {
+        class: "C029",
+        add: &[],
+        remove: &[
+            Change::ClusterOffsetFromId4426,
+            Change::RandomSpawnIgnoresTile4428,
+            Change::NearbySkipsFallout4422,
+        ],
+    },
+    Edge {
+        class: "C030",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C031",
+        add: &[],
+        remove: &[Change::RailroadMaxSizeDiagonal4406],
+    },
+    Edge {
+        class: "C032",
+        add: &[],
+        remove: &[Change::RailroadMaxSizeLimit4337],
+    },
+    Edge {
+        class: "C033",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C034",
+        add: &[],
+        remove: &[Change::UnitsConstructedOnce4320],
+    },
+    Edge {
+        class: "C035",
+        add: &[],
+        remove: &[Change::AiBoatTroopsUnified4297],
     },
 ];
 
@@ -399,6 +531,29 @@ const ROOT_CHANGES: &[Change] = &[
     Change::BulkPurchase4640,
     Change::DoomsdayTeamLevels5030,
     Change::DoomsdayRotWasteland5052,
+    Change::ImpassableTerrain4340,
+    Change::NeighborOrderNswe4495,
+    Change::WarshipVeterancy4433,
+    Change::MirvWarheadsStandard4706,
+    Change::MirvSiloCooldown4707,
+    Change::NukeKeepSrcTile4756,
+    Change::SamTargetingFixes4770,
+    Change::NationSmallLakePorts4429,
+    Change::ReachableShoreTransport4577,
+    Change::TribeNameThemes4647,
+    Change::PirateReachablePort4458,
+    Change::SpawnTeleportGuard4657,
+    Change::ClusterOffsetFromId4426,
+    Change::RandomSpawnIgnoresTile4428,
+    Change::NearbySkipsFallout4422,
+    Change::RailroadMaxSizeDiagonal4406,
+    Change::RailroadMaxSizeLimit4337,
+    Change::UnitsConstructedOnce4320,
+    Change::AiBoatTroopsUnified4297,
+    Change::DoomsdayClock4469,
+    Change::DoomsdayRotLadder4893,
+    Change::WaterComponentMarkers4479,
+    Change::TradeShipPathReuse4654,
 ];
 
 /// Commit of the baseline build v0.34.22.
@@ -631,7 +786,7 @@ mod tests {
         for n in 0..=12 {
             assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
         }
-        assert!(!is_ported("C023"));
+        assert!(!is_ported("C036"));
         let rules = |commit: &str| Rules::for_commit(commit).unwrap();
         assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
         assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
@@ -686,5 +841,39 @@ mod tests {
         assert!(rules("7ee96860c717").has(Change::TutorialSilo6242));
         assert!(!rules("c144d134d150").has(Change::TutorialSilo6242));
         assert!(rules("80bff198b68f").has(Change::TeamFriendGroups6259));
+    }
+
+    #[test]
+    fn era_f_tail_classes_remove_their_changes() {
+        for n in 23..=35 {
+            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
+        }
+        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
+        let c022 = rules("7a7ca5be8ff8");
+        assert!(
+            c022.has(Change::ImpassableTerrain4340) && !c022.has(Change::DoomsdayRotLadder4893)
+        );
+        let c023 = rules("dd1277e245b5");
+        assert!(
+            !c023.has(Change::ImpassableTerrain4340) && !c023.has(Change::NeighborOrderNswe4495)
+        );
+        assert!(
+            !c023.has(Change::SamTargetingFixes4770) && !c023.has(Change::WarshipVeterancy4433)
+        );
+        assert!(c023.has(Change::SpawnTeleportGuard4657));
+        assert!(!rules("b716adb7e2f1").has(Change::SpawnTeleportGuard4657));
+        assert!(!rules("580460c9692a").has(Change::DoomsdayClock4469));
+        assert!(rules("53e1a5b03e35").has(Change::DoomsdayClock4469));
+        let c029 = rules("0c4c7d7993c9");
+        assert!(
+            !c029.has(Change::ClusterOffsetFromId4426) && !c029.has(Change::NearbySkipsFallout4422)
+        );
+        assert!(rules("d7b781f155dc").has(Change::RailroadMaxSizeLimit4337));
+        assert!(!rules("d7b781f155dc").has(Change::RailroadMaxSizeDiagonal4406));
+        assert!(!rules("bb2f2f01ee88").has(Change::RailroadMaxSizeLimit4337));
+        assert!(rules("661d96ba280f").has(Change::RailroadMaxSizeLimit4337));
+        assert!(!rules("305534cc6579").has(Change::UnitsConstructedOnce4320));
+        assert!(!rules("5be72db060fc").has(Change::AiBoatTroopsUnified4297));
+        assert!(!is_ported("C036"));
     }
 }

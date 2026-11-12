@@ -24,6 +24,7 @@ pub struct ConnectedComponents {
     max_id: u32,
     land_marker: u16,
     wide: bool,
+    old_markers: bool,
 }
 
 impl ConnectedComponents {
@@ -41,7 +42,13 @@ impl ConnectedComponents {
             max_id: 0,
             land_marker: LAND_MARKER,
             wide: false,
+            old_markers: false,
         }
+    }
+
+    /// Before PR 4479 ids go wide at component 254 without remapping land, so component 255 reads as land.
+    pub fn set_old_markers(&mut self, old_markers: bool) {
+        self.old_markers = old_markers;
     }
 
     /// Labels every water component of `map` (ids from 1 in scan order).
@@ -61,8 +68,12 @@ impl ConnectedComponents {
             }
             next_id += 1;
 
-            // Promote before assigning component 253 (0xFF would collide with the land marker).
-            if next_id == 253 && !self.wide {
+            if self.old_markers {
+                if next_id == 254 {
+                    self.wide = true;
+                }
+            } else if next_id == 253 && !self.wide {
+                // Promote before assigning component 253 (0xFF would collide with the land marker).
                 for id in ids.iter_mut() {
                     if *id == LAND_MARKER {
                         *id = LAND_MARKER_WIDE;
@@ -70,14 +81,14 @@ impl ConnectedComponents {
                 }
                 self.wide = true;
             }
-            if next_id == 0xffff {
+            if !self.old_markers && next_id == 0xffff {
                 break;
             }
             self.flood_fill_component(&mut ids, &mut queue, start as u32, next_id as u16);
         }
 
         self.component_ids = Some(ids);
-        self.land_marker = if self.wide {
+        self.land_marker = if self.wide && !self.old_markers {
             LAND_MARKER_WIDE
         } else {
             LAND_MARKER

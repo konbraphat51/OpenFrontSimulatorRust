@@ -436,6 +436,28 @@ impl<'a> PlayerRef<'a> {
             .gold_addition_rate(self.info.player_type, self.info.is_lobby_creator)
     }
 
+    /// `unitsConstructed(type)`; before PR 4320 buildings under construction count twice.
+    pub fn units_constructed(&self, t: UnitType) -> i64 {
+        let built = self.num_units_constructed[t.index()];
+        if self
+            .game
+            .config()
+            .rules()
+            .has(Change::UnitsConstructedOnce4320)
+        {
+            return built;
+        }
+        let constructing = self
+            .units
+            .iter()
+            .filter(|&&u| {
+                let unit = self.game.unit_any(u);
+                unit.unit_type == t && unit.is_under_construction()
+            })
+            .count() as i64;
+        built + constructing
+    }
+
     /// `unitInfo(type).cost(mg, player, extraUnits)`.
     pub fn unit_cost(&self, t: UnitType, extra_units: i64) -> Gold {
         let owned = |ut: UnitType| self.units_owned(ut).min(self.units_constructed(ut));
@@ -456,7 +478,7 @@ impl<'a> PlayerRef<'a> {
         let map = &self.game.map;
         let mut nbuf = [0; 4];
         for border in self.border_tiles.iter() {
-            let n = map.neighbors4(border, &mut nbuf);
+            let n = map.neighbors4_nswe(border, &mut nbuf);
             for &nb in &nbuf[..n] {
                 if map.owner_id(nb) == other {
                     return true;
@@ -471,10 +493,15 @@ impl<'a> PlayerRef<'a> {
         let mut ns: OrderedSet<SmallId> = OrderedSet::new();
         let map = &self.game.map;
         let small_id = self.small_id;
+        let skip_fallout = self
+            .game
+            .config()
+            .rules()
+            .has(Change::NearbySkipsFallout4422);
         for border in self.border_tiles.iter() {
-            map.for_each_neighbor(border, |neighbor| {
+            map.for_each_neighbor_nswe(border, |neighbor| {
                 if map.is_land(neighbor) && !map.is_impassable(neighbor) {
-                    if !map.has_owner(neighbor) && map.has_fallout(neighbor) {
+                    if skip_fallout && !map.has_owner(neighbor) && map.has_fallout(neighbor) {
                         return;
                     }
                     let owner = map.owner_id(neighbor);
@@ -1164,7 +1191,7 @@ impl<'a> PlayerRef<'a> {
             stack.push(tile);
         }
         while let Some(t) = stack.pop() {
-            map.for_each_neighbor(t, |n| {
+            map.for_each_neighbor_nswe(t, |n| {
                 if !visited.contains(&n) && inside(n) {
                     visited.insert(n);
                     nearby_tiles.push(n);

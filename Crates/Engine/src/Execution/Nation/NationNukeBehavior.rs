@@ -679,6 +679,7 @@ impl NationNukeBehavior {
             direction_up: Some(true),
             ignore_map_bounds: None,
             legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
+            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
         });
         path_finder.find_path(&game.map, from, to)
     }

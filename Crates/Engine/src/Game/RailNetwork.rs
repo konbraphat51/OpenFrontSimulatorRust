@@ -13,6 +13,7 @@ use super::GameMap::TileRef;
 use super::Railroad::{RailId, Railroad, StationId};
 use super::RailroadSpatialGrid::RailSpatialGrid;
 use super::TrainStation::{Cluster, ClusterId, TrainStation};
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Pathfinding::Algorithms::AStarRail::AStarRail;
 use crate::Pathfinding::PathFinderStation::find_stations_path;
@@ -354,7 +355,9 @@ impl RailNetwork {
             self.station_tile(game, from),
             self.station_tile(game, to),
         );
-        if !path.is_empty() && (path.len() as f64) < game.config().railroad_max_size() {
+        let within_limit = !game.config().rules().has(Change::RailroadMaxSizeLimit4337)
+            || (path.len() as f64) < game.config().railroad_max_size();
+        if !path.is_empty() && within_limit {
             let railroad = self.new_railroad(from, to, path);
             self.station_add_railroad(from, railroad);
             self.station_add_railroad(to, railroad);

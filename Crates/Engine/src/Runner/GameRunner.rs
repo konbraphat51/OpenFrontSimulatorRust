@@ -10,7 +10,7 @@
 
 use super::ConfigConversion::game_config_from_record;
 use super::Executor::Executor;
-use crate::Builds::Rules::Rules;
+use crate::Builds::Rules::{Change, Rules};
 use crate::Configuration::Config::Config;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
@@ -28,9 +28,14 @@ use ofsim_record::Records::Turn;
 use ofsim_record::StartInfo::GameStartInfo;
 use std::path::Path;
 
-fn game_map_of(t: &TerrainMap) -> Result<GameMapImpl> {
-    GameMapImpl::new(t.width, t.height, t.data.clone(), t.num_land_tiles as i64)
-        .map_err(|e| anyhow::anyhow!(e))
+fn game_map_of(t: &TerrainMap, rules: &Rules) -> Result<GameMapImpl> {
+    let mut map = GameMapImpl::new(t.width, t.height, t.data.clone(), t.num_land_tiles as i64)
+        .map_err(|e| anyhow::anyhow!(e))?;
+    map.set_build_behavior(
+        rules.has(Change::ImpassableTerrain4340),
+        !rules.has(Change::NeighborOrderNswe4495),
+    );
+    Ok(map)
 }
 
 /// A game plus the executor that turns recorded turns into executions.
@@ -49,7 +54,7 @@ pub fn create_game_runner(
     rules: Rules,
 ) -> Result<GameRunner> {
     let engine_config = game_config_from_record(&start.config)?;
-    let config = Config::new(engine_config.clone(), false, rules);
+    let config = Config::new(engine_config.clone(), false, rules.clone());
     let size = MapSize::from_wire(start.config.game_map_size.as_str())?;
     let terrain = MapData::load(maps_root, &start.config.game_map, size)?;
     let mut random = PseudoRandom::new(simple_hash(&start.game_id) as f64);
@@ -83,8 +88,8 @@ pub fn create_game_runner(
     let game = GameImpl::new(
         humans,
         nations,
-        game_map_of(&terrain.game_map)?,
-        game_map_of(&terrain.mini_game_map)?,
+        game_map_of(&terrain.game_map, &rules)?,
+        game_map_of(&terrain.mini_game_map, &rules)?,
         config,
         terrain.team_game_spawn_areas.clone(),
     );
@@ -127,7 +132,9 @@ impl GameRunner {
             }
         }
         self.game.add_execution(Box::new(WinCheckExecution::new()));
-        if self.game.config().doomsday_clock_config().enabled {
+        if self.game.config().rules().has(Change::DoomsdayClock4469)
+            && self.game.config().doomsday_clock_config().enabled
+        {
             self.game
                 .add_execution(Box::new(DoomsdayClockExecution::new()));
         }

@@ -2,6 +2,7 @@
 //! Port of src/core/execution/SAMMissileExecution.ts: a SAM missile chasing an enemy nuke.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
@@ -53,7 +54,9 @@ impl Execution for SAMMissileExecution {
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
         self.air = AirPathFinder::new(game.ticks());
         self.speed = game.config().default_sam_missile_speed();
-        self.tick(game, ticks);
+        if game.config().rules().has(Change::SamTargetingFixes4770) {
+            self.tick(game, ticks);
+        }
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
@@ -80,15 +83,18 @@ impl Execution for SAMMissileExecution {
             let t = game.unit_any(self.target);
             (t.is_active(), t.owner_id(), t.unit_type)
         };
+        let warheads_allowed = game.config().rules().has(Change::MirvWarheadsStandard4706);
         let nukes_whitelist = [
             UnitType::AtomBomb,
             UnitType::HydrogenBomb,
             UnitType::MIRVWarhead,
         ];
+        let listed = nukes_whitelist.contains(&target_type)
+            && (warheads_allowed || target_type != UnitType::MIRVWarhead);
         if !target_active
             || !game.unit_any(self.owner_unit).is_active()
             || target_owner == game.unit_any(missile).owner_id()
-            || !nukes_whitelist.contains(&target_type)
+            || !listed
         {
             if target_active {
                 game.unit_mut(self.target).set_targeted_by_sam(false);

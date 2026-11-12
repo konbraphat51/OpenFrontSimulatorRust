@@ -335,10 +335,14 @@ impl Execution for NukeExecution {
         if self.speed == -1.0 {
             self.speed = game.config().nuke_speed(self.nuke_type);
         }
+        let standard_warheads = game.config().rules().has(Change::MirvWarheadsStandard4706);
         self.path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
             increment: Some(self.speed),
+            distance_based_height: (!standard_warheads)
+                .then_some(self.nuke_type != UnitType::MIRVWarhead),
             direction_up: Some(self.rocket_direction_up),
             legacy_curve: !game.config().rules().has(Change::MirvNormalize5188),
+            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
             ..Default::default()
         });
     }
@@ -352,7 +356,12 @@ impl Execution for NukeExecution {
                 self.active = false;
                 return;
             };
-            let src = *self.src.get_or_insert(spawn);
+            let src = if game.config().rules().has(Change::NukeKeepSrcTile4756) {
+                *self.src.get_or_insert(spawn)
+            } else {
+                self.src = Some(spawn);
+                spawn
+            };
             let silo = game
                 .player(self.player)
                 .units_of(UnitType::MissileSilo)
@@ -408,6 +417,11 @@ impl Execution for NukeExecution {
             .path_finder
             .next(&game.map, src, self.dst, Some(self.speed))
         {
+            PathResult::Complete(_)
+                if !game.config().rules().has(Change::SamTargetingFixes4770) =>
+            {
+                self.detonate(game, nuke);
+            }
             PathResult::Complete(node) => {
                 game.unit_mut(nuke).move_to(node);
                 let owner = game.unit_any(nuke).owner_id();

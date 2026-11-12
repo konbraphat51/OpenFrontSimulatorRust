@@ -4,6 +4,7 @@
 
 use super::SpawnExecution::SpawnExecution;
 use super::Utils::TribeNames::{CustomTribe, TribeNameData, resolve_tribe_name_data};
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
@@ -65,6 +66,12 @@ impl<'a> TribeSpawner<'a> {
         }
 
         let remaining = num_tribes - tribes.len();
+        let purchased_names: &[String] =
+            if self.game.config().rules().has(Change::TribeNameThemes4647) {
+                purchased_names
+            } else {
+                &[]
+            };
         let mut purchased_by_slot: OrderedMap<usize, String> = OrderedMap::new();
         if !purchased_names.is_empty() && remaining > 0 {
             let used = &purchased_names[..purchased_names.len().min(remaining)];

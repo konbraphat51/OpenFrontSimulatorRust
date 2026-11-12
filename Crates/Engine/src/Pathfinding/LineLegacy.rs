@@ -20,7 +20,14 @@ pub struct LegacyBezierCurve {
 
 impl LegacyBezierCurve {
     /// Creates the curve and samples a point every `distance_increment` of arc length.
-    pub fn new(p0: Point, p1: Point, p2: Point, p3: Point, distance_increment: f64) -> Self {
+    pub fn new(
+        p0: Point,
+        p1: Point,
+        p2: Point,
+        p3: Point,
+        distance_increment: f64,
+        reset_cumulative: bool,
+    ) -> Self {
         let mut curve = Self {
             p0,
             p1,
@@ -31,7 +38,7 @@ impl LegacyBezierCurve {
             total_distance: 0.0,
             current_index: 0,
         };
-        curve.compute_all_points(distance_increment, 0.002);
+        curve.compute_all_points(distance_increment, 0.002, reset_cumulative);
         curve
     }
 
@@ -76,7 +83,7 @@ impl LegacyBezierCurve {
         self.current_index
     }
 
-    fn compute_all_points(&mut self, pixel_spacing: f64, precision: f64) {
+    fn compute_all_points(&mut self, pixel_spacing: f64, precision: f64, reset_cumulative: bool) {
         self.cached_points.clear();
         self.total_distance = 0.0;
         self.current_index = 0;
@@ -93,7 +100,11 @@ impl LegacyBezierCurve {
             cumulative += (dx * dx + dy * dy).sqrt();
             if cumulative >= pixel_spacing {
                 self.cached_points.push(current);
-                cumulative -= pixel_spacing;
+                if reset_cumulative {
+                    cumulative = 0.0;
+                } else {
+                    cumulative -= pixel_spacing;
+                }
             }
             prev = current;
         }

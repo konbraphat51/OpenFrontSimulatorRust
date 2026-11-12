@@ -265,6 +265,15 @@ impl Execution for DoomsdayClockExecution {
         if !cfg.enabled {
             return;
         }
+        let rot_era = game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::DoomsdayRotLadder4893);
+        assert!(
+            !matches!(game.config().rules().class_id(), "C025" | "C026" | "C027"),
+            "not ported: Doomsday Clock of class {}",
+            game.config().rules().class_id()
+        );
         let drain_cfg = DoomsdayClockDrainConfig {
             drain_start_percent: cfg.drain_start_percent,
             drain_max_percent: cfg.drain_max_percent,
@@ -308,6 +317,7 @@ impl Execution for DoomsdayClockExecution {
         let land = game.num_land_tiles() - game.num_tiles_with_fallout();
         let required = doomsday_clock_required_tiles(
             &DoomsdayClockProfile {
+                six_waves: !rot_era,
                 speed: cfg.speed,
                 team_game: !ffa
                     && game
@@ -342,14 +352,18 @@ impl Execution for DoomsdayClockExecution {
                     if seconds_under >= cfg.warn_seconds {
                         let seconds_past_warn = seconds_under - cfg.warn_seconds;
                         let max_troops = game.player(m).max_troops();
-                        let troop_floor =
-                            doomsday_clock_troop_floor(max_troops, seconds_past_warn, &floor_cfg);
+                        let troop_floor = if rot_era {
+                            doomsday_clock_troop_floor(max_troops, seconds_past_warn, &floor_cfg)
+                        } else {
+                            ((max_troops * cfg.drain_floor_percent) / 100.0).floor()
+                        };
                         let chunk =
                             doomsday_clock_drain(max_troops, seconds_past_warn, &drain_cfg, 1.0);
                         let troops = game.player(m).troops();
                         game.player_mut(m)
                             .remove_troops(f64::min(chunk, f64::max(0.0, troops - troop_floor)));
-                        if cfg.rot_death_seconds > 0.0
+                        if rot_era
+                            && cfg.rot_death_seconds > 0.0
                             && seconds_past_warn >= cfg.floor_decay_seconds
                             && game.player(m).troops() <= troop_floor
                         {

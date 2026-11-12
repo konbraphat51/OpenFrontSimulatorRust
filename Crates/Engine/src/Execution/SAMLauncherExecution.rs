@@ -302,6 +302,116 @@ impl SamTargetingSystem {
         self.sort_targets(game, targets)
     }
 
+    /// Pre-PR-4770 `computeInterceptionTile`: the first targetable tile in range the missile can reach before the explosion.
+    fn single_interception_tile(
+        &self,
+        game: &GameImpl,
+        unit: UnitId,
+        sam_tile: TileRef,
+        range_squared: f64,
+    ) -> Option<InterceptionTile> {
+        let state = game.unit_any(unit).nuke_state();
+        let trajectory = &state.trajectory;
+        let current_index = state.trajectory_index as i64;
+        let explosion_tick = trajectory.len() as f64 - current_index as f64;
+        let mut i = current_index;
+        while i < trajectory.len() as i64 {
+            let tile = trajectory[i as usize];
+            if tile.targetable
+                && (game.map.euclidean_dist_squared(sam_tile, tile.tile) as f64) <= range_squared
+            {
+                let nuke_tick_to_reach = (i - current_index) as f64;
+                let sam_tick_to_reach = self.tick_to_reach(game, sam_tile, tile.tile);
+                let tick_before_shooting = nuke_tick_to_reach - sam_tick_to_reach;
+                if sam_tick_to_reach < explosion_tick && tick_before_shooting >= 0.0 {
+                    return Some(InterceptionTile {
+                        tick: tick_before_shooting,
+                        tile: tile.tile,
+                    });
+                }
+            }
+            i += 1;
+        }
+        None
+    }
+
+    /// Pre-PR-4770 `getSingleTarget`: at most one target, hydrogen bombs preferred.
+    fn get_single_target(&mut self, game: &GameImpl, ticks: f64) -> Option<Target> {
+        let sam_tile = game.unit_any(self.sam).tile();
+        let range = game
+            .config()
+            .sam_range(game.unit_any(self.sam).level() as f64);
+        let range_squared = range * range;
+        let detection_range = game.config().max_sam_range() * 2.0;
+        let nukes = game.nearby_units(
+            sam_tile,
+            detection_range,
+            &[UnitType::AtomBomb, UnitType::HydrogenBomb],
+            Some(&mut |unit, _| self.is_valid_nuke_target(game, unit)),
+            false,
+        );
+        self.legacy_nukes
+            .retain(|id, _| nukes.iter().any(|(n, _)| n == id));
+
+        let mut best: Option<Target> = None;
+        let prefer = |best: &Option<Target>, game: &GameImpl, candidate: UnitId| -> bool {
+            match best {
+                None => true,
+                Some(b) => {
+                    game.unit_any(candidate).unit_type == UnitType::HydrogenBomb
+                        && game.unit_any(b.unit).unit_type != UnitType::HydrogenBomb
+                }
+            }
+        };
+        for (id, _) in nukes {
+            if let Some(cached) = self.legacy_nukes.get(&id) {
+                match cached {
+                    None => continue,
+                    Some(c) if c.tick == ticks => {
+                        let target = Target {
+                            tile: c.tile,
+                            unit: id,
+                            score: 0.0,
+                        };
+                        if prefer(&best, game, id) {
+                            best = Some(target);
+                        }
+                        self.legacy_nukes.remove(&id);
+                        continue;
+                    }
+                    Some(c) if c.tick > ticks => continue,
+                    Some(_) => {
+                        self.legacy_nukes.remove(&id);
+                    }
+                }
+            }
+            match self.single_interception_tile(game, id, sam_tile, range_squared) {
+                Some(hit) if hit.tick <= 1.0 => {
+                    if prefer(&best, game, id) {
+                        best = Some(Target {
+                            unit: id,
+                            tile: hit.tile,
+                            score: 0.0,
+                        });
+                    }
+                }
+                Some(hit) => {
+                    self.legacy_nukes.insert(
+                        id,
+                        Some(InterceptionTile {
+                            tick: hit.tick + ticks,
+                            tile: hit.tile,
+                        }),
+                    );
+                }
+                None => {
+                    self.legacy_nukes.insert(id, None);
+                }
+            }
+        }
+        best
+    }
+
     fn is_valid_nuke_target(
         &self,
         game: &GameImpl,
@@ -448,6 +558,72 @@ impl SAMLauncherExecution {
     }
 }
 
+impl SAMLauncherExecution {
+    /// Pre-PR-4770 targeting step: MIRV warheads aimed at the SAM are removed, otherwise one nuke is shot.
+    fn tick_single_target(&mut self, game: &mut GameImpl, ticks: Tick, sam: UnitId) {
+        const MIRV_WARHEAD_SEARCH_RADIUS: f64 = 400.0;
+        const MIRV_WARHEAD_PROTECTION_RADIUS: u32 = 50;
+        let sam_tile = game.unit_any(sam).tile();
+        let player = self.player;
+        let warheads: Vec<UnitId> = game
+            .nearby_units(
+                sam_tile,
+                MIRV_WARHEAD_SEARCH_RADIUS,
+                &[UnitType::MIRVWarhead],
+                Some(&mut |unit, _| {
+                    let nuke_owner = unit.owner_id();
+                    if nuke_owner == player {
+                        return false;
+                    }
+                    if game.player(player).is_friendly(nuke_owner, false)
+                        && (game.winner().is_none()
+                            || !game.player(player).is_on_same_team(nuke_owner))
+                    {
+                        return false;
+                    }
+                    unit.target_tile().is_some_and(|dst| {
+                        game.manhattan_dist(dst, sam_tile) < MIRV_WARHEAD_PROTECTION_RADIUS
+                    })
+                }),
+                false,
+            )
+            .into_iter()
+            .map(|(id, _)| id)
+            .collect();
+
+        let target = if warheads.is_empty() {
+            self.targeting_system
+                .as_mut()
+                .expect("set before")
+                .get_single_target(game, ticks as f64)
+        } else {
+            None
+        };
+        if target.is_none() && warheads.is_empty() {
+            return;
+        }
+        game.unit_mut(sam).launch();
+        if !warheads.is_empty() {
+            for warhead in warheads {
+                game.unit_mut(warhead).delete(None, None);
+            }
+        } else if let Some(target) = target {
+            game.unit_mut(target.unit).set_targeted_by_sam(true);
+            let (sam_tile, sam_owner) = {
+                let u = game.unit_any(sam);
+                (u.tile(), u.owner_id())
+            };
+            game.add_execution(Box::new(SAMMissileExecution::new(
+                sam_tile,
+                sam_owner,
+                sam,
+                target.unit,
+                target.tile,
+            )));
+        }
+    }
+}
+
 impl Execution for SAMLauncherExecution {
     fn init(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
 
@@ -511,6 +687,11 @@ impl Execution for SAMLauncherExecution {
             }
         }
         if game.unit_any(sam).is_in_cooldown() {
+            return;
+        }
+
+        if !game.config().rules().has(Change::SamTargetingFixes4770) {
+            self.tick_single_target(game, ticks, sam);
             return;
         }
 

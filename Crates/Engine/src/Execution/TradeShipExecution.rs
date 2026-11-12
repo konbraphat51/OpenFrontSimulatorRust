@@ -6,13 +6,14 @@
 //! motion-plan path query is kept (`WaterPathFinder::touch`) because it advances the rebuild
 //! stagger. The memoized path cache of upstream's trade ship finder cannot change results.
 
+use crate::Builds::Rules::Change;
 use crate::Core::Util::find_closest_by;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 use crate::Pathfinding::PathFinder::{WaterPathFinder, WaterStepperEnv};
-use crate::Pathfinding::Types::PathResult;
+use crate::Pathfinding::Types::{PathResult, Source};
 
 /// Moves a trade ship from `src_port` to `dst_port` and pays both owners on arrival.
 pub struct TradeShipExecution {
@@ -190,6 +191,7 @@ impl Execution for TradeShipExecution {
             let mut env = WaterStepperEnv {
                 water: &mut game.water_manager,
                 map: &game.map,
+                chain: None,
             };
             self.path_finder
                 .as_mut()
@@ -200,10 +202,24 @@ impl Execution for TradeShipExecution {
         match result {
             PathResult::Next(node) => {
                 if Some(dst) != self.motion_plan_dst {
-                    self.path_finder
-                        .as_mut()
-                        .expect("set in init")
-                        .touch(&game.water_manager);
+                    if game.config().rules().has(Change::TradeShipPathReuse4654) {
+                        self.path_finder
+                            .as_mut()
+                            .expect("set in init")
+                            .touch(&game.water_manager);
+                    } else {
+                        // Older builds run a real one-shot query for the motion plan.
+                        let mut env = WaterStepperEnv {
+                            water: &mut game.water_manager,
+                            map: &game.map,
+                            chain: None,
+                        };
+                        let _ = self.path_finder.as_mut().expect("set in init").find_path(
+                            &mut env,
+                            Source::Single(node),
+                            dst,
+                        );
+                    }
                     self.motion_plan_dst = Some(dst);
                 }
                 // Update safeFromPirates status

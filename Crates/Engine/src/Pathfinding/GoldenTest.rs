@@ -336,6 +336,7 @@ fn run_map(entry: &Value) {
                 &mut WaterStepperEnv {
                     water: &mut water,
                     map: &map,
+                    chain: None,
                 },
                 cur,
                 to,
@@ -349,6 +350,7 @@ fn run_map(entry: &Value) {
                             &mut WaterStepperEnv {
                                 water: &mut water,
                                 map: &map,
+                                chain: None,
                             },
                             cur,
                             to,
@@ -494,6 +496,7 @@ fn check_parabola(label: &str, entry: &Value, map: &GameMapImpl) {
             direction_up: o["directionUp"].as_bool(),
             ignore_map_bounds: o["ignoreMapBounds"].as_bool(),
             legacy_curve: false,
+            legacy_reset: false,
         };
         let cps = get_parabola_control_points(map, from, to, &options);
         let cp: Vec<String> = cps

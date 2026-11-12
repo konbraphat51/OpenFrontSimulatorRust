@@ -33,6 +33,10 @@ pub struct GameMapImpl {
     height: u32,
     num_land_tiles: i64,
     water_version: u32,
+    /// False before PR 4340: magnitude 31 is ordinary mountain, nothing is impassable.
+    impassable_enabled: bool,
+    /// True before PR 4495: `neighbors4` and `for_each_neighbor` visit W, E, N, S.
+    legacy_neighbor_order: bool,
 }
 
 impl GameMapImpl {
@@ -58,7 +62,15 @@ impl GameMapImpl {
             height,
             num_land_tiles,
             water_version: 0,
+            impassable_enabled: true,
+            legacy_neighbor_order: false,
         })
+    }
+
+    /// Selects the build-dependent terrain and neighbour-order behaviour of this map.
+    pub fn set_build_behavior(&mut self, impassable_enabled: bool, legacy_neighbor_order: bool) {
+        self.impassable_enabled = impassable_enabled;
+        self.legacy_neighbor_order = legacy_neighbor_order;
     }
 
     /// Tiles currently carrying fallout.
@@ -119,7 +131,9 @@ impl GameMapImpl {
 
     /// Land with the maximum magnitude: cannot be owned, attacked or nuked.
     pub fn is_impassable(&self, tile: TileRef) -> bool {
-        self.is_land(tile) && (self.terrain[tile as usize] & MAGNITUDE_MASK) == IMPASSABLE_MAGNITUDE
+        self.impassable_enabled
+            && self.is_land(tile)
+            && (self.terrain[tile as usize] & MAGNITUDE_MASK) == IMPASSABLE_MAGNITUDE
     }
 
     /// Land tile with a cardinal ocean neighbour.
@@ -312,7 +326,7 @@ impl GameMapImpl {
     pub fn terrain_type(&self, tile: TileRef) -> TerrainType {
         if self.is_land(tile) {
             let m = self.magnitude(tile);
-            if m >= IMPASSABLE_MAGNITUDE {
+            if self.impassable_enabled && m >= IMPASSABLE_MAGNITUDE {
                 return TerrainType::Impassable;
             }
             if m < 10 {
@@ -326,15 +340,14 @@ impl GameMapImpl {
         TerrainType::Ocean
     }
 
-    /// Cardinal neighbours in N, S, W, E order.
+    /// Cardinal neighbours in N, S, W, E order (the same in every build).
     pub fn neighbors(&self, tile: TileRef) -> Vec<TileRef> {
-        let mut out = [0; 4];
-        let n = self.neighbors4(tile, &mut out);
-        out[..n].to_vec()
+        let mut out = Vec::with_capacity(4);
+        self.visit_nswe(tile, |t| out.push(t));
+        out
     }
 
-    /// Visits cardinal neighbours in N, S, W, E order.
-    pub fn for_each_neighbor(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
+    fn visit_nswe(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
         let w = self.width;
         let x = tile % w;
         if tile >= w {
@@ -351,7 +364,48 @@ impl GameMapImpl {
         }
     }
 
-    /// Writes cardinal neighbours (N, S, W, E) into `out` and returns the count.
+    fn visit_wens(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
+        let w = self.width;
+        let x = tile % w;
+        if x != 0 {
+            callback(tile - 1);
+        }
+        if x != w - 1 {
+            callback(tile + 1);
+        }
+        if tile >= w {
+            callback(tile - w);
+        }
+        if tile < (self.height - 1) * w {
+            callback(tile + w);
+        }
+    }
+
+    /// Visits cardinal neighbours in N, S, W, E order (W, E, N, S before PR 4495).
+    pub fn for_each_neighbor(&self, tile: TileRef, callback: impl FnMut(TileRef)) {
+        if self.legacy_neighbor_order {
+            self.visit_wens(tile, callback);
+        } else {
+            self.visit_nswe(tile, callback);
+        }
+    }
+
+    /// Visits cardinal neighbours in N, S, W, E order in every build (upstream `neighbors()` order).
+    pub fn for_each_neighbor_nswe(&self, tile: TileRef, callback: impl FnMut(TileRef)) {
+        self.visit_nswe(tile, callback);
+    }
+
+    /// Like `neighbors4` but N, S, W, E in every build (upstream `neighbors()` order).
+    pub fn neighbors4_nswe(&self, tile: TileRef, out: &mut [TileRef; 4]) -> usize {
+        let mut n = 0;
+        self.visit_nswe(tile, |t| {
+            out[n] = t;
+            n += 1;
+        });
+        n
+    }
+
+    /// Writes cardinal neighbours (N, S, W, E; W, E, N, S before PR 4495) into `out` and returns the count.
     pub fn neighbors4(&self, tile: TileRef, out: &mut [TileRef; 4]) -> usize {
         let mut n = 0;
         self.for_each_neighbor(tile, |t| {

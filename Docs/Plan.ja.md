@@ -55,7 +55,7 @@ English version: [Plan.md](Plan.md)
 | C018 | v0.33.5 | なし (マップのマニフェスト) | 20/20 |
 | C019 | v0.33.4 | なし | 14/14 |
 | C020 | v0.33.2、v0.33.3 | 一括購入の amount なし (PR 4640) | 15/15 |
-| C021 | v0.33.1 | 領土腐食のない旧 Doomsday Clock: 未移植 (サンプルに使用例なし) | 16/16 |
+| C021 | v0.33.1 | 領土腐食 (PR 4893) のない Doomsday Clock: 兵力下限は固定 5%、6 段階で 55% までのラダー、勝者確定後に待機しない (4953) | 16/16 (サンプルでクロックを有効にしたものはなし) |
 | C022 | v0.33.0 | なし | 2/3 (xQ449cAw はアップストリームのエンジンでも一致しない) |
 | C081 | v0.35.0 | PR 5899 のネーションの全面改修 (`AiAttackBehavior` の報復、王冠、舟ルート、橋頭堡、ボット併合。核の追撃と MIRV 漏れ推定。構造物。軍艦による航路掃討。絵文字と同盟の調整。攻撃の関係値規則)、PR 5907 プレイヤー単位の貿易・列車スポーン加速、PR 5833 絵文字ウィンドウ、PR 5805 水グラフの辺をノード対で整列、PR 5719 列車の分割線路再調整、PR 5955 `PlayerExecution` の降灰分断地併合、PR 5919 全禁輸が同盟国を除外、ランク FFA とクラン戦の勝利判定 | 12 / 12 (Medium と Easy の長いレコード。Hard と Impossible の経路は未検証) |
 | C082 | v0.35.2 | なし (マップのマニフェストのみ) | 32 / 32 |
@@ -66,7 +66,20 @@ English version: [Plan.md](Plan.md)
 | C087 | v0.35.11, v0.35.12, v0.35.14 | PR 6259 チーム割り当てで友人グループを連続して着席 (`NationCount` の選択は挙動を変えない) | 36 / 36 |
 | C088 | v0.36.0 | 未移植: `PlayerExecution` の書き直し (ピンチパス、領土面積による順位付け)、`RailNetworkImpl`、MIRV と核の変更 | tick 210 で不一致 |
 | C089 | v0.36.1 | 未移植 (C088 が前提) | |
+| C023 | v0.32.14 から v0.32.17 | 通行不能地形なし (4340)、4 近傍が W, E, N, S 順 (4495)、軍艦の熟練度なし (4433)、MIRV 弾頭は通常の核ではない (4706, 4707, 4756)、4770 以前の SAM 照準 (単一目標、弾頭除去、最終 tick の迎撃なし、ミサイルは次 tick から移動)、国家が小さな湖にも港を置く (4429)、到達可能な岸の選択なし (4577)、海賊行為はどの港でも可 (4458)、テーマなしの部族名 (4647)、0xFF マーカーの水域成分と成分によるノード探索 (4479)、交易船のモーションプランは実際の一回限り探索 (4654) | 93/93 (約 13,000 tick の長尺 9 件) |
+| C024 | v0.32.12, v0.32.13 | スポーンフェーズ後のスポーン意図も無視されない (4657) | 22/22 |
+| C025 から C027 | v0.32.10 と v0.32.11、v0.32.8 と v0.32.9、v0.32.7 | Doomsday Clock の各版 (人数比例のバー、兵力下限なし、再調整された波): 未移植。クロックが有効だと `DoomsdayClockExecution` が `not ported` で panic する | 9/9、29/30 (XApT743N はアップストリームのエンジンも tick 1160 からレコードと一致せず、本実装はアップストリームと一致)、26/26 |
+| C028 | v0.32.6 | Doomsday Clock なし (4469) | 12/12 |
+| C029 | v0.32.5 | クラスタ再計算のオフセットは名前から (4426)、ランダムスポーンでも要求タイルを使う (4428)、`nearby()` が放射性降下タイルを除外しない (4422) | 22/22 |
+| C030 | v0.32.4 | なし (統計のみ) | 10/10 |
+| C031 | v0.32.2 | 鉄道の上限は駅の射程 (4406) | 20/20 |
+| C032 | v0.32.3 | 鉄道の長さ上限なし (4337) | 39/39 |
+| C033 | v0.32.0, v0.32.1 | なし (表示メッセージ) | 11/11 |
+| C034 | v0.32.0-beta6 | `unitsConstructed` が建設中の建物を二重に数える (4320) | 1/1 (長尺レコードなし; 差分実行) |
+| C035 | v0.32.0-beta5 | 国家の船攻撃の兵力を別計算 (4297) | 1/1 (長尺レコードなし; 差分実行) |
 
-世代 F の数学: PR 5191 より前のビルドはホストの `Math.exp/log/pow/atan2` を呼ぶ。`Compat/HostMath.rs` は `exp`、`log`、`atan2` に V8 の fdlibm 移植を使い、`Math.pow` は V8 の fdlibm 移植とプラットフォームの `powf` から `Config` が選ぶ (`OFSIM_POW=fdlibm|platform`、既定はプラットフォーム)。C013 から C022 のサンプルは pow がどちらでも全て一致するため、レコードでは区別できない。既定は [BuildPlan.ja.md](BuildPlan.ja.md) の V8 13.3 以降の `std::pow` の調査に従う。ネーション (Hard、Impossible)、大きな初期ゴールド、水核、Duos/Quads チームを有効にするよう書き換えたレコードをアップストリームのエンジン (Node 22、fdlibm pow) と照合した差分実行 (1,500 から 3,700 tick を約 25 回) は tick 単位で完全一致。ただし C013 での初期ゴールド 9 億と水核のストレス実行は tick 2224 で分岐する (水の変換が繰り返された後の交易船 1 隻の経路の違い)。`OFSIM_TOGGLE=<Change>,...` は全ルールセットの指定した変更を反転し、二分探索に使う。C080 (C013 とベースラインの間のテストリリース) は未移植: 唯一のサンプルにハッシュがない。C021 の旧 Doomsday Clock (領土腐食なし) も未移植。
+世代 F の数学: PR 5191 より前のビルドはホストの `Math.exp/log/pow/atan2` を呼ぶ。`Compat/HostMath.rs` は `exp`、`log`、`atan2` に V8 の fdlibm 移植を使い、`Math.pow` は V8 の fdlibm 移植とプラットフォームの `powf` から `Config` が選ぶ (`OFSIM_POW=fdlibm|platform`、既定はプラットフォーム)。C013 から C022 のサンプルは pow がどちらでも全て一致するため、レコードでは区別できない。既定は [BuildPlan.ja.md](BuildPlan.ja.md) の V8 13.3 以降の `std::pow` の調査に従う。ネーション (Hard、Impossible)、大きな初期ゴールド、水核、Duos/Quads チームを有効にするよう書き換えたレコードをアップストリームのエンジン (Node 22、fdlibm pow) と照合した差分実行 (1,500 から 3,700 tick を約 25 回) は tick 単位で完全一致。ただし C013 での初期ゴールド 9 億と水核のストレス実行は tick 2224 で分岐した。原因は水域探索器の世代管理 (下記) で、修正済み。`OFSIM_TOGGLE=<Change>,...` は全ルールセットの指定した変更を反転し、二分探索に使う。C080 (C013 とベースラインの間のテストリリース) は未移植: 唯一のサンプルにハッシュがない。C025 から C027 の Doomsday Clock の各版は未移植 (クロックが有効だと panic し、サンプルに有効なものはない)。
+
+水域探索器は、作成または更新された時点の水グラフ世代のチェーンを保持する (`PathFinder.rs` の `SharedWaterChain` ハンドル。アップストリームの船ごとの stepper と同じ)。以前は、水核によるグラフ再構築の直後に新しい経路を計算した、再構築待機中の交易船が新しいグラフを使って分岐していた (C023 の 9,000 tick の水核差分実行で発見)。初期ゴールド 3 億、Hard の国家、水核の差分実行は C000 と C026 でアップストリームと完全一致する。
 
 注: `AiAttackBehavior` のランダムな船の目標の修正 (D1。ネーションの船の目標は `owner.isFriendly(nation)` を使う) はマージ済みで、上の件数はこれを含む。C081 から C087 (v0.35.x、ファイルは `packages/*/src/`) はネーション改修のルール集合 `NationsLikeHumans5899` を共有し、`AiAttackBehavior.rs`、`NationNukeBehavior.rs`、`NationStructureBehavior.rs`、`NationMIRVBehavior.rs`、`NationWarshipBehavior.rs`、`NationEmojiBehavior.rs`、`NationAllianceBehavior.rs` の中で分岐する (別ファイルの派生ではなくその場で)。新しいモジュール: `Nation/BotAnnexation.rs`、`Execution/SeveredLand.rs` (降灰で分断された土地の併合)、`Nation/TutorialNation.rs`。デバッグ補助: `Reference/RngLog.ts` と `OFSIM_RNG_LOG`、`OFSIM_RNG_STACK_AT` (乱数の呼び出しごとのログと、ある呼び出しのスタック)、`Reference/ExecLog.ts` (アップストリームが tick ごとに追加した実行)、`ofsim trace` の `OFSIM_UNIT_LOG=<smallId>`。C088 には新しい `PlayerExecution` のアルゴリズム (ピンチパス、`floodTerritoryAreas`、`executeSecondaryPass`、書き直された `removeCluster`)、書き直された `RailNetworkImpl`、MIRV、核、港、SAM の実行の変更が必要で、公開ゲームのレコードは tick 210 で最初に食い違う。

@@ -21,6 +21,8 @@ pub struct ParabolaOptions {
     pub ignore_map_bounds: Option<bool>,
     /// Sample the curve with the pre-PR-5188 floating-point table.
     pub legacy_curve: bool,
+    /// With the legacy curve: reset the sampled distance to 0 after each point (before PR 4770; later builds subtract the spacing).
+    pub legacy_reset: bool,
 }
 
 /// The curve of either generation.
@@ -130,7 +132,14 @@ impl ParabolaUniversalPathFinder {
         let increment = self.options.increment.unwrap_or(3.0);
         let [p0, p1, p2, p3] = get_parabola_control_points(map, from, to, &self.options);
         if self.options.legacy_curve {
-            Curve::Legacy(LegacyBezierCurve::new(p0, p1, p2, p3, increment))
+            Curve::Legacy(LegacyBezierCurve::new(
+                p0,
+                p1,
+                p2,
+                p3,
+                increment,
+                self.options.legacy_reset,
+            ))
         } else {
             Curve::Fixed(DistanceBasedBezierCurve::new(p0, p1, p2, p3, increment))
         }

@@ -132,7 +132,10 @@ impl Execution for SpawnExecution {
             if self.from_intent && !self.queued_during_spawn_phase {
                 return;
             }
-        } else if !game.in_spawn_phase() && game.player(player).has_spawned() {
+        } else if game.config().rules().has(Change::SpawnTeleportGuard4657)
+            && !game.in_spawn_phase()
+            && game.player(player).has_spawned()
+        {
             return;
         }
 
@@ -144,7 +147,12 @@ impl Execution for SpawnExecution {
         for &t in &prev_tiles {
             game.player_mut(player).relinquish(t);
         }
-        let requested = if game.config().is_random_spawn() {
+        let requested = if game.config().is_random_spawn()
+            && game
+                .config()
+                .rules()
+                .has(Change::RandomSpawnIgnoresTile4428)
+        {
             None
         } else {
             self.tile

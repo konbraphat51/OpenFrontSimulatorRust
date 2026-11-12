@@ -140,10 +140,11 @@ impl GameImpl {
         rail_network.leave_same_cluster = !config
             .rules()
             .has(crate::Builds::Rules::Change::StationClusterSame5096);
-        let mut water_manager = WaterManager::with_sorted_edges(
+        let mut water_manager = WaterManager::new_with(
             mini_map,
             config.disable_nav_mesh(),
             config.rules().has(Change::WaterGraphEdgeSort5805),
+            !config.rules().has(Change::WaterComponentMarkers4479),
         );
         water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         if !config

@@ -13,7 +13,7 @@ use crate::Pathfinding::Algorithms::AbstractGraph::{AbstractGraph, AbstractGraph
 use crate::Pathfinding::Algorithms::BfsGrid::BfsGrid;
 use crate::Pathfinding::Algorithms::ConnectedComponents::ConnectedComponents;
 use crate::Pathfinding::PathFinder::{
-    HierarchicalWaterChain, SimpleWaterChain, build_hierarchical_chain, build_simple_chain,
+    ChainRef, SharedWaterChain, SimpleWaterChain, build_hierarchical_chain, build_simple_chain,
 };
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 use std::cell::RefCell;
@@ -75,10 +75,11 @@ pub struct WaterManager {
     mini_water_graph: Option<Rc<AbstractGraph>>,
     // Present exactly when the nav mesh is enabled (upstream `_miniWaterHPA`)
     // Chains keep search scratch only; RefCell lets `&GameImpl` queries (canBuild) run them
-    hierarchical_chain: Option<RefCell<HierarchicalWaterChain>>,
+    hierarchical_chain: Option<ChainRef>,
     simple_chain: RefCell<Option<SimpleWaterChain>>,
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
     legacy: bool,
+    old_markers: bool,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
     water_graph_dirty: bool,
@@ -92,14 +93,16 @@ pub struct WaterManager {
 impl WaterManager {
     /// Creates the manager; with the nav mesh enabled it builds the initial graph and HPA* finder.
     pub fn new(mini_map: GameMapImpl, disable_nav_mesh: bool) -> Self {
-        Self::with_sorted_edges(mini_map, disable_nav_mesh, false)
+        Self::new_with(mini_map, disable_nav_mesh, false, false)
     }
 
-    /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on).
-    pub fn with_sorted_edges(
+    /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on), `old_markers`
+    /// selects the component labeling of builds before PR 4479.
+    pub fn new_with(
         mini_map: GameMapImpl,
         disable_nav_mesh: bool,
         sort_edges: bool,
+        old_markers: bool,
     ) -> Self {
         let mut manager = Self {
             sort_edges,
@@ -111,6 +114,7 @@ impl WaterManager {
             simple_chain: RefCell::new(None),
             mini_water_cc: None,
             legacy: false,
+            old_markers,
             builder_bfs: None,
             water_graph_version: 0,
             water_graph_dirty: false,
@@ -123,6 +127,7 @@ impl WaterManager {
         if !disable_nav_mesh {
             let mini = &manager.mini_map;
             let mut cc = ConnectedComponents::new(mini);
+            cc.set_old_markers(old_markers);
             cc.initialize(mini);
             let cc = Rc::new(RefCell::new(cc));
             let mut bfs = BfsGrid::new(mini.width() as usize * mini.height() as usize);
@@ -138,12 +143,12 @@ impl WaterManager {
                 .with_sorted_edges(sort_edges)
                 .build(),
             );
-            let hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
-            manager.hierarchical_chain = Some(RefCell::new(build_hierarchical_chain(
-                mini,
-                hpa,
-                Rc::clone(&graph),
-            )));
+            let mut hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
+            hpa.set_component_filter(old_markers);
+            manager.hierarchical_chain = Some(Rc::new(SharedWaterChain {
+                use_hierarchical: graph.node_count() >= 100,
+                hierarchical: RefCell::new(build_hierarchical_chain(mini, hpa, Rc::clone(&graph))),
+            }));
             manager.mini_water_cc = Some(cc);
             manager.builder_bfs = Some(bfs);
             manager.mini_water_graph = Some(graph);
@@ -214,13 +219,23 @@ impl WaterManager {
                     self.mini_water_cc.clone(),
                     self.builder_bfs.as_mut().expect("nav mesh enabled"),
                 )
-                .with_sorted_edges(self.sort_edges);
+                .with_sorted_edges(self.sort_edges)
+                .with_old_markers(self.old_markers);
                 Rc::new(builder.build())
             };
             self.dirty_mini_tiles.clear();
-            if let Some(chain) = self.hierarchical_chain.as_mut().map(RefCell::get_mut) {
-                // Reuse the map-sized scratch buffers; only swap the graph
-                crate::Pathfinding::PathFinder::set_chain_graph(chain, Rc::clone(&graph));
+            if self.hierarchical_chain.is_some() {
+                // A new finder and chain per version; finders created earlier keep theirs
+                let mut hpa = AStarWaterHierarchical::new(&self.mini_map, Rc::clone(&graph), true);
+                hpa.set_component_filter(self.old_markers);
+                self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
+                    use_hierarchical: graph.node_count() >= 100,
+                    hierarchical: RefCell::new(build_hierarchical_chain(
+                        &self.mini_map,
+                        hpa,
+                        Rc::clone(&graph),
+                    )),
+                }));
             }
             self.mini_water_graph = Some(graph);
             self.water_graph_version += 1;
@@ -244,31 +259,41 @@ impl WaterManager {
         self.mini_water_graph.as_ref()
     }
 
-    /// Water path through the shared chain (upstream `sharedWaterChain(game)`); `from` keeps its single/array form.
-    ///
-    /// Picks the HPA* chain when the graph has at least 100 nodes, else the plain A* chain on the mini map.
+    /// The chain of the current graph version, `None` without a nav mesh.
+    pub fn current_chain(&self) -> Option<ChainRef> {
+        self.hierarchical_chain.clone()
+    }
+
+    /// Water path through the current shared chain (upstream `sharedWaterChain(game)`); `from` keeps its single/array form.
     pub fn find_water_path(
         &self,
         map: &GameMapImpl,
         from: Source,
         to: TileRef,
     ) -> Option<Vec<TileRef>> {
-        let use_hierarchical = match (&self.hierarchical_chain, &self.mini_water_graph) {
-            (Some(_), Some(graph)) => graph.node_count() >= 100,
-            _ => false,
-        };
-        if use_hierarchical {
-            let ctx = PathCtx {
-                map,
-                mini_map: &self.mini_map,
-            };
-            self.hierarchical_chain
-                .as_ref()
-                .expect("checked above")
-                .borrow_mut()
-                .find_path(&ctx, from, to)
-        } else {
-            self.find_water_path_simple(map, from, to)
+        self.find_water_path_with(None, map, from, to)
+    }
+
+    /// Like [`Self::find_water_path`] through the chain of an older graph version (`None` is the current one).
+    ///
+    /// Picks the HPA* chain when its graph had at least 100 nodes, else the plain A* chain on the mini map.
+    pub fn find_water_path_with(
+        &self,
+        chain: Option<&ChainRef>,
+        map: &GameMapImpl,
+        from: Source,
+        to: TileRef,
+    ) -> Option<Vec<TileRef>> {
+        let chain = chain.or(self.hierarchical_chain.as_ref());
+        match chain {
+            Some(chain) if chain.use_hierarchical => {
+                let ctx = PathCtx {
+                    map,
+                    mini_map: &self.mini_map,
+                };
+                chain.hierarchical.borrow_mut().find_path(&ctx, from, to)
+            }
+            _ => self.find_water_path_simple(map, from, to),
         }
     }
 
