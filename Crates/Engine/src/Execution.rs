@@ -5,6 +5,7 @@ pub mod DoomsdayClockExecution;
 pub mod EmojiExecution;
 #[allow(clippy::module_inception)]
 pub mod Execution;
+pub mod MIRVExecution;
 pub mod MarkDisconnectedExecution;
 pub mod Nation;
 pub mod NoOpExecution;
