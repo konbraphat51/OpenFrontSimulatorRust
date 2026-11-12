@@ -1,10 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `ofsim`: command-line replayer for OpenFront game records (unofficial port, see NOTICE).
 
-mod JsNumberFormat;
-mod Replaying;
 mod Trace;
-mod Verify;
 
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
@@ -80,7 +77,7 @@ enum Command {
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
-    Replaying::silence_panics();
+    ofsim_engine::Runner::Replay::silence_panics();
     match cli.command {
         Command::Verify {
             record,
@@ -95,11 +92,12 @@ fn main() -> ExitCode {
                 .trim_end_matches(".gz")
                 .trim_end_matches(".json")
                 .to_string();
-            match Verify::verify(&record, &maps, until) {
+            match ofsim_engine::Runner::Replay::verify(&record, &maps, until) {
                 Ok(report) => {
                     println!("{}", report.line(&name));
                     match report.verdict {
-                        Verify::Verdict::Ok | Verify::Verdict::Partial => ExitCode::SUCCESS,
+                        ofsim_engine::Runner::Replay::Verdict::Ok
+                        | ofsim_engine::Runner::Replay::Verdict::Partial => ExitCode::SUCCESS,
                         _ => ExitCode::from(1),
                     }
                 }

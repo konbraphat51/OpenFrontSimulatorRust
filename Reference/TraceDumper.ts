@@ -6,11 +6,12 @@
  * tsx. The trace format is the contract of `ofsim trace`; see Reference/README.md.
  *
  * Usage:
- *   tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-at t1,t2,...] [--until tick]
+ *   tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-at t1,t2,...] [--until tick] [--inert 1]
  */
 import fs from "fs";
 import { PlayerType } from "../src/core/game/Game";
 import { createGameRunner } from "../src/core/GameRunner";
+import { applyInertPatch } from "./InertPatch";
 import {
   createMapLoader,
   loadRecord,
@@ -58,6 +59,7 @@ async function main(): Promise<void> {
   }
   const [recordPath, outPath] = positional;
   const fullAt = new Set((options.get("--full-at") ?? "").split(",").filter((s) => s !== "").map(Number));
+  if (options.has("--inert")) applyInertPatch();
   const until = options.has("--until") ? Number(options.get("--until")) : Infinity;
   const worktree = resolveWorktree(import.meta.url);
   const { record, gameStart } = loadRecord(recordPath);

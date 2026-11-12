@@ -4,3 +4,4 @@
 pub mod ConfigConversion;
 pub mod Executor;
 pub mod GameRunner;
+pub mod Replay;

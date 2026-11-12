@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `ofsim trace`: writes the NDJSON trace of `Reference/README.md` for a record.
 
-use crate::JsNumberFormat::js_number_to_string;
-use crate::Replaying::{Stop, replay};
 use anyhow::Result;
+use ofsim_engine::Compat::JsNumber::js_number_to_string;
+use ofsim_engine::Runner::Replay::{Stop, replay};
 use std::io::Write;
 use std::path::Path;
 
