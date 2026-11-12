@@ -12,6 +12,7 @@ use super::ConfigConversion::game_config_from_record;
 use super::Executor::Executor;
 use crate::Builds::Rules::{Change, Rules};
 use crate::Configuration::Config::Config;
+use crate::Core::Obscenity;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::DoomsdayClockExecution::DoomsdayClockExecution;
@@ -53,14 +54,39 @@ fn clan_tag_from_name(name: &str) -> Option<String> {
     clan_tag_original_case(name).map(|t| t.to_uppercase())
 }
 
-/// `censorNameWithClanTag(username)`: a clan tag is upper-cased and separated by one space.
-/// Profane names are not detected (the obscenity word list is not ported).
+/// Replacement names of profane usernames (`shadowNames`).
+const SHADOW_NAMES: [&str; 7] = [
+    "NicePeopleOnly",
+    "BeKindPlz",
+    "LearningManners",
+    "StayClassy",
+    "BeNicer",
+    "NeedHugs",
+    "MakeFriends",
+];
+
+/// JS `String.prototype.trim` white space: Unicode White_Space and the byte order mark.
+fn js_trim(s: &str) -> &str {
+    s.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')
+}
+
+/// `censorNameWithClanTag(username)`: profane names are replaced, a clan tag is upper-cased unless profane.
 fn censor_name_with_clan_tag(username: &str) -> String {
-    let Some(tag) = clan_tag_original_case(username) else {
-        return username.to_string();
+    let clan_tag = clan_tag_original_case(username);
+    let name_without_clan = match &clan_tag {
+        Some(tag) => js_trim(&username.replacen(&format!("[{tag}]"), "", 1)).to_string(),
+        None => username.to_string(),
     };
-    let without_clan = username.replacen(&format!("[{tag}]"), "", 1);
-    format!("[{}] {}", tag.to_uppercase(), without_clan.trim())
+    let clan_tag_is_profane = clan_tag.as_ref().is_some_and(|t| Obscenity::has_match(t));
+    let censored = if Obscenity::has_match(&name_without_clan) {
+        SHADOW_NAMES[simple_hash(&name_without_clan) as usize % SHADOW_NAMES.len()].to_string()
+    } else {
+        name_without_clan
+    };
+    match clan_tag {
+        Some(tag) if !clan_tag_is_profane => format!("[{}] {}", tag.to_uppercase(), censored),
+        _ => censored,
+    }
 }
 
 fn game_map_of(t: &TerrainMap, rules: &Rules) -> Result<GameMapImpl> {
