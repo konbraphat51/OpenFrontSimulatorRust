@@ -138,6 +138,11 @@ const EDGES: &[Edge] = &[
         add: &[Change::NewMapThemes5547],
         remove: &[],
     },
+    Edge {
+        class: "C090",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.

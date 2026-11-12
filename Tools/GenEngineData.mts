@@ -5,10 +5,19 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 const [worktree, outDir] = process.argv.slice(2);
-const core = path.join(worktree, "src/core");
+// From v0.35.0 the engine sources live in packages/*/src (monorepo split); find a module in either layout.
+const locate = (module: string): string => {
+  const candidates = [path.join(worktree, "src/core", module)];
+  for (const pkg of fs.existsSync(path.join(worktree, "packages")) ? fs.readdirSync(path.join(worktree, "packages")) : []) {
+    candidates.push(path.join(worktree, "packages", pkg, "src", module));
+  }
+  const found = candidates.find((candidate) => fs.existsSync(candidate));
+  if (found === undefined) throw new Error(`module not found: ${module}`);
+  return found;
+};
 
 // Nation names: NAME_TEMPLATES and NOUNS are module-private, so they are evaluated from the source text.
-const src = fs.readFileSync(path.join(core, "game/NationCreation.ts"), "utf8");
+const src = fs.readFileSync(locate("game/NationCreation.ts"), "utf8");
 const slice = (start: string, end: string): string => {
   const from = src.indexOf(start);
   const to = src.indexOf(end, from);
@@ -24,7 +33,7 @@ fs.writeFileSync(path.join(outDir, "NationNames.json"), JSON.stringify({ templat
 
 // Tribe names: themes plus per-map theme lists and custom tribes.
 const themes = JSON.parse(fs.readFileSync(path.join(worktree, "resources/tribeNameThemes.json"), "utf8"));
-const mapsGen = await import(path.join(core, "game/Maps.gen.ts"));
+const mapsGen = await import(locate("game/Maps.gen.ts"));
 const maps: Record<string, unknown> = {};
 for (const m of mapsGen.maps) {
   maps[m.type] = { themes: m.themes ?? null, customTribes: m.customTribes ?? null };

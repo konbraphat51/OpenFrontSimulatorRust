@@ -27,11 +27,22 @@ if [ ! -e "$tree/node_modules" ]; then
     done
   fi
   if [ -n "$donor" ] && [ -d "$donor/node_modules" ]; then
-    ln -s "$(cd "$donor" && pwd)/node_modules" "$tree/node_modules"
+    if [ -d "$tree/packages" ]; then
+      # Workspace build: share the packages but link @openfront/* to this worktree's own sources.
+      mkdir "$tree/node_modules"
+      for entry in "$donor"/node_modules/* "$donor"/node_modules/.bin; do
+        [ "$(basename "$entry")" = "@openfront" ] || ln -s "$entry" "$tree/node_modules/$(basename "$entry")"
+      done
+      mkdir "$tree/node_modules/@openfront"
+      for pkg in "$tree"/packages/*/; do ln -s "../../packages/$(basename "$pkg")" "$tree/node_modules/@openfront/$(basename "$pkg")"; done
+    else
+      ln -s "$(cd "$donor" && pwd)/node_modules" "$tree/node_modules"
+    fi
   else
     (cd "$tree" && npm ci --ignore-scripts --engine-strict=false)
   fi
 fi
 mkdir -p "$tree/ofsim-reference"
-cp "$here"/*.ts "$tree/ofsim-reference/"
+cp "$here"/*.ts "$here"/*.mjs "$tree/ofsim-reference/"
+node "$tree/ofsim-reference/MakeCoreShim.mjs" "$tree" "$here"
 echo "ready: $tree"

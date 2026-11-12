@@ -20,7 +20,7 @@ import { NationStructureBehavior } from "../src/core/execution/nation/NationStru
 import { PlayerInfo, PlayerType, UnitType } from "../src/core/game/Game";
 import type { Game, Player, Unit } from "../src/core/game/Game";
 import { PseudoRandom } from "../src/core/PseudoRandom";
-import { createMapLoader, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
+import { createRunnerFor, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
 
 silenceEngineLogs();
 const [specPath, outPath] = process.argv.slice(2);
@@ -51,7 +51,7 @@ const gameStart = {
   players: [],
 };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const runner = await createGameRunner(gameStart as any, undefined, createMapLoader(resolveWorktree(import.meta.url)), () => {});
+const runner = await createRunnerFor(gameStart as any, resolveWorktree(import.meta.url), () => {});
 const game: Game = runner.game;
 game.endSpawnPhase();
 

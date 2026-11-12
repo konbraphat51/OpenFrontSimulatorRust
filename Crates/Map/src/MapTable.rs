@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! The `GameMapType` table: wire name (enum value) to directory key (lowercased enum key).
-//! Generated from src/core/game/Maps.gen.ts of build 4e837520e886.
+//! Generated from src/core/game/Maps.gen.ts of build 4e837520e886, plus the maps added up to v0.36.1 (0211f17b71ef).
 
 /// Every `GameMapType` as (enum key, wire name); the directory is the enum key lowercased.
 pub const MAP_TABLE: &[(&str, &str)] = &[
@@ -127,4 +127,27 @@ pub const MAP_TABLE: &[(&str, &str)] = &[
     ("YangtzeRiver", "Yangtze River"),
     ("YellowSea", "Yellow Sea"),
     ("Yenisei", "Yenisei"),
+    ("BabelMandebStrait", "Bab el-Mandeb Strait"),
+    ("Benelux", "Benelux"),
+    ("Brahmaputra", "Brahmaputra"),
+    ("BrainRot", "Brain Rot"),
+    ("Canada", "Canada"),
+    ("CanaryIslands", "Canary Islands"),
+    ("CapeOfGoodHope", "Cape Of Good Hope"),
+    ("HornOfAfrica", "Horn Of Africa"),
+    ("London", "London"),
+    ("Madagascar", "Madagascar"),
+    ("Mexico", "Mexico"),
+    ("NewZealand", "New Zealand"),
+    ("Ommatrypta", "Ommatrypta"),
+    ("OttomanEmpire", "Ottoman Empire"),
+    ("Paris", "Paris"),
+    ("PulicatLake", "Pulicat Lake"),
+    ("RioDeJaneiro", "Rio de Janeiro"),
+    ("Turkiye", "Turkiye"),
+    ("Tutorial", "Tutorial"),
+    ("VancouverIsland", "Vancouver Island"),
+    ("World10000", "World 10000"),
+    ("World4000", "World 4000"),
+    ("Zealandia", "Zealandia"),
 ];

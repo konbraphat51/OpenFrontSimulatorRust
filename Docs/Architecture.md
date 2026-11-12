@@ -104,6 +104,8 @@ Engine code branches on `game.config().rules().has(Change::X)` at the exact plac
 
 Maps and name tables also change between builds. `Builds/Maps.rs` compares the git tree of `resources/maps/<map>` in the record's commit with the baseline's; when they differ, `ofsim verify/trace/replay` extract that map once from the upstream clone (`--upstream`, default `Cache/OpenFrontIO`) into `Cache/Maps/<commit12>/` and read it from there. Per-map tribe name data that differs between builds is selected by `Change` flags in `Execution/Utils/TribeNames.rs`.
 
+From v0.35.0 (C081 on) the upstream sources moved from `src/core/` to `packages/{engine,engine-lib,engine-api,shared}/src/` and are imported as `@openfront/<package>/...`. Port headers keep the baseline `src/core/...` path. The reference tooling bridges the layouts: `Reference/MakeCoreShim.mjs` writes `src/core/` re-export shims into such a worktree, `Reference/EngineSupport.ts` (`createRunnerFor`) passes loaded map files instead of a map loader, and `Tools/GenEngineData.mts` searches both layouts. Mapping: `Schemas` is `engine-api/Schemas`, `Util` splits into `engine-lib/Util` and `shared/SharedUtil`, `Game` into `engine/game/Game` and `engine-api/game/GameTypes`, `GameMap` into `engine-api/game/GameMap` and `engine-lib/game/GameMapImpl`, `Config` into `shared/configuration` and `engine/configuration/EngineConfig`; execution, pathfinding and game files keep their relative paths under `engine/src/`.
+
 ## Verification
 
 - `ofsim verify <record>` replays and compares the computed hash with the record at every turn that has one (every 10 turns). A record passes when every hash matches through its last turn.

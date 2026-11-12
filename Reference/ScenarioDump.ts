@@ -12,7 +12,7 @@
 import fs from "fs";
 import { createGameRunner } from "../src/core/GameRunner";
 import { applyInertPatch } from "./InertPatch";
-import { createMapLoader, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
+import { createRunnerFor, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
 
 silenceEngineLogs();
 const [recordPath, outPath, warmArg, roundsArg, stepsArg, focusArg = "0", freeOnlyArg = "0", enclavesArg = "0", radiusArg = "8"] = process.argv.slice(2);
@@ -25,7 +25,7 @@ const rounds = Number(roundsArg);
 const steps = Number(stepsArg);
 applyInertPatch();
 const { record, gameStart } = loadRecord(recordPath);
-const runner = await createGameRunner(gameStart, undefined, createMapLoader(resolveWorktree(import.meta.url)), () => {});
+const runner = await createRunnerFor(gameStart, resolveWorktree(import.meta.url), () => {});
 const game = runner.game;
 const out = fs.openSync(outPath, "w");
 
