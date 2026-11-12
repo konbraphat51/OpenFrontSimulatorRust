@@ -13,9 +13,9 @@ use super::AllianceImpl::AllianceImpl;
 use super::AllianceRequestImpl::{AllianceRequestImpl, RequestStatus};
 use super::AttackImpl::AttackImpl;
 use super::Game::{
-    AllianceId, AllianceRequestId, COLORED_TEAMS, Cell, GameMode, Gold, Nation, PlayerInfo,
-    PlayerType, SmallId, Team, TeamCountConfig, TeamGameSpawnAreas, Tick, UnitId, UnitParams,
-    UnitType,
+    AllianceId, AllianceRequestId, AttackId, COLORED_TEAMS, Cell, GameMode, Gold, Nation,
+    PlayerInfo, PlayerType, SmallId, Team, TeamCountConfig, TeamGameSpawnAreas, Tick, UnitId,
+    UnitParams, UnitType,
 };
 use super::GameMap::{GameMapImpl, TileRef};
 use super::PlayerImpl::{PlayerImpl, PlayerMut, PlayerRef};
@@ -416,6 +416,30 @@ impl GameImpl {
     /// Mutating handle on a unit.
     pub fn unit_mut(&mut self, id: UnitId) -> UnitMut<'_> {
         UnitMut { game: self, id }
+    }
+    /// An attack by handle (attacks are never freed, so deleted ones stay readable).
+    pub fn attack(&self, id: AttackId) -> &AttackImpl {
+        &self.attacks[id as usize]
+    }
+    /// An attack by handle for mutation.
+    pub fn attack_mut(&mut self, id: AttackId) -> &mut AttackImpl {
+        &mut self.attacks[id as usize]
+    }
+    /// An alliance by handle (the upstream alliance id).
+    pub fn alliance(&self, id: AllianceId) -> &AllianceImpl {
+        &self.alliances[id as usize]
+    }
+    /// An alliance by handle for mutation.
+    pub fn alliance_mut(&mut self, id: AllianceId) -> &mut AllianceImpl {
+        &mut self.alliances[id as usize]
+    }
+    /// An alliance request by handle.
+    pub fn alliance_request(&self, id: AllianceRequestId) -> &AllianceRequestImpl {
+        &self.alliance_requests[id as usize]
+    }
+    /// The pending alliance requests in order (upstream `allianceRequests`).
+    pub fn pending_alliance_requests(&self) -> &[AllianceRequestId] {
+        &self.pending_requests
     }
     /// `nextUnitID`.
     pub fn next_unit_id(&mut self) -> UnitId {

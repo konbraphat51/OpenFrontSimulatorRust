@@ -74,6 +74,15 @@ pub trait Execution {
 
 `GameImpl` は `execs: Vec<Box<dyn Execution>>` と `un_init_execs` を保持する。`execute_next_tick` は `execs` を tick 中は `std::mem::take` で取り出すため、execution はゲームを自由に可変借用できる。その間に追加された execution はアップストリームどおり `un_init_execs` に入る。`GameImpl.executeNextTick` におけるアップストリームの処理順 (アクティブな exec の tick、未初期化 exec の init、整理、追加、player update、10 tick ごとのハッシュ、water manager、`_ticks++`) は、癖も含めて正確に再現する (たとえば、同じループ内の `init` 呼び出し中に追加された execution は、アップストリームが `unInitExecs` を再代入するため捨てられる)。アップストリームの癖を「直す」ことは決してしてはならない。直せば非同期 (desync) になる。
 
+### ゲームと Execution の API (P2)
+
+- `GameImpl::new(humans, nations, map, mini_map, config, team_spawn_areas)`。`GameImpl::execute_next_tick() -> Option<f64>` は 1 ティックを実行し、10 ティックごとにそのティック内で計算したハッシュ (レコードに保存される値) を返す。公開フィールドとアクセサからすべてにアクセスできる: `game.map` (`GameMapImpl`)、`game.config()`、`game.stats_mut()`、`game.ticks()`。
+- プレイヤー: `game.player(id) -> PlayerRef` (読み取り) と `game.player_mut(id) -> PlayerMut` (書き込み)。どちらも単純なゲッターのために `PlayerImpl` へ deref する。`id` は small id で、`0` は terra nullius。ユニット: `game.unit(id)` (削除後は None)、`game.unit_any(id)` (削除済みも含む)、`game.unit_mut(id) -> UnitMut`。攻撃・同盟・リクエスト: `game.attack(id)`、`game.alliance(id)`、`game.alliance_request(id)` と各 `_mut`。`PlayerMut::create_attack`、`GameImpl::delete_attack`。
+- Execution は `Execution { init, tick, is_active, active_during_spawn_phase }` を実装し (すべて `&mut GameImpl` を取る)、`game.add_execution(Box::new(..))` で追加する。`Runner/Executor.rs` が intent を Execution に対応付ける。Execution を移植したら、その intent の `NotPorted::at_creation("<Name>")` の分岐を置き換え、`Reference/InertPatch.ts` の `PORTED_INTENTS` に intent を追加する。`GameRunner::init` はすべてのゲームが最初に持つ Execution を作る。
+- `NotPorted` の Execution は `not ported: <Name>` でパニックし、`ofsim verify` がそのティックとメッセージを報告する。到達するとパニックするスタブ: `WaterManager` (パスファインディングのフェーズで置き換え)、`RailNetwork`、`TransportShipUtils`。
+- クライアント専用の処理は移植しない (更新、名前配置、UI 向けクエリ、ほとんどの `stats()` 呼び出し)。シミュレーションが読み戻すのは人間が送った攻撃数と MIRV の発射数だけで、`StatsImpl` に保持する。
+- デバッグ: `Tools/VerifyAll.sh` (一覧表)、`Tools/TraceCompare.sh` (参照トレース、`ofsim trace`、`TraceDiff`。`--inert` で未移植の Execution を両側で無効化)、シード付きの領土シナリオ (`ofsim scenario`、`Reference/ScenarioDump.ts`)。`Crates/Engine/tests/VerifyRecordsTest.rs` は `tests/Golden/VerifyMinimums.json` の一致ハッシュ数が後退しないことを保証する。
+
 ## 決定性ルール (移植の契約)
 
 1. **数値。** JS の `number` は `f64`。値がすべての使用箇所で Rust の型に収まる整数であると証明できる場合を除き `f64` のままにし、アップストリームが切り捨てる箇所 (`Math.floor`、`Math.trunc`、`| 0`、`toInt`) で正確に変換する。アップストリームの `bigint` (兵力、ゴールド) は範囲に応じて `i64` か `i128` にする。ビット演算子は JS の `ToInt32`/`ToUint32` のセマンティクスで再現する (`Compat::JsNumber`)。`Math.round` は `floor(x + 0.5)` であり、Rust の `round` ではない。浮動小数点演算の順序はアップストリームのまま保つ。`a * b / c` と `a * (b / c)` は異なる。
