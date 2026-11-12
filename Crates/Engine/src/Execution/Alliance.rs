@@ -2,4 +2,6 @@
 //! Alliance executions (upstream `execution/alliance/`).
 
 pub mod AllianceExtensionExecution;
+pub mod AllianceRejectExecution;
 pub mod AllianceRequestExecution;
+pub mod BreakAllianceExecution;

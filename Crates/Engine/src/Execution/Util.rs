@@ -5,7 +5,8 @@
 //! `isTileSetLike`'s plain-iterable fallback of `nearestTileDistCapped` is test-only upstream and
 //! not ported (callers pass a [`TileSet`]).
 
-use crate::Game::Game::SmallId;
+use crate::Configuration::Config::NukeMagnitude;
+use crate::Game::Game::{STRUCTURES, SmallId};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef, eucl_dist_fn};
 use crate::Game::TileSet::TileSet;
@@ -180,4 +181,61 @@ pub fn calculate_territory_center(game: &GameImpl, target: SmallId) -> Option<Ti
         }
     }
     closest
+}
+
+/// `wouldNukeBreakAlliance`: true when a nuke at `target_tile` would hit allied structures or
+/// weigh more than `threshold` allied tiles (inner radius counts 1, outer 0.5).
+pub fn would_nuke_break_alliance(
+    game: &GameImpl,
+    target_tile: TileRef,
+    magnitude: NukeMagnitude,
+    ally_small_ids: &[SmallId],
+    threshold: f64,
+) -> bool {
+    if ally_small_ids.is_empty() {
+        return false;
+    }
+    let would_destroy_allied_structure = game.any_unit_nearby(
+        target_tile,
+        magnitude.outer,
+        STRUCTURES,
+        |unit| unit.owner_id() != 0 && ally_small_ids.contains(&unit.owner_id()),
+        None,
+        false,
+    );
+    if would_destroy_allied_structure {
+        return true;
+    }
+    let inner2 = magnitude.inner * magnitude.inner;
+    let mut ally_tile_counts: Vec<(SmallId, f64)> = Vec::new();
+    let mut result = false;
+    game.map.circle_search_visit(
+        target_tile,
+        magnitude.outer as i32,
+        |tile, d2| {
+            let owner_small_id = game.map.owner_id(tile);
+            if owner_small_id > 0 && ally_small_ids.contains(&owner_small_id) {
+                let weight = if d2 as f64 <= inner2 { 1.0 } else { 0.5 };
+                let entry = match ally_tile_counts
+                    .iter_mut()
+                    .find(|(id, _)| *id == owner_small_id)
+                {
+                    Some(e) => e,
+                    None => {
+                        ally_tile_counts.push((owner_small_id, 0.0));
+                        ally_tile_counts.last_mut().expect("just pushed")
+                    }
+                };
+                entry.1 += weight;
+                if entry.1 > threshold {
+                    result = true;
+                    // Upstream returns false here, which only drops the tile from the result set.
+                    return false;
+                }
+            }
+            true
+        },
+        |_| {},
+    );
+    result
 }

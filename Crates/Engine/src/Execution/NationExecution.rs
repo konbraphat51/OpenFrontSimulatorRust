@@ -114,7 +114,6 @@ impl NationExecution {
         let warship = NationWarshipBehavior::new(random.clone(), game, player, emoji.clone());
         let attack = Rc::new(RefCell::new(AiAttackBehavior::new(
             random.clone(),
-            game,
             player,
             self.trigger_ratio,
             self.reserve_ratio,

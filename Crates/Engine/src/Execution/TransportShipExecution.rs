@@ -243,7 +243,7 @@ impl Execution for TransportShipExecution {
                 if self.target != 0 && game.player(self.attacker).is_friendly(self.target, false) {
                     game.player_mut(self.attacker).add_troops(boat_troops);
                 } else {
-                    let target_id = (self.target != 0).then_some(self.target);
+                    let target_id = (self.target != 0).then(|| game.player(self.target).id().to_string());
                     game.add_execution(Box::new(AttackExecution::new(
                         Some(boat_troops),
                         self.attacker,
