@@ -4,5 +4,7 @@
 pub mod NationBehaviorPorts;
 pub mod NationEmojiBehavior;
 pub mod NationMIRVBehavior;
+pub mod NationNukeBehavior;
+pub mod NationStructureBehavior;
 pub mod NationUtils;
 pub mod SharedWaterCache;
