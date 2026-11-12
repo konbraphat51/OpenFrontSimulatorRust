@@ -135,6 +135,8 @@ impl GameImpl {
         config: Config,
         team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     ) -> Self {
+        let mut spatial = SpatialQuery::new();
+        spatial.set_simple_start(!config.rules().has(Change::NavalInvasionPathing2932));
         let unit_grid = UnitGrid::new(&map);
         let mut rail_network = RailNetwork::new();
         rail_network.legacy_clusters = !config
@@ -158,6 +160,7 @@ impl GameImpl {
                 } else {
                     140
                 },
+                legacy_naval: !config.rules().has(Change::NavalInvasionPathing2932),
             },
         );
         water_manager.set_shared_finder(config.rules().has(Change::WaterHpaSharedFinder4979));
@@ -209,7 +212,7 @@ impl GameImpl {
                 cluster_index_map: vec![0; tiles],
                 gen_: 0,
             },
-            spatial: RefCell::new(SpatialQuery::new()),
+            spatial: RefCell::new(spatial),
             transport_ship_stagger: 0,
             trade_ship_stagger: 0,
         };

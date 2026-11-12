@@ -43,6 +43,8 @@ pub struct WaterTweaks {
     pub single_los_magnitude: bool,
     /// Edge length of the short path search area (260 now, 140 older).
     pub short_path_size: usize,
+    /// Builds before PR 2932: bucket queues, no short path search, no final smoothing pass.
+    pub legacy_naval: bool,
 }
 
 impl Default for WaterTweaks {
@@ -51,6 +53,7 @@ impl Default for WaterTweaks {
             first_shore_neighbor: false,
             single_los_magnitude: false,
             short_path_size: 260,
+            legacy_naval: false,
         }
     }
 }
@@ -65,17 +68,29 @@ pub fn build_hierarchical_chain(
     if tweaks.short_path_size != 260 {
         hpa.set_short_path_size(mini_map, tweaks.short_path_size);
     }
+    if tweaks.legacy_naval {
+        hpa.set_short_path_search(false);
+        hpa.use_bucket_queues();
+    }
     MiniMapTransformer::new(
         ShoreCoercingTransformer::new(
             SmoothingWaterTransformer::new(ComponentCheckTransformer::new(hpa, graph), mini_map)
-                .with_single_magnitude(tweaks.single_los_magnitude),
+                .with_single_magnitude(tweaks.single_los_magnitude)
+                .with_legacy_passes(tweaks.legacy_naval),
         )
         .with_first_neighbor(tweaks.first_shore_neighbor),
     )
 }
 
 /// Builds the simple chain around `core` (upstream `buildWaterChain`, fallback branch).
-pub fn build_simple_chain(core: AStarWater, tweaks: WaterTweaks) -> SimpleWaterChain {
+pub fn build_simple_chain(
+    mut core: AStarWater,
+    mini_map: &GameMapImpl,
+    tweaks: WaterTweaks,
+) -> SimpleWaterChain {
+    if tweaks.legacy_naval {
+        core.use_bucket_queue(mini_map);
+    }
     MiniMapTransformer::new(
         ShoreCoercingTransformer::new(core).with_first_neighbor(tweaks.first_shore_neighbor),
     )

@@ -23,6 +23,7 @@ pub struct AStarWaterHierarchical {
     cache_paths: bool,
     component_filter: bool,
     bucket_queue: bool,
+    short_path_search: bool,
 }
 
 impl AStarWaterHierarchical {
@@ -51,7 +52,20 @@ impl AStarWaterHierarchical {
             cache_paths,
             component_filter: false,
             bucket_queue: false,
+            short_path_search: true,
         }
+    }
+
+    /// Builds before PR 2932 skip the early bounded search for sources near the target.
+    pub fn set_short_path_search(&mut self, enabled: bool) {
+        self.short_path_search = enabled;
+    }
+
+    /// Builds before PR 2932 queue the bounded searches with bucket queues.
+    pub fn use_bucket_queues(&mut self) {
+        self.local_a_star.use_bucket_queue();
+        self.local_a_star_multi_cluster.use_bucket_queue();
+        self.local_a_star_short_path.use_bucket_queue();
     }
 
     /// Builds before PR 2959 size the short path search for 140 tiles instead of 260.
@@ -96,7 +110,9 @@ impl AStarWaterHierarchical {
         target: TileRef,
     ) -> Option<Vec<TileRef>> {
         // Early exit: bounded A* for sources close to the target
-        if let Some(short_path) = self.try_short_path_multi_source(map, sources, target) {
+        if self.short_path_search
+            && let Some(short_path) = self.try_short_path_multi_source(map, sources, target)
+        {
             return Some(short_path);
         }
 

@@ -2,7 +2,7 @@
 //! Port of src/core/pathfinding/algorithms/AStar.WaterBounded.ts: water A* confined to a bounding box with local node indices.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use super::PriorityQueue::{MinHeap, PriorityQueue};
+use super::PriorityQueue::{BucketQueue, MinHeap, OpenQueue, PriorityQueue};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 
@@ -44,7 +44,8 @@ pub struct AStarWaterBounded {
     g_score_stamp: Vec<u32>,
     g_score: Vec<u32>,
     came_from: Vec<i32>,
-    queue: MinHeap,
+    queue: OpenQueue,
+    max_search_area: usize,
     map_width: i64,
     heuristic_weight: f64,
     max_iterations: i64,
@@ -64,11 +65,20 @@ impl AStarWaterBounded {
             g_score_stamp: vec![0; max_search_area],
             g_score: vec![0; max_search_area],
             came_from: vec![0; max_search_area],
-            queue: MinHeap::new(max_search_area * 4),
+            queue: OpenQueue::Heap(MinHeap::new(max_search_area * 4)),
+            max_search_area,
             map_width: map.width() as i64,
             heuristic_weight: heuristic_weight.unwrap_or(3.0),
             max_iterations: max_iterations.unwrap_or(100_000),
         }
+    }
+
+    /// Builds before PR 2932 queue with a bucket queue sized for the scaled costs.
+    pub fn use_bucket_queue(&mut self) {
+        let max_dim = (self.max_search_area as f64).sqrt().ceil();
+        let max_f =
+            (self.heuristic_weight + 1.0) * BASE_COST as f64 * max_dim * 2.0 + COST_SCALE * max_dim;
+        self.queue = OpenQueue::Bucket(BucketQueue::new(max_f as usize));
     }
 
     /// Path over the box spanned by the sources and the goal (upstream `findPath`).

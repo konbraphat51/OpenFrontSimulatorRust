@@ -162,6 +162,42 @@ impl PriorityQueue for BucketQueue {
     }
 }
 
+/// The open set: a min-heap, or the bucket queue of builds before PR 4149 (and of water A* before PR 2932).
+#[derive(Debug)]
+pub enum OpenQueue {
+    /// Binary heap.
+    Heap(MinHeap),
+    /// Bucket queue.
+    Bucket(BucketQueue),
+}
+
+impl PriorityQueue for OpenQueue {
+    fn push(&mut self, node: u32, priority: f64) {
+        match self {
+            Self::Heap(q) => q.push(node, priority),
+            Self::Bucket(q) => q.push(node, priority),
+        }
+    }
+    fn pop(&mut self) -> u32 {
+        match self {
+            Self::Heap(q) => q.pop(),
+            Self::Bucket(q) => q.pop(),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        match self {
+            Self::Heap(q) => q.is_empty(),
+            Self::Bucket(q) => q.is_empty(),
+        }
+    }
+    fn clear(&mut self) {
+        match self {
+            Self::Heap(q) => q.clear(),
+            Self::Bucket(q) => q.clear(),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

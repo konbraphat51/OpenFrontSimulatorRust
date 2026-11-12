@@ -122,7 +122,12 @@ impl TribeExecution {
         }
 
         if self.neighbors_terra_nullius {
-            if game.player(self.tribe).nearby().contains(&0) {
+            let borders_free_land = if game.config().rules().has(Change::BotTerraNulliusLand2896) {
+                game.player(self.tribe).nearby().contains(&0)
+            } else {
+                game.player(self.tribe).shares_border_with(0)
+            };
+            if borders_free_land {
                 let sent = behavior.send_attack(game, 0, false);
                 if AiAttackBehavior::sent(game, sent) {
                     return;
