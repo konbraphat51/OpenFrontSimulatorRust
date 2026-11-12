@@ -106,4 +106,6 @@ pub trait Execution {
 
 ## ライセンス
 
-エンジンは AGPL-3.0 の OpenFrontIO コードの移植であるため、リポジトリ全体が AGPL-3.0-only である。マップファイルとレコードはここでは再配布しない。
+エンジンは AGPL-3.0 の OpenFrontIO コードの移植であるため、リポジトリ全体が AGPL-3.0-only である。マップファイルとレコードはここでは再配布しない。[Licensing.ja.md](Licensing.ja.md) と `NOTICE` を参照。
+
+ファイルヘッダーの規約: すべての Rust と TypeScript のソースファイルは `// SPDX-License-Identifier: AGPL-3.0-only` で始まり、続けて責務を述べる `//!` コメントを置く。移植ファイルではそのコメントにアップストリームのパスを書く。例: `//! Port of src/core/game/PlayerImpl.ts (OpenFrontIO, © OpenFront and Contributors).` `.rs` または `.ts` ファイルに SPDX 行がないと `Tools/CheckHeaders.sh` が失敗する。

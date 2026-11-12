@@ -1,6 +1,6 @@
 [package]
 name = "openfront-engine"
-description = "Unofficial Rust port of the OpenFront game engine (build-exact replay)"
+description = "OfSimRust: unofficial Rust port of the OpenFront game engine (build-exact replay)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

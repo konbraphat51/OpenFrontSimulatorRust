@@ -106,4 +106,6 @@ Maps also change between builds. The engine reads the map files of the record's 
 
 ## Licensing
 
-The engine is a port of the AGPL-3.0 OpenFrontIO code, so the whole repository is AGPL-3.0-only. Map files and records are not redistributed here.
+The engine is a port of the AGPL-3.0 OpenFrontIO code, so the whole repository is AGPL-3.0-only. Map files and records are not redistributed here. See [Licensing.md](Licensing.md) and `NOTICE`.
+
+File header convention: every Rust and TypeScript source file starts with `// SPDX-License-Identifier: AGPL-3.0-only`, then the `//!` responsibility comment. In ported files that comment names the upstream path, for example `//! Port of src/core/game/PlayerImpl.ts (OpenFrontIO, © OpenFront and Contributors).` `Tools/CheckHeaders.sh` fails when a `.rs` or `.ts` file lacks the SPDX line.

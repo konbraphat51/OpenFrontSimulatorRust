@@ -6,7 +6,7 @@ members = ["Crates/OpenFrontRecord", "Crates/OpenFrontMap", "Crates/OpenFrontEng
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-only"
-repository = "https://github.com/konbraphat51/OpenFrontSimulatorRust"
+repository = "https://github.com/konbraphat51/OfSimRust"
 rust-version = "1.90"
 
 [workspace.dependencies]

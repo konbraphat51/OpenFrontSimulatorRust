@@ -6,7 +6,7 @@ This is not legal advice. It describes how this repository relates to upstream O
 
 ## Why AGPL-3.0-only
 
-ofsim is a translation of OpenFrontIO's `src/core` into Rust, so it is a derivative work of that code. Upstream code since 2025-09-04 is AGPL-3.0-only (copyright OpenFront Inc. and contributors); earlier upstream phases were MIT and then GPL. Every build this simulator supports (2025-10-01 onward) is AGPL-3.0-only, so no supported build predates the switch, and the whole repository is AGPL-3.0-only. The root `LICENSE` is upstream's `LICENSE`, including its additional terms.
+OfSimRust is a translation of OpenFrontIO's `src/core` into Rust, so it is a derivative work of that code. Upstream code since 2025-09-04 is AGPL-3.0-only (copyright OpenFront Inc. and contributors); earlier upstream phases were MIT and then GPL. Every build this simulator supports (2025-10-01 onward) is AGPL-3.0-only, so no supported build predates the switch, and the whole repository is AGPL-3.0-only. The root `LICENSE` is upstream's `LICENSE`, including its additional terms.
 
 ## Section 7 additional terms
 
@@ -15,9 +15,8 @@ Upstream appended AGPL Section 7 terms (since 2025-12-16). How this repository m
 | Term | Requirement | How it is met |
 | --- | --- | --- |
 | 7(b) | Preserve the notice "(c) OpenFront and Contributors" in reasonably visible locations | `NOTICE`, the README, and the `ofsim --version` / `--help` output; ported files name their upstream source in the header |
-| 7(c) | Modified versions must not misrepresent their origin, use "OpenFront" as their primary title or imply official endorsement | The project is titled `ofsim`, described as an unofficial port, with a non-affiliation statement in the README, `NOTICE` and the CLI |
+| 7(c) | Modified versions must not misrepresent their origin, use "OpenFront" as their primary title or imply official endorsement | The project is titled OfSimRust (binary `ofsim`), described as an unofficial port, with a non-affiliation statement in the README, `NOTICE` and the CLI |
 
-Open point: the repository name `OpenFrontSimulatorRust` contains "OpenFront". It is a descriptive reference to what is simulated, not the primary title, but the owner may prefer a name such as `ofsim`.
 
 ## Obligations of users
 

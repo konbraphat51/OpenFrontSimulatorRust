@@ -1,7 +1,7 @@
-ofsim
-=====
+OfSimRust
+==========
 
-ofsim is an unofficial Rust port of the OpenFront game simulation
+OfSimRust (CLI binary: ofsim) is an unofficial Rust port of the OpenFront game simulation
 (https://github.com/openfrontio/OpenFrontIO).
 
 It is not affiliated with, authorized by or endorsed by OpenFront Inc. or the
@@ -13,7 +13,7 @@ Copyright
 - Ported game logic: (c) OpenFront and Contributors. The upstream code is
   licensed under AGPL-3.0-only with additional terms (see LICENSE).
   Notice preserved under Section 7(b): (c) OpenFront and Contributors.
-- Rust port: (c) 2026 OpenFrontSimulatorRust contributors.
+- Rust port: (c) 2026 OfSimRust contributors.
 
 Modifications (AGPL-3.0 Section 5(a))
 -------------------------------------
@@ -35,7 +35,7 @@ License
 -------
 
 AGPL-3.0-only with the upstream Section 7 additional terms, as in LICENSE.
-Source code: https://github.com/konbraphat51/OpenFrontSimulatorRust
+Source code: https://github.com/konbraphat51/OfSimRust
 Details: Docs/Licensing.md
 
 Third-party notices

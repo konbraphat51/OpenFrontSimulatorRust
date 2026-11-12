@@ -1,4 +1,8 @@
-# OpenFront Simulator (Rust)
+# OfSimRust
+
+OpenFront のゲームレコード用の非公式リプレイシミュレーター。
+
+**OpenFront Inc. とは無関係であり、承認も受けていない。** © OpenFront and Contributors (移植したゲームロジック)、Rust 移植部分 © OfSimRust contributors。
 
 English version: [README.md](README.md)
 
@@ -9,8 +13,8 @@ English version: [README.md](README.md)
 ## セットアップ
 
 ```sh
-git clone https://github.com/konbraphat51/OpenFrontSimulatorRust
-cd OpenFrontSimulatorRust
+git clone https://github.com/konbraphat51/OfSimRust
+cd OfSimRust
 cargo build --release
 ```
 
@@ -32,10 +36,13 @@ cargo run --release --bin ofsim -- replay --record game.json.gz --maps <OpenFron
 
 ## 開発
 
-- チェック: `cargo fmt --all && cargo clippy --all-targets && cargo test`
+- チェック: `cargo fmt --all && cargo clippy --all-targets && cargo test && Tools/CheckHeaders.sh`
+- 依存クレートのライセンス: `cargo deny check licenses` (cargo-deny が必要。設定は `deny.toml`)
 - 設計と移植ルール: [Docs/Architecture.ja.md](Docs/Architecture.ja.md)
 - アップストリームエンジンとの差分デバッグ (`Reference/Setup.sh`、`TraceDumper.ts`、`TraceDiff.ts`) とレコード取得 (`Tools/FetchRecords.py`): [Reference/README.ja.md](Reference/README.ja.md)
 
 ## ライセンス
 
-AGPL-3.0-only。エンジンが AGPL-3.0 の OpenFrontIO ソースの移植であるため。[LICENSE](LICENSE) を参照。
+AGPL-3.0-only。エンジンが AGPL-3.0 の OpenFrontIO ソースの移植であるため。アップストリームの追加条項 (Section 7) が適用される: 「© OpenFront and Contributors」の表示を保持し、本プロジェクトは非公式の移植であり、「OpenFront」を名称に使わず、承認を示唆しない。マップファイルとゲームレコードは含まない。アップストリームのマップのコピーには、そのライセンスが適用される。
+
+[LICENSE](LICENSE)、[NOTICE](NOTICE)、[Docs/Licensing.ja.md](Docs/Licensing.ja.md) を参照。法的助言ではない。

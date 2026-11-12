@@ -6,7 +6,7 @@ English version: [Licensing.md](Licensing.md)
 
 ## なぜ AGPL-3.0-only か
 
-ofsim は OpenFrontIO の `src/core` を Rust に翻訳したものであり、そのコードの派生物である。アップストリームのコードは 2025-09-04 以降 AGPL-3.0-only (著作権は OpenFront Inc. とコントリビューター) で、それ以前は MIT、続いて GPL の時期があった。このシミュレーターが対象とする全ビルド (2025-10-01 以降) は AGPL-3.0-only であり、AGPL への切り替え以前のビルドは対象外なので、リポジトリ全体を AGPL-3.0-only とする。ルートの `LICENSE` は追加条項を含むアップストリームの `LICENSE` そのものである。
+OfSimRust は OpenFrontIO の `src/core` を Rust に翻訳したものであり、そのコードの派生物である。アップストリームのコードは 2025-09-04 以降 AGPL-3.0-only (著作権は OpenFront Inc. とコントリビューター) で、それ以前は MIT、続いて GPL の時期があった。このシミュレーターが対象とする全ビルド (2025-10-01 以降) は AGPL-3.0-only であり、AGPL への切り替え以前のビルドは対象外なので、リポジトリ全体を AGPL-3.0-only とする。ルートの `LICENSE` は追加条項を含むアップストリームの `LICENSE` そのものである。
 
 ## Section 7 追加条項
 
@@ -15,9 +15,8 @@ ofsim は OpenFrontIO の `src/core` を Rust に翻訳したものであり、�
 | 条項 | 要求 | 対応 |
 | --- | --- | --- |
 | 7(b) | 「(c) OpenFront and Contributors」の表示を目につく場所に保持する | `NOTICE`、README、`ofsim --version` / `--help` の出力。移植ファイルはヘッダーにアップストリームのパスを記す |
-| 7(c) | 改変版は出所を偽らず、「OpenFront」を主たる名称に使わず、公式の承認を示唆しない | 名称は `ofsim`、非公式の移植と明記し、README、`NOTICE`、CLI に非提携の表明を置く |
+| 7(c) | 改変版は出所を偽らず、「OpenFront」を主たる名称に使わず、公式の承認を示唆しない | 名称は OfSimRust (バイナリは `ofsim`)、非公式の移植と明記し、README、`NOTICE`、CLI に非提携の表明を置く |
 
-未決事項: リポジトリ名 `OpenFrontSimulatorRust` には「OpenFront」が含まれる。シミュレーション対象を示す記述的な言及で主たる名称ではないが、`ofsim` などへの変更をオーナーが選ぶ可能性がある。
 
 ## 利用者の義務
 

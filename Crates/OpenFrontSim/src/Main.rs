@@ -5,18 +5,18 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::process::ExitCode;
 
-const ABOUT: &str = "Unofficial port of the OpenFront simulation. Not affiliated with or endorsed by OpenFront Inc.";
+const ABOUT: &str = "OfSimRust: unofficial replay simulator for OpenFront game records. Not affiliated with or endorsed by OpenFront Inc.";
 
 const LONG_VERSION: &str = concat!(
     env!("CARGO_PKG_VERSION"),
-    "\nUnofficial port of the OpenFront simulation. © OpenFront and Contributors.",
-    "\nRust port © OpenFrontSimulatorRust contributors.",
-    "\nAGPL-3.0-only; source: https://github.com/konbraphat51/OpenFrontSimulatorRust"
+    "\nOfSimRust: unofficial replay simulator for OpenFront game records. © OpenFront and Contributors.",
+    "\nRust port © OfSimRust contributors.",
+    "\nAGPL-3.0-only; source: https://github.com/konbraphat51/OfSimRust"
 );
 
-const AFTER_HELP: &str = "Unofficial port of the OpenFront simulation. © OpenFront and Contributors.\n\
-Rust port © OpenFrontSimulatorRust contributors.\n\
-AGPL-3.0-only; source: https://github.com/konbraphat51/OpenFrontSimulatorRust";
+const AFTER_HELP: &str = "OfSimRust: unofficial replay simulator for OpenFront game records. © OpenFront and Contributors.\n\
+Rust port © OfSimRust contributors.\n\
+AGPL-3.0-only; source: https://github.com/konbraphat51/OfSimRust";
 
 /// Command-line arguments of `ofsim`.
 #[derive(Parser)]
