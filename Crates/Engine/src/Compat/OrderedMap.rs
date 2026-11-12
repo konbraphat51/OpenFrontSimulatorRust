@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Insertion-ordered map with JS `Map` semantics and a cursor API for iterate-while-mutating.
 //!
 //! Semantics: `set` on an existing key keeps its position; delete then re-insert moves the entry

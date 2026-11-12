@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of the shared enums and value types of src/core/game/Game.ts (and the map list of Maps.gen.ts).
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Skipped as client-only or owned by later phases: `MessageType` and categories, `PlayerView`
 //! related types, update/record shapes, and the `Player`/`Unit`/`Game` interfaces themselves

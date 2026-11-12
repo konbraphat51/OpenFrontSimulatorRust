@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Deterministic Rust port of the OpenFront simulation, gated per upstream build.
 
 pub mod Builds;

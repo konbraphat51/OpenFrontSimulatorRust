@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/game/TileSet.ts: an insertion-ordered set of tile refs with `Set` semantics.
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Upstream stores a dense `Uint32Array` plus an open-addressing table; the observable behaviour
 //! (insertion order, entries added during iteration are visited, deleted ones skipped, delete +

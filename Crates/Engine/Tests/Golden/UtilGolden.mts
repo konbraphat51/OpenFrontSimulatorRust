@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates Util.json: simpleHash, toInt, within, sigmoid, manhattanDistWrapped and getMode from upstream Util.ts.
 import { bits, upstream } from "./Common.mts";
 

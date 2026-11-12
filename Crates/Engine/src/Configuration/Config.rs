@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/configuration/Config.ts (the baseline `Config` class).
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Methods that took a `Player`/`PlayerView` upstream take the few fields they read instead
 //! (player type, lobby-creator flag, tiles owned, troops, city levels). The `userSettings`,

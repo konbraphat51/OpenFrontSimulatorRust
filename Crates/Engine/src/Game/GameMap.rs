@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/game/GameMap.ts: terrain bits, per-tile owner/fallout state, neighbours, searches.
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Tile refs are `y * width + x`. Out-of-range refs panic (JS would read `undefined`); the engine
 //! only passes refs it derived from the map, and every neighbour helper guards the borders.

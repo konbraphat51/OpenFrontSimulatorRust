@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Named upstream changes a build contains, and the commit to rule-set table.
 
 use std::collections::BTreeSet;

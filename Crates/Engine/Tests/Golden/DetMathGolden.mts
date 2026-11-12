@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates DetMath.json: DetMath functions on a grid of inputs including edge cases.
 import { bits, upstream } from "./Common.mts";
 

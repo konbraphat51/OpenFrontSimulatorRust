@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates JsNumber.json: ToInt32, ToUint32, Math.round, toString(36) and padStart computed by node itself.
 import { bits } from "./Common.mts";
 

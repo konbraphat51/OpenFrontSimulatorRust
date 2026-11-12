@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/DetMath.ts: transcendental functions built only from + - * / and bit views.
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 #![allow(clippy::approx_constant)]
 

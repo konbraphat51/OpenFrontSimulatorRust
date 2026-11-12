@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of the simulation-relevant functions of src/core/Util.ts.
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Skipped (client-only, record handling in P1b, randomness outside the simulation, or text
 //! sanitising): `sanitize`, `onlyImages`, `toWireGameStartInfo`, `createPartialGameRecord`,

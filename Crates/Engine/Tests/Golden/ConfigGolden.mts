@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates Config.json: upstream Config methods over several game configs and input grids.
 import { bits, upstream } from "./Common.mts";
 

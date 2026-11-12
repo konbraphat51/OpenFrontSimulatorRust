@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Shared helpers of the golden generators: upstream module loading and exact f64 encoding.
 // Run a generator from the baseline worktree:
 //   cd <worktree> && OPENFRONT_WORKTREE=<worktree> npx tsx <this dir>/XGolden.mts > <this dir>/X.json

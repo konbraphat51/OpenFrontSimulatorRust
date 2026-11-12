@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates PseudoRandom.json: sequences of every PseudoRandom method for several seeds.
 import { bits, upstream } from "./Common.mts";
 

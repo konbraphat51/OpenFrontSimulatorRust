@@ -1,4 +1,6 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/PseudoRandom.ts: the sfc32 generator seeded through splitmix32.
+//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use crate::Compat::JsNumber::{pad_start, to_int32, to_string_radix36};
 use crate::Compat::OrderedSet::OrderedSet;

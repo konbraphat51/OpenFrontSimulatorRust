@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! JS number semantics on `f64`: `ToInt32`, `ToUint32`, `Math.round`, `toString(radix)`, `padStart`.
 
 /// JS `ToInt32`: truncate toward zero, wrap modulo 2^32, NaN and infinities become 0.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Insertion-ordered set with JS `Set` semantics, built on [`OrderedMap`](super::OrderedMap::OrderedMap).
 
 use super::OrderedMap::{Cursor, FxBuildHasher, OrderedMap};

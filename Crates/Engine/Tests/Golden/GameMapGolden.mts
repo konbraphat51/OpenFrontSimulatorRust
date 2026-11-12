@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 // Generates GameMap.json: upstream GameMapImpl results on small synthetic terrain buffers.
 import { upstream } from "./Common.mts";
 
