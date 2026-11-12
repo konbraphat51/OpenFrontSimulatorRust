@@ -32,7 +32,7 @@ use crate::Execution::TargetPlayerExecution::TargetPlayerExecution;
 use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
 use crate::Execution::UpgradeStructureExecution::UpgradeStructureExecution;
-use crate::Execution::Utils::PlayerSpawner::spawn_players;
+use crate::Execution::Utils::PlayerSpawner::{spawn_players, spawn_players_v28};
 use crate::Game::Game::{Cell, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use ofsim_record::Intents::{Intent, StampedIntent};
@@ -160,6 +160,9 @@ impl Executor {
 
     /// `spawnTribes(numTribes)`.
     pub fn spawn_tribes(&self, game: &GameImpl, num_tribes: usize) -> Vec<SpawnExecution> {
+        if game.config().rules().has(Change::SpawnByTile28) {
+            return TribeSpawner::new(game, &self.game_id, &[]).spawn_bots_v28(num_tribes);
+        }
         let nation_cells: Vec<Cell> = game.nations().iter().filter_map(|n| n.spawn_cell).collect();
         TribeSpawner::new(game, &self.game_id, &nation_cells)
             .spawn_tribes(num_tribes, &self.purchased_tribe_names)
@@ -167,6 +170,9 @@ impl Executor {
 
     /// `spawnPlayers()`.
     pub fn spawn_players(&self, game: &GameImpl) -> Vec<SpawnExecution> {
+        if game.config().rules().has(Change::SpawnByTile28) {
+            return spawn_players_v28(game, &self.game_id);
+        }
         spawn_players(game, &self.game_id)
     }
 

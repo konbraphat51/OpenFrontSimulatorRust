@@ -34,6 +34,8 @@ pub struct NukeExecution {
     path_finder: ParabolaUniversalPathFinder,
     /// Set when this nuke is the one in six that bounces (v0.30.22).
     bouncing: Option<BouncingParabolaPathFinder>,
+    /// Blast tiles computed once at launch (v0.28.4 caches them for the detonation).
+    tiles_cache: Option<Vec<TileRef>>,
 }
 
 impl NukeExecution {
@@ -59,6 +61,7 @@ impl NukeExecution {
             nuke: None,
             path_finder: ParabolaUniversalPathFinder::default(),
             bouncing: None,
+            tiles_cache: None,
         }
     }
 
@@ -162,6 +165,48 @@ impl NukeExecution {
         }
     }
 
+    /// `tilesToDestroy()` of v0.28.4: computed on first use and kept.
+    fn tiles_cached(&mut self, game: &GameImpl) -> Vec<TileRef> {
+        if self.tiles_cache.is_none() {
+            self.tiles_cache = Some(self.tiles_to_destroy(game, self.dst));
+        }
+        self.tiles_cache.clone().expect("set above")
+    }
+
+    /// `maybeBreakAlliances(toDestroy)` of v0.28.4: counts destroyed tiles per owner (no weighting).
+    fn maybe_break_alliances_v28(&self, game: &mut GameImpl, to_destroy: &[TileRef]) {
+        let nuke_type = game.unit_any(self.nuke.expect("not initialized")).unit_type;
+        let mut attacked: OrderedMap<SmallId, f64> = OrderedMap::new();
+        for &tile in to_destroy {
+            let owner = game.owner_id(tile);
+            if owner != 0 {
+                let prev = attacked.get(&owner).copied().unwrap_or(0.0);
+                attacked.insert(owner, prev + 1.0);
+            }
+        }
+        let threshold = game.config().nuke_alliance_break_threshold();
+        let entries: Vec<(SmallId, f64)> = attacked.iter().map(|(&p, &n)| (p, n)).collect();
+        for (attacked_player, tiles_destroyed) in entries {
+            if tiles_destroyed > threshold && nuke_type != UnitType::MIRVWarhead {
+                let pending = game
+                    .player(attacked_player)
+                    .incoming_alliance_requests()
+                    .into_iter()
+                    .find(|&ar| game.alliance_request(ar).requestor() == self.player);
+                if let Some(request) = pending {
+                    game.reject_alliance_request(request);
+                }
+                if let Some(alliance) = game.player(self.player).alliance_with(attacked_player) {
+                    game.player_mut(self.player).break_alliance(alliance);
+                }
+                if attacked_player != self.player {
+                    game.player_mut(attacked_player)
+                        .update_relation(self.player, -100.0);
+                }
+            }
+        }
+    }
+
     fn maybe_break_alliances(&self, game: &mut GameImpl) {
         let nuke_type = game.unit_any(self.nuke.expect("not initialized")).unit_type;
         if nuke_type == UnitType::MIRVWarhead {
@@ -246,7 +291,13 @@ impl NukeExecution {
 
     fn detonate(&mut self, game: &mut GameImpl, nuke: UnitId, explosion_tile: TileRef) {
         let magnitude = game.config().nuke_magnitudes(game.unit_any(nuke).unit_type);
-        let to_destroy = self.tiles_to_destroy(game, explosion_tile);
+        let to_destroy = if game.config().rules().has(Change::LegacyProjectiles28) {
+            let tiles = self.tiles_cached(game);
+            self.maybe_break_alliances_v28(game, &tiles);
+            tiles
+        } else {
+            self.tiles_to_destroy(game, explosion_tile)
+        };
 
         let mut tiles_per_player: OrderedMap<SmallId, f64> = OrderedMap::new();
         for &tile in &to_destroy {
@@ -409,7 +460,10 @@ impl Execution for NukeExecution {
             self.nuke = Some(id);
             game.unit_mut(id)
                 .update_nuke_state(None, None, Some(self.wait_ticks));
-            if self.nuke_type != UnitType::MIRVWarhead {
+            if game.config().rules().has(Change::LegacyProjectiles28) {
+                let tiles = self.tiles_cached(game);
+                self.maybe_break_alliances_v28(game, &tiles);
+            } else if self.nuke_type != UnitType::MIRVWarhead {
                 self.maybe_break_alliances(game);
             }
             if let Some(silo) = silo {

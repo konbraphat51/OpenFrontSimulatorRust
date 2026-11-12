@@ -548,7 +548,8 @@ impl Config {
     }
     /// Navigation mesh disabled.
     pub fn disable_nav_mesh(&self) -> bool {
-        self.game_config.disable_nav_mesh.unwrap_or(false)
+        // The v0.28 engine has no water graph
+        self.rules.has(Change::LegacyAStar28) || self.game_config.disable_nav_mesh.unwrap_or(false)
     }
     /// Alliances disabled (custom duration 0 or the legacy flag).
     pub fn disable_alliances(&self) -> bool {

@@ -12,6 +12,7 @@ use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
+use crate::Pathfinding::Legacy28::PathFinding::{PathFinder as LegacyPathFinder, StepResult};
 use crate::Pathfinding::PathFinder::{WaterPathFinder, WaterStepperEnv};
 use crate::Pathfinding::Types::{PathResult, Source};
 
@@ -21,6 +22,7 @@ pub struct TradeShipExecution {
     trade_ship: Option<UnitId>,
     was_captured: bool,
     path_finder: Option<WaterPathFinder>,
+    legacy_path_finder: Option<LegacyPathFinder>,
     tiles_traveled: f64,
     motion_plan_dst: Option<TileRef>,
     orig_owner: SmallId,
@@ -36,6 +38,7 @@ impl TradeShipExecution {
             trade_ship: None,
             was_captured: false,
             path_finder: None,
+            legacy_path_finder: None,
             tiles_traveled: 0.0,
             motion_plan_dst: None,
             orig_owner,
@@ -81,6 +84,9 @@ impl Execution for TradeShipExecution {
         let stagger = game.trade_ship_stagger % WaterPathFinder::STAGGER_SPREAD;
         game.trade_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
+        if game.config().rules().has(Change::LegacyAStar28) {
+            self.legacy_path_finder = Some(LegacyPathFinder::mini(2500.0, true, 20.0));
+        }
     }
 
     fn tick(&mut self, game: &mut GameImpl, ticks: Tick) {
@@ -192,6 +198,28 @@ impl Execution for TradeShipExecution {
         }
 
         let dst = self.dst_port_tile(game);
+        if let Some(legacy) = self.legacy_path_finder.as_mut() {
+            let result =
+                legacy.next_tile(&game.map, game.water_manager.mini_map(), cur_tile, dst, 1);
+            match result {
+                StepResult::Pending => {}
+                StepResult::NextTile(node) => {
+                    if game.map.is_water(node) && game.map.is_shoreline(node) {
+                        game.unit_mut(ship).set_safe_from_pirates();
+                    }
+                    game.unit_mut(ship).move_to(node);
+                    self.tiles_traveled += 1.0;
+                }
+                StepResult::Completed(_) => self.complete(game),
+                StepResult::PathNotFound => {
+                    if game.unit_any(ship).is_active() {
+                        game.unit_mut(ship).delete(Some(false), None);
+                    }
+                    self.active = false;
+                }
+            }
+            return;
+        }
         let result = {
             let mut env = WaterStepperEnv {
                 water: &mut game.water_manager,

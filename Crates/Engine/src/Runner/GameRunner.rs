@@ -21,7 +21,7 @@ use crate::Execution::WinCheckExecution::WinCheckExecution;
 use crate::Game::Game::{GameType, PlayerInfo, PlayerType, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::GameMapImpl;
-use crate::Game::NationCreation::create_nations_for_game;
+use crate::Game::NationCreation::{create_nations_for_game, create_nations_v28};
 use anyhow::Result;
 use ofsim_map::{MapData, MapSize, TerrainMap};
 use ofsim_record::Records::Turn;
@@ -101,15 +101,19 @@ pub fn create_game_runner(
         })
         .collect();
 
-    let nations = create_nations_for_game(
-        &engine_config,
-        &terrain.nations,
-        &terrain.additional_nations,
-        humans.len(),
-        rules.has(Change::NationNamesExpanded31),
-        rules.has(Change::NationCreationConfigurable30),
-        &mut random,
-    );
+    let nations = if rules.has(Change::FakeHumanNations28) {
+        create_nations_v28(&engine_config, &terrain.nations, &mut random)
+    } else {
+        create_nations_for_game(
+            &engine_config,
+            &terrain.nations,
+            &terrain.additional_nations,
+            humans.len(),
+            rules.has(Change::NationNamesExpanded31),
+            rules.has(Change::NationCreationConfigurable30),
+            &mut random,
+        )
+    };
 
     let game = GameImpl::new(
         humans,

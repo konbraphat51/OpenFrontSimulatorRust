@@ -3,13 +3,17 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::WarshipExecution::WarshipExecution;
+use crate::Builds::Rules::Change;
 use crate::Game::Game::UnitType;
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 use crate::Pathfinding::Types::PathResult;
 
 /// `findTargetUnit()`: transport ships first, then warships, then trade ships; nearest wins.
-fn find_target_unit(exec: &WarshipExecution, game: &GameImpl) -> Option<crate::Game::Game::UnitId> {
+pub(super) fn find_target_unit(
+    exec: &WarshipExecution,
+    game: &GameImpl,
+) -> Option<crate::Game::Game::UnitId> {
     let config = game.config();
     let warship = exec.ship();
     let owner = exec.owner(game);
@@ -34,7 +38,11 @@ fn find_target_unit(exec: &WarshipExecution, game: &GameImpl) -> Option<crate::G
         let unit = game.unit_any(unit_id);
         if unit.owner_id() == owner
             || unit_id == warship
-            || !game.player(owner).can_attack_player(unit.owner_id(), true)
+            || if game.config().rules().has(Change::WarshipLegacy28) {
+                game.player(unit.owner_id()).is_friendly(owner, true)
+            } else {
+                !game.player(owner).can_attack_player(unit.owner_id(), true)
+            }
             || exec.already_sent_shell.contains(&unit_id)
         {
             continue;
@@ -73,7 +81,7 @@ fn find_target_unit(exec: &WarshipExecution, game: &GameImpl) -> Option<crate::G
     best
 }
 
-fn shoot_target(exec: &mut WarshipExecution, game: &mut GameImpl) {
+pub(super) fn shoot_target(exec: &mut WarshipExecution, game: &mut GameImpl) {
     let ship = exec.ship();
     let rate = game.config().warship_shell_attack_rate();
     let ticks = game.ticks() as f64;

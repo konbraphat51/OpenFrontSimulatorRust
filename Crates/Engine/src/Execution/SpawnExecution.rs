@@ -111,6 +111,39 @@ impl SpawnExecution {
     }
 }
 
+impl SpawnExecution {
+    /// `tick` of v0.28.4: the tile is always given and a spawn never fails or rolls back.
+    fn tick_v28(&mut self, game: &mut GameImpl) {
+        let tile = self.tile.expect("SpawnExecution always has a tile");
+        if !game.is_valid_ref(tile) || !game.in_spawn_phase() {
+            return;
+        }
+        let player = match game.find_player(&self.player_info.id) {
+            Some(p) => p,
+            None => game.add_player(self.player_info.clone(), None),
+        };
+        let prev_tiles: Vec<TileRef> = game.player(player).tiles().iter().collect();
+        for &t in &prev_tiles {
+            game.player_mut(player).relinquish(t);
+        }
+        for t in get_spawn_tiles(&game.map, tile, false, false).unwrap_or_default() {
+            game.player_mut(player).conquer(t);
+        }
+        if !game.player(player).has_spawned() {
+            game.add_execution(Box::new(PlayerExecution::new(player)));
+            if game.player(player).player_type() == PlayerType::Bot {
+                let tribe_id = game.player(player).id().to_string();
+                game.add_execution(Box::new(TribeExecution::new(
+                    player,
+                    &tribe_id,
+                    game.config().rules(),
+                )));
+            }
+        }
+        game.player_mut(player).set_spawn_tile(tile);
+    }
+}
+
 impl Execution for SpawnExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.queued_during_spawn_phase = game.in_spawn_phase();
@@ -118,6 +151,11 @@ impl Execution for SpawnExecution {
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.active = false;
+
+        if game.config().rules().has(Change::SpawnByTile28) {
+            self.tick_v28(game);
+            return;
+        }
 
         if !game.config().rules().has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
             return;

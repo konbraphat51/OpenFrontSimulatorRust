@@ -16,6 +16,8 @@ use super::TrainStation::{Cluster, ClusterId, TrainStation};
 use crate::Builds::Rules::Change;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Pathfinding::Algorithms::AStarRail::AStarRail;
+use crate::Pathfinding::Legacy28::MiniAStar::MiniAStar;
+use crate::Pathfinding::Legacy28::SerialAStar::{GraphAdapter, PathFindResultType, SerialAStar};
 use crate::Pathfinding::PathFinderStation::find_stations_path;
 use crate::Pathfinding::Transformers::MiniMapTransformer::MiniMapTransformer;
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
@@ -213,11 +215,52 @@ impl RailNetwork {
         from: StationId,
         to: StationId,
     ) -> Vec<StationId> {
+        if game.config().rules().has(Change::LegacyAStar28) {
+            return self.find_stations_path_v28(game, from, to);
+        }
         find_stations_path(self, game, &[from], to).unwrap_or_default()
+    }
+
+    /// `findStationsPath` of v0.28.4: bidirectional A* over the station graph, no cluster filter.
+    fn find_stations_path_v28(
+        &self,
+        game: &GameImpl,
+        from: StationId,
+        to: StationId,
+    ) -> Vec<StationId> {
+        let adapter = StationAdapterV28 {
+            network: self,
+            game,
+        };
+        let mut a_star = SerialAStar::new(&[from], to, 5000.0, 20.0, &adapter, 0.0);
+        if a_star.compute(&adapter) == PathFindResultType::Completed {
+            a_star.reconstruct_path()
+        } else {
+            Vec::new()
+        }
     }
 
     /// `RailPathFinderServiceImpl.findTilePath`: rail A* on the mini map (empty when none).
     fn find_tile_path(&self, game: &GameImpl, from: TileRef, to: TileRef) -> Vec<TileRef> {
+        if game.config().rules().has(Change::LegacyAStar28) {
+            let mini = game.water_manager.mini_map();
+            let mut a_star = MiniAStar::new(
+                &game.map,
+                mini,
+                &[from],
+                false,
+                to,
+                5000.0,
+                20.0,
+                false,
+                3.0,
+            );
+            return if a_star.compute(mini) == PathFindResultType::Completed {
+                a_star.reconstruct_path(&game.map, mini)
+            } else {
+                Vec::new()
+            };
+        }
         let ctx = PathCtx {
             map: &game.map,
             mini_map: game.water_manager.mini_map(),
@@ -453,5 +496,30 @@ impl RailNetwork {
         for &cluster in clusters_to_merge.iter() {
             self.cluster_merge(game, merged, cluster);
         }
+    }
+}
+
+/// `TrainStationMapAdapter` of v0.28.4: the station graph as an A* graph.
+struct StationAdapterV28<'a> {
+    network: &'a RailNetwork,
+    game: &'a GameImpl,
+}
+
+impl GraphAdapter for StationAdapterV28<'_> {
+    fn neighbors(&self, node: u32) -> Vec<u32> {
+        self.network.station_neighbors(node)
+    }
+
+    fn cost(&self, _node: u32) -> f64 {
+        1.0
+    }
+
+    fn position(&self, node: u32) -> (f64, f64) {
+        let tile = self.network.station_tile(self.game, node);
+        (self.game.map.x(tile) as f64, self.game.map.y(tile) as f64)
+    }
+
+    fn is_traversable(&self, _from: u32, _to: u32) -> bool {
+        true
     }
 }

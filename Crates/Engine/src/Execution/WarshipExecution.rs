@@ -14,6 +14,7 @@ use crate::Execution::ShellExecution::ShellExecution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType, WarshipMode};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
+use crate::Pathfinding::Legacy28::PathFinding::PathFinder as LegacyPathFinder;
 use crate::Pathfinding::PathFinder::{WaterPathFinder, WaterStepperEnv};
 use crate::Pathfinding::Types::PathResult;
 use std::collections::HashSet;
@@ -35,6 +36,7 @@ pub struct WarshipExecution {
     random: PseudoRandom,
     warship: Option<UnitId>,
     pathfinder: Option<WaterPathFinder>,
+    pub(super) legacy_pathfinder: Option<LegacyPathFinder>,
     pub(super) last_shell_attack: f64,
     pub(super) already_sent_shell: HashSet<UnitId>,
     last_manual_move_tick_retreat_disabled: f64,
@@ -60,6 +62,7 @@ impl WarshipExecution {
             random: PseudoRandom::new(0.0),
             warship: None,
             pathfinder: None,
+            legacy_pathfinder: None,
             last_shell_attack: 0.0,
             already_sent_shell: HashSet::new(),
             last_manual_move_tick_retreat_disabled: 0.0,
@@ -850,7 +853,7 @@ impl WarshipExecution {
             let rejected = !water
                 || (!allow_shoreline && game.map.is_shoreline(tile))
                 // Water component connectivity
-                || warship_component.is_some_and(|c| {
+                || (!game.config().rules().has(Change::WarshipLegacy28)) && warship_component.is_some_and(|c| {
                     !game.water_manager.has_water_component(&game.map, tile, c)
                 });
             if rejected {
@@ -875,6 +878,9 @@ impl WarshipExecution {
 impl Execution for WarshipExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.pathfinder = Some(WaterPathFinder::new(&game.water_manager, 0));
+        if game.config().rules().has(Change::WarshipLegacy28) {
+            self.legacy_pathfinder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
+        }
         self.random = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         match self.input {
             Input::Unit(unit) => self.warship = Some(unit),
@@ -900,6 +906,10 @@ impl Execution for WarshipExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if game.config().rules().has(Change::WarshipLegacy28) {
+            super::WarshipExecutionV28::tick_v28(self, game);
+            return;
+        }
         if !game.config().rules().has(Change::WarshipDocking31) {
             super::WarshipExecutionV30::tick_v30(self, game);
             return;

@@ -13,6 +13,7 @@ use crate::Game::Game::{PlayerType, SmallId, Tick, UnitId, UnitParams, UnitType}
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
 use crate::Game::TransportShipUtils::target_transport_tile;
+use crate::Pathfinding::Legacy28::PathFinding::{PathFinder as LegacyPathFinder, StepResult};
 use crate::Pathfinding::PathFinder::{WaterPathFinder, WaterStepperEnv};
 use crate::Pathfinding::Types::PathResult;
 
@@ -26,6 +27,7 @@ pub struct TransportShipExecution {
     last_move: Tick,
     target: SmallId,
     path_finder: Option<WaterPathFinder>,
+    legacy_path_finder: Option<LegacyPathFinder>,
     dst: Option<TileRef>,
     /// `null` (unresolved) / `false` (none found) / a tile.
     retreat_dst: Option<Option<TileRef>>,
@@ -46,6 +48,7 @@ impl TransportShipExecution {
             last_move: 0,
             target: 0,
             path_finder: None,
+            legacy_path_finder: None,
             dst: None,
             retreat_dst: None,
             boat: None,
@@ -85,6 +88,9 @@ impl Execution for TransportShipExecution {
         let stagger = game.transport_ship_stagger % WaterPathFinder::STAGGER_SPREAD;
         game.transport_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
+        if game.config().rules().has(Change::LegacyAStar28) {
+            self.legacy_path_finder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
+        }
 
         let boat_max = game.config().boat_max_number() as i64;
         if game
@@ -228,7 +234,14 @@ impl Execution for TransportShipExecution {
 
         let dst = self.dst.expect("checked above");
         let boat_tile = game.unit_any(boat).tile();
-        let result = {
+        let result = if let Some(legacy) = self.legacy_path_finder.as_mut() {
+            match legacy.next_tile(&game.map, game.water_manager.mini_map(), boat_tile, dst, 1) {
+                StepResult::Pending => return,
+                StepResult::NextTile(node) => PathResult::Next(node),
+                StepResult::Completed(node) => PathResult::Complete(node),
+                StepResult::PathNotFound => PathResult::NotFound,
+            }
+        } else {
             let mut env = WaterStepperEnv {
                 water: &mut game.water_manager,
                 map: &game.map,
@@ -267,7 +280,7 @@ impl Execution for TransportShipExecution {
             PathResult::Next(node) => {
                 game.unit_mut(boat).move_to(node);
                 // Upstream re-queries the path for the motion plan when the destination changed
-                if self.dst != self.motion_plan_dst {
+                if self.legacy_path_finder.is_none() && self.dst != self.motion_plan_dst {
                     path_finder.touch(&game.water_manager);
                     self.motion_plan_dst = self.dst;
                 }
