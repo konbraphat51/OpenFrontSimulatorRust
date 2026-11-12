@@ -128,6 +128,10 @@ pub enum Change {
     PlayerClusterRewrite36,
     /// v0.36.0: a port spawns on the first shore tile of the valid structure tiles (no radius-20 search).
     PortSpawnFirstShore36,
+    /// v0.36.0: nations book troops they send this tick so later decisions see what is left at home.
+    NationHomeTroops36,
+    /// v0.36.0: a nation without a land front attacks the nearest bots across the water.
+    NationOverseasBots36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -332,6 +336,8 @@ const EDGES: &[Edge] = &[
             Change::BfsFifoOrder36,
             Change::PlayerClusterRewrite36,
             Change::PortSpawnFirstShore36,
+            Change::NationHomeTroops36,
+            Change::NationOverseasBots36,
         ],
         remove: &[],
     },
