@@ -1,6 +1,6 @@
 [package]
 name = "openfront-record"
-description = "OpenFront game record schema, loading and turn expansion"
+description = "OpenFront game record schema, loading and turn expansion, unofficial"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

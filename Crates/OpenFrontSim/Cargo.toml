@@ -1,6 +1,6 @@
 [package]
 name = "openfront-sim"
-description = "Command-line replayer: hash verification, state snapshots and batch runs"
+description = "ofsim: unofficial command-line replayer for OpenFront game records"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
