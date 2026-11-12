@@ -366,8 +366,9 @@ impl AiAttackBehavior {
             return;
         }
         // The maximum number of transport ships may already be out.
-        if game.player(self.player).unit_count(UnitType::TransportShip)
-            >= game.config().boat_max_number() as i64
+        if game.config().rules().has(Change::NationAiRework2984)
+            && game.player(self.player).unit_count(UnitType::TransportShip)
+                >= game.config().boat_max_number() as i64
         {
             return;
         }
@@ -582,6 +583,14 @@ impl AiAttackBehavior {
     }
 
     fn attack_strategies(game: &GameImpl) -> Vec<Strategy> {
+        let mut list = Self::attack_strategy_list(game);
+        if !game.config().rules().has(Change::NationAiRework2984) {
+            list.retain(|s| !matches!(s, Strategy::Donate));
+        }
+        list
+    }
+
+    fn attack_strategy_list(game: &GameImpl) -> Vec<Strategy> {
         use Strategy::*;
         if Self::v2(game) {
             return match game.config().game_config().difficulty {
@@ -1435,7 +1444,47 @@ impl AiAttackBehavior {
         find_juiciest_target(game, &candidates)
     }
 
+    /// `findNearestIslandEnemy` before PR 2984: the nearest or second nearest weaker player, reachable or not.
+    fn find_nearest_island_enemy_v29(&mut self, game: &mut GameImpl) -> Option<SmallId> {
+        if game.player(self.player).border_tiles().is_empty() {
+            return None;
+        }
+        let filtered_players: Vec<SmallId> = game
+            .players()
+            .into_iter()
+            .filter(|&p| {
+                p != self.player
+                    && game.player(p).is_alive()
+                    && !game.player(p).border_tiles().is_empty()
+                    && !self.is_friendly(game, p)
+                    && game.player(p).troops() < self.troops(game)
+            })
+            .collect();
+        if filtered_players.is_empty() {
+            return None;
+        }
+        let player_center = self.player_center(game, self.player);
+        let mut sorted_players: Vec<(SmallId, u32)> = filtered_players
+            .into_iter()
+            .map(|p| {
+                let center = self.player_center(game, p);
+                let a = game.tile_ref(player_center.x, player_center.y);
+                let b = game.tile_ref(center.x, center.y);
+                (p, game.manhattan_dist(a, b))
+            })
+            .collect();
+        sorted_players.sort_by_key(|&(_, d)| d);
+        // The second nearest enemy half of the time, so the boat does not always meet the same warship.
+        if sorted_players.len() > 1 && self.chance(2.0) {
+            return Some(sorted_players[1].0);
+        }
+        Some(sorted_players[0].0)
+    }
+
     fn find_nearest_island_enemy(&mut self, game: &mut GameImpl) -> Option<SmallId> {
+        if !game.config().rules().has(Change::NationAiRework2984) {
+            return self.find_nearest_island_enemy_v29(game);
+        }
         if game.config().is_unit_disabled(UnitType::TransportShip) {
             return None;
         }
@@ -1778,7 +1827,8 @@ impl AiAttackBehavior {
             || game.player(other).player_type() != PlayerType::Human
             || game.player(other).is_traitor()
             || game.player(self.player).player_type() == PlayerType::Bot
-            || game.config().player_teams() == TeamCountConfig::HumansVsNations
+            || (game.config().rules().has(Change::NationAiRework2984)
+                && game.config().player_teams() == TeamCountConfig::HumansVsNations)
         {
             return true;
         }
@@ -2015,7 +2065,9 @@ impl AiAttackBehavior {
         ) else {
             return false;
         };
-        if !can_build_truthy(game, self.player, closest_y) {
+        if game.config().rules().has(Change::NationAiRework2984)
+            && !can_build_truthy(game, self.player, closest_y)
+        {
             return false;
         }
         let troops = if game.config().rules().has(Change::AiBoatTroopsUnified4297) {

@@ -1368,7 +1368,8 @@ impl Config {
         if player_type == PlayerType::Nation {
             let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
             return match self.game_config.difficulty {
-                Difficulty::Easy => 12_500.0,
+                Difficulty::Easy if self.rules.has(Change::EasyNationsEasier3072) => 12_500.0,
+                Difficulty::Easy => 18_750.0,
                 Difficulty::Medium if rebalanced => 18_750.0,
                 Difficulty::Medium => 25_000.0,
                 Difficulty::Hard if rebalanced => 25_000.0,
@@ -1419,7 +1420,8 @@ impl Config {
         }
         let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
         match self.game_config.difficulty {
-            Difficulty::Easy => max_troops * 0.5,
+            Difficulty::Easy if self.rules.has(Change::EasyNationsEasier3072) => max_troops * 0.5,
+            Difficulty::Easy => max_troops * 0.75,
             Difficulty::Medium if rebalanced => max_troops * 0.75,
             Difficulty::Medium => max_troops * 1.0,
             Difficulty::Hard if rebalanced => max_troops * 1.0,
@@ -1444,7 +1446,8 @@ impl Config {
         if p.player_type == PlayerType::Nation {
             let rebalanced = self.rules.has(Change::NationDifficultyRebalance3184);
             match self.game_config.difficulty {
-                Difficulty::Easy => to_add *= 0.9,
+                Difficulty::Easy if self.rules.has(Change::EasyNationsEasier3072) => to_add *= 0.9,
+                Difficulty::Easy => to_add *= 0.95,
                 Difficulty::Medium if rebalanced => to_add *= 0.95,
                 Difficulty::Medium => to_add *= 1.0,
                 Difficulty::Hard if rebalanced => to_add *= 1.0,
