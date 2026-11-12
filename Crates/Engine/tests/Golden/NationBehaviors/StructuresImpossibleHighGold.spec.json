@@ -1,0 +1,628 @@
+{
+ "gameID": "n2-structures-Impossible",
+ "config": {
+  "difficulty": "Impossible",
+  "startingGold": 5000000
+ },
+ "steps": [
+  {
+   "op": "addPlayer",
+   "id": "A",
+   "type": "NATION"
+  },
+  {
+   "op": "addPlayer",
+   "id": "B",
+   "type": "NATION"
+  },
+  {
+   "op": "addPlayer",
+   "id": "C",
+   "type": "HUMAN"
+  },
+  {
+   "op": "conquerSquare",
+   "player": "A",
+   "x": 700,
+   "y": 540,
+   "r": 60
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 700,
+   "y": 640,
+   "r": 40
+  },
+  {
+   "op": "conquerSquare",
+   "player": "C",
+   "x": 640,
+   "y": 470,
+   "r": 20
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "30000000"
+  },
+  {
+   "op": "troops",
+   "player": "A",
+   "amount": 100000
+  },
+  {
+   "op": "structure.new",
+   "id": "s",
+   "player": "A",
+   "seed": 1244
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "attack",
+   "attacker": "B",
+   "target": "A",
+   "troops": 90000
+  },
+  {
+   "op": "attack",
+   "attacker": "C",
+   "target": "A",
+   "troops": 30000,
+   "x": 700,
+   "y": 540
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "structure.call",
+   "id": "s",
+   "player": "A",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 40
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "6000000"
+  },
+  {
+   "op": "addPlayer",
+   "id": "D",
+   "type": "NATION"
+  },
+  {
+   "op": "conquerSquare",
+   "player": "D",
+   "x": 1100,
+   "y": 500,
+   "r": 6
+  },
+  {
+   "op": "gold",
+   "player": "D",
+   "amount": "40000000"
+  },
+  {
+   "op": "structure.new",
+   "id": "t",
+   "player": "D",
+   "seed": 109
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  },
+  {
+   "op": "structure.call",
+   "id": "t",
+   "player": "D",
+   "apply": true
+  },
+  {
+   "op": "tick",
+   "n": 60
+  }
+ ]
+}

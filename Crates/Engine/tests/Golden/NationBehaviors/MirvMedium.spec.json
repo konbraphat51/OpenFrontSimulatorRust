@@ -1,0 +1,609 @@
+{
+ "gameID": "n2-mirv-Medium-Free For All",
+ "config": {
+  "difficulty": "Medium",
+  "gameMap": "Oceania"
+ },
+ "steps": [
+  {
+   "op": "addPlayer",
+   "id": "A",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "B",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "C",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "D",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "conquerSquare",
+   "player": "A",
+   "x": 560,
+   "y": 450,
+   "r": 22
+  },
+  {
+   "op": "conquerSquare",
+   "player": "C",
+   "x": 1550,
+   "y": 120,
+   "r": 25
+  },
+  {
+   "op": "conquerSquare",
+   "player": "D",
+   "x": 150,
+   "y": 940,
+   "r": 30
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "400000000"
+  },
+  {
+   "op": "build",
+   "player": "A",
+   "type": "Missile Silo",
+   "x": 559,
+   "y": 449,
+   "level": 1
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 550,
+   "y": 640,
+   "r": 110
+  },
+  {
+   "op": "mirv.new",
+   "id": "m00",
+   "player": "A",
+   "seed": 6
+  },
+  {
+   "op": "mirv.call",
+   "id": "m00"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m01",
+   "player": "A",
+   "seed": 7
+  },
+  {
+   "op": "mirv.call",
+   "id": "m01"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m02",
+   "player": "A",
+   "seed": 8
+  },
+  {
+   "op": "mirv.call",
+   "id": "m02"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m03",
+   "player": "A",
+   "seed": 9
+  },
+  {
+   "op": "mirv.call",
+   "id": "m03"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 550,
+   "y": 640,
+   "r": 160
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 500,
+   "y": 640,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 512,
+   "y": 647,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 524,
+   "y": 654,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 536,
+   "y": 640,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 548,
+   "y": 647,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 560,
+   "y": 654,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 572,
+   "y": 640,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 584,
+   "y": 647,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 596,
+   "y": 654,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "C",
+   "type": "City",
+   "x": 1567,
+   "y": 103,
+   "level": 2
+  },
+  {
+   "op": "mirv.new",
+   "id": "m10",
+   "player": "A",
+   "seed": 106
+  },
+  {
+   "op": "mirv.call",
+   "id": "m10"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m11",
+   "player": "A",
+   "seed": 107
+  },
+  {
+   "op": "mirv.call",
+   "id": "m11"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m12",
+   "player": "A",
+   "seed": 108
+  },
+  {
+   "op": "mirv.call",
+   "id": "m12"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m13",
+   "player": "A",
+   "seed": 109
+  },
+  {
+   "op": "mirv.call",
+   "id": "m13"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 50,
+   "y": 30,
+   "r": 90
+  },
+  {
+   "op": "mirv.new",
+   "id": "m20",
+   "player": "A",
+   "seed": 206
+  },
+  {
+   "op": "mirv.call",
+   "id": "m20"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m21",
+   "player": "A",
+   "seed": 207
+  },
+  {
+   "op": "mirv.call",
+   "id": "m21"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m22",
+   "player": "A",
+   "seed": 208
+  },
+  {
+   "op": "mirv.call",
+   "id": "m22"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m23",
+   "player": "A",
+   "seed": 209
+  },
+  {
+   "op": "mirv.call",
+   "id": "m23"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 1500,
+   "y": 60,
+   "r": 120
+  },
+  {
+   "op": "mirv.new",
+   "id": "m30",
+   "player": "A",
+   "seed": 306
+  },
+  {
+   "op": "mirv.call",
+   "id": "m30"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m31",
+   "player": "A",
+   "seed": 307
+  },
+  {
+   "op": "mirv.call",
+   "id": "m31"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m32",
+   "player": "A",
+   "seed": 308
+  },
+  {
+   "op": "mirv.call",
+   "id": "m32"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m33",
+   "player": "A",
+   "seed": 309
+  },
+  {
+   "op": "mirv.call",
+   "id": "m33"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 200,
+   "y": 40,
+   "r": 200
+  },
+  {
+   "op": "mirv.new",
+   "id": "m40",
+   "player": "A",
+   "seed": 406
+  },
+  {
+   "op": "mirv.call",
+   "id": "m40"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m41",
+   "player": "A",
+   "seed": 407
+  },
+  {
+   "op": "mirv.call",
+   "id": "m41"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m42",
+   "player": "A",
+   "seed": 408
+  },
+  {
+   "op": "mirv.call",
+   "id": "m42"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m43",
+   "player": "A",
+   "seed": 409
+  },
+  {
+   "op": "mirv.call",
+   "id": "m43"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 900,
+   "y": 20,
+   "r": 300
+  },
+  {
+   "op": "mirv.new",
+   "id": "m50",
+   "player": "A",
+   "seed": 506
+  },
+  {
+   "op": "mirv.call",
+   "id": "m50"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m51",
+   "player": "A",
+   "seed": 507
+  },
+  {
+   "op": "mirv.call",
+   "id": "m51"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m52",
+   "player": "A",
+   "seed": 508
+  },
+  {
+   "op": "mirv.call",
+   "id": "m52"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "m53",
+   "player": "A",
+   "seed": 509
+  },
+  {
+   "op": "mirv.call",
+   "id": "m53"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "gold",
+   "player": "D",
+   "amount": "30000000"
+  },
+  {
+   "op": "build",
+   "player": "D",
+   "type": "MIRV",
+   "x": 149,
+   "y": 941,
+   "targetX": 559,
+   "targetY": 449
+  },
+  {
+   "op": "mirv.new",
+   "id": "c0",
+   "player": "A",
+   "seed": 7006
+  },
+  {
+   "op": "mirv.call",
+   "id": "c0"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "c1",
+   "player": "A",
+   "seed": 7007
+  },
+  {
+   "op": "mirv.call",
+   "id": "c1"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "c2",
+   "player": "A",
+   "seed": 7008
+  },
+  {
+   "op": "mirv.call",
+   "id": "c2"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "c3",
+   "player": "A",
+   "seed": 7009
+  },
+  {
+   "op": "mirv.call",
+   "id": "c3"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  },
+  {
+   "op": "mirv.new",
+   "id": "c4",
+   "player": "A",
+   "seed": 7010
+  },
+  {
+   "op": "mirv.call",
+   "id": "c4"
+  },
+  {
+   "op": "tick",
+   "n": 310
+  }
+ ]
+}

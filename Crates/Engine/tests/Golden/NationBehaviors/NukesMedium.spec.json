@@ -1,0 +1,283 @@
+{
+ "gameID": "n2-nukes-Medium-Free For All-1-0-None-False-0",
+ "config": {
+  "difficulty": "Medium"
+ },
+ "steps": [
+  {
+   "op": "addPlayer",
+   "id": "A",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "B",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "C",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "addPlayer",
+   "id": "D",
+   "type": "NATION",
+   "team": null
+  },
+  {
+   "op": "conquerSquare",
+   "player": "A",
+   "x": 1450,
+   "y": 130,
+   "r": 30
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 1500,
+   "y": 260,
+   "r": 100
+  },
+  {
+   "op": "conquerSquare",
+   "player": "C",
+   "x": 1650,
+   "y": 200,
+   "r": 20
+  },
+  {
+   "op": "conquerSquare",
+   "player": "D",
+   "x": 1300,
+   "y": 220,
+   "r": 15
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "90000000"
+  },
+  {
+   "op": "build",
+   "player": "A",
+   "type": "Missile Silo",
+   "x": 1450,
+   "y": 130,
+   "level": 3
+  },
+  {
+   "op": "build",
+   "player": "A",
+   "type": "Missile Silo",
+   "x": 1430,
+   "y": 140,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 1500,
+   "y": 260,
+   "level": 3
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 1515,
+   "y": 272,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "Port",
+   "x": 1475,
+   "y": 270,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "Factory",
+   "x": 1520,
+   "y": 245,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "SAM Launcher",
+   "x": 1490,
+   "y": 240,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "SAM Launcher",
+   "x": 1525,
+   "y": 280,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "Missile Silo",
+   "x": 1470,
+   "y": 285,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "Defense Post",
+   "x": 1505,
+   "y": 290,
+   "level": 1
+  },
+  {
+   "op": "build",
+   "player": "C",
+   "type": "SAM Launcher",
+   "x": 1650,
+   "y": 200,
+   "level": 4
+  },
+  {
+   "op": "build",
+   "player": "D",
+   "type": "City",
+   "x": 1300,
+   "y": 220,
+   "level": 2
+  },
+  {
+   "op": "relation",
+   "a": "A",
+   "b": "B",
+   "delta": -120
+  },
+  {
+   "op": "troops",
+   "player": "A",
+   "amount": 80000
+  },
+  {
+   "op": "nuke.new",
+   "id": "n",
+   "player": "A",
+   "seed": 4248,
+   "incoming": null,
+   "shouldAttack": true
+  },
+  {
+   "op": "tick",
+   "n": 5
+  },
+  {
+   "op": "nuke.target",
+   "id": "n"
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 220
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 15
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 220
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 15
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 220
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "60000000"
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 15
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 220
+  },
+  {
+   "op": "attack",
+   "attacker": "B",
+   "target": "A",
+   "troops": 500000
+  },
+  {
+   "op": "nuke.target",
+   "id": "n"
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 15
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 220
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 15
+  }
+ ]
+}
