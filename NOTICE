@@ -1,0 +1,48 @@
+OfSimRust
+==========
+
+OfSimRust (CLI binary: ofsim) is an unofficial Rust port of the OpenFront game simulation
+(https://github.com/openfrontio/OpenFrontIO).
+
+It is not affiliated with, authorized by or endorsed by OpenFront Inc. or the
+OpenFront project (AGPL-3.0 Section 7(c)).
+
+Copyright
+---------
+
+- Ported game logic: (c) OpenFront and Contributors. The upstream code is
+  licensed under AGPL-3.0-only with additional terms (see LICENSE).
+  Notice preserved under Section 7(b): (c) OpenFront and Contributors.
+- Rust port: (c) 2026 OfSimRust contributors.
+
+Modifications (AGPL-3.0 Section 5(a))
+-------------------------------------
+
+The files under Crates/OpenFrontEngine are modified (translated to Rust)
+versions of files of OpenFrontIO src/core. Each such file names its upstream
+source path in the header of the file. This paragraph and those headers are the
+notice that the files were modified. Other crates are original work or
+describe upstream data formats (game records and map resources).
+
+Not included
+------------
+
+This repository contains no OpenFront map files, assets or proprietary content
+(upstream /resources is CC BY-SA 4.0 with further third-party terms,
+/proprietary is All Rights Reserved) and no game records or player names.
+
+License
+-------
+
+AGPL-3.0-only with the upstream Section 7 additional terms, as in LICENSE.
+Source code: https://github.com/konbraphat51/OfSimRust
+Details: Docs/Licensing.md
+
+Third-party notices
+-------------------
+
+- V8 and Sun fdlibm (floating-point math ported to reproduce JavaScript
+  results): see ThirdPartyNotices/V8.md.
+- Rust crate dependencies are used under their own permissive licenses
+  (MIT, Apache-2.0, BSD, ISC, Zlib, Unicode, MPL-2.0). List them with
+  `cargo license` or check them with `cargo deny check licenses`.

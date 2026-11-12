@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Loading of records from `.json` and `.json.gz` files or bytes.
 
 use crate::Records::GameRecord;

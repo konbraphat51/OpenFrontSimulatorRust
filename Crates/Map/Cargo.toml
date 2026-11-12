@@ -1,6 +1,6 @@
 [package]
 name = "ofsim-map"
-description = "Loader for OpenFront map resources (terrain binaries and manifests)"
+description = "OfSimRust: unofficial loader for OpenFront map resources (terrain binaries and manifests)"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

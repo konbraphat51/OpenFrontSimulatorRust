@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 /**
  * Replays a game record through the upstream engine and writes one NDJSON trace line per tick.
  *

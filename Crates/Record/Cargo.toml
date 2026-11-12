@@ -1,6 +1,6 @@
 [package]
 name = "ofsim-record"
-description = "OpenFront game record schema, loading and turn expansion"
+description = "OfSimRust: unofficial OpenFront game record schema, loading and turn expansion"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

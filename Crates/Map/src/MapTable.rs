@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! The `GameMapType` table: wire name (enum value) to directory key (lowercased enum key).
 //! Generated from src/core/game/Maps.gen.ts of build 4e837520e886.
 

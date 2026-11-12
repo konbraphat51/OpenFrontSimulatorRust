@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of src/core/game/TerrainMapLoader.ts (`loadTerrainMap`, `genTerrainFromBin`) onto plain data.
 
 use crate::directory_key_of;

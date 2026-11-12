@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of `decompressGameRecord` (src/core/Util.ts): expands sparse turns into one turn per tick.
 
 use crate::Records::{GameRecord, Turn};

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of `GameConfigSchema` (src/core/Schemas.ts): the game configuration inside a record.
 
 use crate::wire_enum;

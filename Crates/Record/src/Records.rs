@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Port of the record schemas (src/core/Schemas.ts): `GameRecord`, `GameEndInfo`, `PlayerRecord`, `Turn`.
 
 use crate::Config::GameConfig;

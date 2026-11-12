@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Unit tests of intent fallback, turn expansion and start-info blanking on synthetic data.
 
 #![allow(non_snake_case)]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-only
 //! Integration test: the Rust record and map layers reproduce the upstream digests in `Golden/*.json`.
 //!
 //! Needs the local cache (`Cache/Records/<commit>`, baseline worktree maps); skipped when it is absent.
