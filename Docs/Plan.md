@@ -46,6 +46,7 @@ Class ids, parents and builds are in [BuildPlan.md](BuildPlan.md) (status column
 | C010 | v0.34.3, v0.34.4 | PR 5462 train saturation midpoint 300 | 18 of 18 |
 | C011 | v0.34.0, v0.34.1 | PR 5425 attack speed divisor 7.77, PR 5436 team count without the minimum of 2 | 12 of 12 |
 | C012 | v0.34.14 | tribe themes of Canary Islands, New Zealand, Pulicat Lake | 6 of 6 |
+| C090 | v0.34.5 | none (data tables and map manifests only; manifests read from git) | 7 of 7 |
 
 Notes: the passes were measured with the `AiAttackBehavior` random boat target fix of the D1 branch (nation boat targets use `owner.isFriendly(nation)`, commit 42a1c03) applied on top; without it three long records (C006, C008, C009) fail at the first boat of a nation next to a disconnected ally, the same way they fail on baseline code. C081 onward (v0.35.x, files moved into `packages/engine/src/`) needs the reference tracer and `GenEngineData` adapted to the new layout and is not started.
 

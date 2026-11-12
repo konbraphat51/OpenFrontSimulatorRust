@@ -104,6 +104,9 @@ pub trait Execution {
 
 マップや名前表もビルド間で変わる。`Builds/Maps.rs` はレコードのコミットの `resources/maps/<map>` の git ツリーをベースラインのものと比較し、異なる場合は `ofsim verify/trace/replay` がアップストリームの clone (`--upstream`、既定 `Cache/OpenFrontIO`) からそのマップを一度だけ `Cache/Maps/<commit12>/` に取り出して読む。ビルド間で異なる部族名データは `Execution/Utils/TribeNames.rs` で `Change` フラグにより選択する。
 
+
+v0.35.0 (C081 以降) から上流のソースは `src/core/` から `packages/{engine,engine-lib,engine-api,shared}/src/` に移り、`@openfront/<package>/...` で import される。移植ファイルのヘッダーはベースラインの `src/core/...` パスのままにする。リファレンスツールは両方の構成に対応する: `Reference/MakeCoreShim.mjs` が該当 worktree に `src/core/` の再エクスポート shim を作り、`Reference/EngineSupport.ts` の `createRunnerFor` がマップローダーの代わりに読み込み済みマップファイルを渡し、`Tools/GenEngineData.mts` が両方の構成を探す。対応: `Schemas` は `engine-api/Schemas`、`Util` は `engine-lib/Util` と `shared/SharedUtil` に分割、`Game` は `engine/game/Game` と `engine-api/game/GameTypes`、`GameMap` は `engine-api/game/GameMap` と `engine-lib/game/GameMapImpl`、`Config` は `shared/configuration` と `engine/configuration/EngineConfig`。execution、pathfinding、game の各ファイルは `engine/src/` 以下で相対パスを保つ。
+
 ## 検証
 
 - `ofsim verify <record>` は再生し、ハッシュを持つすべてのターン (10 ターンごと) で計算したハッシュとレコードを比較する。最後のターンまですべてのハッシュが一致すればレコードは合格である。
