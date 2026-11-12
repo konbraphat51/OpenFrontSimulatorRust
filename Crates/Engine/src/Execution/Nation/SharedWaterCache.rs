@@ -91,7 +91,7 @@ impl SharedWaterCache {
             if !map.is_shore(tile) {
                 return;
             }
-            map.for_each_neighbor(tile, |neighbor| {
+            map.for_each_neighbor_nswe(tile, |neighbor| {
                 if !map.is_water(neighbor) {
                     return;
                 }

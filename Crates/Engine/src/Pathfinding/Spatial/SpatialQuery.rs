@@ -86,7 +86,7 @@ impl SpatialQuery {
             mark(from, visited, stack);
         }
         while let Some(curr) = stack.pop() {
-            map.for_each_neighbor(curr, |n| {
+            map.for_each_neighbor_nswe(curr, |n| {
                 if visited[n as usize] != gen_stamp
                     && map.manhattan_dist(from, n) as f64 <= max_dist
                 {

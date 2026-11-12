@@ -85,7 +85,7 @@ fn best_water_neighbor(map: &GameMapImpl, tile: TileRef) -> Option<TileRef> {
     let mut max_score: i32 = -1;
 
     let mut nbuf = [0; 4];
-    let n = map.neighbors4(tile, &mut nbuf);
+    let n = map.neighbors4_nswe(tile, &mut nbuf);
     for &neighbor in &nbuf[..n] {
         if !map.is_water(neighbor) {
             continue;
@@ -101,6 +101,6 @@ fn best_water_neighbor(map: &GameMapImpl, tile: TileRef) -> Option<TileRef> {
 
 fn count_water_neighbors(map: &GameMapImpl, tile: TileRef) -> i32 {
     let mut nbuf = [0; 4];
-    let n = map.neighbors4(tile, &mut nbuf);
+    let n = map.neighbors4_nswe(tile, &mut nbuf);
     nbuf[..n].iter().filter(|&&t| map.is_water(t)).count() as i32
 }

@@ -96,6 +96,52 @@ pub enum Change {
     DoomsdayTeamLevels5030,
     /// PR 5052: rotted territory becomes fallout wasteland.
     DoomsdayRotWasteland5052,
+    /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
+    ImpassableTerrain4340,
+    /// PR 4433: warships gain veterancy (more health and shell damage) from kills and captures.
+    WarshipVeterancy4433,
+    /// PR 4706: MIRV warheads are standard nukes (per-type speeds 15 and 22, real flight, SAM interception).
+    MirvWarheadsStandard4706,
+    /// PR 4707: launching a MIRV puts the silo on cooldown.
+    MirvSiloCooldown4707,
+    /// PR 4756: a nuke execution keeps a given launch tile (MIRV warheads start at the separation point).
+    NukeKeepSrcTile4756,
+    /// PR 4770: SAM targeting fixes (multi-target scoring, final-tick interception) and a SAM missile that moves on init.
+    SamTargetingFixes4770,
+    /// PR 4429: nations skip ports on lakes below 3000 water tiles (not on Easy).
+    NationSmallLakePorts4429,
+    /// PR 4654: trade ship motion plans reuse the stepper's cached path (older builds run a one-shot query).
+    TradeShipPathReuse4654,
+    /// PR 4577: transport ships only target shores on water reachable from their own shoreline.
+    ReachableShoreTransport4577,
+    /// PR 4647: per-map tribe name themes and custom tribes.
+    TribeNameThemes4647,
+    /// PR 4458: pirating needs a port in the warship's water body.
+    PirateReachablePort4458,
+    /// PR 4657: a spawn intent after the spawn phase is ignored for an already spawned player.
+    SpawnTeleportGuard4657,
+    /// PR 4426: the cluster recalculation offset is seeded from the player id (older builds: the name).
+    ClusterOffsetFromId4426,
+    /// PR 4428: random spawn ignores the requested tile in `SpawnExecution`.
+    RandomSpawnIgnoresTile4428,
+    /// PR 4422: `nearby()` skips unowned tiles with fallout.
+    NearbySkipsFallout4422,
+    /// PR 4406: the longest railroad is 1.4142 times the station range (older: the range itself).
+    RailroadMaxSizeDiagonal4406,
+    /// PR 4337: railroads longer than `railroadMaxSize` are not built.
+    RailroadMaxSizeLimit4337,
+    /// PR 4320: `unitsConstructed` does not count buildings under construction twice.
+    UnitsConstructedOnce4320,
+    /// PR 4297: nation land and boat attacks share one troop calculation.
+    AiBoatTroopsUnified4297,
+    /// PR 4469: the Doomsday Clock game mode exists (later builds only).
+    DoomsdayClock4469,
+    /// PR 4893: Doomsday Clock territory rot, decaying troop floor, 7-wave 35 percent ladder and idle-on-winner.
+    DoomsdayRotLadder4893,
+    /// PR 4479: water components use a wide land marker and the HPA node search walks water tiles.
+    WaterComponentMarkers4479,
+    /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
+    NeighborOrderNswe4495,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -326,6 +372,29 @@ const ROOT_CHANGES: &[Change] = &[
     Change::BulkPurchase4640,
     Change::DoomsdayTeamLevels5030,
     Change::DoomsdayRotWasteland5052,
+    Change::ImpassableTerrain4340,
+    Change::NeighborOrderNswe4495,
+    Change::WarshipVeterancy4433,
+    Change::MirvWarheadsStandard4706,
+    Change::MirvSiloCooldown4707,
+    Change::NukeKeepSrcTile4756,
+    Change::SamTargetingFixes4770,
+    Change::NationSmallLakePorts4429,
+    Change::ReachableShoreTransport4577,
+    Change::TribeNameThemes4647,
+    Change::PirateReachablePort4458,
+    Change::SpawnTeleportGuard4657,
+    Change::ClusterOffsetFromId4426,
+    Change::RandomSpawnIgnoresTile4428,
+    Change::NearbySkipsFallout4422,
+    Change::RailroadMaxSizeDiagonal4406,
+    Change::RailroadMaxSizeLimit4337,
+    Change::UnitsConstructedOnce4320,
+    Change::AiBoatTroopsUnified4297,
+    Change::DoomsdayClock4469,
+    Change::DoomsdayRotLadder4893,
+    Change::WaterComponentMarkers4479,
+    Change::TradeShipPathReuse4654,
 ];
 
 /// Commit of the baseline build v0.34.22.

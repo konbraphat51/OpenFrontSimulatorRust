@@ -119,7 +119,7 @@ impl AiAttackBehavior {
         {
             let g: &GameImpl = game;
             for t in g.player(self.player).border_tiles().iter() {
-                g.map.for_each_neighbor(t, |n| {
+                g.map.for_each_neighbor_nswe(t, |n| {
                     if !g.map.is_land(n) || g.map.is_impassable(n) {
                         return;
                     }
@@ -646,7 +646,7 @@ impl AiAttackBehavior {
         }
         let mut nbuf = [0; 4];
         for tile in game.player(self.player).border_tiles().iter() {
-            let n = game.map.neighbors4(tile, &mut nbuf);
+            let n = game.map.neighbors4_nswe(tile, &mut nbuf);
             for &neighbor in &nbuf[..n] {
                 if game.map.is_land(neighbor)
                     && !game.map.has_owner(neighbor)
@@ -885,7 +885,7 @@ impl AiAttackBehavior {
         let map = &game.map;
         let mut nbuf = [0; 4];
         for border in game.player(self.player).border_tiles().iter() {
-            let n = map.neighbors4(border, &mut nbuf);
+            let n = map.neighbors4_nswe(border, &mut nbuf);
             for &neighbor in &nbuf[..n] {
                 if map.is_land(neighbor) && !map.is_impassable(neighbor) && !map.has_owner(neighbor)
                 {
@@ -1150,9 +1150,12 @@ impl AiAttackBehavior {
         if !can_build_truthy(game, self.player, closest_y) {
             return false;
         }
-        let Some(troops) =
+        let troops = if game.config().rules().has(Change::AiBoatTroopsUnified4297) {
             self.calculate_attack_troops(game, target, |this, g, _| this.troops(g) / 5.0)
-        else {
+        } else {
+            self.legacy_boat_troops(game, target)
+        };
+        let Some(troops) = troops else {
             return false;
         };
         game.add_execution(Box::new(TransportShipExecution::new(
@@ -1161,6 +1164,28 @@ impl AiAttackBehavior {
             Some(troops),
         )));
         true
+    }
+
+    /// Boat troops before PR 4297: no reserve subtraction for bot targets and the cap always applies.
+    fn legacy_boat_troops(&mut self, game: &mut GameImpl, target: SmallId) -> Option<f64> {
+        let fifth = self.troops(game) / 5.0;
+        let mut troops = if game.player(target).player_type() == PlayerType::Bot {
+            self.calculate_bot_attack_troops(game, target, fifth)
+        } else {
+            fifth
+        };
+        troops = troops.min(self.troop_send_cap(game));
+        if troops < 1.0 {
+            return None;
+        }
+        if self.is_attack_too_weak(game, troops, target) {
+            return None;
+        }
+        if game.player(self.player).player_type() == PlayerType::Nation {
+            let emoji = self.emoji_behavior.clone().expect("not initialized");
+            emoji.borrow_mut().maybe_send_attack_emoji(game, target);
+        }
+        Some(troops)
     }
 
     fn calculate_bot_attack_troops(
