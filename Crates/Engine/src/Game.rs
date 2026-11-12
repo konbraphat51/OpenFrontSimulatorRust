@@ -5,3 +5,4 @@
 pub mod Game;
 pub mod GameMap;
 pub mod TileSet;
+pub mod WaterManager;
