@@ -9,11 +9,19 @@ use crate::Compat::JsNumber::js_number_to_string;
 use anyhow::{Context, Result};
 use ofsim_record::Records::{GameRecord, Turn};
 use ofsim_record::StartInfo::GameStartInfo;
+use std::cell::RefCell;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::Path;
-use std::sync::Mutex;
 
-static LAST_PANIC: Mutex<Option<String>> = Mutex::new(None);
+thread_local! {
+    static LAST_PANIC: RefCell<Option<String>> = const { RefCell::new(None) };
+}
+
+fn take_last_panic() -> String {
+    LAST_PANIC
+        .with(|p| p.borrow_mut().take())
+        .unwrap_or_default()
+}
 
 /// Installs a panic hook that keeps the message and location instead of printing them.
 pub fn silence_panics() {
@@ -29,7 +37,7 @@ pub fn silence_panics() {
             .location()
             .map(|l| format!(" ({}:{})", l.file(), l.line()))
             .unwrap_or_default();
-        *LAST_PANIC.lock().unwrap() = Some(format!("{message}{location}"));
+        LAST_PANIC.with(|p| *p.borrow_mut() = Some(format!("{message}{location}")));
     }));
 }
 
@@ -81,16 +89,26 @@ pub fn replay(
     on_tick: &mut dyn FnMut(&GameRunner, &TickInfo) -> bool,
 ) -> Result<Outcome> {
     let record = GameRecord::load_decompressed(record_path)?;
+    replay_record(&record, maps, until, on_tick)
+}
+
+/// Like [`replay`] for an already loaded (decompressed) record.
+pub fn replay_record(
+    record: &GameRecord,
+    maps: &Path,
+    until: Option<u32>,
+    on_tick: &mut dyn FnMut(&GameRunner, &TickInfo) -> bool,
+) -> Result<Outcome> {
     let rules = Rules::for_commit(&record.git_commit)
         .with_context(|| format!("record commit {}", record.git_commit))?;
-    let start = GameStartInfo::from_record(&record);
+    let start = GameStartInfo::from_record(record);
     let total_turns = record.turns.len();
 
     let created = catch_unwind(AssertUnwindSafe(|| create_game_runner(&start, maps, rules)));
     let mut runner = match created {
         Ok(r) => r?,
         Err(_) => {
-            let message = LAST_PANIC.lock().unwrap().take().unwrap_or_default();
+            let message = take_last_panic();
             return Ok(Outcome {
                 total_turns,
                 ticks_run: 0,
@@ -115,7 +133,7 @@ pub fn replay(
             Ok(Some(h)) => h,
             Ok(None) => unreachable!("a turn was just queued"),
             Err(_) => {
-                let message = LAST_PANIC.lock().unwrap().take().unwrap_or_default();
+                let message = take_last_panic();
                 return Ok(Outcome {
                     total_turns,
                     ticks_run,

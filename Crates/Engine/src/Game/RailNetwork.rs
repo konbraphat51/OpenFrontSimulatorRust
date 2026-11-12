@@ -34,6 +34,8 @@ pub struct RailNetwork {
     pub(crate) registered: Vec<bool>,
     /// The manager's `stations` set, in insertion order.
     pub(crate) station_set: OrderedSet<StationId>,
+    /// Registered stations per unit, in registration order (index for `find_station`).
+    by_unit: std::collections::HashMap<UnitId, Vec<StationId>>,
     /// Railroad arena; the id is the index.
     pub(crate) rails: Vec<Railroad>,
     pub(crate) clusters: Vec<Cluster>,
@@ -54,6 +56,7 @@ impl RailNetwork {
             stations: Vec::new(),
             registered: Vec::new(),
             station_set: OrderedSet::new(),
+            by_unit: std::collections::HashMap::new(),
             rails: Vec::new(),
             clusters: Vec::new(),
             grid: RailSpatialGrid::new(GRID_CELL_SIZE),
@@ -90,10 +93,7 @@ impl RailNetwork {
 
     /// `stationManager().findStation(unit)`: the first registered station of the unit.
     pub fn find_station(&self, unit: UnitId) -> Option<StationId> {
-        self.station_set
-            .iter()
-            .copied()
-            .find(|&s| self.station(s).unit == unit)
+        self.by_unit.get(&unit).and_then(|v| v.first().copied())
     }
 
     /// `StationManager.addStation`: registers a new station of `unit` and returns its id.
@@ -108,6 +108,7 @@ impl RailNetwork {
         });
         self.registered.push(true);
         self.station_set.insert(id);
+        self.by_unit.entry(unit).or_default().push(id);
         id
     }
 
@@ -161,6 +162,9 @@ impl RailNetwork {
         self.registered[station as usize - 1] = false;
         self.station_set.remove(&station);
         let station_unit = self.station(station).unit;
+        if let Some(v) = self.by_unit.get_mut(&station_unit) {
+            v.retain(|&s| s != station);
+        }
         game.unit_mut(station_unit).set_train_station(false);
 
         let Some(cluster) = self.station(station).cluster else {

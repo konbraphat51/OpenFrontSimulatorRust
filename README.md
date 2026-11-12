@@ -32,7 +32,15 @@ cargo run --release --bin ofsim -- verify --record game.json.gz --maps <OpenFron
 
 # Replay and write snapshots every 100 ticks
 cargo run --release --bin ofsim -- replay --record game.json.gz --maps <OpenFrontIO>/resources/maps --out Out/game --every 100
+
+# Many records in parallel (one JSON line per record, resumable; --verify-only writes nothing)
+cargo run --release --bin ofsim -- batch --records Records/ --maps <OpenFrontIO>/resources/maps --out Out --every 100 --jobs 4
+
+# Per-tick NDJSON trace (format of Reference/README.md)
+cargo run --release --bin ofsim -- trace --record game.json.gz --maps <OpenFrontIO>/resources/maps --out trace.ndjson
 ```
+
+Output files and the comparison with the upstream dumper: [Docs/Output.md](Docs/Output.md). Compare two outputs with `python3 Tools/CompareReplayOutput.py <dir A> <dir B>`.
 
 ## Development
 
