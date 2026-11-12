@@ -1,0 +1,6 @@
+# Changes class C042 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "ClusterLocalEnemyBox3455",
+  "ClusterCalcSmallPlayers3448",
+]

@@ -1,0 +1,13 @@
+# Changes class C037 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "SpawnPhaseTimer3199",
+  "NationSpawnRetry4117",
+  "DefensePostDestroyed1563",
+  "SelfActionGuards4014",
+  "SiloInactiveGuard3997",
+  "WarshipPatrolComponent4151",
+  "AttackForEachNeighbor3820",
+  "TrainRange110Pr4079",
+  "AbstractAStarMinHeap4149",
+]

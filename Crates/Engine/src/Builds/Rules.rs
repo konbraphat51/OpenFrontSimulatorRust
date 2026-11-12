@@ -2,17 +2,34 @@
 //! Named upstream changes a build contains, and the commit to rule-set mapping.
 //!
 //! `BuildClasses.toml` (generated, checked in) gives commit -> class and class -> parent; the
-//! `EDGES` table below says which `Change`s each ported class adds to or removes from its parent.
+//! `Edges/<class>.toml` (one file per ported class, embedded by `build.rs`) says which `Change`s the
+//! class adds to or removes from its parent.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::OnceLock;
 use thiserror::Error;
 
+/// Declares `Change` and `Change::ALL` from one variant list, so flag names in `Edges/*.toml` resolve.
+macro_rules! change_enum {
+    ($(#[$emeta:meta])* pub enum Change { $($(#[$meta:meta])* $name:ident,)* }) => {
+        $(#[$emeta])*
+        #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum Change {
+            $($(#[$meta])* $name,)*
+        }
+
+        impl Change {
+            /// Every change, in declaration order.
+            pub const ALL: &'static [Change] = &[$(Change::$name,)*];
+        }
+    };
+}
+
+change_enum! {
 /// One upstream behaviour change, named after the upstream PR; more are added per build.
 ///
 /// Engine code branches on [`Rules::has`] at the exact place upstream changed; `has` is true
 /// when the build contains the changed (newer) behaviour.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum Change {
     /// PR 5191: deterministic `DetMath` replaces V8's `Math.exp/log/pow/atan2`.
     DetMath5191,
@@ -399,6 +416,7 @@ pub enum Change {
     /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
     WarshipLegacy28,
 }
+}
 
 /// Raised for a commit this engine has no rule set for.
 #[derive(Debug, Error, PartialEq, Eq)]
@@ -423,554 +441,60 @@ pub enum RulesError {
     },
 }
 
-/// Changes a class adds to / removes from its parent class.
-struct Edge {
-    class: &'static str,
-    add: &'static [Change],
-    remove: &'static [Change],
+impl Change {
+    /// The change called `name` (its variant name), or None.
+    pub fn from_name(name: &str) -> Option<Change> {
+        Change::ALL
+            .iter()
+            .copied()
+            .find(|c| format!("{c:?}") == name)
+    }
 }
 
-/// Ported classes, parents first. `C000` is the root and holds `ROOT_CHANGES`.
-const EDGES: &[Edge] = &[
-    Edge {
-        class: "C000",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C001",
-        add: &[Change::AttackRetreatNoTargets5823],
-        remove: &[],
-    },
-    Edge {
-        class: "C002",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C003",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C004",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C005",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C006",
-        add: &[],
-        remove: &[Change::ChannelIslandsTribes5564],
-    },
-    Edge {
-        class: "C007",
-        add: &[],
-        remove: &[
-            Change::InternalBorderAnnexFix5545,
-            Change::SaturationMidpoints5587,
-        ],
-    },
-    Edge {
-        class: "C008",
-        add: &[],
-        remove: &[Change::NukeFriendlyKillNoCredit5525],
-    },
-    Edge {
-        class: "C009",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C010",
-        add: &[],
-        remove: &[Change::TrainSaturation500Pr5462],
-    },
-    Edge {
-        class: "C011",
-        add: &[],
-        remove: &[Change::TeamCountMinTwo5436, Change::AttackSpeedDivisor5425],
-    },
-    Edge {
-        class: "C012",
-        add: &[Change::NewMapThemes5547],
-        remove: &[],
-    },
-    Edge {
-        class: "C081",
-        add: &[
-            Change::SmallEconomyBoost5907,
-            Change::EmojiBatch5833,
-            Change::NationsLikeHumans5899,
-            Change::WaterGraphEdgeSort5805,
-            Change::TrainSplitReconcile5719,
-            Change::SeveredLandAnnex5955,
-            Change::EmbargoAllSkipsAllies5919,
-        ],
-        remove: &[Change::WaterHpaSharedFinder4979],
-    },
-    Edge {
-        class: "C082",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C083",
-        add: &[
-            Change::NationAiSplit6087,
-            Change::AttackInactiveBeforeRetreat6089,
-            Change::WaterNukeMiniTile6016,
-        ],
-        remove: &[],
-    },
-    Edge {
-        class: "C084",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C085",
-        add: &[Change::TutorialMode6204],
-        remove: &[],
-    },
-    Edge {
-        class: "C086",
-        add: &[Change::TutorialSilo6242],
-        remove: &[],
-    },
-    Edge {
-        class: "C087",
-        add: &[Change::TeamFriendGroups6259],
-        remove: &[],
-    },
-    Edge {
-        class: "C088",
-        add: &[
-            Change::RailNetworkHash36,
-            Change::BfsFifoOrder36,
-            Change::PlayerClusterRewrite36,
-            Change::PortSpawnFirstShore36,
-            Change::NationHomeTroops36,
-            Change::NationOverseasBots36,
-            Change::AbstractGraphWideSearch36,
-            Change::TrainSpawnOffRail36,
-            Change::MirvTargetGrid36,
-            Change::TribeMapData36,
-            Change::NationWarshipSpareGold36,
-        ],
-        remove: &[],
-    },
-    Edge {
-        class: "C089",
-        add: &[Change::TribeMapData361],
-        remove: &[],
-    },
-    Edge {
-        class: "C090",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C013",
-        add: &[],
-        remove: &[
-            Change::WaterHpaSharedFinder4979,
-            Change::DetMath5191,
-            Change::AttackLogicRework5173,
-            Change::AttackTroopsDeducted5111,
-            Change::AnnexConvergeLoop4890,
-            Change::AnnexEnclosedOnly5027,
-            Change::DonateGoldKeepNull4892,
-            Change::DoomsdayIdleOnWinner4953,
-            Change::SpawnIntentGate4867,
-            Change::SpawnRelaxMinDist4921,
-            Change::SpawnRollback5321,
-            Change::SpawnPhase20s5347,
-            Change::TrainSplitResolve5200,
-            Change::TradeTrainSaturation5302,
-            Change::WinThresholdSame5223,
-            Change::AllianceCancelMirv5054,
-            Change::MirvNormalize5188,
-            Change::SamTargeting5197,
-            Change::AftergameSingleplayer5332,
-            Change::NationBetray5330,
-            Change::NationJuicy5294,
-            Change::NationExpansionCap5290,
-            Change::NationCrowdedFirst5344,
-            Change::NationVictoryDenialPercent5223,
-            Change::TeamAssignDuos4758,
-            Change::RailNoImpassable4903,
-            Change::WaterNukeMinimap4975,
-        ],
-    },
-    Edge {
-        class: "C014",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C015",
-        add: &[],
-        remove: &[Change::StationClusterSame5096],
-    },
-    Edge {
-        class: "C016",
-        add: &[],
-        remove: &[Change::Overtime5062],
-    },
-    Edge {
-        class: "C017",
-        add: &[],
-        remove: &[
-            Change::DoomsdayTeamLevels5030,
-            Change::DoomsdayRotWasteland5052,
-        ],
-    },
-    Edge {
-        class: "C018",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C019",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C020",
-        add: &[],
-        remove: &[Change::BulkPurchase4640],
-    },
-    Edge {
-        class: "C021",
-        add: &[],
-        remove: &[
-            Change::DoomsdayRotLadder4893,
-            Change::DoomsdayIdleOnWinner4953,
-        ],
-    },
-    Edge {
-        class: "C022",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C023",
-        add: &[],
-        remove: &[
-            Change::ImpassableTerrain4340,
-            Change::NeighborOrderNswe4495,
-            Change::WarshipVeterancy4433,
-            Change::MirvWarheadsStandard4706,
-            Change::MirvSiloCooldown4707,
-            Change::NukeKeepSrcTile4756,
-            Change::SamTargetingFixes4770,
-            Change::NationSmallLakePorts4429,
-            Change::ReachableShoreTransport4577,
-            Change::TribeNameThemes4647,
-            Change::PirateReachablePort4458,
-            Change::WaterComponentMarkers4479,
-            Change::TradeShipPathReuse4654,
-        ],
-    },
-    Edge {
-        class: "C024",
-        add: &[],
-        remove: &[Change::SpawnTeleportGuard4657],
-    },
-    Edge {
-        class: "C025",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C026",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C027",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C028",
-        add: &[],
-        remove: &[Change::DoomsdayClock4469],
-    },
-    Edge {
-        class: "C029",
-        add: &[],
-        remove: &[
-            Change::ClusterOffsetFromId4426,
-            Change::RandomSpawnIgnoresTile4428,
-            Change::NearbySkipsFallout4422,
-        ],
-    },
-    Edge {
-        class: "C030",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C031",
-        add: &[],
-        remove: &[Change::RailroadMaxSizeDiagonal4406],
-    },
-    Edge {
-        class: "C032",
-        add: &[],
-        remove: &[Change::RailroadMaxSizeLimit4337],
-    },
-    Edge {
-        class: "C033",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C034",
-        add: &[],
-        remove: &[Change::UnitsConstructedOnce4320],
-    },
-    Edge {
-        class: "C035",
-        add: &[],
-        remove: &[Change::AiBoatTroopsUnified4297],
-    },
-    Edge {
-        class: "C036",
-        add: &[],
-        remove: &[
-            Change::Sfc32PseudoRandom4233,
-            Change::AiTroopCap4239,
-            Change::NationsIgnoreImmunity4282,
-            Change::NukeSpeed10Meta,
-            Change::TradeShipSigmoid400Meta,
-        ],
-    },
-    Edge {
-        class: "C037",
-        add: &[],
-        remove: &[
-            Change::SpawnPhaseTimer3199,
-            Change::NationSpawnRetry4117,
-            Change::DefensePostDestroyed1563,
-            Change::SelfActionGuards4014,
-            Change::SiloInactiveGuard3997,
-            Change::WarshipPatrolComponent4151,
-            Change::AttackForEachNeighbor3820,
-            Change::TrainRange110Pr4079,
-            Change::AbstractAStarMinHeap4149,
-        ],
-    },
-    Edge {
-        class: "C038",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C039",
-        add: &[Change::TradeShipSigmoid400Meta],
-        remove: &[],
-    },
-    Edge {
-        class: "C040",
-        add: &[],
-        remove: &[
-            Change::NextIntFloorsArgs31,
-            Change::SamCooldown90V31,
-            Change::SiloCooldown90V31,
-            Change::PortBuild50V31,
-            Change::BotAttackMalus07V31,
-            Change::AttackerLoss6040V31,
-            Change::BotTroopGrowth05V31,
-            Change::NukeSpeed8V31,
-            Change::ConquerGoldHalfHuman31,
-            Change::CityTroopsFinishedOnly31,
-            Change::AttackSkipsWater31,
-            Change::DonateTroopZeroInactive31,
-            Change::AiAttackRework31,
-            Change::AllianceNukeCancelBlast31,
-            Change::TradeWaterComponents31,
-            Change::SamReloadThenFire31,
-            Change::NationExecutionTweaks31,
-            Change::IncomingAttacksAliveOnly31,
-            Change::NationStructureRework31,
-            Change::NationNukeRework31,
-            Change::NationWarshipRework31,
-            Change::NationBehaviorTweaks31,
-            Change::NationNamesExpanded31,
-            Change::WarshipDocking31,
-            Change::ClanTagField31,
-            Change::NationDisabledAlliances31,
-            Change::TransportRejectsAlliances31,
-        ],
-    },
-    Edge {
-        class: "C041",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C042",
-        add: &[],
-        remove: &[
-            Change::ClusterLocalEnemyBox3455,
-            Change::ClusterCalcSmallPlayers3448,
-        ],
-    },
-    Edge {
-        class: "C043",
-        add: &[],
-        remove: &[
-            Change::NoPublicDonation3437,
-            Change::RandomSpawnShortPhase3433,
-        ],
-    },
-    Edge {
-        class: "C044",
-        add: &[],
-        remove: &[Change::TrainTradeRetune30],
-    },
-    Edge {
-        class: "C047",
-        add: &[Change::TrainSpawnRate25Beta2],
-        remove: &[
-            Change::SamCooldown120V30,
-            Change::AttackerLoss7030V30,
-            Change::TrainDistanceGold30Beta,
-            Change::DisableAlliancesOption30,
-            Change::TribeNamesRevised30,
-        ],
-    },
-    Edge {
-        class: "C048",
-        add: &[],
-        remove: &[
-            Change::TrainSpawnRate25Beta2,
-            Change::HardTimeLimit170Min30,
-            Change::AllianceSpawnReject30,
-            Change::BotSpawnerOwnSeed30,
-            Change::NationCreationConfigurable30,
-            Change::TransportRetreatNearest3286,
-        ],
-    },
-    Edge {
-        class: "C049",
-        add: &[],
-        remove: &[
-            Change::AttackerLossBlend3227,
-            Change::NationDifficultyRebalance3184,
-            Change::NationSpawnImmunity3222,
-            Change::TradeShipMeta3232,
-            Change::ConquerGoldSkipInactive3020,
-            Change::MirvRelationBoth3206,
-            Change::AttackFriendlyNeighbor2954,
-            Change::NukeExplosionBulk3176,
-            Change::BotStructureFarming2895,
-            Change::AllianceRemovedOnDeath3168,
-            Change::AllianceRadialAccept3155,
-            Change::AllianceIncomingBypass3092,
-            Change::NukeBreakAllyList2912,
-            Change::MirvWarheadsWhenDead3134,
-            Change::SamMissileImmunity3167,
-            Change::BorderUpdateForEach3124,
-            Change::ServerUsernameCensoring3122,
-            Change::NukeTeammateStructureGuard3105,
-            Change::RailSnapOverlap3003,
-            Change::TrainDestinationReservoir3130,
-            Change::SamTargetingFix3223,
-            Change::SpawnValidation3009,
-            Change::TeamSpawnAreas3263,
-            Change::NationStructureBehavior3152,
-            Change::NationBehaviorUpdate3246,
-        ],
-    },
-    Edge {
-        class: "C050",
-        add: &[Change::SamMissileImmunity3167],
-        remove: &[],
-    },
-    Edge {
-        class: "C051",
-        add: &[],
-        remove: &[Change::EasyNationsEasier3072],
-    },
-    Edge {
-        class: "C052",
-        add: &[],
-        remove: &[],
-    },
-    Edge {
-        class: "C053",
-        add: &[],
-        remove: &[Change::NationAiRework2984],
-    },
-    Edge {
-        class: "C054",
-        add: &[],
-        remove: &[Change::NationTeamRejectHarder2971],
-    },
-    Edge {
-        class: "C055",
-        add: &[],
-        remove: &[
-            Change::PathfindingRefinements2959,
-            Change::ShoreCoerceBestNeighbor2937,
-            Change::RandomSpawnLock2958,
-            Change::RailPathfindingFix2950,
-        ],
-    },
-    Edge {
-        class: "C056",
-        add: &[],
-        remove: &[
-            Change::NavalInvasionPathing2932,
-            Change::LobbyGoldOptions2915,
-        ],
-    },
-    Edge {
-        class: "C057",
-        add: &[],
-        remove: &[Change::BotTerraNulliusLand2896],
-    },
-    Edge {
-        class: "C058",
-        add: &[],
-        remove: &[Change::NukeBreakAlliedStructures2878],
-    },
-    Edge {
-        class: "C046",
-        add: &[Change::BouncingNukes30],
-        remove: &[],
-    },
-    Edge {
-        class: "C045",
-        add: &[],
-        remove: &[Change::AftergameTeammateNukes3410],
-    },
-    Edge {
-        class: "C059",
-        add: V28_CHANGES,
-        remove: &[],
-    },
-];
+/// Changes a class adds to / removes from its parent class (one `Edges/<class>.toml`).
+struct Edge {
+    add: Vec<Change>,
+    remove: Vec<Change>,
+}
 
-/// The changes that exist only in v0.28.4 and older (class C059).
-const V28_CHANGES: &[Change] = &[
-    Change::FakeHumanNations28,
-    Change::NationDifficultyEconomy28,
-    Change::ImmunityByConfig28,
-    Change::SpawnByTile28,
-    Change::LegacyAStar28,
-    Change::LegacyProjectiles28,
-    Change::RelationPenalties28,
-    Change::WarshipLegacy28,
-];
+// `EDGE_FILES: &[(&str, &str)]` of (class id, file text), generated from `Edges/*.toml`.
+include!(concat!(env!("OUT_DIR"), "/EdgeFiles.rs"));
+
+/// Parses one edge file; an unknown flag name panics (covered by a unit test over all files).
+fn parse_edge(class: &str, text: &str) -> Edge {
+    let value: toml::Value = text
+        .parse()
+        .unwrap_or_else(|e| panic!("Edges/{class}.toml: {e}"));
+    let list = |key: &str| -> Vec<Change> {
+        value[key]
+            .as_array()
+            .unwrap_or_else(|| panic!("Edges/{class}.toml: `{key}` array"))
+            .iter()
+            .map(|v| {
+                let name = v.as_str().expect("flag name");
+                Change::from_name(name)
+                    .unwrap_or_else(|| panic!("Edges/{class}.toml: unknown change {name}"))
+            })
+            .collect()
+    };
+    Edge {
+        add: list("add"),
+        remove: list("remove"),
+    }
+}
+
+/// The edge of a ported class, parsed once.
+fn edge_of(class: &str) -> Option<&'static Edge> {
+    static EDGES: OnceLock<BTreeMap<&'static str, Edge>> = OnceLock::new();
+    EDGES
+        .get_or_init(|| {
+            EDGE_FILES
+                .iter()
+                .map(|(class, text)| (*class, parse_edge(class, text)))
+                .collect()
+        })
+        .get(class)
+}
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[
@@ -1209,9 +733,9 @@ impl Rules {
             return None;
         }
         for id in chain.iter().rev() {
-            let edge = EDGES.iter().find(|e| e.class == *id)?;
+            let edge = edge_of(id)?;
             changes.extend(edge.add.iter().copied());
-            for removed in edge.remove {
+            for removed in &edge.remove {
                 changes.remove(removed);
             }
         }
@@ -1267,10 +791,8 @@ fn toggle_for_debugging(changes: &mut BTreeSet<Change>) {
     let Ok(names) = std::env::var("OFSIM_TOGGLE") else {
         return;
     };
-    let mut all: Vec<Change> = ROOT_CHANGES.to_vec();
-    all.extend(V28_CHANGES);
     for name in names.split(',') {
-        if let Some(&change) = all.iter().find(|c| format!("{c:?}") == name.trim())
+        if let Some(change) = Change::from_name(name.trim())
             && !changes.remove(&change)
         {
             changes.insert(change);
@@ -1298,6 +820,13 @@ pub fn is_ported(class: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn every_edge_file_names_known_changes() {
+        for (class, _) in EDGE_FILES {
+            assert!(edge_of(class).is_some(), "{class}");
+        }
+    }
+
     use super::*;
 
     #[test]

@@ -1,0 +1,5 @@
+# Changes class C032 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "RailroadMaxSizeLimit4337",
+]
