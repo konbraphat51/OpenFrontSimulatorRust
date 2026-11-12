@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 //! `ofsim`: command-line replayer for OpenFront game records (unofficial port, see NOTICE).
 
+mod Batch;
+mod Dump;
 mod Naval;
 mod NukeScenario;
 mod Scenario;
@@ -169,6 +171,30 @@ enum Command {
         #[arg(long, default_value_t = 100)]
         every: u32,
     },
+    /// Replay many records in parallel (one JSON line per record; resumable)
+    Batch {
+        /// Directory of records or a glob such as `dir/*.json.gz`
+        #[arg(long)]
+        records: String,
+        /// Directory of upstream map resources
+        #[arg(long)]
+        maps: PathBuf,
+        /// Output root (one subdirectory per record)
+        #[arg(long)]
+        out: PathBuf,
+        /// Snapshot interval in ticks
+        #[arg(long, default_value_t = 100)]
+        every: u32,
+        /// Parallel records (0 = one per core)
+        #[arg(long, default_value_t = 0)]
+        jobs: usize,
+        /// Only verify hashes; write nothing
+        #[arg(long)]
+        verify_only: bool,
+        /// Redo records whose Result.json already exists
+        #[arg(long)]
+        force: bool,
+    },
 }
 
 fn main() -> ExitCode {
@@ -283,9 +309,59 @@ fn main() -> ExitCode {
                 ExitCode::from(2)
             }
         },
-        Command::Replay { .. } => {
-            eprintln!("ofsim replay: not implemented yet");
-            ExitCode::from(2)
+        Command::Replay {
+            record,
+            maps,
+            out,
+            every,
+        } => {
+            let run = ofsim_record::Records::GameRecord::load_decompressed(&record)
+                .and_then(|r| Dump::dump(&r, &maps, &out, every));
+            match run {
+                Ok(result) => {
+                    eprintln!(
+                        "{} {} ticks={} hashes_checked={} snapshots={}",
+                        Batch::record_name(&record),
+                        result.status,
+                        result.final_tick,
+                        result.hashes_checked,
+                        result.snapshot_ticks.len()
+                    );
+                    if result.status == "ok" {
+                        ExitCode::SUCCESS
+                    } else {
+                        ExitCode::from(1)
+                    }
+                }
+                Err(e) => {
+                    eprintln!("ofsim replay: {e:#}");
+                    ExitCode::from(2)
+                }
+            }
         }
+        Command::Batch {
+            records,
+            maps,
+            out,
+            every,
+            jobs,
+            verify_only,
+            force,
+        } => match Batch::batch(&Batch::BatchArgs {
+            records: &records,
+            maps: &maps,
+            out: &out,
+            every,
+            jobs,
+            verify_only,
+            force,
+        }) {
+            Ok(0) => ExitCode::SUCCESS,
+            Ok(_) => ExitCode::from(1),
+            Err(e) => {
+                eprintln!("ofsim batch: {e:#}");
+                ExitCode::from(2)
+            }
+        },
     }
 }
