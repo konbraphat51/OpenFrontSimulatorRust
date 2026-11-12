@@ -18,6 +18,8 @@ pub enum Change {
     DetMath5191,
     /// PR 4233: `PseudoRandom` is sfc32 seeded by splitmix32 (older builds use another generator).
     Sfc32PseudoRandom4233,
+    /// PR 5823: an attack with nothing to conquer retreats in `init` instead of lingering.
+    AttackRetreatNoTargets5823,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -51,11 +53,18 @@ struct Edge {
 }
 
 /// Ported classes, parents first. `C000` is the root and holds `ROOT_CHANGES`.
-const EDGES: &[Edge] = &[Edge {
-    class: "C000",
-    add: &[],
-    remove: &[],
-}];
+const EDGES: &[Edge] = &[
+    Edge {
+        class: "C000",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C001",
+        add: &[Change::AttackRetreatNoTargets5823],
+        remove: &[],
+    },
+];
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[Change::DetMath5191, Change::Sfc32PseudoRandom4233];
