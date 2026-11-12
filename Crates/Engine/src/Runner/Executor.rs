@@ -89,8 +89,21 @@ impl Executor {
                 true,
                 game.config().rules(),
             )),
-            Intent::Boat { troops, dst } => {
-                Box::new(TransportShipExecution::new(player, *dst, Some(*troops)))
+            Intent::Boat {
+                troops,
+                dst,
+                target_id,
+                src,
+            } => {
+                let mut exec = TransportShipExecution::new(player, *dst, Some(*troops));
+                if !game
+                    .config()
+                    .rules()
+                    .has(crate::Builds::Rules::Change::PathfindingRefinements2959)
+                {
+                    exec = exec.with_intent_target(target_id.clone(), *src);
+                }
+                Box::new(exec)
             }
             Intent::AllianceRequest { recipient } => {
                 Box::new(AllianceRequestExecution::new(player, recipient.clone()))

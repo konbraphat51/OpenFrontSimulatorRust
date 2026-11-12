@@ -350,6 +350,24 @@ pub enum Change {
     BorderUpdateForEach3124,
     /// PR 3286: a retreating transport ship returns to the closest owned shore (older: to its launch tile).
     TransportRetreatNearest3286,
+    /// PR 3167: a nuke blast does not destroy SAM missiles.
+    SamMissileImmunity3167,
+    /// PR 3072: Easy nations start with 12,500 troops, cap at half and grow at 0.9 (older: 18,750, three quarters and 0.95).
+    EasyNationsEasier3072,
+    /// PR 2984: nations donate troops in team games, check the boat limit and tile share for winners (older: none of these).
+    NationAiRework2984,
+    /// PR 2971: nations reject team-game alliances 25, 50, 75 and 100 percent of the time (older: 0, 20, 40, 60).
+    NationTeamRejectHarder2971,
+    /// PR 2959: the boat intent carries no target or source tile, smoothing keeps two magnitude passes, the short path search covers 260 tiles.
+    PathfindingRefinements2959,
+    /// PR 2937: shore endpoints coerce to the best connected water neighbour (older: the first one).
+    ShoreCoerceBestNeighbor2937,
+    /// PR 2958: with random spawn a player cannot re-roll its spawn tile.
+    RandomSpawnLock2958,
+    /// PR 2950: station ids start at 1 and the station graph allows 32 neighbours (older: 0 and 8).
+    RailPathfindingFix2950,
+    /// PR 3134: MIRV warheads separate even when the launcher died meanwhile.
+    MirvWarheadsWhenDead3134,
     /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
     TeamSpawnAreas3263,
     /// PR 3152: nations use the structure behaviour class (older: an inline build order).
@@ -834,6 +852,8 @@ const EDGES: &[Edge] = &[
             Change::AllianceRadialAccept3155,
             Change::AllianceIncomingBypass3092,
             Change::NukeBreakAllyList2912,
+            Change::MirvWarheadsWhenDead3134,
+            Change::SamMissileImmunity3167,
             Change::BorderUpdateForEach3124,
             Change::ServerUsernameCensoring3122,
             Change::NukeTeammateStructureGuard3105,
@@ -844,6 +864,41 @@ const EDGES: &[Edge] = &[
             Change::TeamSpawnAreas3263,
             Change::NationStructureBehavior3152,
             Change::NationBehaviorUpdate3246,
+        ],
+    },
+    Edge {
+        class: "C050",
+        add: &[Change::SamMissileImmunity3167],
+        remove: &[],
+    },
+    Edge {
+        class: "C051",
+        add: &[],
+        remove: &[Change::EasyNationsEasier3072],
+    },
+    Edge {
+        class: "C052",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C053",
+        add: &[],
+        remove: &[Change::NationAiRework2984],
+    },
+    Edge {
+        class: "C054",
+        add: &[],
+        remove: &[Change::NationTeamRejectHarder2971],
+    },
+    Edge {
+        class: "C055",
+        add: &[],
+        remove: &[
+            Change::PathfindingRefinements2959,
+            Change::ShoreCoerceBestNeighbor2937,
+            Change::RandomSpawnLock2958,
+            Change::RailPathfindingFix2950,
         ],
     },
     Edge {
@@ -990,6 +1045,15 @@ const ROOT_CHANGES: &[Change] = &[
     Change::AllianceRadialAccept3155,
     Change::AllianceIncomingBypass3092,
     Change::NukeBreakAllyList2912,
+    Change::MirvWarheadsWhenDead3134,
+    Change::PathfindingRefinements2959,
+    Change::ShoreCoerceBestNeighbor2937,
+    Change::RandomSpawnLock2958,
+    Change::RailPathfindingFix2950,
+    Change::NationTeamRejectHarder2971,
+    Change::NationAiRework2984,
+    Change::EasyNationsEasier3072,
+    Change::SamMissileImmunity3167,
     Change::TransportRetreatNearest3286,
     Change::BorderUpdateForEach3124,
     Change::TribeNamesRevised30,

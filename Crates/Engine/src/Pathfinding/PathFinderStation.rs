@@ -43,7 +43,16 @@ impl AStarAdapter for StationGraphAdapter<'_> {
     }
 
     fn max_neighbors(&self) -> usize {
-        32
+        if self
+            .game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::RailPathfindingFix2950)
+        {
+            32
+        } else {
+            8
+        }
     }
 
     fn max_priority(&self) -> usize {

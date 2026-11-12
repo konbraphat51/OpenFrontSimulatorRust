@@ -150,6 +150,15 @@ impl GameImpl {
             !config.rules().has(Change::WaterComponentMarkers4479),
             config.rules().has(Change::AbstractGraphWideSearch36),
             !config.rules().has(Change::AbstractAStarMinHeap4149),
+            crate::Pathfinding::PathFinder::WaterTweaks {
+                first_shore_neighbor: !config.rules().has(Change::ShoreCoerceBestNeighbor2937),
+                single_los_magnitude: !config.rules().has(Change::PathfindingRefinements2959),
+                short_path_size: if config.rules().has(Change::PathfindingRefinements2959) {
+                    260
+                } else {
+                    140
+                },
+            },
         );
         water_manager.set_shared_finder(config.rules().has(Change::WaterHpaSharedFinder4979));
         water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);

@@ -207,7 +207,10 @@ impl Execution for SpawnExecution {
             return;
         }
 
-        if game.config().is_random_spawn() && game.player(player).has_spawned() {
+        if game.config().rules().has(Change::RandomSpawnLock2958)
+            && game.config().is_random_spawn()
+            && game.player(player).has_spawned()
+        {
             return;
         }
 

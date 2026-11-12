@@ -36,6 +36,12 @@ pub enum Intent {
         troops: f64,
         /// Destination tile.
         dst: u32,
+        /// Target player id (builds before PR 2959; null for terra nullius).
+        #[serde(default, rename = "targetID")]
+        target_id: Option<String>,
+        /// Chosen launch tile (builds before PR 2959).
+        #[serde(default)]
+        src: Option<u32>,
     },
     /// `allianceRequest`.
     #[serde(rename = "allianceRequest")]

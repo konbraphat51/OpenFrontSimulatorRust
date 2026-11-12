@@ -31,6 +31,8 @@ pub struct TransportShipExecution {
     retreat_dst: Option<Option<TileRef>>,
     /// The launch tile (builds before PR 3286 retreat to it).
     src: Option<TileRef>,
+    /// Builds before PR 2959 take the target and the launch tile from the intent: (target id, chosen src).
+    intent_target: Option<(Option<String>, Option<TileRef>)>,
     boat: Option<UnitId>,
     motion_plan_dst: Option<TileRef>,
     original_owner: SmallId,
@@ -40,6 +42,12 @@ pub struct TransportShipExecution {
 }
 
 impl TransportShipExecution {
+    /// Uses the target id and launch tile of a boat intent (builds before PR 2959).
+    pub fn with_intent_target(mut self, target_id: Option<String>, src: Option<TileRef>) -> Self {
+        self.intent_target = Some((target_id, src));
+        self
+    }
+
     /// `new TransportShipExecution(attacker, ref, troops)`; `troops` is `None` when upstream gets null/undefined.
     pub fn new(attacker: SmallId, tile_ref: TileRef, troops: Option<f64>) -> Self {
         Self {
@@ -51,6 +59,7 @@ impl TransportShipExecution {
             dst: None,
             retreat_dst: None,
             src: None,
+            intent_target: None,
             boat: None,
             motion_plan_dst: None,
             original_owner: attacker,
@@ -78,13 +87,29 @@ impl Execution for TransportShipExecution {
     }
 
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
+        if let Some((Some(target_id), _)) = &self.intent_target
+            && !game.has_player(target_id)
+        {
+            self.active = false;
+            return;
+        }
         if !game.is_valid_ref(self.tile_ref) {
+            self.active = false;
+            return;
+        }
+        if let Some((_, Some(src))) = &self.intent_target
+            && !game.is_valid_ref(*src)
+        {
             self.active = false;
             return;
         }
 
         self.last_move = ticks;
-        self.target = game.owner_id(self.tile_ref);
+        self.target = match &self.intent_target {
+            Some((Some(target_id), _)) => game.player_id(target_id),
+            Some((None, _)) => 0,
+            None => game.owner_id(self.tile_ref),
+        };
         let stagger = game.transport_ship_stagger % WaterPathFinder::STAGGER_SPREAD;
         game.transport_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
@@ -140,12 +165,21 @@ impl Execution for TransportShipExecution {
             return;
         };
 
-        let Some(src) = game
-            .player(self.attacker)
-            .can_build(UnitType::TransportShip, dst, None)
+        let Some(closest_src) =
+            game.player(self.attacker)
+                .can_build(UnitType::TransportShip, dst, None)
         else {
             self.active = false;
             return;
+        };
+        // An intent source is kept when it is an owned shore tile.
+        let src = match &self.intent_target {
+            Some((_, Some(hint)))
+                if game.owner_id(*hint) == self.attacker && game.map.is_shore(*hint) =>
+            {
+                *hint
+            }
+            _ => closest_src,
         };
 
         self.src = Some(src);
