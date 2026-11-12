@@ -49,6 +49,10 @@ npx tsx ofsim-reference/TraceDumper.ts <record.json[.gz]> <out.ndjson> [--full-a
 
 `<out.ndjson>.full.ndjson` に、指定した各 tick について `{"tick":t,"full":{...}}` を書く。読み取り時点はトレース行と同じ。内容: `width`、`height`、`tileState` (タイルごとの生の `u16`、ビット 0-11 が所有者)、`owners` (タイルごとの所有者 small id)、`units` (`id,type,owner,tile,troops,level,active,hash`、`game.units()` の順)、`players` (`smallId,type,troops,gold,tilesOwned,isAlive,hasSpawned,hash`)。大きい: 大きなマップの 533 tick のゲームで約 16 MB。
 
+### Inert モードとシナリオ
+
+`--inert 1` (`InertPatch.ts`) は、Rust エンジンが未移植の Execution (`PORTED_INTENTS` 以外の intent、`NationExecution`、`TribeExecution`、`DoomsdayClockExecution`) をアップストリームのエンジンでも無効化する。`ofsim` は `OFSIM_INERT=1` で同じ動作になり、`Tools/TraceCompare.sh <record> <until> --inert` で比較する。このトレースはレコードのハッシュとは一致しない。`ScenarioDump.ts` はシード付きの領土ファズ (占領、放棄、囲い込み) を実行し、`ofsim scenario` と比較する。
+
 ## TraceDiff
 
 ```sh

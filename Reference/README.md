@@ -49,6 +49,10 @@ Point of reading: upstream computes the stored hash inside `GameImpl.executeNext
 
 `<out.ndjson>.full.ndjson` holds `{"tick":t,"full":{...}}` for each requested tick, read at the same point as the trace line: `width`, `height`, `tileState` (raw `u16` per tile, bits 0-11 owner), `owners` (owner small id per tile), `units` (`id,type,owner,tile,troops,level,active,hash`, in `game.units()` order) and `players` (`smallId,type,troops,gold,tilesOwned,isAlive,hasSpawned,hash`). Large: about 16 MB for a 533 tick game on a big map.
 
+### Inert mode and scenarios
+
+`--inert 1` (`InertPatch.ts`) makes every execution the Rust engine has not ported inert in the upstream engine (intents other than `PORTED_INTENTS`, `NationExecution`, `TribeExecution`, `DoomsdayClockExecution`); run `ofsim` with `OFSIM_INERT=1` for the same behaviour and compare with `Tools/TraceCompare.sh <record> <until> --inert`. Such traces never match the record hashes. `ScenarioDump.ts` runs a seeded territory fuzz (conquer, relinquish, walled-in players) for the same comparison against `ofsim scenario`.
+
 ## TraceDiff
 
 ```sh

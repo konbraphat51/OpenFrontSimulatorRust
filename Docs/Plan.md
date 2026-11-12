@@ -12,7 +12,7 @@ The first milestone is hash-exact replay of the baseline build v0.34.22 (`4e8375
 | P1a | `Compat`, `Core` (PseudoRandom, DetMath, Util), `GameMap`, `TileSet`, `Configuration` of the baseline | unit tests match node-computed values | done (V8 fdlibm too) |
 | P1b | `ofsim-record`, `ofsim-map` | baseline records and maps load; turns expand like `decompressGameRecord` | done |
 | P1c | Reference tracer and record fetcher | trace of a baseline record written from the upstream engine | done |
-| P2 | Game core: `GameImpl`, `PlayerImpl`, `UnitImpl`, attacks, alliances, `Executor`, `GameRunner`, spawn, tribes, attacks, troop growth, win check | hashes match on baseline records through the end of the spawn phase, then through the first unit build | |
+| P2 | Game core: `GameImpl`, `PlayerImpl`, `UnitImpl`, attacks, alliances, `Executor`, `GameRunner`, spawn, tribes, attacks, troop growth, win check | hashes match on baseline records through the end of the spawn phase, then through the first unit build | core landed (game state, spawn, player upkeep, win check, `ofsim verify`/`trace`); attacks, alliances, tribes and nations are `NotPorted`, so records match through the spawn phase of games without nations |
 | P3 | Units: construction, structures, ports and trade ships, transport ships, warships, rails and trains, nukes, MIRV, SAM, shells, water nukes, pathfinding | every baseline record without nations passes `ofsim verify` | |
 | P4 | Nation AI (`NationExecution` and behaviours, `NationCreation`) | every baseline record passes | |
 | P5 | `ofsim replay` snapshots, `batch`, profiling | output identical to the upstream dumper on sample games; throughput measured | |

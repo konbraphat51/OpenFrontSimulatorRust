@@ -7,6 +7,7 @@
 //! (their Rust form is `GameImpl`/`PlayerImpl`/`UnitImpl` in P2).
 
 use crate::Core::Util::format_player_display_name;
+use crate::Game::GameMap::TileRef;
 
 /// Player identifier string (`PlayerInfo.id`).
 pub type PlayerID = String;
@@ -16,6 +17,18 @@ pub type Tick = u32;
 pub type Gold = i64;
 /// Team name (`"Red"`, `"Bot"`, ...).
 pub type Team = String;
+/// Player small id (index + 1 into the players array; 0 is terra nullius).
+pub type SmallId = u16;
+/// Terra nullius pseudo small id.
+pub const TERRA_NULLIUS: SmallId = 0;
+/// Unit id (upstream `nextUnitID`, starts at 1).
+pub type UnitId = u32;
+/// Attack handle: index into the attack arena of the game.
+pub type AttackId = u32;
+/// Alliance handle: the upstream alliance id (sequential from 0).
+pub type AllianceId = u32;
+/// Alliance request handle: index into the request arena of the game.
+pub type AllianceRequestId = u32;
 
 /// Defines a fieldless enum whose variants map to exact upstream string values.
 macro_rules! string_enum {
@@ -208,6 +221,147 @@ impl UnitType {
         STRUCTURES.contains(&self)
     }
 }
+
+impl UnitType {
+    /// Dense index in declaration order, for per-type arrays.
+    pub fn index(self) -> usize {
+        self as usize
+    }
+}
+
+/// Number of unit types.
+pub const NUM_UNIT_TYPES: usize = 16;
+
+/// Port of `TrajectoryTile`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct TrajectoryTile {
+    /// Tile on the path.
+    pub tile: TileRef,
+    /// Whether a SAM may target the nuke here.
+    pub targetable: bool,
+}
+
+/// Port of `TransportShipState`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TransportShipState {
+    /// Boat is returning.
+    pub is_retreating: bool,
+}
+
+/// Port of the `WarshipState.state` union.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum WarshipMode {
+    /// Patrolling.
+    Patrolling,
+    /// Retreating to a port.
+    Retreating,
+    /// Docked at a port.
+    Docked,
+}
+
+/// Port of `WarshipState` (`isInCombat` is derived, never stored).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WarshipState {
+    /// Mode.
+    pub state: WarshipMode,
+    /// Patrol target tile.
+    pub patrol_tile: Option<TileRef>,
+    /// Port tile being retreated to.
+    pub retreat_port: Option<TileRef>,
+    /// Tick of the last combat (initially -100).
+    pub last_combat_tick: f64,
+    /// Veterancy level.
+    pub veterancy: f64,
+    /// Shared progress meter toward the next level.
+    pub veterancy_progress: f64,
+}
+
+/// Port of `NukeState`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct NukeState {
+    /// Trajectory tiles.
+    pub trajectory: Vec<TrajectoryTile>,
+    /// Current index into the trajectory.
+    pub trajectory_index: usize,
+    /// A SAM is targeting this nuke.
+    pub targeted_by_sam: bool,
+    /// Ticks to wait before moving.
+    pub wait_ticks: f64,
+}
+
+/// Union of the upstream `UnitParamsMap` entries; absent fields are `None`.
+#[derive(Clone, Debug, Default)]
+pub struct UnitParams {
+    /// Troops carried (transport ships).
+    pub troops: Option<f64>,
+    /// Target tile.
+    pub target_tile: Option<TileRef>,
+    /// Target player (MIRV).
+    pub target_player: Option<SmallId>,
+    /// Warship patrol tile (presence makes a warship state).
+    pub patrol_tile: Option<TileRef>,
+    /// Target unit (SAM missiles, trade ships, trains).
+    pub target_unit: Option<UnitId>,
+    /// Trajectory (presence makes a nuke state).
+    pub trajectory: Option<Vec<TrajectoryTile>>,
+    /// `waitTicks` present (also makes a nuke state).
+    pub has_wait_ticks: bool,
+    /// Trade ship safe-from-pirates stamp.
+    pub last_set_safe_from_pirates: Option<f64>,
+    /// Train car kind.
+    pub train_type: Option<TrainType>,
+    /// Train loaded flag.
+    pub loaded: Option<bool>,
+}
+
+/// Port of `Embargo`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Embargo {
+    /// Tick the embargo started.
+    pub created_at: Tick,
+    /// Temporary embargoes expire.
+    pub is_temporary: bool,
+    /// Embargoed player.
+    pub target: SmallId,
+}
+
+/// Port of `DisconnectSnapshot`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct DisconnectSnapshot {
+    /// Tick of the disconnect.
+    pub current_tick: Tick,
+    /// Tiles of the team at that moment.
+    pub team_tiles: f64,
+    /// Total land tiles at that moment.
+    pub total_land: f64,
+    /// Player was alive.
+    pub was_alive: bool,
+}
+
+/// Recipient of an emoji: everyone or one player.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EmojiRecipient {
+    /// `AllPlayers`.
+    All,
+    /// A player.
+    Player(SmallId),
+}
+
+/// Port of `EmojiMessage`.
+#[derive(Clone, Debug, PartialEq)]
+pub struct EmojiMessage {
+    /// The emoji string.
+    pub message: String,
+    /// Sender.
+    pub sender_id: SmallId,
+    /// Recipient.
+    pub recipient: EmojiRecipient,
+    /// Tick sent.
+    pub created_at: Tick,
+}
+
+/// Team spawn areas per team count, from the map manifest (scaled for compact maps).
+pub type TeamGameSpawnAreas = std::collections::BTreeMap<String, Vec<ofsim_map::SpawnArea>>;
 
 /// Largest bulk-purchase amount an intent may carry.
 pub const MAX_UPGRADE_AMOUNT: u32 = 50;
