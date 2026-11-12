@@ -100,7 +100,7 @@ pub trait Execution {
 
 対応付けは 2 層である。`Builds/BuildClasses.toml` (`Tools/BuildPlanGen.py` が生成しチェックイン済み。`include_str!` で埋め込み、一度だけ解析する) は、既知のすべてのビルド (コミット先頭 12 文字) をそのクラス (シミュレーションコードが同一のビルド群) に対応付け、各クラスにベースラインクラス C000 を根とする差分木での親を与える。`Rules.rs` の `EDGES` 表は、移植済みクラスが親に対して追加または削除する `Change` を定める。クラスの集合は親の集合に辺を適用したものである。辺のないクラス、または祖先に辺がないクラスは未移植で、`Rules::for_commit` は `build <commit> (class Cnnn) not ported yet` で失敗する。表にないコミットは `unsupported build <commit>` で失敗し、先頭が最も長く一致する既知ビルドを示す。
 
-エンジンのコードは、アップストリームが変更した正確な場所で `game.config().rules().has(Change::X)` により分岐する。`has` はそのビルドが変更後の挙動を含むとき true なので、ベースライン (最新) のコードが `true` 側になり、古いビルドの辺は主に変更を取り除く。サブシステムが丸ごと書き換えられた場合 (たとえば経路探索) は、新旧の実装を 1 つのトレイトの裏に並べて置く (`AStarWaterV1.rs`、`AStarWaterV2.rs`)。ビルド間で変わる設定定数は `Configuration` に置き、`Rules` で選択する。ベースラインビルドは v0.34.22 (`4e837520e886`) で、他のビルドはアップストリームの `src/core` をそれと比較して追加する。
+エンジンのコードは、アップストリームが変更した正確な場所で `game.config().rules().has(Change::X)` により分岐する。`has` はそのビルドが変更後の挙動を含むとき true なので、ベースライン (最新) のコードが `true` 側になり、古いビルドの辺は主に変更を取り除く。サブシステムが丸ごと書き換えられた場合 (たとえば経路探索) は、新旧の実装を 1 つのトレイトの裏に並べて置く (`AStarWaterV1.rs`、`AStarWaterV2.rs`)。 v0.28.4 のエンジン (クラス C059) は `Pathfinding/Legacy28/` (双方向 `SerialAStar`、`MiniAStar`、ステッパー)、`Execution/FakeHumanExecution.rs`、`Execution/BotExecutionV28.rs`、`Execution/Utils/*V28.rs` にあり、いずれも 1 つの `V28` ルールフラグから呼ばれる。ビルド間で変わる設定定数は `Configuration` に置き、`Rules` で選択する。ベースラインビルドは v0.34.22 (`4e837520e886`) で、他のビルドはアップストリームの `src/core` をそれと比較して追加する。
 
 マップや名前表もビルド間で変わる。`Builds/Maps.rs` はレコードのコミットの `resources/maps/<map>` の git ツリーをベースラインのものと比較し、異なる場合は `ofsim verify/trace/replay` がアップストリームの clone (`--upstream`、既定 `Cache/OpenFrontIO`) からそのマップを一度だけ `Cache/Maps/<commit12>/` に取り出して読む。ビルド間で異なる部族名データは `Execution/Utils/TribeNames.rs` で `Change` フラグにより選択する。
 
