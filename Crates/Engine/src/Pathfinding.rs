@@ -4,7 +4,7 @@
 pub mod Algorithms;
 pub mod Legacy28;
 pub mod Line;
-pub mod LineLegacy;
+pub mod LineV33;
 pub mod PathFinder;
 pub mod PathFinderAir;
 pub mod PathFinderParabola;

@@ -7,7 +7,7 @@ use super::SerialAStar::PathFindResultType;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Line::Point;
-use crate::Pathfinding::LineLegacy::LegacyBezierCurve;
+use crate::Pathfinding::LineV33::LegacyBezierCurve;
 use crate::Pathfinding::PathFinderParabola::{ParabolaOptions, get_parabola_control_points};
 
 const PARABOLA_MIN_HEIGHT: f64 = 50.0;
