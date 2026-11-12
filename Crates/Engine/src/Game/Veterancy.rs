@@ -13,3 +13,15 @@ pub fn max_health_with_veterancy(
     }
     base_max_health + ((base_max_health * veterancy * health_bonus_percent) / 100.0).floor()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bonus_is_floored_percent() {
+        assert_eq!(max_health_with_veterancy(1000.0, 0.0, 10.0), 1000.0);
+        assert_eq!(max_health_with_veterancy(1000.0, 2.0, 10.0), 1200.0);
+        assert_eq!(max_health_with_veterancy(1001.0, 1.0, 15.0), 1001.0 + 150.0);
+    }
+}

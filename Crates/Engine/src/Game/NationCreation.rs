@@ -223,3 +223,32 @@ fn pluralize(noun: &str) -> String {
     }
     format!("{noun}s")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn plurals_follow_upstream() {
+        assert_eq!(pluralize("Cactus"), "Cacti");
+        assert_eq!(pluralize("Potato"), "Potatoes");
+        assert_eq!(pluralize("Puppy"), "Puppies");
+        assert_eq!(pluralize("Monkey"), "Monkeys");
+        assert_eq!(pluralize("Sandwich"), "Sandwiches");
+        assert_eq!(pluralize("Snail"), "Snails");
+    }
+
+    #[test]
+    fn compact_maps_use_a_quarter() {
+        assert_eq!(get_compact_map_nation_count(0, true), 0);
+        assert_eq!(get_compact_map_nation_count(3, true), 1);
+        assert_eq!(get_compact_map_nation_count(40, true), 10);
+        assert_eq!(get_compact_map_nation_count(40, false), 40);
+    }
+
+    #[test]
+    fn name_tables_load() {
+        assert_eq!(tables().templates.len(), 194);
+        assert_eq!(tables().nouns.len(), 236);
+    }
+}

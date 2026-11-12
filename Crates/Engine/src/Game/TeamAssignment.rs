@@ -225,3 +225,58 @@ pub fn resolve_teams_list(config: TeamCountConfig, total_players: usize) -> Vec<
     }
     (0..num_teams).map(|i| format!("Team {}", i + 1)).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn info(id: &str, clan: Option<&str>) -> PlayerInfo {
+        PlayerInfo::new(
+            id.to_string(),
+            PlayerType::Human,
+            Some(format!("c{id}")),
+            id.to_string(),
+            false,
+            clan.map(str::to_string),
+            vec![],
+            None,
+            None,
+        )
+    }
+
+    #[test]
+    fn team_lists() {
+        assert_eq!(
+            resolve_teams_list(TeamCountConfig::Count(2), 10),
+            ["Red", "Blue"]
+        );
+        assert_eq!(
+            resolve_teams_list(TeamCountConfig::Duos, 7),
+            ["Red", "Blue", "Yellow", "Green"]
+        );
+        assert_eq!(
+            resolve_teams_list(TeamCountConfig::Count(8), 0)[7],
+            "Team 8"
+        );
+        assert_eq!(
+            resolve_teams_list(TeamCountConfig::HumansVsNations, 3),
+            ["Humans", "Nations"]
+        );
+    }
+
+    #[test]
+    fn clans_stay_together_and_overflow_is_kicked() {
+        let players = vec![
+            info("a", Some("X")),
+            info("b", Some("X")),
+            info("c", Some("X")),
+            info("d", None),
+        ];
+        let teams = resolve_teams_list(TeamCountConfig::Count(2), 4);
+        let result = assign_teams(&players, &teams, false, Some(2));
+        let clan: Vec<_> = result.iter().take(3).collect();
+        assert_eq!(clan[0].1, clan[1].1);
+        assert_eq!(clan[2].1, None);
+        assert!(result[3].1.is_some());
+    }
+}
