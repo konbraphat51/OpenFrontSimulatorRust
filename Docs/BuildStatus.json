@@ -58,7 +58,8 @@
     "C045": "ported; no usable record (the only sample is a one-player team game that throws `Too few teams` upstream too)",
     "C046": "ported; 9 of 9 (5 long)",
     "C047": "ported; 1 of 1 (short, 279 turns)",
-    "C048": "ported; 4 of 4 (short, no hashes beyond the spawn phase)"
+    "C048": "ported; 4 of 4 (short, no hashes beyond the spawn phase)",
+    "C059": "in progress: flags and side-by-side v0.28.4 modules landed on p6-s4; 8 singleplayer records match on the C048 chain, public records need the C049 to C058 rules"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -119,6 +120,7 @@
     "C045": "移植済み; 使えるレコードなし (唯一のサンプルは 1 人のチーム戦で、アップストリームも `Too few teams` で例外)",
     "C046": "移植済み; 9/9 (長尺 5 件)",
     "C047": "移植済み; 1/1 (短尺 279 ターン)",
-    "C048": "移植済み; 4/4 (短尺、ハッシュはスポーン期間のみ)"
+    "C048": "移植済み; 4/4 (短尺、ハッシュはスポーン期間のみ)",
+    "C059": "作業中: p6-s4 にフラグと v0.28.4 の並置モジュールを実装; C048 の系列でシングルプレイ 8 件が一致、公開レコードは C049〜C058 の規則が必要"
   }
 }
