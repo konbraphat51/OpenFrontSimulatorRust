@@ -13,9 +13,9 @@ Hash-exact Rust replay of the OpenFront engine (upstream `openfrontio/OpenFrontI
 ## Commands
 
 - Checks before each commit: `cargo fmt --all && cargo clippy --all-targets -q -- -D warnings && cargo test --lib --bins -q && Tools/CheckHeaders.sh`. The full `cargo test` adds `VerifyRecordsTest` (about 17 min in debug); use release `ofsim batch` for records instead.
-- Build: `CARGO_BUILD_JOBS=2 cargo build --release -q`. Read build output with `tail`, never `head` (a pipe closing early can hide failures).
+- Build for porting and verification: `CARGO_BUILD_JOBS=2 cargo build --profile verify -q` (incremental, about 12 s after an edit; `--release` is for distribution). Read build output with `tail`, never `head` (a pipe closing early can hide failures).
 - Upstream diff of a class: `Tools/ClassDigest.py C064` (`--files-only` first).
-- Verify a class: `Tools/VerifyClass.sh C064` (summary of every record; rebuild the release binary first).
+- Verify a class: `Tools/VerifyClass.sh C064` (summary of every record; rebuild first). Fast regression over all ported classes: `Tools/QuickRegression.sh`.
 - First divergence of a record: `Tools/Triage.sh <record> [--trace] [--bisect-flags]`.
 - Summarise batch output: `Tools/BatchSummary.py <ndjson>`.
 
@@ -25,7 +25,7 @@ Hash-exact Rust replay of the OpenFront engine (upstream `openfrontio/OpenFrontI
 2. One `Change` variant per upstream behaviour change in `Builds/Rules.rs`, named after the upstream PR (`WaterHpaSharedFinder4979`); `rules.has(X)` is true for the newer behaviour. Branch exactly where upstream diverged.
 3. Large rewrites become side-by-side variant modules (`PlayerExecutionV36.rs`, `FakeHumanExecution.rs`), not many flags threaded through one function.
 4. Add the class edge, run `Tools/VerifyClass.sh`, then `Tools/Triage.sh` on the first failing record.
-5. Rerun a regression sample (classes C000, C009, C023, C038, C040, C044, C081, C088) and update `Docs/Plan.md`/`.ja.md`, `Docs/BuildStatus.json` and long records in `Crates/Engine/tests/Golden/VerifyMinimums.json`.
+5. Run `Tools/QuickRegression.sh` and update `Docs/Plan.md`/`.ja.md`, `Docs/BuildStatus.json` and long records in `Crates/Engine/tests/Golden/VerifyMinimums.json`.
 
 ## Rules
 
@@ -34,4 +34,5 @@ Hash-exact Rust replay of the OpenFront engine (upstream `openfrontio/OpenFrontI
 - File header: line 1 `// SPDX-License-Identifier: AGPL-3.0-only`; line 2 `//! Port of src/core/<path>.ts: <responsibility>.` (or `//! <responsibility>`); line 3 for ports `//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.` UpperCamelCase file names, `///` on public items, short English comments.
 - Small commits with Angular prefixes. Agents never push.
 - User-facing documents in `Docs/` have a `.ja.md` twin; agent-only files (this file, `.claude/`) are English only.
+- Upstream worktrees: `Reference/Setup.sh <commit>` (shared `node_modules` pool); remove them when done.
 - Shared machine: at most 2 to 3 agents, one extra upstream worktree each, delete traces after use, never `pkill -f` broad patterns.

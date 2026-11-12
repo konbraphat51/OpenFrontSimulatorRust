@@ -1,11 +1,12 @@
 # Porting tools
 
-Four small tools that cut the tokens spent per ported class. All are stdlib-only Python 3 or bash, derive the repository root from their own location, and take `Cache/` paths from flags or environment variables (a worktree under `Cache/Wt/<name>` uses the main checkout's `Cache/`). Every tool has `--help`, terse output by default and `--verbose`.
+Small tools that cut the tokens and time spent per ported class. All are stdlib-only Python 3 or bash, derive the repository root from their own location, and take `Cache/` paths from flags or environment variables (a worktree under `Cache/Wt/<name>` uses the main checkout's `Cache/`). Every tool has `--help`, terse output by default and `--verbose`.
 
 | Tool | Question it answers |
 | --- | --- |
 | `Tools/ClassDigest.py <class>` | What did upstream change for this class, and which Rust files port it? |
 | `Tools/VerifyClass.sh <class>` | Does every record of the class's builds pass? |
+| `Tools/QuickRegression.sh [class...]` | Do the largest records of every ported class still pass (minutes, not an hour)? |
 | `Tools/BatchSummary.py <ndjson...>` | What happened in this batch run? |
 | `Tools/Triage.sh <record>` | Where does this record first diverge, and which flag moves it? |
 
@@ -30,7 +31,20 @@ Tools/ClassDigest.py C064 --max-lines 150  # smaller hunk budget
 Tools/VerifyClass.sh C040 --jobs 2
 ```
 
-Runs `ofsim batch --verify-only` over `Cache/Records/<commit12>/` of every build of the class with the baseline maps and an upstream path, writes NDJSON to a temporary directory (removed unless `--keep` or `--verbose`) and prints the BatchSummary. It builds nothing; rebuild `target/release/ofsim` first. Env: `OFSIM_BIN`, `OFSIM_MAPS`, `OFSIM_UPSTREAM`, `OFSIM_RECORDS`, `OFSIM_CACHE`, `OFSIM_TMP`.
+Runs `ofsim batch --verify-only` over `Cache/Records/<commit12>/` of every build of the class with the baseline maps and an upstream path, writes NDJSON to a temporary directory (removed unless `--keep` or `--verbose`) and prints the BatchSummary. `--quick N` keeps only the N largest records of each build. It builds nothing: rebuild first with `cargo build --profile verify -q` (the `verify` profile has no LTO and builds incrementally, about 12 s after an edit against about 66 s for `--release`; float semantics are the same, so hashes agree). The tools use `target/verify/ofsim` when it exists, else `target/release/ofsim`. Env: `OFSIM_BIN`, `OFSIM_MAPS`, `OFSIM_UPSTREAM`, `OFSIM_RECORDS`, `OFSIM_CACHE`, `OFSIM_TMP`.
+
+## QuickRegression
+
+```bash
+Tools/QuickRegression.sh                 # every class in BuildClasses.toml, 1 record per build
+Tools/QuickRegression.sh --per-build 2 C000 C040
+```
+
+One summary line per class plus its non-ok records; classes whose builds are not ported yet are listed once at the end. Use it after merges and refactors; run the full set (`VerifyClass.sh` per class) before publishing.
+
+## Upstream worktrees
+
+`Reference/Setup.sh <commit>` creates `Cache/Worktrees/<commit12>` and links `node_modules` from the pool `Cache/NodeModules/<package-lock hash>/` (one `npm ci` per lock file), so removing a worktree never breaks another one. Remove with `git -C Cache/OpenFrontIO worktree remove --force Cache/Worktrees/<commit12>`.
 
 ## BatchSummary
 
