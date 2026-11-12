@@ -134,6 +134,10 @@ pub enum Change {
     NationOverseasBots36,
     /// v0.36.0: the water graph edge search is bounded by the squared cluster size.
     AbstractGraphWideSearch36,
+    /// v0.36.0: a train spawned off the rail starts one tile behind its first rail tile.
+    TrainSpawnOffRail36,
+    /// v0.36.0: MIRV warhead targets come from a clipped box with a spatial overlap grid and a saturation limit.
+    MirvTargetGrid36,
     /// PR 5833: a human may send several emojis per window (nations still one).
     EmojiBatch5833,
     /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
@@ -341,6 +345,8 @@ const EDGES: &[Edge] = &[
             Change::NationHomeTroops36,
             Change::NationOverseasBots36,
             Change::AbstractGraphWideSearch36,
+            Change::TrainSpawnOffRail36,
+            Change::MirvTargetGrid36,
         ],
         remove: &[],
     },

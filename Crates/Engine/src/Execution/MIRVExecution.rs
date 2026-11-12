@@ -28,6 +28,10 @@ const RANGE: f64 = 1500.0;
 const RANGE_SQUARED: f64 = RANGE * RANGE;
 const MINIMUM_SPREAD: f64 = 55.0;
 const WARHEAD_COUNT: usize = 350;
+/// Overlap failures in a row after which target generation gives up (v0.36.0 on).
+const SATURATION_THRESHOLD: u32 = 1500;
+/// Cells of the overlap grid per side (v0.36.0 on).
+const GRID_WIDTH: i32 = (RANGE * 2.0 / MINIMUM_SPREAD).ceil() as i32 + 2;
 
 /// A warhead execution shared between the game's execution list and the MIRV that may cancel it.
 struct SharedNuke(Rc<RefCell<NukeExecution>>);
@@ -68,6 +72,11 @@ pub struct MirvExecution {
     legacy: bool,
     legacy_speed: f64,
     legacy_path_finder: ParabolaUniversalPathFinder,
+    /// Box of the target range clipped to the map (v0.36.0 on): min x, max x, min y, max y.
+    bounds: [i32; 4],
+    consecutive_overlap_failures: u32,
+    /// Two target slots per cell of 55 tiles, -1 when empty (v0.36.0 on).
+    spatial_grid: Vec<i32>,
 }
 
 impl MirvExecution {
@@ -92,7 +101,194 @@ impl MirvExecution {
             legacy: false,
             legacy_speed: -1.0,
             legacy_path_finder: ParabolaUniversalPathFinder::default(),
+            bounds: [0; 4],
+            consecutive_overlap_failures: 0,
+            spatial_grid: Vec::new(),
         }
+    }
+
+    fn grid_rules(game: &GameImpl) -> bool {
+        game.config().rules().has(Change::MirvTargetGrid36)
+    }
+
+    /// Grid cell offset of a tile, or None when outside the grid.
+    fn grid_cell(&self, game: &GameImpl, x: i32, y: i32) -> Option<(i32, i32)> {
+        let _ = game;
+        let rel_x = x as f64 - self.base_x + RANGE;
+        let rel_y = y as f64 - self.base_y + RANGE;
+        let cx = (rel_x / MINIMUM_SPREAD).floor() as i32;
+        let cy = (rel_y / MINIMUM_SPREAD).floor() as i32;
+        if cx < 0 || cx >= GRID_WIDTH || cy < 0 || cy >= GRID_WIDTH {
+            return None;
+        }
+        Some((cx, cy))
+    }
+
+    fn add_to_grid(&mut self, game: &GameImpl, tile: TileRef) {
+        let Some((cx, cy)) = self.grid_cell(game, game.x(tile) as i32, game.y(tile) as i32) else {
+            return;
+        };
+        let base = ((cy * GRID_WIDTH + cx) * 2) as usize;
+        for i in 0..2 {
+            if self.spatial_grid[base + i] == -1 {
+                self.spatial_grid[base + i] = tile as i32;
+                return;
+            }
+        }
+    }
+
+    fn remove_from_grid(&mut self, game: &GameImpl, tile: TileRef) {
+        if self.spatial_grid.is_empty() {
+            return;
+        }
+        let Some((cx, cy)) = self.grid_cell(game, game.x(tile) as i32, game.y(tile) as i32) else {
+            return;
+        };
+        let base = ((cy * GRID_WIDTH + cx) * 2) as usize;
+        if self.spatial_grid[base] == tile as i32 {
+            self.spatial_grid[base] = self.spatial_grid[base + 1];
+            self.spatial_grid[base + 1] = -1;
+        } else if self.spatial_grid[base + 1] == tile as i32 {
+            self.spatial_grid[base + 1] = -1;
+        }
+    }
+
+    fn build_overlap_grid(&mut self, game: &GameImpl) {
+        self.spatial_grid = vec![-1; (GRID_WIDTH * GRID_WIDTH * 2) as usize];
+        for t in self.staged_targets.clone() {
+            self.add_to_grid(game, t);
+        }
+    }
+
+    fn is_overlapping_grid(&self, game: &GameImpl, x: i32, y: i32) -> bool {
+        let Some((cx, cy)) = self.grid_cell(game, x, y) else {
+            return true;
+        };
+        // A full target cell rejects, so a target is never silently dropped from the grid.
+        let target_off = ((cy * GRID_WIDTH + cx) * 2) as usize;
+        if self.spatial_grid[target_off + 1] != -1 {
+            return true;
+        }
+        for gy in (cy - 1)..=(cy + 1) {
+            if gy < 0 || gy >= GRID_WIDTH {
+                continue;
+            }
+            for gx in (cx - 1)..=(cx + 1) {
+                if gx < 0 || gx >= GRID_WIDTH {
+                    continue;
+                }
+                let base = ((gy * GRID_WIDTH + gx) * 2) as usize;
+                for i in 0..2 {
+                    let t = self.spatial_grid[base + i];
+                    if t == -1 {
+                        break;
+                    }
+                    let dx = (x - game.x(t as TileRef) as i32).abs() as f64;
+                    if dx < MINIMUM_SPREAD {
+                        let dy = (y - game.y(t as TileRef) as i32).abs() as f64;
+                        if dx + dy < MINIMUM_SPREAD {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// `tryGenerateTarget()` of v0.36.0: samples inside the clipped box and uses the overlap grid.
+    fn try_generate_target_grid(&mut self, game: &GameImpl) -> Option<TileRef> {
+        if self.consecutive_overlap_failures >= SATURATION_THRESHOLD {
+            return None;
+        }
+        let [min_x, max_x, min_y, max_y] = self.bounds;
+        for _ in 0..100 {
+            let r1 = self.random.next();
+            let r2 = (r1 * 15485863.0) % 1.0;
+            let x = min_x + (r1 * (max_x - min_x + 1) as f64).floor() as i32;
+            let y = min_y + (r2 * (max_y - min_y + 1) as f64).floor() as i32;
+            let (dx, dy) = (x as f64 - self.base_x, y as f64 - self.base_y);
+            if dx * dx + dy * dy > RANGE_SQUARED {
+                continue;
+            }
+            let tile = game.tile_ref(x, y);
+            if game.owner_id(tile) != self.target_player {
+                continue;
+            }
+            if !game.is_land(tile) || game.map.is_impassable(tile) {
+                continue;
+            }
+            if self.is_overlapping_grid(game, x, y) {
+                self.consecutive_overlap_failures += 1;
+                if self.consecutive_overlap_failures >= SATURATION_THRESHOLD {
+                    return None;
+                }
+                continue;
+            }
+            self.consecutive_overlap_failures = 0;
+            return Some(tile);
+        }
+        None
+    }
+
+    /// Stagger of target finding on ticks 20 to 11 (v0.36.0).
+    fn stage_targets_grid(&mut self, game: &GameImpl) {
+        if self.consecutive_overlap_failures >= SATURATION_THRESHOLD
+            || self.staged_targets.len() >= WARHEAD_COUNT
+        {
+            return;
+        }
+        for _ in 0..100 {
+            if self.staged_targets.len() >= WARHEAD_COUNT {
+                break;
+            }
+            if let Some(target) = self.try_generate_target_grid(game) {
+                self.staged_targets.push(target);
+                self.add_to_grid(game, target);
+            }
+            if self.consecutive_overlap_failures >= SATURATION_THRESHOLD {
+                break;
+            }
+        }
+    }
+
+    /// `finalizeDestinations` of v0.36.0.
+    fn finalize_destinations_grid(&mut self, game: &GameImpl, additional_attempts: usize) {
+        let dst = self.dst;
+        let target_player = self.target_player;
+        let count_before = self.staged_targets.len();
+        let staged = std::mem::take(&mut self.staged_targets);
+        let mut kept = Vec::with_capacity(staged.len());
+        for tile in staged {
+            if tile == dst || game.owner_id(tile) == target_player {
+                kept.push(tile);
+            } else {
+                self.remove_from_grid(game, tile);
+            }
+        }
+        self.staged_targets = kept;
+        if self.staged_targets.len() < count_before {
+            self.consecutive_overlap_failures = 0;
+        }
+        if self.consecutive_overlap_failures < SATURATION_THRESHOLD {
+            for _ in 0..additional_attempts {
+                if self.staged_targets.len() >= WARHEAD_COUNT {
+                    break;
+                }
+                if let Some(target) = self.try_generate_target_grid(game) {
+                    self.staged_targets.push(target);
+                    self.add_to_grid(game, target);
+                }
+                if self.consecutive_overlap_failures >= SATURATION_THRESHOLD {
+                    break;
+                }
+            }
+        }
+        self.staged_targets.sort_by(|&a, &b| {
+            game.manhattan_dist(b, dst)
+                .cmp(&game.manhattan_dist(a, dst))
+        });
+        self.spatial_grid = Vec::new();
     }
 
     /// Pre-PR-5188 `init`: betrayal on construction and the fixed-speed path finder.
@@ -372,6 +568,15 @@ impl Execution for MirvExecution {
         self.base_x = game.x(self.dst) as f64;
         self.base_y = game.y(self.dst) as f64;
         self.staged_targets = vec![self.dst];
+        if Self::grid_rules(game) {
+            self.bounds = [
+                f64::max(0.0, self.base_x - RANGE) as i32,
+                f64::min(game.width() as f64 - 1.0, self.base_x + RANGE) as i32,
+                f64::max(0.0, self.base_y - RANGE) as i32,
+                f64::min(game.height() as f64 - 1.0, self.base_y + RANGE) as i32,
+            ];
+            self.build_overlap_grid(game);
+        }
         self.legacy = !game.config().rules().has(Change::MirvNormalize5188);
         if self.legacy {
             self.init_legacy(game);
@@ -454,7 +659,9 @@ impl Execution for MirvExecution {
 
         let remaining_ticks = self.full_path.len() as f64 - self.path_index as f64;
 
-        if remaining_ticks <= 20.0 && remaining_ticks > 10.0 {
+        if remaining_ticks <= 20.0 && remaining_ticks > 10.0 && Self::grid_rules(game) {
+            self.stage_targets_grid(game);
+        } else if remaining_ticks <= 20.0 && remaining_ticks > 10.0 {
             for _ in 0..100 {
                 if self.staged_targets.len() >= WARHEAD_COUNT {
                     break;
@@ -468,7 +675,11 @@ impl Execution for MirvExecution {
         if remaining_ticks <= 10.0 && !self.warheads_spawned {
             self.warheads_spawned = true;
             let extra_attempts = ((10.0 - remaining_ticks) * 50.0) as usize;
-            self.finalize_destinations(game, 500 + extra_attempts);
+            if Self::grid_rules(game) {
+                self.finalize_destinations_grid(game, 500 + extra_attempts);
+            } else {
+                self.finalize_destinations(game, 500 + extra_attempts);
+            }
             self.spawn_warheads_with_wait(game, remaining_ticks);
         }
 
