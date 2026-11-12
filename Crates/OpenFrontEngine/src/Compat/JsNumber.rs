@@ -170,4 +170,38 @@ mod tests {
         assert_eq!(min(0.0, -0.0).to_bits(), (-0.0f64).to_bits());
         assert!(max(f64::NAN, 1.0).is_nan());
     }
+
+    #[test]
+    fn matches_node_goldens() {
+        let g: serde_json::Value =
+            serde_json::from_str(include_str!("../../Tests/Golden/JsNumber.json")).unwrap();
+        let hex = |v: &serde_json::Value| {
+            f64::from_bits(u64::from_str_radix(v.as_str().unwrap(), 16).unwrap())
+        };
+        for row in g["int32"].as_array().unwrap() {
+            let x = hex(&row[0]);
+            assert_eq!(to_int32(x) as i64, row[1].as_i64().unwrap(), "int32 {x:e}");
+            assert_eq!(
+                to_uint32(x) as i64,
+                row[2].as_i64().unwrap(),
+                "uint32 {x:e}"
+            );
+            let want = hex(&row[3]);
+            let got = round(x);
+            assert!(
+                got.to_bits() == want.to_bits() || (got.is_nan() && want.is_nan()),
+                "round {x:e}"
+            );
+        }
+        for row in g["radix"].as_array().unwrap() {
+            assert_eq!(
+                to_string_radix36(row[0].as_f64().unwrap()),
+                row[1].as_str().unwrap()
+            );
+        }
+        for row in g["pad"].as_array().unwrap() {
+            let (s, n) = (row[0].as_str().unwrap(), row[1].as_u64().unwrap() as usize);
+            assert_eq!(pad_start(s, n, '0'), row[2].as_str().unwrap());
+        }
+    }
 }
