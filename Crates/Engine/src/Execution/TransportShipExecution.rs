@@ -29,6 +29,8 @@ pub struct TransportShipExecution {
     dst: Option<TileRef>,
     /// `null` (unresolved) / `false` (none found) / a tile.
     retreat_dst: Option<Option<TileRef>>,
+    /// The launch tile (builds before PR 3286 retreat to it).
+    src: Option<TileRef>,
     boat: Option<UnitId>,
     motion_plan_dst: Option<TileRef>,
     original_owner: SmallId,
@@ -48,6 +50,7 @@ impl TransportShipExecution {
             path_finder: None,
             dst: None,
             retreat_dst: None,
+            src: None,
             boat: None,
             motion_plan_dst: None,
             original_owner: attacker,
@@ -145,6 +148,7 @@ impl Execution for TransportShipExecution {
             return;
         };
 
+        self.src = Some(src);
         let boat = game.player_mut(self.attacker).build_unit(
             UnitType::TransportShip,
             src,
@@ -191,8 +195,36 @@ impl Execution for TransportShipExecution {
             self.motion_plan_dst = None;
         }
 
+        if !game
+            .config()
+            .rules()
+            .has(Change::TransportRetreatNearest3286)
+        {
+            if game.unit_any(boat).transport_ship_state().is_retreating {
+                // The launch tile is water, so its owner never matches: the spawn is looked up again.
+                let src = self.src.expect("set in init");
+                if game.owner_id(src) != self.attacker {
+                    let dst = self.dst.expect("checked above");
+                    self.src = game.player(self.attacker).best_transport_ship_spawn(dst);
+                }
+                match self.src {
+                    None => {
+                        let troops = game.unit_any(boat).troops();
+                        game.player_mut(self.attacker).add_troops(troops);
+                        game.unit_mut(boat).delete(Some(false), None);
+                        self.active = false;
+                        return;
+                    }
+                    Some(src) => {
+                        self.dst = Some(src);
+                        if game.unit_any(boat).target_tile() != self.dst {
+                            game.unit_mut(boat).set_target_tile(self.dst);
+                        }
+                    }
+                }
+            }
         // Auto-retreat if the destination was destroyed by a nuke (turned to water)
-        if let Some(dst) = self.dst
+        } else if let Some(dst) = self.dst
             && game.map.is_water(dst)
         {
             if !game.unit_any(boat).transport_ship_state().is_retreating {
@@ -201,7 +233,12 @@ impl Execution for TransportShipExecution {
             self.retreat_dst = None;
         }
 
-        if game.unit_any(boat).transport_ship_state().is_retreating {
+        if game
+            .config()
+            .rules()
+            .has(Change::TransportRetreatNearest3286)
+            && game.unit_any(boat).transport_ship_state().is_retreating
+        {
             // Resolve the retreat destination once, from the boat's location when the retreat begins
             let boat_tile = game.unit_any(boat).tile();
             let retreat_dst = *self.retreat_dst.get_or_insert_with(|| {

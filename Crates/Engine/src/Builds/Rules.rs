@@ -346,6 +346,10 @@ pub enum Change {
     ServerUsernameCensoring3122,
     /// v0.30.0-beta1: tribe names come from the revised `TribeNames` pools (older: the `BotNames.ts` lists, 180 prefixes and 71 suffixes).
     TribeNamesRevised30,
+    /// PR 3124: border tile updates walk `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
+    BorderUpdateForEach3124,
+    /// PR 3286: a retreating transport ship returns to the closest owned shore (older: to its launch tile).
+    TransportRetreatNearest3286,
     /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
     TeamSpawnAreas3263,
     /// PR 3152: nations use the structure behaviour class (older: an inline build order).
@@ -810,6 +814,7 @@ const EDGES: &[Edge] = &[
             Change::AllianceSpawnReject30,
             Change::BotSpawnerOwnSeed30,
             Change::NationCreationConfigurable30,
+            Change::TransportRetreatNearest3286,
         ],
     },
     Edge {
@@ -829,6 +834,7 @@ const EDGES: &[Edge] = &[
             Change::AllianceRadialAccept3155,
             Change::AllianceIncomingBypass3092,
             Change::NukeBreakAllyList2912,
+            Change::BorderUpdateForEach3124,
             Change::ServerUsernameCensoring3122,
             Change::NukeTeammateStructureGuard3105,
             Change::RailSnapOverlap3003,
@@ -984,6 +990,8 @@ const ROOT_CHANGES: &[Change] = &[
     Change::AllianceRadialAccept3155,
     Change::AllianceIncomingBypass3092,
     Change::NukeBreakAllyList2912,
+    Change::TransportRetreatNearest3286,
+    Change::BorderUpdateForEach3124,
     Change::TribeNamesRevised30,
     Change::ServerUsernameCensoring3122,
     Change::NukeTeammateStructureGuard3105,

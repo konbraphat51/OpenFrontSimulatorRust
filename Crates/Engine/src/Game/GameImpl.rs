@@ -842,17 +842,6 @@ impl GameImpl {
 
     /// `conquer(owner, tile)`.
     pub fn conquer(&mut self, owner: SmallId, tile: TileRef) {
-        if let Ok(v) = std::env::var("OFSIM_CONQUER_LOG")
-            && v.parse::<u32>().ok() == Some(tile)
-        {
-            eprintln!(
-                "CONQUER tick={} tile={} owner={}\n{}",
-                self.ticks,
-                tile,
-                owner,
-                std::backtrace::Backtrace::force_capture()
-            );
-        }
         assert!(self.map.is_land(tile), "cannot conquer water");
         assert!(
             !self.map.is_impassable(tile),
@@ -899,7 +888,12 @@ impl GameImpl {
     fn update_borders(&mut self, tile: TileRef) {
         self.update_border_status(tile);
         let mut nbuf = [0; 4];
-        let n = self.map.neighbors4(tile, &mut nbuf);
+        // Before PR 3124 the border update walked `neighbors()` (N, S, W, E) in every build.
+        let n = if self.config.rules().has(Change::BorderUpdateForEach3124) {
+            self.map.neighbors4(tile, &mut nbuf)
+        } else {
+            self.map.neighbors4_nswe(tile, &mut nbuf)
+        };
         for &nb in &nbuf[..n] {
             self.update_border_status(nb);
         }
