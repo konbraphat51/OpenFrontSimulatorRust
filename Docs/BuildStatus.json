@@ -68,7 +68,7 @@
     "C055": "ported; 6/6 sampled records pass (one 6,242 turn game)",
     "C056": "ported; 1/1 (short, 279 turns)",
     "C057": "ported; 1/1 (short, 279 turns)",
-    "C058": "partial; 2/2 short records pass, the water pathfinding rewrite (Bounded A*, hierarchical finder, Bresenham smoother) is NOT ported"
+    "C058": "partial; 2/2 short records pass, the water pathfinding rewrite (Bounded A*, hierarchical finder, Bresenham smoother) is NOT ported",
     "C059": "ported; 20/20 sampled records pass (8 singleplayer, 12 public up to 7,200 turns)"
   },
   "ja": {
@@ -140,7 +140,7 @@
     "C055": "移植済み; 6/6一致 (6,242ターン1件を含む)",
     "C056": "移植済み; 1/1 (短尺 279 ターン)",
     "C057": "移植済み; 1/1 (短尺 279 ターン)",
-    "C058": "部分; 短尺2/2一致、水上経路探索の書き換え (Bounded A*、階層探索、Bresenham平滑化) は未移植"
+    "C058": "部分; 短尺2/2一致、水上経路探索の書き換え (Bounded A*、階層探索、Bresenham平滑化) は未移植",
     "C059": "移植済み; 20/20 件のサンプルが一致 (シングルプレイ 8 件、公開 12 件、最大 7,200 ターン)"
   }
 }
