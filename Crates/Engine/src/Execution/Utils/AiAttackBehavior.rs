@@ -332,6 +332,16 @@ impl AiAttackBehavior {
             self.send_beachhead(game, owner, dst);
             return;
         }
+        if !game.config().rules().has(Change::AiTroopCap4239) {
+            // Before PR 4239 the boat always carried a fifth of the troops, unchecked.
+            let troops = self.troops(game) / 5.0;
+            game.add_execution(Box::new(TransportShipExecution::new(
+                self.player,
+                dst,
+                Some(troops),
+            )));
+            return;
+        }
         let cap = if owner != 0 {
             self.troop_send_cap(game, None)
         } else if game.config().rules().has(Change::NationExpansionCap5290) {
@@ -1622,6 +1632,9 @@ impl AiAttackBehavior {
 
     // Hard and Impossible nations in FFA: true when `troops` is under 20% of the target's troops.
     fn is_attack_too_weak(&self, game: &GameImpl, troops: f64, target: SmallId) -> bool {
+        if !game.config().rules().has(Change::AiTroopCap4239) {
+            return false;
+        }
         if game.player(self.player).player_type() == PlayerType::Bot {
             return false;
         }
@@ -1640,6 +1653,9 @@ impl AiAttackBehavior {
     // Hard and Impossible nations in FFA: the most troops that can be sent without dropping below
     // a fraction of the strongest non-allied, non-bot neighbour (Hard 75%, Impossible 90%).
     fn troop_send_cap(&self, game: &GameImpl, ignore: Option<SmallId>) -> f64 {
+        if !game.config().rules().has(Change::AiTroopCap4239) {
+            return f64::INFINITY;
+        }
         if Self::v2(game) {
             let mut cap = self.neighbor_troop_cap(game, ignore);
             // Nations under attack may retaliate with at least the incoming troops.

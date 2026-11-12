@@ -22,6 +22,7 @@ pub struct AStarWaterHierarchical {
     graph: Rc<AbstractGraph>,
     cache_paths: bool,
     component_filter: bool,
+    bucket_queue: bool,
 }
 
 impl AStarWaterHierarchical {
@@ -49,6 +50,7 @@ impl AStarWaterHierarchical {
             graph,
             cache_paths,
             component_filter: false,
+            bucket_queue: false,
         }
     }
 
@@ -57,9 +59,15 @@ impl AStarWaterHierarchical {
         self.component_filter = component_filter;
     }
 
+    /// Before PR 4149 the abstract search queues with a bucket queue instead of a min-heap.
+    pub fn set_bucket_queue(&mut self, bucket_queue: bool) {
+        self.bucket_queue = bucket_queue;
+        self.abstract_a_star = AbstractGraphAStar::with_queue(Rc::clone(&self.graph), bucket_queue);
+    }
+
     /// Swaps in a rebuilt graph, keeping the map-sized scratch buffers.
     pub fn set_graph(&mut self, graph: Rc<AbstractGraph>) {
-        self.abstract_a_star = AbstractGraphAStar::new(Rc::clone(&graph), None, None);
+        self.abstract_a_star = AbstractGraphAStar::with_queue(Rc::clone(&graph), self.bucket_queue);
         self.graph = graph;
     }
 

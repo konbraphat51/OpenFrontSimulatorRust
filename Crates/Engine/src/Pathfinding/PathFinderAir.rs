@@ -2,6 +2,7 @@
 //! Port of src/core/pathfinding/PathFinder.Air.ts: the randomised staircase path of shells and SAM missiles.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::{Change, Rules};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 
@@ -9,17 +10,33 @@ use crate::Game::GameMap::{GameMapImpl, TileRef};
 #[derive(Clone, Copy, Debug)]
 pub struct AirPathFinder {
     seed: f64,
+    seedrandom: bool,
 }
 
 impl AirPathFinder {
     /// Creates a finder seeded with the current tick (`game.ticks()`).
     pub fn new(ticks: u32) -> Self {
-        Self { seed: ticks as f64 }
+        Self {
+            seed: ticks as f64,
+            seedrandom: false,
+        }
+    }
+
+    /// Like [`Self::new`], with the PRNG the build's rules select.
+    pub fn new_for(ticks: u32, rules: &Rules) -> Self {
+        Self {
+            seed: ticks as f64,
+            seedrandom: !rules.has(Change::Sfc32PseudoRandom4233),
+        }
     }
 
     /// Path from `from` to `to`, both included.
     pub fn find_path(&self, map: &GameMapImpl, from: TileRef, to: TileRef) -> Vec<TileRef> {
-        let mut random = PseudoRandom::new(self.seed);
+        let mut random = if self.seedrandom {
+            PseudoRandom::new_seedrandom(self.seed)
+        } else {
+            PseudoRandom::new(self.seed)
+        };
         let mut path = vec![from];
         let mut current = from;
 

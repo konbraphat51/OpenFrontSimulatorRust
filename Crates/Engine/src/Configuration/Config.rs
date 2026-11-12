@@ -655,13 +655,20 @@ impl Config {
     }
     /// Longest train station link.
     pub fn train_station_max_range(&self) -> f64 {
-        110.0
+        if self.rules.has(Change::TrainRange110Pr4079) {
+            110.0
+        } else {
+            100.0
+        }
     }
     /// Longest railroad.
     pub fn railroad_max_size(&self) -> f64 {
         #[allow(clippy::approx_constant)]
         let sqrt2_approx = 1.4142;
         if !self.rules.has(Change::RailroadMaxSizeDiagonal4406) {
+            if !self.rules.has(Change::TrainRange110Pr4079) {
+                return 120.0;
+            }
             return self.train_station_max_range();
         }
         self.train_station_max_range() * sqrt2_approx
@@ -712,7 +719,12 @@ impl Config {
         }
         if !self.rules.has(Change::TradeTrainSaturation5302) {
             let decay_rate = std::f64::consts::LN_2 / 50.0;
-            let base_spawn_rate = 1.0 - self.sigmoid(num_trade_ships, decay_rate, 400.0);
+            let midpoint = if self.rules.has(Change::TradeShipSigmoid400Meta) {
+                400.0
+            } else {
+                200.0
+            };
+            let base_spawn_rate = 1.0 - self.sigmoid(num_trade_ships, decay_rate, midpoint);
             return ((100.0 * rejection_modifier) / base_spawn_rate).floor();
         }
         js_max(
@@ -1375,15 +1387,23 @@ impl Config {
     pub fn nuke_alliance_break_threshold(&self) -> f64 {
         100.0
     }
+    /// `defaultNukeSpeed()`.
+    fn default_nuke_speed(&self) -> f64 {
+        if self.rules.has(Change::NukeSpeed10Meta) {
+            10.0
+        } else {
+            8.0
+        }
+    }
     /// Nuke speed; panics for other units like upstream throws.
     pub fn nuke_speed(&self, unit_type: UnitType) -> f64 {
         match unit_type {
-            UnitType::AtomBomb | UnitType::HydrogenBomb => 10.0,
+            UnitType::AtomBomb | UnitType::HydrogenBomb => self.default_nuke_speed(),
             UnitType::MIRV | UnitType::MIRVWarhead
                 if !self.rules.has(Change::MirvWarheadsStandard4706) =>
             {
                 if unit_type == UnitType::MIRV {
-                    10.0
+                    self.default_nuke_speed()
                 } else {
                     15.0
                 }

@@ -105,12 +105,21 @@ impl AttackExecution {
         self.active = false;
     }
 
+    /// Cardinal neighbours in the order the build's attack code walks them (`neighbors()` before PR 3820).
+    fn neighbors_of(game: &GameImpl, tile: TileRef, out: &mut [TileRef; 4]) -> usize {
+        if game.config().rules().has(Change::AttackForEachNeighbor3820) {
+            game.map.neighbors4(tile, out)
+        } else {
+            game.map.neighbors4_nswe(tile, out)
+        }
+    }
+
     fn add_neighbors(&mut self, game: &mut GameImpl, tile: TileRef) {
         let attack = self.attack_id();
         let tick_now = game.ticks() as f64;
         let mut nbuf = [0; 4];
         let mut nbuf2 = [0; 4];
-        let num_neighbors = game.map.neighbors4(tile, &mut nbuf);
+        let num_neighbors = Self::neighbors_of(game, tile, &mut nbuf);
         for &neighbor in &nbuf[..num_neighbors] {
             if game.map.is_water(neighbor)
                 || game.map.is_impassable(neighbor)
@@ -120,7 +129,7 @@ impl AttackExecution {
             }
             game.attack_mut(attack).add_border_tile(neighbor);
             let mut num_owned_by_me = 0;
-            let num_inner = game.map.neighbors4(neighbor, &mut nbuf2);
+            let num_inner = Self::neighbors_of(game, neighbor, &mut nbuf2);
             for &inner in &nbuf2[..num_inner] {
                 if game.map.owner_id(inner) == self.owner {
                     num_owned_by_me += 1;
@@ -204,7 +213,9 @@ impl AttackExecution {
                     progressed = true;
                 } else {
                     let mut captured_by: Option<SmallId> = None;
-                    game.map.for_each_neighbor(tile, |neighbor| {
+                    let mut nbuf = [0; 4];
+                    let count = Self::neighbors_of(game, tile, &mut nbuf);
+                    nbuf[..count].iter().for_each(|&neighbor| {
                         if captured_by.is_some() {
                             return;
                         }
@@ -232,6 +243,7 @@ impl Execution for AttackExecution {
         if !self.active {
             return;
         }
+        self.random = PseudoRandom::for_rules(game.config().rules(), 123.0);
         if let Some(id) = &self.target_id
             && !game.has_player(id)
         {
@@ -432,7 +444,7 @@ impl Execution for AttackExecution {
 
             let mut on_border = false;
             let mut nbuf = [0; 4];
-            let num_neighbors = game.map.neighbors4(tile_to_conquer, &mut nbuf);
+            let num_neighbors = Self::neighbors_of(game, tile_to_conquer, &mut nbuf);
             for &n in &nbuf[..num_neighbors] {
                 if game.map.owner_id(n) == self.owner {
                     on_border = true;

@@ -79,7 +79,7 @@ impl NukeExecution {
 
     fn tiles_to_destroy(&self, game: &GameImpl) -> Vec<TileRef> {
         let magnitude = game.config().nuke_magnitudes(self.nuke_type);
-        let mut rand = PseudoRandom::new(game.ticks() as f64);
+        let mut rand = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         let inner2 = magnitude.inner * magnitude.inner;
         let outer2 = magnitude.outer * magnitude.outer;
         let map = &game.map;

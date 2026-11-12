@@ -145,6 +145,7 @@ impl GameImpl {
             config.disable_nav_mesh(),
             config.rules().has(Change::WaterGraphEdgeSort5805),
             !config.rules().has(Change::WaterComponentMarkers4479),
+            !config.rules().has(Change::AbstractAStarMinHeap4149),
         );
         water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         if !config
@@ -248,6 +249,7 @@ impl GameImpl {
             is_duos_trios_quads,
             None,
             self.config.rules().has(Change::TeamFriendGroups6259),
+            self.config.rules(),
         );
         for (i, team) in assignment {
             match team {
@@ -291,6 +293,9 @@ impl GameImpl {
     }
     /// `inSpawnPhase`.
     pub fn in_spawn_phase(&self) -> bool {
+        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+            return self.ticks <= self.config.num_spawn_phase_turns();
+        }
         self.start_tick.is_none()
     }
     /// `endSpawnPhase`.
@@ -1051,17 +1056,30 @@ impl GameImpl {
 
     /// `isSpawnImmunityActive`.
     pub fn is_spawn_immunity_active(&self) -> bool {
+        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+            return (self.config.num_spawn_phase_turns() as f64)
+                + (self.config.spawn_immunity_duration() as f64)
+                > self.ticks as f64;
+        }
         self.in_spawn_phase()
             || self.ticks_since_start() < self.config.spawn_immunity_duration() as f64
     }
 
     /// `elapsedGameSeconds`.
     pub fn elapsed_game_seconds(&self) -> f64 {
+        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+            return (self.ticks as f64 - self.config.num_spawn_phase_turns() as f64) / 10.0;
+        }
         self.ticks_since_start() / 10.0
     }
 
     /// `isNationSpawnImmunityActive`.
     pub fn is_nation_spawn_immunity_active(&self) -> bool {
+        if !self.config.rules().has(Change::SpawnPhaseTimer3199) {
+            return (self.config.num_spawn_phase_turns() as f64)
+                + (self.config.nation_spawn_immunity_duration() as f64)
+                > self.ticks as f64;
+        }
         self.in_spawn_phase()
             || self.ticks_since_start() < self.config.nation_spawn_immunity_duration() as f64
     }

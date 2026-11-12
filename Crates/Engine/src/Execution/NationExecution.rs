@@ -3,7 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::SpawnExecution::SpawnExecution;
-use crate::Builds::Rules::Change;
+use crate::Builds::Rules::{Change, Rules};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -53,13 +53,14 @@ pub struct NationExecution {
     embargo_malus_applied: HashSet<SmallId>,
     game_id: String,
     nation: Nation,
+    rules: Rules,
 }
 
 impl NationExecution {
     /// `new NationExecution(gameID, nation)`.
-    pub fn new(game_id: &str, nation: Nation) -> Self {
+    pub fn new(game_id: &str, nation: Nation, rules: &Rules) -> Self {
         let seed = simple_hash(&nation.player_info.id) as f64 + simple_hash(game_id) as f64;
-        let mut random = PseudoRandom::new(seed);
+        let mut random = PseudoRandom::for_rules(rules, seed);
         let trigger_ratio = random.next_int(50.0, 60.0) / 100.0;
         let reserve_ratio = random.next_int(30.0, 40.0) / 100.0;
         let expand_ratio = random.next_int(10.0, 20.0) / 100.0;
@@ -77,6 +78,7 @@ impl NationExecution {
             embargo_malus_applied: HashSet::new(),
             game_id: game_id.to_string(),
             nation,
+            rules: rules.clone(),
         }
     }
 
@@ -97,6 +99,7 @@ impl NationExecution {
             self.nation.player_info.clone(),
             tile,
             false,
+            &self.rules,
         ))
     }
 
@@ -267,8 +270,13 @@ impl Execution for NationExecution {
 
         let Some(player) = self.player else { return };
 
+        let tracks_spawn = game.config().rules().has(Change::NationSpawnRetry4117);
         if game.in_spawn_phase() {
-            if game.player(player).has_spawned() {
+            if !tracks_spawn {
+                if ticks % self.attack_rate != self.attack_tick {
+                    return;
+                }
+            } else if game.player(player).has_spawned() {
                 // Re-spawn periodically so the nation hops during the spawn phase.
                 if ticks % self.attack_rate != self.attack_tick {
                     return;
@@ -308,7 +316,7 @@ impl Execution for NationExecution {
         }
 
         // Spawn phase ended but our SpawnExecution has not fired yet.
-        if self.spawn_exec_added && !game.player(player).has_spawned() {
+        if tracks_spawn && self.spawn_exec_added && !game.player(player).has_spawned() {
             return;
         }
 

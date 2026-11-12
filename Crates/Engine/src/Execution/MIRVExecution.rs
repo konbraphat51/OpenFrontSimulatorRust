@@ -365,7 +365,8 @@ impl MirvExecution {
 
 impl Execution for MirvExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
-        self.random = PseudoRandom::new(
+        self.random = PseudoRandom::for_rules(
+            game.config().rules(),
             game.ticks() as f64 + simple_hash(game.player(self.player).id()) as f64,
         );
         self.target_player = game.owner_id(self.dst);

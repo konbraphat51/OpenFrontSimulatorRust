@@ -46,7 +46,10 @@ pub fn mirv_leak_share(game: &GameImpl, attacker: SmallId, target: SmallId) -> f
         ),
     );
     // Own seed, so the estimate is a pure function of the game state.
-    let mut random = PseudoRandom::new((game.ticks() as f64) * 1024.0 + target as f64);
+    let mut random = PseudoRandom::for_rules(
+        game.config().rules(),
+        (game.ticks() as f64) * 1024.0 + target as f64,
+    );
     let samples = rand_territory_tile_array(&mut random, game, target, MIRV_COVERAGE_SAMPLES);
     if samples.is_empty() {
         return 1.0;

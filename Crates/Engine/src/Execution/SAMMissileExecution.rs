@@ -52,7 +52,7 @@ impl SAMMissileExecution {
 
 impl Execution for SAMMissileExecution {
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
-        self.air = AirPathFinder::new(game.ticks());
+        self.air = AirPathFinder::new_for(game.ticks(), game.config().rules());
         self.speed = game.config().default_sam_missile_speed();
         if game.config().rules().has(Change::SamTargetingFixes4770) {
             self.tick(game, ticks);

@@ -80,6 +80,8 @@ pub struct WaterManager {
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
     legacy: bool,
     old_markers: bool,
+    /// Before PR 4149 the abstract graph A* queues with a bucket queue.
+    bucket_queue: bool,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
     water_graph_dirty: bool,
@@ -93,7 +95,7 @@ pub struct WaterManager {
 impl WaterManager {
     /// Creates the manager; with the nav mesh enabled it builds the initial graph and HPA* finder.
     pub fn new(mini_map: GameMapImpl, disable_nav_mesh: bool) -> Self {
-        Self::new_with(mini_map, disable_nav_mesh, false, false)
+        Self::new_with(mini_map, disable_nav_mesh, false, false, false)
     }
 
     /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on), `old_markers`
@@ -103,6 +105,7 @@ impl WaterManager {
         disable_nav_mesh: bool,
         sort_edges: bool,
         old_markers: bool,
+        bucket_queue: bool,
     ) -> Self {
         let mut manager = Self {
             sort_edges,
@@ -115,6 +118,7 @@ impl WaterManager {
             mini_water_cc: None,
             legacy: false,
             old_markers,
+            bucket_queue,
             builder_bfs: None,
             water_graph_version: 0,
             water_graph_dirty: false,
@@ -145,6 +149,7 @@ impl WaterManager {
             );
             let mut hpa = AStarWaterHierarchical::new(mini, Rc::clone(&graph), true);
             hpa.set_component_filter(old_markers);
+            hpa.set_bucket_queue(bucket_queue);
             manager.hierarchical_chain = Some(Rc::new(SharedWaterChain {
                 use_hierarchical: graph.node_count() >= 100,
                 hierarchical: RefCell::new(build_hierarchical_chain(mini, hpa, Rc::clone(&graph))),
@@ -228,6 +233,7 @@ impl WaterManager {
                 // A new finder and chain per version; finders created earlier keep theirs
                 let mut hpa = AStarWaterHierarchical::new(&self.mini_map, Rc::clone(&graph), true);
                 hpa.set_component_filter(self.old_markers);
+                hpa.set_bucket_queue(self.bucket_queue);
                 self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
                     use_hierarchical: graph.node_count() >= 100,
                     hierarchical: RefCell::new(build_hierarchical_chain(

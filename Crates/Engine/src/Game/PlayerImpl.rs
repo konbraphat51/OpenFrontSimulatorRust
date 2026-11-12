@@ -104,7 +104,8 @@ impl PlayerImpl {
         let gold = game
             .config()
             .starting_gold(info.player_type, info.is_lobby_creator);
-        let pseudo_random = PseudoRandom::new(simple_hash(&info.id) as f64);
+        let pseudo_random =
+            PseudoRandom::for_rules(game.config().rules(), simple_hash(&info.id) as f64);
         Self {
             small_id,
             team,
@@ -848,7 +849,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `canDonateGold(recipient)`.
     pub fn can_donate_gold(&self, recipient: SmallId) -> bool {
-        if recipient == self.id {
+        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
             return false;
         }
         let r = self.game.player(recipient);
@@ -863,7 +864,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `canDonateTroops(recipient)`.
     pub fn can_donate_troops(&self, recipient: SmallId) -> bool {
-        if recipient == self.id {
+        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
             return false;
         }
         let r = self.game.player(recipient);
@@ -947,7 +948,7 @@ impl<'a> PlayerRef<'a> {
 
     /// `isFriendly(other, treatAFKFriendly)`.
     pub fn is_friendly(&self, other: SmallId, treat_afk_friendly: bool) -> bool {
-        if other == self.id {
+        if other == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
             return true;
         }
         if self.game.player(other).is_disconnected && !treat_afk_friendly {
@@ -1259,7 +1260,17 @@ impl<'a> PlayerRef<'a> {
 
     /// `canAttackPlayer(player, treatAFKFriendly)`.
     pub fn can_attack_player(&self, player: SmallId, treat_afk_friendly: bool) -> bool {
-        if self.info.player_type != PlayerType::Human {
+        let ignores_immunity = if self
+            .game
+            .config()
+            .rules()
+            .has(Change::NationsIgnoreImmunity4282)
+        {
+            self.info.player_type != PlayerType::Human
+        } else {
+            self.info.player_type == PlayerType::Bot
+        };
+        if ignores_immunity {
             return !self.is_friendly(player, treat_afk_friendly);
         }
         !self.game.player(player).is_immune() && !self.is_friendly(player, treat_afk_friendly)
@@ -1450,7 +1461,7 @@ impl PlayerMut<'_> {
 
     /// `donateTroops(recipient, troops)`.
     pub fn donate_troops(&mut self, recipient: SmallId, troops: f64) -> bool {
-        if recipient == self.id {
+        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
             return false;
         }
         if troops <= 0.0 {
@@ -1468,7 +1479,7 @@ impl PlayerMut<'_> {
 
     /// `donateGold(recipient, gold)`.
     pub fn donate_gold(&mut self, recipient: SmallId, gold: Gold) -> bool {
-        if recipient == self.id {
+        if recipient == self.id && self.game.config().rules().has(Change::SelfActionGuards4014) {
             return false;
         }
         if gold <= 0 {

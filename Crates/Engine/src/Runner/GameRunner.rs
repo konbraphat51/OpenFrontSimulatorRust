@@ -57,7 +57,7 @@ pub fn create_game_runner(
     let config = Config::new(engine_config.clone(), false, rules.clone());
     let size = MapSize::from_wire(start.config.game_map_size.as_str())?;
     let terrain = MapData::load(maps_root, &start.config.game_map, size)?;
-    let mut random = PseudoRandom::new(simple_hash(&start.game_id) as f64);
+    let mut random = PseudoRandom::for_rules(config.rules(), simple_hash(&start.game_id) as f64);
 
     let humans: Vec<PlayerInfo> = start
         .players
@@ -111,11 +111,14 @@ pub fn create_game_runner(
 impl GameRunner {
     /// `init()`: the executions every game starts with.
     pub fn init(&mut self) {
-        if self.game.config().game_config().game_type != GameType::Singleplayer {
+        if self.game.config().game_config().game_type != GameType::Singleplayer
+            && self.game.config().rules().has(Change::SpawnPhaseTimer3199)
+        {
             self.game
                 .add_execution(Box::new(SpawnTimerExecution::new()));
         }
-        if self.game.config().spawn_nations() {
+        let nations_last = !self.game.config().rules().has(Change::NationSpawnRetry4117);
+        if !nations_last && self.game.config().spawn_nations() {
             for e in self.executor.nation_executions(&self.game) {
                 self.game.add_execution(e);
             }
@@ -129,6 +132,11 @@ impl GameRunner {
             let n = self.game.config().bots() as usize;
             for e in self.executor.spawn_tribes(&self.game, n) {
                 self.game.add_execution(Box::new(e));
+            }
+        }
+        if nations_last && self.game.config().spawn_nations() {
+            for e in self.executor.nation_executions(&self.game) {
+                self.game.add_execution(e);
             }
         }
         self.game.add_execution(Box::new(WinCheckExecution::new()));
