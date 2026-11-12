@@ -2,9 +2,8 @@
 //! Port of src/core/execution/ExecutionManager.ts: turns intents into executions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
-//! Executions that are not ported yet are created as [`NotPorted`], which panics with
-//! `not ported: <Name>` the moment it is created. Replace the arm of the matching intent when an
-//! execution lands. `Executor.random` is seeded but never drawn from upstream, so it is not kept.
+//! Every intent of the baseline build maps to a ported execution. `Executor.random` is seeded but
+//! never drawn from upstream, so it is not kept.
 
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
