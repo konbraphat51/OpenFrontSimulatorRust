@@ -1,0 +1,4430 @@
+{
+ "Achiran|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1700,
+   "numLandTiles": 1149943,
+   "terrainSha256": "30287ef720787c145f3561547f49ac51c21cd0ddcc447269105d52aab3ebaf0e"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 850,
+   "numLandTiles": 284422,
+   "terrainSha256": "6bb208d8741ca5156c914f18bbbd65910a2ee97bbeec784e85b3f52e7ea4b650"
+  },
+  "nations": 4,
+  "nationsSha256": "cb7a4890c3883e5562572e81a006947b6b16d40d88010dde6861cdb48f28c505",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Achiran|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 850,
+   "numLandTiles": 284422,
+   "terrainSha256": "6bb208d8741ca5156c914f18bbbd65910a2ee97bbeec784e85b3f52e7ea4b650"
+  },
+  "mini": {
+   "width": 500,
+   "height": 425,
+   "numLandTiles": 69860,
+   "terrainSha256": "821ffbad880d5d1aafbd164a833efd315473b648a21971b5ba40ea4fc9e7451f"
+  },
+  "nations": 4,
+  "nationsSha256": "01c911293fe0bcfae637a3e4adcfcf027a4222d1141840386b8db509b2298ad5",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Aegean|Normal": {
+  "map": {
+   "width": 1700,
+   "height": 2000,
+   "numLandTiles": 1171283,
+   "terrainSha256": "0af9bb369fc0dcc279b2d95b8810331f99a5b801d8d6821c23ca0c4f63d994fc"
+  },
+  "mini": {
+   "width": 850,
+   "height": 1000,
+   "numLandTiles": 284992,
+   "terrainSha256": "b467347231f99aef2017fb55fdbde8079508cdf173e46903398b0f5d4e5fddbe"
+  },
+  "nations": 29,
+  "nationsSha256": "27e12be22159bd679094cd4034174d5db19eb593e315f7fadf126fe16c87c62e",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0ecdf88485d4cbc28e30ee3956c5638e45d22630356ae0baf29e3e2f41284aff"
+ },
+ "Aegean|Compact": {
+  "map": {
+   "width": 850,
+   "height": 1000,
+   "numLandTiles": 284992,
+   "terrainSha256": "b467347231f99aef2017fb55fdbde8079508cdf173e46903398b0f5d4e5fddbe"
+  },
+  "mini": {
+   "width": 425,
+   "height": 500,
+   "numLandTiles": 68047,
+   "terrainSha256": "a9bbcc7777cf26f37cb673e5d9e94159487df8ac899fa467a2eeeaa5d73f6041"
+  },
+  "nations": 29,
+  "nationsSha256": "e72e974d245e060f725ba8afbbe41122eb7b391b5e05d4e017e9add5b7921570",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "6e34bbe80d932e8488002bce7083d12332daf1db390a024fea98ac3d3ac5a8aa"
+ },
+ "Africa|Normal": {
+  "map": {
+   "width": 1948,
+   "height": 2032,
+   "numLandTiles": 2183279,
+   "terrainSha256": "f465381a44f0351d968ea7d52d76bd320024d3f6ca8c43b1948a3d3130d7945b"
+  },
+  "mini": {
+   "width": 974,
+   "height": 1016,
+   "numLandTiles": 537561,
+   "terrainSha256": "775c3488af8410aecd07096e810b49218e166354fffa6c4da31647fbce0b7a3d"
+  },
+  "nations": 44,
+  "nationsSha256": "bf8a7569d906cd1ab59f40d68d632338f1a8756bfdccde554369121f4227d11d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Africa|Compact": {
+  "map": {
+   "width": 974,
+   "height": 1016,
+   "numLandTiles": 537561,
+   "terrainSha256": "775c3488af8410aecd07096e810b49218e166354fffa6c4da31647fbce0b7a3d"
+  },
+  "mini": {
+   "width": 487,
+   "height": 508,
+   "numLandTiles": 130741,
+   "terrainSha256": "d70f0559285b85266d4fd66437658c44afeb8268d640ec8028f9f59cee60524a"
+  },
+  "nations": 44,
+  "nationsSha256": "bc32cf991154f31d97db0195a8325d6c91d850439e4bb7d47cd060936ff5a772",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Alps|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1836,
+   "numLandTiles": 3672000,
+   "terrainSha256": "2e5da1bdd724e0f58aa27812a31769dec390379a313977f7b9bb6ec4ab523ec2"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 918,
+   "numLandTiles": 918000,
+   "terrainSha256": "8502323bc0016296952bdbed250ef9ce1597e46b6c83727836a021491bd37d80"
+  },
+  "nations": 30,
+  "nationsSha256": "23b2fd423b511eb46f0c01a0504293e23206b06824b8f83c4bf687cb58808f34",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Alps|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 918,
+   "numLandTiles": 918000,
+   "terrainSha256": "8502323bc0016296952bdbed250ef9ce1597e46b6c83727836a021491bd37d80"
+  },
+  "mini": {
+   "width": 500,
+   "height": 459,
+   "numLandTiles": 229500,
+   "terrainSha256": "e3962dfe8443e9213909e058ccf38daa8b488a6b1f6847dde91c71d6e427f9d1"
+  },
+  "nations": 30,
+  "nationsSha256": "d864f682147fad81c7a17abdafa21543da8db589570e7ba87168a31fc0f73897",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Amazon River|Normal": {
+  "map": {
+   "width": 5536,
+   "height": 276,
+   "numLandTiles": 1150819,
+   "terrainSha256": "95c783b8230efd717ccb22f1b0e13eaeb5a842763c6fd4f5cdf2c9cbee4379f9"
+  },
+  "mini": {
+   "width": 2768,
+   "height": 138,
+   "numLandTiles": 284639,
+   "terrainSha256": "d4897f1ec65ef7e646aba42e21fdf75eb77c03fb8f74149024f17462a2b25eac"
+  },
+  "nations": 21,
+  "nationsSha256": "e97c15a74656fb8b165bed5de24ea521360561a2120a43c191d73a4400674ad3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Amazon River|Compact": {
+  "map": {
+   "width": 2768,
+   "height": 138,
+   "numLandTiles": 284639,
+   "terrainSha256": "d4897f1ec65ef7e646aba42e21fdf75eb77c03fb8f74149024f17462a2b25eac"
+  },
+  "mini": {
+   "width": 1384,
+   "height": 69,
+   "numLandTiles": 69687,
+   "terrainSha256": "0a382479fe676f09e655d93690097e40e56c4783b212452701b922f642f0b118"
+  },
+  "nations": 21,
+  "nationsSha256": "4ce96afcd970eeb5309717f3b6a5f8d587c1017a4d2cc8c1379f718404417731",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Antarctica|Normal": {
+  "map": {
+   "width": 2212,
+   "height": 2212,
+   "numLandTiles": 1292224,
+   "terrainSha256": "4a082bfc3e7011f77a9fd77460a0d74f630a103d3a8fa12ba4bb3d376bb65d69"
+  },
+  "mini": {
+   "width": 1106,
+   "height": 1106,
+   "numLandTiles": 320398,
+   "terrainSha256": "3577b16aee78cbb8d1950826f174dc55579c22ee7679b4c5f8951b8e0e76141d"
+  },
+  "nations": 30,
+  "nationsSha256": "c475a405629652d72ca09cba32167bdf0d5aacbf479b81f2931e01bad01c060a",
+  "additionalNationsSha256": "139b5026a8530b17be4df6891079a2c52687f0dae39fb6393a052d65226319e5",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Antarctica|Compact": {
+  "map": {
+   "width": 1106,
+   "height": 1106,
+   "numLandTiles": 320398,
+   "terrainSha256": "3577b16aee78cbb8d1950826f174dc55579c22ee7679b4c5f8951b8e0e76141d"
+  },
+  "mini": {
+   "width": 553,
+   "height": 553,
+   "numLandTiles": 79007,
+   "terrainSha256": "d8705306f1dbdf1cdc1baa3f40ff39302a3c7cbe2dda630dae5c801dcd441d67"
+  },
+  "nations": 30,
+  "nationsSha256": "8c5eff207d33cc71a88be074b0ed6f982ceb46f088807daa28c2c512c5a27587",
+  "additionalNationsSha256": "139b5026a8530b17be4df6891079a2c52687f0dae39fb6393a052d65226319e5",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "ArchipelagoSea|Normal": {
+  "map": {
+   "width": 3100,
+   "height": 1508,
+   "numLandTiles": 287155,
+   "terrainSha256": "892ebf1366db0ef2ea67a79f08abc0b90a333bc73415424b3e2cb357ad7ee3d1"
+  },
+  "mini": {
+   "width": 1550,
+   "height": 754,
+   "numLandTiles": 52779,
+   "terrainSha256": "33fa5db74a58eabe513a26658a96238fec611911628b9517227358399b02e478"
+  },
+  "nations": 20,
+  "nationsSha256": "d25a63875aa317e51070a15d2354ed5473dd49a919fae04fd89e1efc4ae8d0cd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "ArchipelagoSea|Compact": {
+  "map": {
+   "width": 1550,
+   "height": 754,
+   "numLandTiles": 52779,
+   "terrainSha256": "33fa5db74a58eabe513a26658a96238fec611911628b9517227358399b02e478"
+  },
+  "mini": {
+   "width": 775,
+   "height": 377,
+   "numLandTiles": 9586,
+   "terrainSha256": "1d4e5460898f121a31852e81117ab67dab3df403c0fc0b99e09071fa4362297c"
+  },
+  "nations": 20,
+  "nationsSha256": "6db6e36a2e9b1bdc6ea365fcb851baf43504ff538efe471c53eb53fa68b5ea44",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Arctic|Normal": {
+  "map": {
+   "width": 1828,
+   "height": 1828,
+   "numLandTiles": 1679064,
+   "terrainSha256": "f0d50436c4e21e0bf4e40b3bf175d92889c77ee99000e40edaa6152d2ec4cce9"
+  },
+  "mini": {
+   "width": 914,
+   "height": 914,
+   "numLandTiles": 409202,
+   "terrainSha256": "39000f5bccdfdaec2452c46ea00e164354c1c5a546dd520c82f9c74477b852aa"
+  },
+  "nations": 44,
+  "nationsSha256": "33c7b520c75aeec2cacfba3d4f35e3b114152894a42bad7646cc6b8b6e70cb03",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Arctic|Compact": {
+  "map": {
+   "width": 914,
+   "height": 914,
+   "numLandTiles": 409202,
+   "terrainSha256": "39000f5bccdfdaec2452c46ea00e164354c1c5a546dd520c82f9c74477b852aa"
+  },
+  "mini": {
+   "width": 457,
+   "height": 457,
+   "numLandTiles": 97905,
+   "terrainSha256": "d492d87fac1a444fd4d56591fb117faf9d38093e289b61fdfff6f4ab233cd357"
+  },
+  "nations": 44,
+  "nationsSha256": "ed750976560ccbfc26b3e8a68dac3ff70e3eea729c7569ef95ddaffa7ac6e0f2",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Asia|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1200,
+   "numLandTiles": 1079587,
+   "terrainSha256": "c49fb256a4cde4f169c3436180febcc4ecf8844966b9a803ff18fda1ef1532d2"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 600,
+   "numLandTiles": 265522,
+   "terrainSha256": "619307d4208256e87e0f45769f7ace1514d0d30ff773bcdb97df0660716500fe"
+  },
+  "nations": 25,
+  "nationsSha256": "f62642f70f4413184e81d549c25a7a9fda7b47a96037707f83904ee77e4d1d8f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Asia|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 600,
+   "numLandTiles": 265522,
+   "terrainSha256": "619307d4208256e87e0f45769f7ace1514d0d30ff773bcdb97df0660716500fe"
+  },
+  "mini": {
+   "width": 500,
+   "height": 300,
+   "numLandTiles": 64809,
+   "terrainSha256": "484f4b08fc9f0e2af143203db681e066707622e447b0165533ff5be53c7bfa4b"
+  },
+  "nations": 25,
+  "nationsSha256": "128da4f7b507ab8d3eaca4661a7cd93777820074004393e9a828bec4d4fa1879",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Australia|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1500,
+   "numLandTiles": 1319763,
+   "terrainSha256": "997ce7afec065820a5379ca8bfdbab611f2ce644a4fafecb784322e0a5312620"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 328153,
+   "terrainSha256": "5a233c3ddc966c2620508a6630d7cb78d6e431111a87ac63f89b8223519150ab"
+  },
+  "nations": 7,
+  "nationsSha256": "c5e770469d13368510b310fa8af0e9f00c9d0c8902b04464e9c07c1ea5c7a81c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Australia|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 328153,
+   "terrainSha256": "5a233c3ddc966c2620508a6630d7cb78d6e431111a87ac63f89b8223519150ab"
+  },
+  "mini": {
+   "width": 500,
+   "height": 375,
+   "numLandTiles": 81252,
+   "terrainSha256": "c5678f3a9573b05398167c837155ab9564d0e840d15ef9b412aa4dd02963d667"
+  },
+  "nations": 7,
+  "nationsSha256": "edcf7ee180cdacfb77381c52813c3d4d55f3b4d1c2a720a307e9e23ac27578bb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Baikal|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1564,
+   "numLandTiles": 2181746,
+   "terrainSha256": "667bb3a9e9a7cd681da00ae1ecdb555de3be629df86d1e6420075d332ba7abac"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 782,
+   "numLandTiles": 540826,
+   "terrainSha256": "c993bdcb79e6821856c0e877475c22a40038c195a627256139083976f8e934c3"
+  },
+  "nations": 11,
+  "nationsSha256": "6fe799e7040cf634954fed47b045ec5bf0cabbc83adba5ec4be8724785bcb634",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "8c1f4e7467a390f658b2430ecc402765046ebb4ea998aa7de269d82caccea96d"
+ },
+ "Baikal|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 782,
+   "numLandTiles": 540826,
+   "terrainSha256": "c993bdcb79e6821856c0e877475c22a40038c195a627256139083976f8e934c3"
+  },
+  "mini": {
+   "width": 625,
+   "height": 391,
+   "numLandTiles": 133081,
+   "terrainSha256": "3b79c183b33d3fd14cbdfd217c1e408b5ecfc6386b16cdfc411e33838bb2338c"
+  },
+  "nations": 11,
+  "nationsSha256": "f7cbd7eea7f15a0798baf65184f9bdcc72d23417967ecb817a9e52c4523121a7",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0709af607cd0d5babb9fcc1b50d4be838047308ada264912f887038cf6b93573"
+ },
+ "Baikal Nuke Wars|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1564,
+   "numLandTiles": 1968430,
+   "terrainSha256": "48adf76868e4da14603b49ad516e45eba513a985829a4cd12dffb0adb8aa6a43"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 782,
+   "numLandTiles": 488323,
+   "terrainSha256": "6db388d45d341cdac7eb6b099a02cd9b361394a2f8f08f77cbfe2a80b1546843"
+  },
+  "nations": 0,
+  "nationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "8c1f4e7467a390f658b2430ecc402765046ebb4ea998aa7de269d82caccea96d"
+ },
+ "Baikal Nuke Wars|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 782,
+   "numLandTiles": 488323,
+   "terrainSha256": "6db388d45d341cdac7eb6b099a02cd9b361394a2f8f08f77cbfe2a80b1546843"
+  },
+  "mini": {
+   "width": 625,
+   "height": 391,
+   "numLandTiles": 120322,
+   "terrainSha256": "4c3565abd778cc935196b8feddf4238285e6667a7f4796a1f29b5685aa5305f9"
+  },
+  "nations": 0,
+  "nationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0709af607cd0d5babb9fcc1b50d4be838047308ada264912f887038cf6b93573"
+ },
+ "Baja California|Normal": {
+  "map": {
+   "width": 1800,
+   "height": 2120,
+   "numLandTiles": 1345295,
+   "terrainSha256": "4122339bb2e407d03fc74fe5a57b08bdfa7ba832b9a27cb889ad6f393db18439"
+  },
+  "mini": {
+   "width": 900,
+   "height": 1060,
+   "numLandTiles": 331582,
+   "terrainSha256": "2c051d6ed70b9e9af0e79aa7d91fea03b92b33af406f3750c14909c4208f5ed2"
+  },
+  "nations": 8,
+  "nationsSha256": "625ebfa8003fa2353edb54e3439cb9e6355818a40ad98e458bd1cbf1719ced04",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Baja California|Compact": {
+  "map": {
+   "width": 900,
+   "height": 1060,
+   "numLandTiles": 331582,
+   "terrainSha256": "2c051d6ed70b9e9af0e79aa7d91fea03b92b33af406f3750c14909c4208f5ed2"
+  },
+  "mini": {
+   "width": 450,
+   "height": 530,
+   "numLandTiles": 80847,
+   "terrainSha256": "c9e53e692c5cf706a9e1ee0ce6cae0c0030090652230c12a056a15924bfb5dda"
+  },
+  "nations": 8,
+  "nationsSha256": "13a65a64ba668362b3226467565a156f8700165ab4131aea7245a231fde1a8f5",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Balkans|Normal": {
+  "map": {
+   "width": 2048,
+   "height": 2048,
+   "numLandTiles": 2478805,
+   "terrainSha256": "073920a8f6271063b26b3e9c0398ed7516222ae4e0a1904aa1c8931daaace8ae"
+  },
+  "mini": {
+   "width": 1024,
+   "height": 1024,
+   "numLandTiles": 610629,
+   "terrainSha256": "019321ce2cd6333c9c072772827e09bd36c0bb456c9a3e012eb1eb419dc38e88"
+  },
+  "nations": 23,
+  "nationsSha256": "54295a43a4488c8b0d6cfdd2b875ef3a8dd5a925e9ab50446a16e07ec2318e04",
+  "additionalNationsSha256": "a70189b59c2770640b410840d892f56e2a4cb76e197074bedc972add432b6f46",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Balkans|Compact": {
+  "map": {
+   "width": 1024,
+   "height": 1024,
+   "numLandTiles": 610629,
+   "terrainSha256": "019321ce2cd6333c9c072772827e09bd36c0bb456c9a3e012eb1eb419dc38e88"
+  },
+  "mini": {
+   "width": 512,
+   "height": 512,
+   "numLandTiles": 148759,
+   "terrainSha256": "351e0355fed4c67f709ca6fe0292eb858e42c0defb4cb46dbc90616cd3abba08"
+  },
+  "nations": 23,
+  "nationsSha256": "cc75527d3e46d6965cd906268ec5dceeedaade420ae837207b1d96c26c7bfa03",
+  "additionalNationsSha256": "930e74669098af3cd9ca9951b69386d9098413c98507062467c13f508795a68f",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Balkhash|Normal": {
+  "map": {
+   "width": 3300,
+   "height": 1500,
+   "numLandTiles": 2361045,
+   "terrainSha256": "eea2951e4ff92fefdbdbda20a0216cfd63d50520ceb5361a0c2664a8b223f021"
+  },
+  "mini": {
+   "width": 1650,
+   "height": 750,
+   "numLandTiles": 584289,
+   "terrainSha256": "bb540b0274a5f130ab248942631a0fee0f91fcf2502e57a96879f2469e60bec0"
+  },
+  "nations": 26,
+  "nationsSha256": "9c816ccb8feeec5f3c44f747b2b42cf93fd5b02f130c9180b5d028c93adc3f54",
+  "additionalNationsSha256": "c265e2948d7f6644db0caa25c2b06345c19dc77b1237239d961a208c0c2fe933",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Balkhash|Compact": {
+  "map": {
+   "width": 1650,
+   "height": 750,
+   "numLandTiles": 584289,
+   "terrainSha256": "bb540b0274a5f130ab248942631a0fee0f91fcf2502e57a96879f2469e60bec0"
+  },
+  "mini": {
+   "width": 825,
+   "height": 375,
+   "numLandTiles": 143351,
+   "terrainSha256": "a645d8f5dafd5240ad6536f0279746c9fc909dc46f0b51a3b2910d71ac73b197"
+  },
+  "nations": 26,
+  "nationsSha256": "47ac2b0c66a83d255b2c0ec2639b31304f4a497ba1122f34607ef41d5f37ac2f",
+  "additionalNationsSha256": "c265e2948d7f6644db0caa25c2b06345c19dc77b1237239d961a208c0c2fe933",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Baltics|Normal": {
+  "map": {
+   "width": 1364,
+   "height": 1324,
+   "numLandTiles": 1039982,
+   "terrainSha256": "57f72ec16a63a397e1c866f3c3a1750d195ff60d0932fe2483aba1b1a4221248"
+  },
+  "mini": {
+   "width": 682,
+   "height": 662,
+   "numLandTiles": 256370,
+   "terrainSha256": "7a49a5bd8e6ecc4f544dd3950cbcf42c47b082a485a22fef5413241062b331b0"
+  },
+  "nations": 35,
+  "nationsSha256": "88223ce0e0ca248242ebe228d409614eb981e3939970397fb07c426501e28aec",
+  "additionalNationsSha256": "e54196b7c74ca3ee2aad276eed1cf8b00eabbc99fd2728b663cff3159e60dff0",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Baltics|Compact": {
+  "map": {
+   "width": 682,
+   "height": 662,
+   "numLandTiles": 256370,
+   "terrainSha256": "7a49a5bd8e6ecc4f544dd3950cbcf42c47b082a485a22fef5413241062b331b0"
+  },
+  "mini": {
+   "width": 341,
+   "height": 331,
+   "numLandTiles": 62702,
+   "terrainSha256": "114e34d10dcb638d7598dfb0fcb938b72e46d3740146528239a93d48d9744acb"
+  },
+  "nations": 35,
+  "nationsSha256": "3d640287cf2d2ee00a6aef96ef6678bf13a2f36c098f0fcdae28c930ee0a2080",
+  "additionalNationsSha256": "3bf3beaafa497c9dfe10b5bbf30e7735a4e9cb477a85451c14d3b07ceaafc130",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Bering Sea|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1600,
+   "numLandTiles": 1615723,
+   "terrainSha256": "35c7b41358f19eb5f2e94d0a7efae0be176c92ae936e394e9646d25278d1c974"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 800,
+   "numLandTiles": 396641,
+   "terrainSha256": "f1e153b9610407f0c6fba8eb088f552b6f965a7e1dcff9f1a9e04e6841c2867b"
+  },
+  "nations": 24,
+  "nationsSha256": "9927d27343ce74b0c01bf47716ca295e56cae51742a4c7bbc9ee7ecc2a319b8a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "b00b73a787e687eca7f4a64660e43a3eb0caa740058776fec656cf4e6e8cf04e"
+ },
+ "Bering Sea|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 800,
+   "numLandTiles": 396641,
+   "terrainSha256": "f1e153b9610407f0c6fba8eb088f552b6f965a7e1dcff9f1a9e04e6841c2867b"
+  },
+  "mini": {
+   "width": 625,
+   "height": 400,
+   "numLandTiles": 96248,
+   "terrainSha256": "df6746df3d2e79a76f46e9b222047e70c6fcabff508793ba6cddf11dead9261a"
+  },
+  "nations": 24,
+  "nationsSha256": "3ab6bbad7fcc5525d48e12844323d25416d304fd60b4f5eb76b20406e3be1541",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "48ba5a5c7d55d9e7c6d5a20570f873fb2e96d524e05afa8068e652a5e3b1beb3"
+ },
+ "Bering Strait|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 916,
+   "numLandTiles": 596037,
+   "terrainSha256": "fe584999c4d938782bae58c3bc3f3245b63aa5c1ba4881746b11b67fdbb66684"
+  },
+  "mini": {
+   "width": 750,
+   "height": 458,
+   "numLandTiles": 146565,
+   "terrainSha256": "316b76c7d8c99d94686714d8e18d8e4c1f253f0592b965efed828406a7f2b95d"
+  },
+  "nations": 2,
+  "nationsSha256": "3e39f0e5c021eb757ca74b07359b5fbd3f9ab2e0a4559166172ca5e817a8824c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "4048b8e49d9ee7f25b586d52bc65a424e507f78cff7868cf973513e5bc2c33d1"
+ },
+ "Bering Strait|Compact": {
+  "map": {
+   "width": 750,
+   "height": 458,
+   "numLandTiles": 146565,
+   "terrainSha256": "316b76c7d8c99d94686714d8e18d8e4c1f253f0592b965efed828406a7f2b95d"
+  },
+  "mini": {
+   "width": 375,
+   "height": 229,
+   "numLandTiles": 35520,
+   "terrainSha256": "443780b1ccf7f60cf69d073124550c2aec1b0d323f559ab5601cd0a9f2620d68"
+  },
+  "nations": 2,
+  "nationsSha256": "401c8df145e709c49176dcd22c830b1f27814be8b6103bf4a308491883ee212c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "87e505cf20c00f24412f2e65aa71ccac230efe2fe5b27b8e07bf009b6d2adf6b"
+ },
+ "Between Two Seas|Normal": {
+  "map": {
+   "width": 1776,
+   "height": 1060,
+   "numLandTiles": 1478803,
+   "terrainSha256": "7f57e22ec6bd23bca713ac3dbd13d36e0ebb79baf7ad34eda401d97d77ca5569"
+  },
+  "mini": {
+   "width": 888,
+   "height": 530,
+   "numLandTiles": 364078,
+   "terrainSha256": "1613c53f4512631e4d17867fb71be8dc3061373efe101f33091379580047b6f3"
+  },
+  "nations": 15,
+  "nationsSha256": "d7f4acf701c9c831e36e223f99d3bba02d41a4793c9ea136213f9173a903df3e",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Between Two Seas|Compact": {
+  "map": {
+   "width": 888,
+   "height": 530,
+   "numLandTiles": 364078,
+   "terrainSha256": "1613c53f4512631e4d17867fb71be8dc3061373efe101f33091379580047b6f3"
+  },
+  "mini": {
+   "width": 444,
+   "height": 265,
+   "numLandTiles": 88486,
+   "terrainSha256": "6146f34c682c2bf0198a2b39dadd8fdef37bc85d9af727d38cbf3889a74f38e7"
+  },
+  "nations": 15,
+  "nationsSha256": "6b1ded0e6842e2e20d762997389e6492faa0516c9d32e32d80abbb4fd49b3a0a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Black Sea|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1100,
+   "numLandTiles": 1165868,
+   "terrainSha256": "393026a29dfb93293acdf6995e0a4a3f92e8b45e5d336867a66857ba7fbdf424"
+  },
+  "mini": {
+   "width": 750,
+   "height": 550,
+   "numLandTiles": 285772,
+   "terrainSha256": "4aa6ca6bba9f70e554e7f96ba0588521efc7b21faa5d8e742159e41b984f708e"
+  },
+  "nations": 9,
+  "nationsSha256": "6d26d9d95003116771e766c98cf52410e474527906fa660e821d1a8e5193e863",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Black Sea|Compact": {
+  "map": {
+   "width": 750,
+   "height": 550,
+   "numLandTiles": 285772,
+   "terrainSha256": "4aa6ca6bba9f70e554e7f96ba0588521efc7b21faa5d8e742159e41b984f708e"
+  },
+  "mini": {
+   "width": 375,
+   "height": 275,
+   "numLandTiles": 68961,
+   "terrainSha256": "f54c0435caae22ad8aeaea8cefcdd2efc75f941b17f9f3562069ca1349deb243"
+  },
+  "nations": 9,
+  "nationsSha256": "98ad3ceb398fc5023dde6fc1b9913af0c2b234d1fa961590c1631bb7a84bfdcc",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Bosphorus Straits|Normal": {
+  "map": {
+   "width": 1000,
+   "height": 612,
+   "numLandTiles": 382332,
+   "terrainSha256": "03c1bc58b4ad2791cf615cd841650c1e9f83bd0ba35be81e0e406813a7f45c25"
+  },
+  "mini": {
+   "width": 500,
+   "height": 306,
+   "numLandTiles": 93711,
+   "terrainSha256": "8da389126a27e09a3237e40baec983818e6d6be542dff9218528cffdf6cd1933"
+  },
+  "nations": 22,
+  "nationsSha256": "7546121871340102b7b5fb53764e95730498a83f8a3a3655e7e5db02ce19519d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "bd4b061f000a308f38692fd88879a024a8f548304a8f715e2613146a35d465bd"
+ },
+ "Bosphorus Straits|Compact": {
+  "map": {
+   "width": 500,
+   "height": 306,
+   "numLandTiles": 93711,
+   "terrainSha256": "8da389126a27e09a3237e40baec983818e6d6be542dff9218528cffdf6cd1933"
+  },
+  "mini": {
+   "width": 250,
+   "height": 153,
+   "numLandTiles": 22523,
+   "terrainSha256": "984bd978938db74cb5893292bb49b4add47ce0333ae6e2728c128904eb4d9d9a"
+  },
+  "nations": 22,
+  "nationsSha256": "6adb78887d31539ed891374d12d934704f606d02970fa8e3d34517f1fc00a1c3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "2008a83a140c708ec55f6a766097a65c0f76e4fa5465fe7376463276b3510967"
+ },
+ "Branching Paths|Normal": {
+  "map": {
+   "width": 2480,
+   "height": 2148,
+   "numLandTiles": 2103911,
+   "terrainSha256": "1c75532209cc9e0ebce541d3630ba7974dd2e457b0f95ab58c84c8879cddffd9"
+  },
+  "mini": {
+   "width": 1240,
+   "height": 1074,
+   "numLandTiles": 514307,
+   "terrainSha256": "9342467a268a66d6ca4dd0b28f627f8f76311aa878275568ddceaba8eb16019b"
+  },
+  "nations": 19,
+  "nationsSha256": "4f6405decadbd35aba0c9475bbc1a19f6d7b5f2798bb203350fc50ef7407c4ca",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Branching Paths|Compact": {
+  "map": {
+   "width": 1240,
+   "height": 1074,
+   "numLandTiles": 514307,
+   "terrainSha256": "9342467a268a66d6ca4dd0b28f627f8f76311aa878275568ddceaba8eb16019b"
+  },
+  "mini": {
+   "width": 620,
+   "height": 537,
+   "numLandTiles": 122812,
+   "terrainSha256": "f65a18cc312dffda866b8d0173c72eb0309c6668ec0f0387ca6aa9d1989ad1aa"
+  },
+  "nations": 19,
+  "nationsSha256": "b011836a4e56d72fc3ad045d45926d12945dd4984cd6440fdc16eb85369d7cbc",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Britannia|Normal": {
+  "map": {
+   "width": 1600,
+   "height": 2088,
+   "numLandTiles": 1183898,
+   "terrainSha256": "abff18fa1c7f5fc7684060230f1febf1e297d6f41ce7fa0394a42bc41f808e94"
+  },
+  "mini": {
+   "width": 800,
+   "height": 1044,
+   "numLandTiles": 290479,
+   "terrainSha256": "fd5195ab5cf9a6f7b71272e996dcb8d7146c4adb56f663769dd49b464a6f300a"
+  },
+  "nations": 20,
+  "nationsSha256": "1e055eaf359e4378d33c26ef60995637ace49a20dce4652275d7e63d9ff10945",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Britannia|Compact": {
+  "map": {
+   "width": 800,
+   "height": 1044,
+   "numLandTiles": 290479,
+   "terrainSha256": "fd5195ab5cf9a6f7b71272e996dcb8d7146c4adb56f663769dd49b464a6f300a"
+  },
+  "mini": {
+   "width": 400,
+   "height": 522,
+   "numLandTiles": 70110,
+   "terrainSha256": "7e7e9653b6b4f6ab861cee404923389ed6cddb2bbe99432eb57336a3b29ae582"
+  },
+  "nations": 20,
+  "nationsSha256": "538f2af20d9203a5e09d6d277320b4ffd3ce6a59d84941bdafd0d2ea3219a2f5",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Britannia Classic|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1396,
+   "numLandTiles": 933571,
+   "terrainSha256": "51461d14913ad2bb1a1039f43493e67979e19b5c5d35ceba16996519b09e760c"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 698,
+   "numLandTiles": 228703,
+   "terrainSha256": "e4057294fbbaee1f5f34c686498658b5faef3ded6b7dcd16b960f6f8ff0d6d4d"
+  },
+  "nations": 23,
+  "nationsSha256": "fda0638396847fa9479a6bf1c59818d6cc36f463a875b20f3e4c7f1d00b99fd2",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Britannia Classic|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 698,
+   "numLandTiles": 228703,
+   "terrainSha256": "e4057294fbbaee1f5f34c686498658b5faef3ded6b7dcd16b960f6f8ff0d6d4d"
+  },
+  "mini": {
+   "width": 500,
+   "height": 349,
+   "numLandTiles": 54968,
+   "terrainSha256": "7c61c098a6c4b7c491d7a65220af334ed0078af98762af51d3ed66e33b8b2708"
+  },
+  "nations": 23,
+  "nationsSha256": "dc739891a691c4c09c2f37c2dc78ce3b5f97474bbbe047a3531c1b3a05c70e03",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Cape Cod|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1240,
+   "numLandTiles": 594679,
+   "terrainSha256": "e778ff36dfde5e128df6b585767a8577f65159028411e56703af18ff721e30e6"
+  },
+  "mini": {
+   "width": 750,
+   "height": 620,
+   "numLandTiles": 143346,
+   "terrainSha256": "c02115951f62b16285f8ea8a8f7a523563b01eb0934362a5d6abfb6804e13a78"
+  },
+  "nations": 31,
+  "nationsSha256": "2b4e2924dcb040119e0941de6934efce1034b26caef92fca277ae19064e0e189",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Cape Cod|Compact": {
+  "map": {
+   "width": 750,
+   "height": 620,
+   "numLandTiles": 143346,
+   "terrainSha256": "c02115951f62b16285f8ea8a8f7a523563b01eb0934362a5d6abfb6804e13a78"
+  },
+  "mini": {
+   "width": 375,
+   "height": 310,
+   "numLandTiles": 34096,
+   "terrainSha256": "03fee8782742b953478902a98716f170f01a1e34a34ae59bf78b89861f3270f9"
+  },
+  "nations": 31,
+  "nationsSha256": "a3990f8d8d91d569267b45a94e3a1a5af5a3ac189878c5de4eefd50789fbe788",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Caribbean|Normal": {
+  "map": {
+   "width": 3200,
+   "height": 1808,
+   "numLandTiles": 577573,
+   "terrainSha256": "5b8edfe2ddc290176b5dff115ce4f72ed6f0c823c9383e3a7f6bed18d64984f8"
+  },
+  "mini": {
+   "width": 1600,
+   "height": 904,
+   "numLandTiles": 138280,
+   "terrainSha256": "013093f40272cd844a75f0b21b94ba7d1cb9640017181187019635cb7bd41faf"
+  },
+  "nations": 34,
+  "nationsSha256": "ba747ecd6fc124e95ee95c2b8109c2fa6cd98db199fa309dc1648e289fef7e4e",
+  "additionalNationsSha256": "6a2b6b0308b9ef4adb31adb3d7b208304ad07666f6aea5810dea043d7e0c117e",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Caribbean|Compact": {
+  "map": {
+   "width": 1600,
+   "height": 904,
+   "numLandTiles": 138280,
+   "terrainSha256": "013093f40272cd844a75f0b21b94ba7d1cb9640017181187019635cb7bd41faf"
+  },
+  "mini": {
+   "width": 800,
+   "height": 452,
+   "numLandTiles": 32566,
+   "terrainSha256": "85707a51af0b7ccbd757c813f5ae5473e9e031eda0aa625bc10a3311f6d399dc"
+  },
+  "nations": 34,
+  "nationsSha256": "1980200be8540a72a6815fb2cf9551b48098e6fa239984abcccd8abb1c74d6d2",
+  "additionalNationsSha256": "8c794931c722d5cd552d69adf1704b721d114c71e2697ed6c16d2b8a9866a98f",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Caspian Sea|Normal": {
+  "map": {
+   "width": 1008,
+   "height": 1728,
+   "numLandTiles": 951192,
+   "terrainSha256": "9d89cd69287179d091c0f664fd040d70e9ab05a4278a9298007754e6c301efae"
+  },
+  "mini": {
+   "width": 504,
+   "height": 864,
+   "numLandTiles": 235925,
+   "terrainSha256": "5acd2bb44ea64a0e8387b484b37696864e28f12b492028db35d6df3bf3e58f94"
+  },
+  "nations": 12,
+  "nationsSha256": "2a2c4621a8a14a78c2e2666598f67bd1e41e34b8e180c0ddb1c847dd4b740d98",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "2931a2a57f036ef5364e5c993b92452c51dfb3429d362929b11cf780d5c59270"
+ },
+ "Caspian Sea|Compact": {
+  "map": {
+   "width": 504,
+   "height": 864,
+   "numLandTiles": 235925,
+   "terrainSha256": "5acd2bb44ea64a0e8387b484b37696864e28f12b492028db35d6df3bf3e58f94"
+  },
+  "mini": {
+   "width": 252,
+   "height": 432,
+   "numLandTiles": 58158,
+   "terrainSha256": "d5dc511c5d6c4ac780a1ad97ae020e644022fbe2e43682ae1dc8ef72659611d9"
+  },
+  "nations": 12,
+  "nationsSha256": "1555147127c61f205353c920ee4f92a0e2b993701b1bc3cba9a6eb2f84a9b8f2",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "ffd0feabee7bee1284bc4e091ccbf6fa07c2c1f135585641af0ef4ad37f54b0e"
+ },
+ "Caucasus|Normal": {
+  "map": {
+   "width": 1248,
+   "height": 1000,
+   "numLandTiles": 846140,
+   "terrainSha256": "c9ae8885e3bcfe298c2f9d512feca4d8978fe8007e0066678a5afced3eb44d5a"
+  },
+  "mini": {
+   "width": 624,
+   "height": 500,
+   "numLandTiles": 209226,
+   "terrainSha256": "67d244184d6628d14d57d202f0162a860a8c50b0f6f80cc55704f961425ba934"
+  },
+  "nations": 21,
+  "nationsSha256": "2a9b50e5ad1984d8bd46690fca3ed84c174340c3d7bf5d758f07a575c2947932",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Caucasus|Compact": {
+  "map": {
+   "width": 624,
+   "height": 500,
+   "numLandTiles": 209226,
+   "terrainSha256": "67d244184d6628d14d57d202f0162a860a8c50b0f6f80cc55704f961425ba934"
+  },
+  "mini": {
+   "width": 312,
+   "height": 250,
+   "numLandTiles": 51199,
+   "terrainSha256": "003883b158847060cb9d1a92abc35d3b2da63b4216b9536bf6abb10664743d52"
+  },
+  "nations": 21,
+  "nationsSha256": "101750b4f30ba51dfab8fdca1053e71c5b192e1dcb8791a319dd301eb8462344",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Central America|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1956,
+   "numLandTiles": 1162805,
+   "terrainSha256": "69e07a3df6df010d27b314c0582ef7ddecf0fd3d79bdd17e497a7679324fff29"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 978,
+   "numLandTiles": 285673,
+   "terrainSha256": "10aa195e1d376aaa77d561a8a8e365e2a567619c00da0fb81723aa6547a719b8"
+  },
+  "nations": 22,
+  "nationsSha256": "819b60dd42e5f5321cb5fc96bb4e4cfcef3a34f91d07a7d62d5fe058ebf2db23",
+  "additionalNationsSha256": "1f3d89c2a7e9d4a1970e5b7fc71162d23bab027f06306c76eb42fbff5a7d4cac",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Central America|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 978,
+   "numLandTiles": 285673,
+   "terrainSha256": "10aa195e1d376aaa77d561a8a8e365e2a567619c00da0fb81723aa6547a719b8"
+  },
+  "mini": {
+   "width": 625,
+   "height": 489,
+   "numLandTiles": 69355,
+   "terrainSha256": "178d1ea2b3189a8af9518022aeff94b6e28a76e0e420d078de53f0899aecaf1d"
+  },
+  "nations": 22,
+  "nationsSha256": "a2038aad2d80df4df67c38f09540f925cb73668523904edbd8494a638f8f1a19",
+  "additionalNationsSha256": "2056852d7ef7410f9b8a8e28396f1eb27fb8ad82c4f9881e2acfb2b336d4dc89",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Channel Islands|Normal": {
+  "map": {
+   "width": 4744,
+   "height": 2628,
+   "numLandTiles": 1828256,
+   "terrainSha256": "3c96e699a2c702c175cefa01d90419a29d473070b126508957081ad152516def"
+  },
+  "mini": {
+   "width": 2372,
+   "height": 1314,
+   "numLandTiles": 452399,
+   "terrainSha256": "8ecbc928ea1e9e7cb1821304e345c30d14fa2ba5d66ebc1a2457435559b95a5e"
+  },
+  "nations": 44,
+  "nationsSha256": "d4982a6d361eb27396e938eb1920a4cfecd230c8801c49407ae4154a783e6254",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Channel Islands|Compact": {
+  "map": {
+   "width": 2372,
+   "height": 1314,
+   "numLandTiles": 452399,
+   "terrainSha256": "8ecbc928ea1e9e7cb1821304e345c30d14fa2ba5d66ebc1a2457435559b95a5e"
+  },
+  "mini": {
+   "width": 1186,
+   "height": 657,
+   "numLandTiles": 111072,
+   "terrainSha256": "9bfd70e21ed69b08de3388910c348f32244ef6419eb55e34da7730e13212b0a5"
+  },
+  "nations": 44,
+  "nationsSha256": "905c12862a045a3c94e3c10ecf122773d0f749f014e9ebb970ed0be4819e0a78",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "China|Normal": {
+  "map": {
+   "width": 2248,
+   "height": 2024,
+   "numLandTiles": 1570704,
+   "terrainSha256": "98efeaa9da01cc46660394427046d7f8fcbdf85677853c5bd803f16319ec88eb"
+  },
+  "mini": {
+   "width": 1124,
+   "height": 1012,
+   "numLandTiles": 386972,
+   "terrainSha256": "c31a6ea8ecf385a56d35fec5e100b6991332ddee9a74a4a6ea029f40fb07cd49"
+  },
+  "nations": 34,
+  "nationsSha256": "f1416d3175e9bad9f6264c8893098385b497ce06a48b0891adfda08f0fcf0cb7",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "China|Compact": {
+  "map": {
+   "width": 1124,
+   "height": 1012,
+   "numLandTiles": 386972,
+   "terrainSha256": "c31a6ea8ecf385a56d35fec5e100b6991332ddee9a74a4a6ea029f40fb07cd49"
+  },
+  "mini": {
+   "width": 562,
+   "height": 506,
+   "numLandTiles": 94112,
+   "terrainSha256": "ebe303d35c2c2123b2709710f8bcbe2ab21ac14a736cde642eb92eca05c521d0"
+  },
+  "nations": 34,
+  "nationsSha256": "b8ff04a03aa640d014769d222074cce213625362272248d166ffcf59dde9a1ca",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Chopping Block|Normal": {
+  "map": {
+   "width": 1616,
+   "height": 1616,
+   "numLandTiles": 1485703,
+   "terrainSha256": "f885328233b7b0da4099ccdd80d7698b15118582b1530b86322fdf936e0ea252"
+  },
+  "mini": {
+   "width": 808,
+   "height": 808,
+   "numLandTiles": 364395,
+   "terrainSha256": "a1fdb85c179573ccdd99d2ffceedd09157c417f9505ab12cfe4aed7674a6329e"
+  },
+  "nations": 32,
+  "nationsSha256": "d34b3c5529feadeb4e87076420a61f92991de5e8fd8cee7e830b7172da52b502",
+  "additionalNationsSha256": "161585140269e5706fbe5b2747dfc5a98aa249d59cedb7907990e5abf784cfd4",
+  "teamSpawnAreasSha256": "6b32b1efb0908522911ef2b51180df372c47fb99a37f642bf9c0acc2e5591960"
+ },
+ "Chopping Block|Compact": {
+  "map": {
+   "width": 808,
+   "height": 808,
+   "numLandTiles": 364395,
+   "terrainSha256": "a1fdb85c179573ccdd99d2ffceedd09157c417f9505ab12cfe4aed7674a6329e"
+  },
+  "mini": {
+   "width": 404,
+   "height": 404,
+   "numLandTiles": 87035,
+   "terrainSha256": "b52c4e62bd461666143be5fb5763acce63efb21ae3e8378ecd368eac56f66df3"
+  },
+  "nations": 32,
+  "nationsSha256": "9171bfe441e4e26d9ec83710b4313e6302ceb08ae72a1fb39900c7b6fb485a56",
+  "additionalNationsSha256": "161585140269e5706fbe5b2747dfc5a98aa249d59cedb7907990e5abf784cfd4",
+  "teamSpawnAreasSha256": "e7e1a03dca163461b60a058a9e2720150ddab8335f44306fbb7179814e56eee8"
+ },
+ "Clearwater Lakes|Normal": {
+  "map": {
+   "width": 1872,
+   "height": 1656,
+   "numLandTiles": 841410,
+   "terrainSha256": "b8bee65d720c947048f1e80669d63285609c10caf536c8cc5231aada5746db4c"
+  },
+  "mini": {
+   "width": 936,
+   "height": 828,
+   "numLandTiles": 197274,
+   "terrainSha256": "fa08773c7e53557f36eeaa1e4dd0e0307b49a2b1ca4cc7147a7570947ba84042"
+  },
+  "nations": 13,
+  "nationsSha256": "d1970ef50fa137d6c304745e5a9d15cf77c324df220cc15dfed76ad9d71d091c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Clearwater Lakes|Compact": {
+  "map": {
+   "width": 936,
+   "height": 828,
+   "numLandTiles": 197274,
+   "terrainSha256": "fa08773c7e53557f36eeaa1e4dd0e0307b49a2b1ca4cc7147a7570947ba84042"
+  },
+  "mini": {
+   "width": 468,
+   "height": 414,
+   "numLandTiles": 44150,
+   "terrainSha256": "587a4fbce6dc758cd5c37458729958d0d23b44b871948ebbd6ccba694216c5d6"
+  },
+  "nations": 13,
+  "nationsSha256": "088444613f0c2a62b21511c8bc51af1a6ee4261d7e684e8233b075b80f35b9b9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Conakry|Normal": {
+  "map": {
+   "width": 2456,
+   "height": 1000,
+   "numLandTiles": 1108371,
+   "terrainSha256": "c3147889928417926a4ded26444f9b534d1a2b7a143b05e4c322176829f2a0b2"
+  },
+  "mini": {
+   "width": 1228,
+   "height": 500,
+   "numLandTiles": 272605,
+   "terrainSha256": "4462d90090d4ad4db4d9f7b7af291292a9c676223488e55632c716c3a33c3738"
+  },
+  "nations": 20,
+  "nationsSha256": "eebfd03375f7a75ca073c9a71e0efa6e0f60bc5b180f8f2a87b9c6ad546229c7",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "ccbe2e0a5e4ae99191778c3f544462f9882ec1b6c9c2ac13396b5cc0d6e41582"
+ },
+ "Conakry|Compact": {
+  "map": {
+   "width": 1228,
+   "height": 500,
+   "numLandTiles": 272605,
+   "terrainSha256": "4462d90090d4ad4db4d9f7b7af291292a9c676223488e55632c716c3a33c3738"
+  },
+  "mini": {
+   "width": 614,
+   "height": 250,
+   "numLandTiles": 65998,
+   "terrainSha256": "21eb3c12787cef225073faa2f0080025805fbbc9e40cb0a82ac7ccc3faf83b0e"
+  },
+  "nations": 20,
+  "nationsSha256": "e0abad4e72b1d72e88f43291b6b1c1c95365f817509866ad1025fd4113efdb80",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "7759dcd17b7298d20ef3cd27275ac840c058d378b6ee42b9b79ee50058de3efd"
+ },
+ "Crimea|Normal": {
+  "map": {
+   "width": 2040,
+   "height": 1316,
+   "numLandTiles": 958125,
+   "terrainSha256": "eb44d7653aedb0a0795709860288563836dc04a5ce5f6455e4cdf680271eae22"
+  },
+  "mini": {
+   "width": 1020,
+   "height": 658,
+   "numLandTiles": 236482,
+   "terrainSha256": "20beb52e4bd8f0f935c449240e5a55e0231d52987c3c03def096e66583b0f947"
+  },
+  "nations": 9,
+  "nationsSha256": "13f8704dbe685a3828ed97320baa3362b7ddef8532cb102cdf8cb8806a6fe6b2",
+  "additionalNationsSha256": "219bb2a49f9528ea60e9e686a4950bd23f3d749aa9ec7bb1f9100cef73e33922",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Crimea|Compact": {
+  "map": {
+   "width": 1020,
+   "height": 658,
+   "numLandTiles": 236482,
+   "terrainSha256": "20beb52e4bd8f0f935c449240e5a55e0231d52987c3c03def096e66583b0f947"
+  },
+  "mini": {
+   "width": 510,
+   "height": 329,
+   "numLandTiles": 57850,
+   "terrainSha256": "e7365ef86e8b2f9939547ad695d7729fe9a76ab684b63847a72ff7a96bd62b49"
+  },
+  "nations": 9,
+  "nationsSha256": "97f23ffbf5422e756b3b5301e23b3ad6151aee451b5001ce845866974a6f7f77",
+  "additionalNationsSha256": "0b9723f67cd66406bbeb804755d48f0df2b2536665001224a2b10b2d18d525c9",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Danish Straits|Normal": {
+  "map": {
+   "width": 872,
+   "height": 1224,
+   "numLandTiles": 587312,
+   "terrainSha256": "d54123c09bd083cb45121858042dcb12342f86765d990bdb00db0e650939f712"
+  },
+  "mini": {
+   "width": 436,
+   "height": 612,
+   "numLandTiles": 142124,
+   "terrainSha256": "b847ad79ae268fe137aa70a0b2bb309eefac595a671885b28fca8e9a77bd8cad"
+  },
+  "nations": 26,
+  "nationsSha256": "18d5624812b00607768f3242099933aa6dbe4bfac152b6fdb7922537dd6b5a5d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Danish Straits|Compact": {
+  "map": {
+   "width": 436,
+   "height": 612,
+   "numLandTiles": 142124,
+   "terrainSha256": "b847ad79ae268fe137aa70a0b2bb309eefac595a671885b28fca8e9a77bd8cad"
+  },
+  "mini": {
+   "width": 218,
+   "height": 306,
+   "numLandTiles": 33817,
+   "terrainSha256": "e279033300726c2088388a0463597ce20d46cfc4e21c03c7c087029b45aa447c"
+  },
+  "nations": 26,
+  "nationsSha256": "3c130973827636ea65edd88da2f79e2588e3471cfab813180f23d38730c1a6d6",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Deglaciated Antarctica|Normal": {
+  "map": {
+   "width": 2300,
+   "height": 1840,
+   "numLandTiles": 1079790,
+   "terrainSha256": "0ebd2135557432efc9bc057104fdd7e48c6f9f2b215ef680be9be6962a3b22ff"
+  },
+  "mini": {
+   "width": 1150,
+   "height": 920,
+   "numLandTiles": 261659,
+   "terrainSha256": "bfe69c4c790ab3e955976baff1d45ca4dd42579aa6ade16b041c22bcc190e41b"
+  },
+  "nations": 9,
+  "nationsSha256": "8b47ce8fec81d9a5e37772700333dc10f291a5b7868584b8acef3521d61f4dd5",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Deglaciated Antarctica|Compact": {
+  "map": {
+   "width": 1150,
+   "height": 920,
+   "numLandTiles": 261659,
+   "terrainSha256": "bfe69c4c790ab3e955976baff1d45ca4dd42579aa6ade16b041c22bcc190e41b"
+  },
+  "mini": {
+   "width": 575,
+   "height": 460,
+   "numLandTiles": 62082,
+   "terrainSha256": "15b39663766536e2d07e58dc799358d3fa774f5848eac709813a2fd760f423a3"
+  },
+  "nations": 9,
+  "nationsSha256": "c389df4c33ee6205d1dfddbccc48f8e826ae3e5731e93d0685782c94c97dd82d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Didier|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1348,
+   "numLandTiles": 1122321,
+   "terrainSha256": "e1bb5932f6d21b0131fa0ea65821de1b2cd0892292ad828772b27bbba8e02258"
+  },
+  "mini": {
+   "width": 750,
+   "height": 674,
+   "numLandTiles": 278357,
+   "terrainSha256": "43b8b1eeab7266acd044a62cae1810eee61fa48d6d03298763bdf372f9e59f38"
+  },
+  "nations": 12,
+  "nationsSha256": "4ea279e99ad1cb4789fe650fbcd40faa110126ccaf40a205988349594f539c21",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Didier|Compact": {
+  "map": {
+   "width": 750,
+   "height": 674,
+   "numLandTiles": 278357,
+   "terrainSha256": "43b8b1eeab7266acd044a62cae1810eee61fa48d6d03298763bdf372f9e59f38"
+  },
+  "mini": {
+   "width": 375,
+   "height": 337,
+   "numLandTiles": 68539,
+   "terrainSha256": "58df390e4696891d40f8e4117a6610311c1e790d6dc671b5702cade7920b50e0"
+  },
+  "nations": 12,
+  "nationsSha256": "8aa129547dc15575945c9db17422d98332f5e3a4079267c668bfc4d8c3c48f52",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Didier France|Normal": {
+  "map": {
+   "width": 2100,
+   "height": 2248,
+   "numLandTiles": 2303633,
+   "terrainSha256": "c8bf2e35689851f8b37d445e26bd604e355c404178f7c28f138ea334f0ed0c61"
+  },
+  "mini": {
+   "width": 1050,
+   "height": 1124,
+   "numLandTiles": 571849,
+   "terrainSha256": "48dea5d637a3ea09dae9aa383635941d957a4231099307508107d5d9b3306cf7"
+  },
+  "nations": 42,
+  "nationsSha256": "4d43ea9841be5cca1b3b46cfff8bd740169f32a748f660cfc8dfb48876c84edf",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Didier France|Compact": {
+  "map": {
+   "width": 1050,
+   "height": 1124,
+   "numLandTiles": 571849,
+   "terrainSha256": "48dea5d637a3ea09dae9aa383635941d957a4231099307508107d5d9b3306cf7"
+  },
+  "mini": {
+   "width": 525,
+   "height": 562,
+   "numLandTiles": 141149,
+   "terrainSha256": "21961d8e05ab286f6a8ab81a81527969c1b02356f73c1e01080a7bb398cb7644"
+  },
+  "nations": 42,
+  "nationsSha256": "a536cb286697ec875cd3a8de37bf9ae907d20a697e7d0df9d08e93d884a2c8e6",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Dyslexdria|Normal": {
+  "map": {
+   "width": 3308,
+   "height": 1440,
+   "numLandTiles": 2103253,
+   "terrainSha256": "c0e456c1045d54b990cbcc2715dbd187f9763bf37d139df100ea022c18d609ef"
+  },
+  "mini": {
+   "width": 1654,
+   "height": 720,
+   "numLandTiles": 508102,
+   "terrainSha256": "515f52255cc14c243052245af55199d044117e6a1ddd07c005db9a7bcf3aa7e8"
+  },
+  "nations": 82,
+  "nationsSha256": "bdb024c7f607fdc27804005e73ac63d1ac2a629e05177b5121b3b8ddfabda582",
+  "additionalNationsSha256": "2a686e5e0f503930c9b8f76e8ce952a6d490614d85cdfb15f77cd703d47a6462",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Dyslexdria|Compact": {
+  "map": {
+   "width": 1654,
+   "height": 720,
+   "numLandTiles": 508102,
+   "terrainSha256": "515f52255cc14c243052245af55199d044117e6a1ddd07c005db9a7bcf3aa7e8"
+  },
+  "mini": {
+   "width": 827,
+   "height": 360,
+   "numLandTiles": 120034,
+   "terrainSha256": "3903d0653ba68b78eb98002f4a12b1ff27cb99bce67acc551a9f361e93984e74"
+  },
+  "nations": 82,
+  "nationsSha256": "e686bd967fe38b9a339bc3e1eda19f92dc70469c2facf2d2168646d827d7e1e6",
+  "additionalNationsSha256": "2a686e5e0f503930c9b8f76e8ce952a6d490614d85cdfb15f77cd703d47a6462",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "East Asia|Normal": {
+  "map": {
+   "width": 1560,
+   "height": 1644,
+   "numLandTiles": 879264,
+   "terrainSha256": "d5ae56c76f6386d0a7e167b755010efb664971712548734912824166e2e34313"
+  },
+  "mini": {
+   "width": 780,
+   "height": 822,
+   "numLandTiles": 214937,
+   "terrainSha256": "a2664bcf7e65c200774391e8b5300649fcaae44648dd2fc03782783eecb63fb0"
+  },
+  "nations": 22,
+  "nationsSha256": "55a6f91fd27646d4bf40f982d0c0a6340787f54e1fcda52b6525436a32227691",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "East Asia|Compact": {
+  "map": {
+   "width": 780,
+   "height": 822,
+   "numLandTiles": 214937,
+   "terrainSha256": "a2664bcf7e65c200774391e8b5300649fcaae44648dd2fc03782783eecb63fb0"
+  },
+  "mini": {
+   "width": 390,
+   "height": 411,
+   "numLandTiles": 51649,
+   "terrainSha256": "f724bbb60814b35f465decd8850c4fa43d836c9c6e4050fbcc05e65773f490fb"
+  },
+  "nations": 22,
+  "nationsSha256": "d6615369bb1d7c4f02475c9328fe33974160a03ff879261d818da1f0565aedf3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Europe|Normal": {
+  "map": {
+   "width": 2904,
+   "height": 1672,
+   "numLandTiles": 2345907,
+   "terrainSha256": "57f6bf0c6d1a7c574f4e6d775535d4ad6f204c765e8ebe9833e08d832cee8cb7"
+  },
+  "mini": {
+   "width": 1452,
+   "height": 836,
+   "numLandTiles": 568335,
+   "terrainSha256": "bb78c04e50c086b3e302e7e4e5089cab2dc08a39517c4d601907fc0efcb2f2a7"
+  },
+  "nations": 52,
+  "nationsSha256": "2f39b6e39e03ddc3afc917793d3ffbf61269eb75d1c8b44b850f7642d582d023",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Europe|Compact": {
+  "map": {
+   "width": 1452,
+   "height": 836,
+   "numLandTiles": 568335,
+   "terrainSha256": "bb78c04e50c086b3e302e7e4e5089cab2dc08a39517c4d601907fc0efcb2f2a7"
+  },
+  "mini": {
+   "width": 726,
+   "height": 418,
+   "numLandTiles": 134751,
+   "terrainSha256": "e1f86e312066b1290adbb8a0c0488efd7a5a65198bfd37b4da15ea43b4b015ba"
+  },
+  "nations": 52,
+  "nationsSha256": "ae6c11419d5950b170c59fce3cc5bff1b002cf70421c97aad6001c2c9879e972",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Europe Classic|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1000,
+   "numLandTiles": 1008469,
+   "terrainSha256": "92b663dacb70482b13e555f48b18ba6da09817baa20cfd341b2e78c89538c490"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 248492,
+   "terrainSha256": "13704fa32980cf0c6d72be16251db214e410d28786481b250c77cf99c787b63a"
+  },
+  "nations": 37,
+  "nationsSha256": "7337c4b5efd37594d806f6c94c479e1c52d9e35978eca807fb8b775d86e1e1cb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Europe Classic|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 248492,
+   "terrainSha256": "13704fa32980cf0c6d72be16251db214e410d28786481b250c77cf99c787b63a"
+  },
+  "mini": {
+   "width": 500,
+   "height": 250,
+   "numLandTiles": 60624,
+   "terrainSha256": "b8e6d79a95e1e02b484063d7918eb60a5b19f4a4c25d79337d88caecf8341e9c"
+  },
+  "nations": 37,
+  "nationsSha256": "c83173495fd734cb7c4f67e0771eae9674d992cc3a9ec0dcdd4d176e8d247adc",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Falkland Islands|Normal": {
+  "map": {
+   "width": 2100,
+   "height": 1400,
+   "numLandTiles": 746474,
+   "terrainSha256": "9563ae52db4eb57aadb183d6b4ced253c6d9df85918b6dfb1e89119ce072b960"
+  },
+  "mini": {
+   "width": 1050,
+   "height": 700,
+   "numLandTiles": 178970,
+   "terrainSha256": "0e9c888e7a67959dcb82950f937e776c4c50f60dffc84a80e690b253a2c498a5"
+  },
+  "nations": 12,
+  "nationsSha256": "f8dd00780531365e8172bff2984bff31367aae6407d2cf334a3de163b3c7e57d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "adbf0f5b51900899dd0c3a8c89537851599e37966951c8b6ea747c6156cb6d4b"
+ },
+ "Falkland Islands|Compact": {
+  "map": {
+   "width": 1050,
+   "height": 700,
+   "numLandTiles": 178970,
+   "terrainSha256": "0e9c888e7a67959dcb82950f937e776c4c50f60dffc84a80e690b253a2c498a5"
+  },
+  "mini": {
+   "width": 525,
+   "height": 350,
+   "numLandTiles": 42072,
+   "terrainSha256": "a8fa3e30b552e10ee48990be494770765aed899bac373f3e7291f1c32868c2a3"
+  },
+  "nations": 12,
+  "nationsSha256": "2b6c6acd85c2fafc2f99428e647a5f5b6c27ac7cb1b686f1a045e1724fbaf86b",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "e936564293590944a75aa2f5581ec563415e891971b8efd0a3882bc2ff86e3ff"
+ },
+ "Faroe Islands|Normal": {
+  "map": {
+   "width": 1600,
+   "height": 2000,
+   "numLandTiles": 424994,
+   "terrainSha256": "3fc9410476af0b33f830b8654fecff126407475e43b9ba7c62fce2dbbedf422d"
+  },
+  "mini": {
+   "width": 800,
+   "height": 1000,
+   "numLandTiles": 103090,
+   "terrainSha256": "17cb9b9711f70b2a6a9d19fc1cc12e2eb234666bdb587a2398d6a8a1eecb8f67"
+  },
+  "nations": 6,
+  "nationsSha256": "24453f5319179ba555f8fde5d84b407b02e4e9f22c6ade1dcc5867b3f268bb93",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Faroe Islands|Compact": {
+  "map": {
+   "width": 800,
+   "height": 1000,
+   "numLandTiles": 103090,
+   "terrainSha256": "17cb9b9711f70b2a6a9d19fc1cc12e2eb234666bdb587a2398d6a8a1eecb8f67"
+  },
+  "mini": {
+   "width": 400,
+   "height": 500,
+   "numLandTiles": 24378,
+   "terrainSha256": "2330156e71dbf4232a64ca0367bdb3abab9382139ec6c572997745f876d8b9f5"
+  },
+  "nations": 6,
+  "nationsSha256": "293affcae90ea02230359cd66452d1f06371d9be0de56fc6e4230a0174318f37",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Finger Lakes|Normal": {
+  "map": {
+   "width": 1468,
+   "height": 1376,
+   "numLandTiles": 1824045,
+   "terrainSha256": "e65acf9ce0bccbbcd474949e80409302ef171c3ad07aeb4d2d08b7c444008487"
+  },
+  "mini": {
+   "width": 734,
+   "height": 688,
+   "numLandTiles": 451352,
+   "terrainSha256": "f8f3ba7fd0acd3fc7fdc2319e71746056c8e7ecc72c9e5e021c28caad1c19066"
+  },
+  "nations": 10,
+  "nationsSha256": "93875a840fbcee9980bdcd28f88c0e300c0c93697946a37a54b570ee41627deb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Finger Lakes|Compact": {
+  "map": {
+   "width": 734,
+   "height": 688,
+   "numLandTiles": 451352,
+   "terrainSha256": "f8f3ba7fd0acd3fc7fdc2319e71746056c8e7ecc72c9e5e021c28caad1c19066"
+  },
+  "mini": {
+   "width": 367,
+   "height": 344,
+   "numLandTiles": 110559,
+   "terrainSha256": "f6ce820da2763335c95d7188d7511f866bbfd1df04cc709cf15f82e6096e07bc"
+  },
+  "nations": 10,
+  "nationsSha256": "9dd69fdd7170d0ebb1ef5f9dc1787c78bcae51ec85679cb948c58386ac962224",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Four Islands|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1500,
+   "numLandTiles": 517506,
+   "terrainSha256": "09f49ebe1ef71949b2192e3867bb9480efe609e6e1a0e627d8e4f668aacf669b"
+  },
+  "mini": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 127769,
+   "terrainSha256": "0f627a53e9b7c2c9879b4b097e6edb5b0448a504a725a227235bd0d1d48bf4d2"
+  },
+  "nations": 4,
+  "nationsSha256": "db3215d06cb8a7b36e61afa78df0d4bd04b2bd2919a531f8c383c35d13e6f410",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0835e20724fcde9ae91102e5f56dc82e6c652fd3516f3172da8c6b31c1c735e6"
+ },
+ "Four Islands|Compact": {
+  "map": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 127769,
+   "terrainSha256": "0f627a53e9b7c2c9879b4b097e6edb5b0448a504a725a227235bd0d1d48bf4d2"
+  },
+  "mini": {
+   "width": 375,
+   "height": 375,
+   "numLandTiles": 31175,
+   "terrainSha256": "24eaeb3f1cd8055d654790489fd7dde7947e7041511ea8eab69b137d6e877cd7"
+  },
+  "nations": 4,
+  "nationsSha256": "9b916896676ab760c9ea61fa13e43a5a6dabbbab25e0d5c8eaa244d92d2c07ab",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "099f5f4c64465adb779692300e1752794daff6a515ff480924bd89f019d443a4"
+ },
+ "France|Normal": {
+  "map": {
+   "width": 2424,
+   "height": 2424,
+   "numLandTiles": 2047093,
+   "terrainSha256": "d7fc0517802dacc67d4b9e8d0252d8924938536ecc3d981c0b8e0133b9667a8c"
+  },
+  "mini": {
+   "width": 1212,
+   "height": 1212,
+   "numLandTiles": 506105,
+   "terrainSha256": "054b02543315635294ccb604f3b9c96285cfd613ee2acaf5d4d520d7d2422c5e"
+  },
+  "nations": 25,
+  "nationsSha256": "011f989ec7d44e1ae72f30c0f397439555dc3978f1433e2fdab424848f0dc46d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "France|Compact": {
+  "map": {
+   "width": 1212,
+   "height": 1212,
+   "numLandTiles": 506105,
+   "terrainSha256": "054b02543315635294ccb604f3b9c96285cfd613ee2acaf5d4d520d7d2422c5e"
+  },
+  "mini": {
+   "width": 606,
+   "height": 606,
+   "numLandTiles": 123911,
+   "terrainSha256": "93d3db38d9a44c12c78df2d57b3ce0ee4b51e8ac0ff8727175b909315fd9a7d7"
+  },
+  "nations": 25,
+  "nationsSha256": "8080c1c5a9d64d9e4051bda84a019c07a2f08788933f1ef26c94cb4531e1ba9a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gateway to the Atlantic|Normal": {
+  "map": {
+   "width": 2216,
+   "height": 1968,
+   "numLandTiles": 2239824,
+   "terrainSha256": "3d64665e48a4dfbcf660272839149d694cc3e3327bd87b0dfc268ea0531facc6"
+  },
+  "mini": {
+   "width": 1108,
+   "height": 984,
+   "numLandTiles": 554984,
+   "terrainSha256": "c02a647782c42a1a1c41a8436c0ef87a1de6f159a86ab8950de29fe3b4c44af1"
+  },
+  "nations": 27,
+  "nationsSha256": "dda299d4f2fe57a3e55aa284bd3d3432fefbd732fbad2c5118e612e451ec97bb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gateway to the Atlantic|Compact": {
+  "map": {
+   "width": 1108,
+   "height": 984,
+   "numLandTiles": 554984,
+   "terrainSha256": "c02a647782c42a1a1c41a8436c0ef87a1de6f159a86ab8950de29fe3b4c44af1"
+  },
+  "mini": {
+   "width": 554,
+   "height": 492,
+   "numLandTiles": 136293,
+   "terrainSha256": "3768fd90cf21eb9885adf3949db86c68c443e731f73828dd0eabd650894a713c"
+  },
+  "nations": 27,
+  "nationsSha256": "970ba7f0a48b72b22ddc93966282854db21b740c6e1fa8d53aeebb6e500b7dd3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Germany|Normal": {
+  "map": {
+   "width": 1548,
+   "height": 1516,
+   "numLandTiles": 1072928,
+   "terrainSha256": "5f1250cba165e8007b7b813aee4469f9c81ec85c319bb295dfce2f2821326556"
+  },
+  "mini": {
+   "width": 774,
+   "height": 758,
+   "numLandTiles": 265159,
+   "terrainSha256": "ee3a323bc4170f4489dcfe54af9e15bf22cebbaab9c2870a6c56a1e6eee40088"
+  },
+  "nations": 16,
+  "nationsSha256": "b25c210a2b40b50f9775f14af77be5512d0213923ffd3f43b09964c8052e1898",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Germany|Compact": {
+  "map": {
+   "width": 774,
+   "height": 758,
+   "numLandTiles": 265159,
+   "terrainSha256": "ee3a323bc4170f4489dcfe54af9e15bf22cebbaab9c2870a6c56a1e6eee40088"
+  },
+  "mini": {
+   "width": 387,
+   "height": 379,
+   "numLandTiles": 64963,
+   "terrainSha256": "3f03bee9f09da00efcc94255f4451da7afa488bf58a518f1ff229c67cd5bd5b4"
+  },
+  "nations": 16,
+  "nationsSha256": "3b9e53e746312bfd233718ccd873eaef855568023d8e90a60cda169f2367746e",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Giant World Map|Normal": {
+  "map": {
+   "width": 4108,
+   "height": 1948,
+   "numLandTiles": 2335403,
+   "terrainSha256": "2ff3936ab9feef98d1ff4080ffa3f5d030d8d2a3e3cc62366a2ba692d62a0ca1"
+  },
+  "mini": {
+   "width": 2054,
+   "height": 974,
+   "numLandTiles": 563303,
+   "terrainSha256": "e784847e4664c476fbe3f846c09cb503524304983f8bd4c2cbf13a8db86ac769"
+  },
+  "nations": 107,
+  "nationsSha256": "005dd55a2cde090c6993c5cfbf4a2b00fabafd45c35b6093b069c80ab255e934",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Giant World Map|Compact": {
+  "map": {
+   "width": 2054,
+   "height": 974,
+   "numLandTiles": 563303,
+   "terrainSha256": "e784847e4664c476fbe3f846c09cb503524304983f8bd4c2cbf13a8db86ac769"
+  },
+  "mini": {
+   "width": 1027,
+   "height": 487,
+   "numLandTiles": 132766,
+   "terrainSha256": "8ed410b777720b4fa3c894a2e76a1aa62fb6dec321a8b1d0be5d57e582d826ae"
+  },
+  "nations": 107,
+  "nationsSha256": "d5797d203e9017603b75b323a6034d5f12d460a3ca6e153a5103b228c589a422",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Great Lakes|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1300,
+   "numLandTiles": 1938051,
+   "terrainSha256": "1bc974ab359ce878b554cc2835635bf0b79a15d1828cc8e8b9825f3acd107772"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 650,
+   "numLandTiles": 476259,
+   "terrainSha256": "fe3aa327ec3f1e5939bf553e5403a3b249e705055c0d7e969fa1402504b94946"
+  },
+  "nations": 34,
+  "nationsSha256": "ab972f500ee58a0c63d299f643a9b1b39600f93151fd8d9b462c15ef128bf91f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Great Lakes|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 650,
+   "numLandTiles": 476259,
+   "terrainSha256": "fe3aa327ec3f1e5939bf553e5403a3b249e705055c0d7e969fa1402504b94946"
+  },
+  "mini": {
+   "width": 500,
+   "height": 325,
+   "numLandTiles": 115497,
+   "terrainSha256": "f5b192d0973b51e20f5d7b1db46c1a720c3f149ee04e8553fe904f13975d2530"
+  },
+  "nations": 34,
+  "nationsSha256": "8d430c69391cdd213cfcb4ee2d9460237c1d7491f2a3ac58fd09a798c5c61454",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gulf Of Guinea|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 2200,
+   "numLandTiles": 1788041,
+   "terrainSha256": "7be738d8f569807681a86f7646fa901b7e59a15589ee37ab905be29a2f1342e0"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 1100,
+   "numLandTiles": 443514,
+   "terrainSha256": "fb35aa47e0a2bcfa93891881e12d1a8e8cffdbac767dddeb0895bfa84849d6c7"
+  },
+  "nations": 22,
+  "nationsSha256": "4b133adaca3fd1d4a9e36ed2b2bb107eb3ec21bf4cbcf54b5e22da2f74995fb6",
+  "additionalNationsSha256": "91ede651a4f564b395b37b5c9ab83caff1314a8cef32ca60f5df7dfa752a20bd",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gulf Of Guinea|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 1100,
+   "numLandTiles": 443514,
+   "terrainSha256": "fb35aa47e0a2bcfa93891881e12d1a8e8cffdbac767dddeb0895bfa84849d6c7"
+  },
+  "mini": {
+   "width": 625,
+   "height": 550,
+   "numLandTiles": 109223,
+   "terrainSha256": "e5716cd1eb3645645d39c7a2141c244ab9157a49035f02d55878507cf6b56c4a"
+  },
+  "nations": 22,
+  "nationsSha256": "7a0642ac581f6340b550166ff6726486e5077be83a897bf6270358d39492dadb",
+  "additionalNationsSha256": "94c764c6d3f55aae70f64cf81d937d62b7b912c6ae31cbabc5ae92dcc666beca",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gulf Of Mexico|Normal": {
+  "map": {
+   "width": 3000,
+   "height": 1928,
+   "numLandTiles": 1552933,
+   "terrainSha256": "d912fa9857e3cfb22606de6746b47f68f26d621ff120f7b5ec25fd985cea01bb"
+  },
+  "mini": {
+   "width": 1500,
+   "height": 964,
+   "numLandTiles": 380354,
+   "terrainSha256": "2ff7fec451620369c713ecce516d876189da858b28095096f2702a2ac2929e6d"
+  },
+  "nations": 37,
+  "nationsSha256": "3eb4de786c4ba31e72401f66c93db012d848c1c13975b348ba1c8625f09801dc",
+  "additionalNationsSha256": "e53c588c1ad7a94c9abd7050c06da2fa58fc2f29bbf47ca97447f9120051892b",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gulf Of Mexico|Compact": {
+  "map": {
+   "width": 1500,
+   "height": 964,
+   "numLandTiles": 380354,
+   "terrainSha256": "2ff7fec451620369c713ecce516d876189da858b28095096f2702a2ac2929e6d"
+  },
+  "mini": {
+   "width": 750,
+   "height": 482,
+   "numLandTiles": 92055,
+   "terrainSha256": "c98919d559c849a0de27ad0e27b163fe8be6f0c3fbfc58f838c346015b04069f"
+  },
+  "nations": 37,
+  "nationsSha256": "3fb7105791925dfe6deaa260b14673dfa678ba90d8efdeed12cd6767b3c261c9",
+  "additionalNationsSha256": "a22edb1f2a10bd175f8213d51552adb6296fc58c118bd07d24e7fbd23fedca25",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Gulf of St. Lawrence|Normal": {
+  "map": {
+   "width": 1620,
+   "height": 1348,
+   "numLandTiles": 874013,
+   "terrainSha256": "0738eccaa656bc0e11f81ae4c94db26b30a744d9d3bf55ad91f164984ba37cd6"
+  },
+  "mini": {
+   "width": 810,
+   "height": 674,
+   "numLandTiles": 212526,
+   "terrainSha256": "cb343bce3bcc47bb56a407b9bdcd5b5217a85a702feb63bd546a4058e9e96508"
+  },
+  "nations": 26,
+  "nationsSha256": "75dcf6da257f8c3db7928a3cd3a4c61860c18baea563fac4de15b139a59f094a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "9598b3fea887bc55a328a4cd8e6ac2a3087663bf756866773302d8c12ef814c4"
+ },
+ "Gulf of St. Lawrence|Compact": {
+  "map": {
+   "width": 810,
+   "height": 674,
+   "numLandTiles": 212526,
+   "terrainSha256": "cb343bce3bcc47bb56a407b9bdcd5b5217a85a702feb63bd546a4058e9e96508"
+  },
+  "mini": {
+   "width": 405,
+   "height": 337,
+   "numLandTiles": 50845,
+   "terrainSha256": "6735ecd6491ac9d16385187fb1636b70b5ef9b5b8cf7db4ee5a6f2e64c1f838f"
+  },
+  "nations": 26,
+  "nationsSha256": "a596634a0423a20e5d4cfd633b221c75ad4d0a6d998bd3c71ed53f04d4c7d9a9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "c21ce52bf79c5634863141c272187665eaaba21daafb4fd52cd8d6ab1dc2e5c9"
+ },
+ "Halkidiki|Normal": {
+  "map": {
+   "width": 2200,
+   "height": 1760,
+   "numLandTiles": 1728899,
+   "terrainSha256": "a28986b8fa7b252d2607139d5c8ac1fb5377b40928a8da435725dbb0355743ec"
+  },
+  "mini": {
+   "width": 1100,
+   "height": 880,
+   "numLandTiles": 427883,
+   "terrainSha256": "d57231baf88b71e5e27efd4cfe9b8179079c65a891d6cd4920b5bdcaa5a6bbaa"
+  },
+  "nations": 8,
+  "nationsSha256": "5cec63936df53793f5e61690eb4fa276da014b19fcdc99da3828d64fa4b8a5ba",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Halkidiki|Compact": {
+  "map": {
+   "width": 1100,
+   "height": 880,
+   "numLandTiles": 427883,
+   "terrainSha256": "d57231baf88b71e5e27efd4cfe9b8179079c65a891d6cd4920b5bdcaa5a6bbaa"
+  },
+  "mini": {
+   "width": 550,
+   "height": 440,
+   "numLandTiles": 105020,
+   "terrainSha256": "8fa9ed614a8eea349f8a65a587f9b9247f0f34508fa228a01bfcf27fd5a18fbf"
+  },
+  "nations": 8,
+  "nationsSha256": "2003a3c5279a033cba0e167a655e700d3feda6465bf336e412263d2c1472650f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hawaii|Normal": {
+  "map": {
+   "width": 3200,
+   "height": 2076,
+   "numLandTiles": 408264,
+   "terrainSha256": "fe8a5cf813c719d0d02503a6a63b89b1cd589b4715291a98d449e2ba48b0dfa1"
+  },
+  "mini": {
+   "width": 1600,
+   "height": 1038,
+   "numLandTiles": 100951,
+   "terrainSha256": "320c15da68b713348e11751578ef0b36978686d4d99c9ac5fa0e5a478aa09776"
+  },
+  "nations": 9,
+  "nationsSha256": "a12581bcccad8b7789e1267ba7ac46b1185e2153ebc93ab686c861f0e975b7b9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hawaii|Compact": {
+  "map": {
+   "width": 1600,
+   "height": 1038,
+   "numLandTiles": 100951,
+   "terrainSha256": "320c15da68b713348e11751578ef0b36978686d4d99c9ac5fa0e5a478aa09776"
+  },
+  "mini": {
+   "width": 800,
+   "height": 519,
+   "numLandTiles": 24703,
+   "terrainSha256": "f673090308f3f572bea350ed9204c0283597925abffa9077d912e66c2f1085e1"
+  },
+  "nations": 9,
+  "nationsSha256": "a9bf808bcbda287899e24e3b38683e320fd8bcffef0b0314a932a2126377fcec",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hecate Strait|Normal": {
+  "map": {
+   "width": 2248,
+   "height": 1932,
+   "numLandTiles": 2266145,
+   "terrainSha256": "396b55ded1c765f37e0a5ca7d15853a82b804758ae3d947d3301bf28286254f5"
+  },
+  "mini": {
+   "width": 1124,
+   "height": 966,
+   "numLandTiles": 552480,
+   "terrainSha256": "5844dd2c333898f6b4d1cefe11dd14841710d738fb650a8bae2fa1d46282a88d"
+  },
+  "nations": 28,
+  "nationsSha256": "bfa55c3510ad1f536c7f13d12457b79e513f754b88e7b73b70e3c95b6c59973f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hecate Strait|Compact": {
+  "map": {
+   "width": 1124,
+   "height": 966,
+   "numLandTiles": 552480,
+   "terrainSha256": "5844dd2c333898f6b4d1cefe11dd14841710d738fb650a8bae2fa1d46282a88d"
+  },
+  "mini": {
+   "width": 562,
+   "height": 483,
+   "numLandTiles": 132192,
+   "terrainSha256": "5cfb488de6b288c7b4dfdea15dc98c4598dc0419ab532f33a7f1b06c02373d6e"
+  },
+  "nations": 28,
+  "nationsSha256": "52e8970faef51bf0a186a04a9d6d5222d2e221a8e5f5e3431a983c321500bee4",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hong Kong|Normal": {
+  "map": {
+   "width": 2780,
+   "height": 1996,
+   "numLandTiles": 2260689,
+   "terrainSha256": "97de5bf8e6a477537ec119ff7bc39e43dd1a03cdd60ada197a7cd848ba4464dc"
+  },
+  "mini": {
+   "width": 1390,
+   "height": 998,
+   "numLandTiles": 557907,
+   "terrainSha256": "be120bf926ac0c7d7982aa53f43fd4c7dfd53316e2727ad838d0d87b57f8d24b"
+  },
+  "nations": 71,
+  "nationsSha256": "1dd6c5edc5f40e511ce58667040f7453724e70c74196e7d47006b4663d57fb46",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Hong Kong|Compact": {
+  "map": {
+   "width": 1390,
+   "height": 998,
+   "numLandTiles": 557907,
+   "terrainSha256": "be120bf926ac0c7d7982aa53f43fd4c7dfd53316e2727ad838d0d87b57f8d24b"
+  },
+  "mini": {
+   "width": 695,
+   "height": 499,
+   "numLandTiles": 136157,
+   "terrainSha256": "d270c894721b29c2217c462b4b99e95ef0649825c7aa94d88c1f6671a67541d8"
+  },
+  "nations": 71,
+  "nationsSha256": "6e9c9fab4a5eeb486536fc87484504a00c951987572c6164218534d334019313",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Iceland|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1500,
+   "numLandTiles": 1069645,
+   "terrainSha256": "28491fb2fec516b477c4fbbb60d507717eeec589e54868a9129a410f7dfe00f0"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 264736,
+   "terrainSha256": "dee55c1ff22f0198b0aabcd12452394846106897205889fd2b304a35f695d56d"
+  },
+  "nations": 8,
+  "nationsSha256": "1cb80e458dfe8e236bfe7320f4995515dd1b46848e5c35868c78e10a8d610f00",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Iceland|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 264736,
+   "terrainSha256": "dee55c1ff22f0198b0aabcd12452394846106897205889fd2b304a35f695d56d"
+  },
+  "mini": {
+   "width": 500,
+   "height": 375,
+   "numLandTiles": 64964,
+   "terrainSha256": "e522e0b87fef92da537ec4df2bb6ee07e8b9f825ef84d172c2764b4974627293"
+  },
+  "nations": 8,
+  "nationsSha256": "05f4811ab6ac782244319a79e7a571a434aacca6204f6f6f8782bbb7126330e4",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Indian Subcontinent|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 2220,
+   "numLandTiles": 2113509,
+   "terrainSha256": "71f4617b2bb503324aa623879f53e3d3caa3bf632443314c5b17eae945dbe989"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 1110,
+   "numLandTiles": 519188,
+   "terrainSha256": "c1daec3eab95a8837c8ef27b59ade81723adad5cf1c16b04fbd250e1d6560a55"
+  },
+  "nations": 52,
+  "nationsSha256": "819b8ecdc0b599912c8e4287fdb823a1a71883701efaff12895295a6021979d1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Indian Subcontinent|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 1110,
+   "numLandTiles": 519188,
+   "terrainSha256": "c1daec3eab95a8837c8ef27b59ade81723adad5cf1c16b04fbd250e1d6560a55"
+  },
+  "mini": {
+   "width": 500,
+   "height": 555,
+   "numLandTiles": 125915,
+   "terrainSha256": "4183989dad688a361649b504093b4ca38a3850535fdaab9138350f12b896eb64"
+  },
+  "nations": 52,
+  "nationsSha256": "525f60ea6b295bb8a30bd307b997bf70f2ff43b417ea9bd6c5b398452b25e5dc",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Irish Sea|Normal": {
+  "map": {
+   "width": 1400,
+   "height": 1500,
+   "numLandTiles": 978363,
+   "terrainSha256": "e2c3af839c55969e3cee47e6baed4020c18ca01f01c2eb14b663ca358332072e"
+  },
+  "mini": {
+   "width": 700,
+   "height": 750,
+   "numLandTiles": 241209,
+   "terrainSha256": "5ada0447327a827cc32753691d6cc8f4ae01ebeff9fe8e866fbff43b37e03b2f"
+  },
+  "nations": 19,
+  "nationsSha256": "d41e9712edc39bf966ce85a9f39e4a742a80b6fb3c82480776c940c713d743f5",
+  "additionalNationsSha256": "4010572facb9ec6849fd7cfe9ee4feda1f172e808d5e2580cdde324750f92221",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Irish Sea|Compact": {
+  "map": {
+   "width": 700,
+   "height": 750,
+   "numLandTiles": 241209,
+   "terrainSha256": "5ada0447327a827cc32753691d6cc8f4ae01ebeff9fe8e866fbff43b37e03b2f"
+  },
+  "mini": {
+   "width": 350,
+   "height": 375,
+   "numLandTiles": 58780,
+   "terrainSha256": "41908d1aec8eefde29802f8bee67c1d11f817e94581aab56508230588e46efb7"
+  },
+  "nations": 19,
+  "nationsSha256": "a23a3bcc4f4868f1e2ff7d1803b6c27293e39d9b57327547b2845dbfab6f01df",
+  "additionalNationsSha256": "04b39d9a61ff5f6cc4abc49c65cf4aa6a656983c55ff389728d7c06b2e17050e",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Italia|Normal": {
+  "map": {
+   "width": 1360,
+   "height": 1272,
+   "numLandTiles": 775663,
+   "terrainSha256": "8aae70a7e27ae67102dfeea1ec546813582f977e8ce35f9276d516fd76ed1985"
+  },
+  "mini": {
+   "width": 680,
+   "height": 636,
+   "numLandTiles": 191249,
+   "terrainSha256": "efd12e8f223a3d92cd7566d92ee566ffc9cd73f82943cbbfd84a0d4241f0ab84"
+  },
+  "nations": 15,
+  "nationsSha256": "8d80973b04a6c6251f31216f0f2f69a1ef2a271250671b68ea4cf48523d472cb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Italia|Compact": {
+  "map": {
+   "width": 680,
+   "height": 636,
+   "numLandTiles": 191249,
+   "terrainSha256": "efd12e8f223a3d92cd7566d92ee566ffc9cd73f82943cbbfd84a0d4241f0ab84"
+  },
+  "mini": {
+   "width": 340,
+   "height": 318,
+   "numLandTiles": 46701,
+   "terrainSha256": "0c09fead2ca2c8bfdcb93b48b92165aea34f1765bc860d0f7bb5a012ceb273b8"
+  },
+  "nations": 15,
+  "nationsSha256": "5203c95c4833ebd7d5e8e107acfa2b091e256d156e2be28cab716ec27357fc13",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Japan|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 2500,
+   "numLandTiles": 478894,
+   "terrainSha256": "4ea7e19ad51b6af7d40673e6557a495424e57ba6622c3a75886a25aab68af51a"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 1250,
+   "numLandTiles": 116922,
+   "terrainSha256": "10efa7c5eabd6d538bcdc6ecdf89aa95af014195b628261875b5a8c373293aad"
+  },
+  "nations": 12,
+  "nationsSha256": "47c4a7481259b59b9e1a2b39a94c2a42f8742a98cb49bf792f321e4e07f26868",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Japan|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 1250,
+   "numLandTiles": 116922,
+   "terrainSha256": "10efa7c5eabd6d538bcdc6ecdf89aa95af014195b628261875b5a8c373293aad"
+  },
+  "mini": {
+   "width": 625,
+   "height": 625,
+   "numLandTiles": 28027,
+   "terrainSha256": "2d61724ba48c460758f500663559c3f51532e6a15ace8a15d914bfb68b7d688f"
+  },
+  "nations": 12,
+  "nationsSha256": "e15db6c8319e8f0468efb303a836835815a93ed98bfc0f57f33728895218ccb9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Juan De Fuca Strait|Normal": {
+  "map": {
+   "width": 3000,
+   "height": 1100,
+   "numLandTiles": 1666141,
+   "terrainSha256": "67517f48b1587f429a87b4f3294e6a541cf41c6cbc8785c47d78240bbb7ce158"
+  },
+  "mini": {
+   "width": 1500,
+   "height": 550,
+   "numLandTiles": 410851,
+   "terrainSha256": "96198bc4cc6ba4607fb7ba56a2f0c744357158dc95c278494920f400e2ef4b8a"
+  },
+  "nations": 16,
+  "nationsSha256": "b289e3b7483b50c77debfddea98b1a27213e679bcb26e18404a59ab6ee647e1e",
+  "additionalNationsSha256": "69f639f57df54ab7a9246b9f63763f69a07431df19059b20301b599e6426357b",
+  "teamSpawnAreasSha256": "73b1d6c4864411bf9fb7d9acbbba24402a7cae79e3689152876a00339354bd2a"
+ },
+ "Juan De Fuca Strait|Compact": {
+  "map": {
+   "width": 1500,
+   "height": 550,
+   "numLandTiles": 410851,
+   "terrainSha256": "96198bc4cc6ba4607fb7ba56a2f0c744357158dc95c278494920f400e2ef4b8a"
+  },
+  "mini": {
+   "width": 750,
+   "height": 275,
+   "numLandTiles": 100385,
+   "terrainSha256": "87262fc77e856317973b0fdd03ff0dad08b629aa1cac9c1852ff09487703de14"
+  },
+  "nations": 16,
+  "nationsSha256": "8c3c09b6f8961eccafd20084b260678cf99cc3c22ab0416f5e8728bede8e2a58",
+  "additionalNationsSha256": "b3ccafc50252cf43769120c2ccb78ce0d58fc58732c2b43a7140b9137b20edee",
+  "teamSpawnAreasSha256": "083430ba08643c400b4b37a4f766c74efc1194c2212509ae8dfba56ca564676d"
+ },
+ "Korea|Normal": {
+  "map": {
+   "width": 1088,
+   "height": 2188,
+   "numLandTiles": 782048,
+   "terrainSha256": "570e7e03164fb6c1c77ef6dc5cb54dea90ff7eed0a971c7a45ac3d27e4f4a93a"
+  },
+  "mini": {
+   "width": 544,
+   "height": 1094,
+   "numLandTiles": 192353,
+   "terrainSha256": "a4fba088646b52cc0aae3382e083e68fe5e368baf28bdfabf75e88b290acda1a"
+  },
+  "nations": 32,
+  "nationsSha256": "fe320cf0da5efaa062b4b481f7674230fe428d74245e77cc008ede947d110ff7",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "2622dd3c3ce3ed9eb8615dd988c9d81059a7c69700be7723addc9a48a4453c15"
+ },
+ "Korea|Compact": {
+  "map": {
+   "width": 544,
+   "height": 1094,
+   "numLandTiles": 192353,
+   "terrainSha256": "a4fba088646b52cc0aae3382e083e68fe5e368baf28bdfabf75e88b290acda1a"
+  },
+  "mini": {
+   "width": 272,
+   "height": 547,
+   "numLandTiles": 46830,
+   "terrainSha256": "29d968fc88ffca3cec0322425419936294b2fd141c7d7b09d218abb82b2f4261"
+  },
+  "nations": 32,
+  "nationsSha256": "f81f459ecf429319321206544d251413ea36c561f170aa8ef94f1bef7d1bcc19",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "bf9cb82024c77c10ce722d1bf93aeb2351881c1d579f68602ca0f96d0cad9edf"
+ },
+ "Labyrinth|Normal": {
+  "map": {
+   "width": 1360,
+   "height": 1360,
+   "numLandTiles": 1524448,
+   "terrainSha256": "d7049e7ff4e6a0c28edd19cacaac5dfe8b0e490d2a2f53f880edd33a5b58d08c"
+  },
+  "mini": {
+   "width": 680,
+   "height": 680,
+   "numLandTiles": 372162,
+   "terrainSha256": "622fb004828c49d9ade526b563ae6050c57089194ed850618ec00de0605502c2"
+  },
+  "nations": 26,
+  "nationsSha256": "5d282093658f3a1797802b3b193cf4c447dffb2366591751c225c4df46395d52",
+  "additionalNationsSha256": "2de7f83c6cd3bf321c0d9014a64f225a9a40e40d6bb123d9c6385595e5821bfb",
+  "teamSpawnAreasSha256": "82d2ca9bb6f2dd8087dfd42b49241299d6eb2952c2d6e92d4997971f8655a84a"
+ },
+ "Labyrinth|Compact": {
+  "map": {
+   "width": 680,
+   "height": 680,
+   "numLandTiles": 372162,
+   "terrainSha256": "622fb004828c49d9ade526b563ae6050c57089194ed850618ec00de0605502c2"
+  },
+  "mini": {
+   "width": 340,
+   "height": 340,
+   "numLandTiles": 88437,
+   "terrainSha256": "bf69d0ecbaf551587a1c35fe9eaa2908c764ac08dccdecc977be1ee201a966cc"
+  },
+  "nations": 26,
+  "nationsSha256": "0360ac56ebcec6d76b3c5b77af5e2d3000e4d8bcbb96eb61d7cdbebfca1ca8fc",
+  "additionalNationsSha256": "2de7f83c6cd3bf321c0d9014a64f225a9a40e40d6bb123d9c6385595e5821bfb",
+  "teamSpawnAreasSha256": "99239612ae80dd9fead63625955454a95bc1f4b75cdd19b7a076efb5320ef76e"
+ },
+ "Las Vegas Strip|Normal": {
+  "map": {
+   "width": 2036,
+   "height": 4428,
+   "numLandTiles": 2048698,
+   "terrainSha256": "9f04a2a8dc289a574dcf146da707324332eb3b84537006f0b480c96a2e423cb9"
+  },
+  "mini": {
+   "width": 1018,
+   "height": 2214,
+   "numLandTiles": 498671,
+   "terrainSha256": "d5bf903811d6d16128f19f14f80f67d12f2f5b22d1d17fb4fc7221879fff94c1"
+  },
+  "nations": 34,
+  "nationsSha256": "4b46b4f71fbab58d7ab14d6ea86330f2437ee0c0fb50146ec7dcce7276bbd49f",
+  "additionalNationsSha256": "e60fea0025b31181102beedf29f37d4cd8437d6b608847d7a5cb936636f89505",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Las Vegas Strip|Compact": {
+  "map": {
+   "width": 1018,
+   "height": 2214,
+   "numLandTiles": 498671,
+   "terrainSha256": "d5bf903811d6d16128f19f14f80f67d12f2f5b22d1d17fb4fc7221879fff94c1"
+  },
+  "mini": {
+   "width": 509,
+   "height": 1107,
+   "numLandTiles": 118765,
+   "terrainSha256": "0768896fdf4c9b3e61e34135ca83c6f5300e9e5cb27894a7a55982e4fbe8d319"
+  },
+  "nations": 34,
+  "nationsSha256": "9e97378646cf3b3afcbb3f42804bddbbb398ef4921bac400cf2adcff03412e2f",
+  "additionalNationsSha256": "270f38e4e89a9d407fc6b15458ecbdd7cfcba9bc3038d80153510a3418cfa506",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Lemnos|Normal": {
+  "map": {
+   "width": 1748,
+   "height": 1420,
+   "numLandTiles": 874763,
+   "terrainSha256": "97c479303b3dfb83f47b1712d9693fa7f78fe26c670cb48e8b4ad46077da3646"
+  },
+  "mini": {
+   "width": 874,
+   "height": 710,
+   "numLandTiles": 216496,
+   "terrainSha256": "b32c854b65dae9455f93b479288d723dab240140ed22012b2202214429d6ecf6"
+  },
+  "nations": 9,
+  "nationsSha256": "886928a2cf25f5004c36e579adef6fe2a892700263490eabe8b81d129714008a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Lemnos|Compact": {
+  "map": {
+   "width": 874,
+   "height": 710,
+   "numLandTiles": 216496,
+   "terrainSha256": "b32c854b65dae9455f93b479288d723dab240140ed22012b2202214429d6ecf6"
+  },
+  "mini": {
+   "width": 437,
+   "height": 355,
+   "numLandTiles": 53102,
+   "terrainSha256": "726c0b7f6fb671c30f8012de84b91e4666e4ffaec798100a31e2bca955cb89c6"
+  },
+  "nations": 9,
+  "nationsSha256": "0ef3d1a186c09e2939ed5bb3a085058f19ae8e3ee9bcd86179bf258fd1dfdb65",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Levant|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 2000,
+   "numLandTiles": 2173100,
+   "terrainSha256": "f79886035d7ded5332752733455cd7ae78608c2c4a01d9c3589054f12be55089"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 1000,
+   "numLandTiles": 539922,
+   "terrainSha256": "54bb10818b0c5fc4c50f90c8ef0be3e6e61113957bfd4c786a3ed8d269aff196"
+  },
+  "nations": 15,
+  "nationsSha256": "158c081c3264e9ff10328cd9bbad3318c405a22d6218c40306f70fc26d8cfb1f",
+  "additionalNationsSha256": "47e2f9eee311b4ea70a8323ba3d8e45fd1a27cc92b4e8b9db4de280098e02b12",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Levant|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 1000,
+   "numLandTiles": 539922,
+   "terrainSha256": "54bb10818b0c5fc4c50f90c8ef0be3e6e61113957bfd4c786a3ed8d269aff196"
+  },
+  "mini": {
+   "width": 500,
+   "height": 500,
+   "numLandTiles": 133459,
+   "terrainSha256": "252977d93c1096a9ef73a298c56d4ab4c0487bc1f654ab198710768dbc6ead2a"
+  },
+  "nations": 15,
+  "nationsSha256": "77392d6779799701afa9649609ad6029be03ecab513517a6ddf9001c1ab1d8f5",
+  "additionalNationsSha256": "ec5ff5fe1746609813f8d084dee5bf69107d0c02b316d9777f7ca309cb6b1242",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Lisbon|Normal": {
+  "map": {
+   "width": 1600,
+   "height": 1600,
+   "numLandTiles": 1495857,
+   "terrainSha256": "c1c0e277a4ab4efe92f3b4b0927beeaab72f89711b4cac404f17d8503532ba02"
+  },
+  "mini": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 369114,
+   "terrainSha256": "15e85baac7c33e22d1cf1bc216965147c7581ca421507ac5b60dff6db157a9bc"
+  },
+  "nations": 15,
+  "nationsSha256": "f5df773b76e1101b1091ccbb2559904664b31f029b9c43fe6515f2ea9b7a0e58",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Lisbon|Compact": {
+  "map": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 369114,
+   "terrainSha256": "15e85baac7c33e22d1cf1bc216965147c7581ca421507ac5b60dff6db157a9bc"
+  },
+  "mini": {
+   "width": 400,
+   "height": 400,
+   "numLandTiles": 90186,
+   "terrainSha256": "8657f421c4dfbe0e025f98e965d56eb80a510bf78c299edb11878708f134b4c3"
+  },
+  "nations": 15,
+  "nationsSha256": "a32640646833694769af274c04598924e01ef216117c6380b0b1afb537204586",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Los Angeles|Normal": {
+  "map": {
+   "width": 1800,
+   "height": 2276,
+   "numLandTiles": 2065301,
+   "terrainSha256": "86be51f0c1c0febf3b39c701b06b4dc1081914b6859c18072f48e7ca2e742d45"
+  },
+  "mini": {
+   "width": 900,
+   "height": 1138,
+   "numLandTiles": 507774,
+   "terrainSha256": "24fd4c2cd00ace8be8798b17dd855e376902cfc5e89d695879b6f3a56eb61de2"
+  },
+  "nations": 26,
+  "nationsSha256": "a891cecfac22e6e2d167c4e6461df9eb7fcbfc212e24e173b08f611cc9fa5dbe",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Los Angeles|Compact": {
+  "map": {
+   "width": 900,
+   "height": 1138,
+   "numLandTiles": 507774,
+   "terrainSha256": "24fd4c2cd00ace8be8798b17dd855e376902cfc5e89d695879b6f3a56eb61de2"
+  },
+  "mini": {
+   "width": 450,
+   "height": 569,
+   "numLandTiles": 122927,
+   "terrainSha256": "d29eded04505a12766645367978382182d9b5d900baefa1fa2deb77215822b2d"
+  },
+  "nations": 26,
+  "nationsSha256": "460ffbcf52d18259d5584cd5b7dbffdac163a1f73c4f7bc1bd4232eb3b0cb126",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Luna|Normal": {
+  "map": {
+   "width": 1308,
+   "height": 3508,
+   "numLandTiles": 1517614,
+   "terrainSha256": "40c6661e7556f0671641339143c07a026c93ed31c62f1c77a664852096bcf67f"
+  },
+  "mini": {
+   "width": 654,
+   "height": 1754,
+   "numLandTiles": 363006,
+   "terrainSha256": "0cc942f5544d1dfc5603c01e396bb0ec7cca7a6135495ec9a4d13d10be360229"
+  },
+  "nations": 25,
+  "nationsSha256": "d325594d9d768e96780fa843fd3c0e2d3a4c43967006b658235106e5fafec258",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "aff2cde74c04fa5efb1a48e249129bc9ccc717a2ea50306bd1aa313135ea67f7"
+ },
+ "Luna|Compact": {
+  "map": {
+   "width": 654,
+   "height": 1754,
+   "numLandTiles": 363006,
+   "terrainSha256": "0cc942f5544d1dfc5603c01e396bb0ec7cca7a6135495ec9a4d13d10be360229"
+  },
+  "mini": {
+   "width": 327,
+   "height": 877,
+   "numLandTiles": 84663,
+   "terrainSha256": "4f86e3270b0ba9da54a94e307b28e05ee2e2c99d06ea0361876fe4ca0067bb1a"
+  },
+  "nations": 25,
+  "nationsSha256": "018c83567ed5cf751148d3237aa3ca7d8b4a0d0c58391e1bfefe77b71a4dc2c1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0647852b4b4031d2bd38410dc008a4523bba797d88039461dd3665ca55287f10"
+ },
+ "Manicouagan|Normal": {
+  "map": {
+   "width": 1600,
+   "height": 1600,
+   "numLandTiles": 1992029,
+   "terrainSha256": "8879ba246b695a7d97db8f447502c4fd3158d9af413d18c5629f583ebf7c7f6c"
+  },
+  "mini": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 489928,
+   "terrainSha256": "cd8e0864f4bb951cd1e138590eb2b12b5853fadfce3fd22b8380557afa327550"
+  },
+  "nations": 11,
+  "nationsSha256": "ea26c8d15d8efbcef3d0d147372c262be8d7e306648a0d235ed94e5b9688c870",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Manicouagan|Compact": {
+  "map": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 489928,
+   "terrainSha256": "cd8e0864f4bb951cd1e138590eb2b12b5853fadfce3fd22b8380557afa327550"
+  },
+  "mini": {
+   "width": 400,
+   "height": 400,
+   "numLandTiles": 118914,
+   "terrainSha256": "73efc77ff2380b62fe0290912c3dc8a9b564e0805830f3e7bb244b824170800d"
+  },
+  "nations": 11,
+  "nationsSha256": "6e242da0f41a1bfc5a40d94ac5dc3702b7a0afcf91c23604d07fc46cc6b7d643",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mare Nostrum|Normal": {
+  "map": {
+   "width": 2848,
+   "height": 1448,
+   "numLandTiles": 2644620,
+   "terrainSha256": "609a54e6aa62c70df329138c159e527f06d91cf962b29d279abb24cc43800890"
+  },
+  "mini": {
+   "width": 1424,
+   "height": 724,
+   "numLandTiles": 652112,
+   "terrainSha256": "41fc52beae4c42d4b78b4983c9bf0015dd8719ce744ecfd81af51231ec36d8b2"
+  },
+  "nations": 38,
+  "nationsSha256": "1baa3b77d29fbf193345939dc993377e3017423b8ed4a47a9319a312659982ac",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mare Nostrum|Compact": {
+  "map": {
+   "width": 1424,
+   "height": 724,
+   "numLandTiles": 652112,
+   "terrainSha256": "41fc52beae4c42d4b78b4983c9bf0015dd8719ce744ecfd81af51231ec36d8b2"
+  },
+  "mini": {
+   "width": 712,
+   "height": 362,
+   "numLandTiles": 159247,
+   "terrainSha256": "bb13b80ee85a473c310ed72c0fcb6be0072ac70ef083350f4c76ad85f709bff4"
+  },
+  "nations": 38,
+  "nationsSha256": "c404759aab1081d34a337701a41626ccef89523c2a00c7be8bbcc7bcea3cd0f6",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mars|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1000,
+   "numLandTiles": 1354047,
+   "terrainSha256": "4dc984c9bf1e70ce5b52b6efbed55fb2c31fc132c0c7b202c8e974bd14fac122"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 335749,
+   "terrainSha256": "6007a2da8cb3ef7cd7a4dd89409f54d001fa14354bcc7f6e4ee281352de5ce45"
+  },
+  "nations": 6,
+  "nationsSha256": "5dbb2b0da281975a1e5daf712254ce70959ced66239d4e872db3f535b9dfe42c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mars|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 335749,
+   "terrainSha256": "6007a2da8cb3ef7cd7a4dd89409f54d001fa14354bcc7f6e4ee281352de5ce45"
+  },
+  "mini": {
+   "width": 500,
+   "height": 250,
+   "numLandTiles": 82762,
+   "terrainSha256": "10db16df20e1cd7b2cc6b35ceed4c0e66cc6b9635149156e95b240fb2393f41b"
+  },
+  "nations": 6,
+  "nationsSha256": "141024c2013ed2e19b921de1550afed115c0d154c1ad8e336719316b5abbe5b9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mena|Normal": {
+  "map": {
+   "width": 2200,
+   "height": 964,
+   "numLandTiles": 1621317,
+   "terrainSha256": "e0176c5330b8ad5665885d5def7c68106effc2ec81f24136eeee52c985e54f90"
+  },
+  "mini": {
+   "width": 1100,
+   "height": 482,
+   "numLandTiles": 400304,
+   "terrainSha256": "d3a9bb4b6d83239564c63d743f1124b8175829d7ec903e6bfd973641003648eb"
+  },
+  "nations": 35,
+  "nationsSha256": "17600910f788b73a4bbc438d88f0d8680bd2c3bfa68b0a08b3dbc8bd91cb8433",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mena|Compact": {
+  "map": {
+   "width": 1100,
+   "height": 482,
+   "numLandTiles": 400304,
+   "terrainSha256": "d3a9bb4b6d83239564c63d743f1124b8175829d7ec903e6bfd973641003648eb"
+  },
+  "mini": {
+   "width": 550,
+   "height": 241,
+   "numLandTiles": 97874,
+   "terrainSha256": "c3cee09db5731fc896c5416e29bd8a1c7fa274f016bc6afccf6ecda43556598e"
+  },
+  "nations": 35,
+  "nationsSha256": "398f025d0780670137f7efc2424b3375fc3bc3640fdeefa1df26d025f99160cf",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Middle East|Normal": {
+  "map": {
+   "width": 2200,
+   "height": 2060,
+   "numLandTiles": 3449078,
+   "terrainSha256": "1fd5e31a50b2b2a22fd7ff6ed6c39b17ee00bf56c47cfc0588dc23e4d2bc5c0f"
+  },
+  "mini": {
+   "width": 1100,
+   "height": 1030,
+   "numLandTiles": 856603,
+   "terrainSha256": "7fd3533c0aad3557cbc385392a30d0d1f89c3c561d94a1c2efcaa32c95d83af1"
+  },
+  "nations": 27,
+  "nationsSha256": "016bd532ab2583183cdf4a6df757f0df04b933784203733c25a33c3aeeda1b3c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Middle East|Compact": {
+  "map": {
+   "width": 1100,
+   "height": 1030,
+   "numLandTiles": 856603,
+   "terrainSha256": "7fd3533c0aad3557cbc385392a30d0d1f89c3c561d94a1c2efcaa32c95d83af1"
+  },
+  "mini": {
+   "width": 550,
+   "height": 515,
+   "numLandTiles": 211600,
+   "terrainSha256": "a298b54a4191fde425401e339b7349bd7d747af4a83f7dbbc97a6387dc90b7e9"
+  },
+  "nations": 27,
+  "nationsSha256": "14b23ecba6fc1528797b50da690ccd8a51ec08b0a8be89599bf3c53491585cc1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "MilkyWay|Normal": {
+  "map": {
+   "width": 1748,
+   "height": 1748,
+   "numLandTiles": 442979,
+   "terrainSha256": "8cbb6c18271b0798306212966851a940e849f0cb1de9a818c2f10ba9537ff009"
+  },
+  "mini": {
+   "width": 874,
+   "height": 874,
+   "numLandTiles": 105950,
+   "terrainSha256": "d7386813cd9dac34dc602b240a162eba951ec78285ccc99ff49bf03828536c77"
+  },
+  "nations": 18,
+  "nationsSha256": "82da40b39228e8e1c8ad6e873c6d44daecdfe917ebe8e4b05c36eb7707b9568d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "MilkyWay|Compact": {
+  "map": {
+   "width": 874,
+   "height": 874,
+   "numLandTiles": 105950,
+   "terrainSha256": "d7386813cd9dac34dc602b240a162eba951ec78285ccc99ff49bf03828536c77"
+  },
+  "mini": {
+   "width": 437,
+   "height": 437,
+   "numLandTiles": 24782,
+   "terrainSha256": "0d79597c8820ab08b870868a43705d6581d118c1ee7b49e776b8a1d6bb983fb6"
+  },
+  "nations": 18,
+  "nationsSha256": "7ea9b1e6ae0b976c884e1f95f849739ee6dafd53bb7372d5f77f0757be2958e0",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mississippi River|Normal": {
+  "map": {
+   "width": 400,
+   "height": 4200,
+   "numLandTiles": 1500944,
+   "terrainSha256": "3bfca6c54b2bf4eaef15a2521bb2f175219c0ec95b5e9e8f5e43cfb4f5bd24e8"
+  },
+  "mini": {
+   "width": 200,
+   "height": 2100,
+   "numLandTiles": 370175,
+   "terrainSha256": "14361eba3cddbe8f29c70ce32269205d20d90c29b99cb4aa9a5b0c3665556a9a"
+  },
+  "nations": 11,
+  "nationsSha256": "00e8f22e18abf1005bbb8936f486959c8e8d5c74e2ea1c66419bbe1fba6b2ba2",
+  "additionalNationsSha256": "983c945955eb4ca4bb82a17aeb4aee4bb71d723ed8bd6dc735831b8c505aafdf",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Mississippi River|Compact": {
+  "map": {
+   "width": 200,
+   "height": 2100,
+   "numLandTiles": 370175,
+   "terrainSha256": "14361eba3cddbe8f29c70ce32269205d20d90c29b99cb4aa9a5b0c3665556a9a"
+  },
+  "mini": {
+   "width": 100,
+   "height": 1050,
+   "numLandTiles": 90334,
+   "terrainSha256": "78e37152830a3ecff82688d9008118b66694dcaf294a45dd422732ff6b7ca356"
+  },
+  "nations": 11,
+  "nationsSha256": "44a34dc8e84aa288722f68dd1d5b13c4708e90dc8e3d118a66857a6f4d60ee56",
+  "additionalNationsSha256": "9b3ecc76310cb4d19561b050d1e4ff87994e60a0b11c94fb2b0a87db844e1cbd",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Montreal|Normal": {
+  "map": {
+   "width": 1528,
+   "height": 1500,
+   "numLandTiles": 1954940,
+   "terrainSha256": "44b54fb7e212fc6046bdec36cd5bd6d4f904b02af1174c1afdfc8cb546852748"
+  },
+  "mini": {
+   "width": 764,
+   "height": 750,
+   "numLandTiles": 483571,
+   "terrainSha256": "59a88e7d8d02d36f6d9809086cb3c502097c490da2c246d9600fc8a13e0f8e0b"
+  },
+  "nations": 12,
+  "nationsSha256": "83cbb6bd627649c965b61c0ccfbb4dff49ea10380722e303c5f9d458ac17824a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Montreal|Compact": {
+  "map": {
+   "width": 764,
+   "height": 750,
+   "numLandTiles": 483571,
+   "terrainSha256": "59a88e7d8d02d36f6d9809086cb3c502097c490da2c246d9600fc8a13e0f8e0b"
+  },
+  "mini": {
+   "width": 382,
+   "height": 375,
+   "numLandTiles": 118554,
+   "terrainSha256": "b3a810e95b5522f291632617099315f37736432b988b82d9df5fd61e5834da2b"
+  },
+  "nations": 12,
+  "nationsSha256": "af21a572e5a20e4e0c0d6743fb1b09604daf677ae5384aa61753f6afda416cbb",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "More Than Luck|Normal": {
+  "map": {
+   "width": 1348,
+   "height": 1344,
+   "numLandTiles": 915740,
+   "terrainSha256": "612d30d93159e96f01e7b7a016943ecd22028ac70ddb24e35b3400705796487b"
+  },
+  "mini": {
+   "width": 674,
+   "height": 672,
+   "numLandTiles": 226651,
+   "terrainSha256": "a3e44c1c65e25caaca48aff6431f677e0b97d37f858a1ab5167dcc7420547678"
+  },
+  "nations": 35,
+  "nationsSha256": "c77ec0b1601377088e1e5d8b2aa2348ce10d627c128c0aeefa65b0e26c5a5a8a",
+  "additionalNationsSha256": "7837a98aec0248b076501a94282b8a56e12faa742b3385c1ce1e2f1b0f0c7b13",
+  "teamSpawnAreasSha256": "3db20164388ecbe130ac5e091c03eea174f26a21b5331a50b4e70e17376dd763"
+ },
+ "More Than Luck|Compact": {
+  "map": {
+   "width": 674,
+   "height": 672,
+   "numLandTiles": 226651,
+   "terrainSha256": "a3e44c1c65e25caaca48aff6431f677e0b97d37f858a1ab5167dcc7420547678"
+  },
+  "mini": {
+   "width": 337,
+   "height": 336,
+   "numLandTiles": 55536,
+   "terrainSha256": "6a138f642450718f30a4f670f77f76ec374246c473c36116f8733e528f61602e"
+  },
+  "nations": 35,
+  "nationsSha256": "c77ec0b1601377088e1e5d8b2aa2348ce10d627c128c0aeefa65b0e26c5a5a8a",
+  "additionalNationsSha256": "7837a98aec0248b076501a94282b8a56e12faa742b3385c1ce1e2f1b0f0c7b13",
+  "teamSpawnAreasSha256": "f755715692f1b3733fd1b48e6a588083d30224ac9df8e7073063b3a6f313289f"
+ },
+ "New York City|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1900,
+   "numLandTiles": 1648646,
+   "terrainSha256": "5625eaffcfe28f6d90696e9a9850b1a80f16f9544a83c0575bf8ffd29c50de29"
+  },
+  "mini": {
+   "width": 750,
+   "height": 950,
+   "numLandTiles": 406215,
+   "terrainSha256": "62a4e0be25e8b625d728d3383bf5576df5362f99f80dfda30dc093866fb4431d"
+  },
+  "nations": 20,
+  "nationsSha256": "6418b0c9abb90d633de0c4c0c1156fa987d525bb10833b61624d887df40dd0fd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "New York City|Compact": {
+  "map": {
+   "width": 750,
+   "height": 950,
+   "numLandTiles": 406215,
+   "terrainSha256": "62a4e0be25e8b625d728d3383bf5576df5362f99f80dfda30dc093866fb4431d"
+  },
+  "mini": {
+   "width": 375,
+   "height": 475,
+   "numLandTiles": 98783,
+   "terrainSha256": "50d9955f00d1b7b83d2b59bd1ab8e4715aeaaed1a19dd4e98866d0085503c6e6"
+  },
+  "nations": 20,
+  "nationsSha256": "0e9d11df0691a8ace3492945807fe84531983f9c22dc654acdb6a08fc00a7a73",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Nile Delta|Normal": {
+  "map": {
+   "width": 1556,
+   "height": 1280,
+   "numLandTiles": 1363238,
+   "terrainSha256": "36048213731c2356d3fc58bbc2e01805399b54b0478e2fdea3ec245546f40487"
+  },
+  "mini": {
+   "width": 778,
+   "height": 640,
+   "numLandTiles": 336925,
+   "terrainSha256": "e82190f0a67f860966b9159e84262557ec7fabeb31fb4b1ae433b9a934c2caa8"
+  },
+  "nations": 11,
+  "nationsSha256": "ddfd3ce872c9032d364d9807e5e9979b08c5220ffc528da3621d20bd70d262d2",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Nile Delta|Compact": {
+  "map": {
+   "width": 778,
+   "height": 640,
+   "numLandTiles": 336925,
+   "terrainSha256": "e82190f0a67f860966b9159e84262557ec7fabeb31fb4b1ae433b9a934c2caa8"
+  },
+  "mini": {
+   "width": 389,
+   "height": 320,
+   "numLandTiles": 82733,
+   "terrainSha256": "0134956ebb91cf1527277e3dc2eb4428dbd1e79895d8fefafd587159a3a040b2"
+  },
+  "nations": 11,
+  "nationsSha256": "638008ab0ad49cc1ac4ddcaa188295bf5e1b311bcb557aee8bca415036ee13ff",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "North America|Normal": {
+  "map": {
+   "width": 2800,
+   "height": 1448,
+   "numLandTiles": 1243929,
+   "terrainSha256": "a1956361c27c580feae54dfceae0a6a6001bc95b2fbfa4b2f90a8dc69ccea3da"
+  },
+  "mini": {
+   "width": 1400,
+   "height": 724,
+   "numLandTiles": 294494,
+   "terrainSha256": "eae16c183003ebaba7dd6c31393e9f7935f303f5081add5e23e70bce6c5a3906"
+  },
+  "nations": 71,
+  "nationsSha256": "4180a4f7da8d328678f1c28ce5bbed3ee02ce34a252be1d56905edf51aa0c32d",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "North America|Compact": {
+  "map": {
+   "width": 1400,
+   "height": 724,
+   "numLandTiles": 294494,
+   "terrainSha256": "eae16c183003ebaba7dd6c31393e9f7935f303f5081add5e23e70bce6c5a3906"
+  },
+  "mini": {
+   "width": 700,
+   "height": 362,
+   "numLandTiles": 67500,
+   "terrainSha256": "1f855829034d13bc45b817a0a41ab81a7c1ad407463d160cc34c00cbb8ce1345"
+  },
+  "nations": 71,
+  "nationsSha256": "abf25a7c4a91186efa6054300c17d19477bc375bcfe0b86557bc249bbb92686c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Northwest Passage|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1664,
+   "numLandTiles": 1569905,
+   "terrainSha256": "637bd62d8b120227db282def4a54f309ee83d702cdf06f92959856600e70dd62"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 832,
+   "numLandTiles": 379907,
+   "terrainSha256": "c7ff9f67af9a2f267776830718e399927d1d51132fecb8952ad5a1a61c3ad78f"
+  },
+  "nations": 21,
+  "nationsSha256": "6cae831180b1e95f2a73ad0c9e3323fcea5951644be35aed623722693815ff3b",
+  "additionalNationsSha256": "3ddab714adbfb94bfea508d78ed7cce0aeb25a5d88d6f9ca9798faba73fd94f9",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Northwest Passage|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 832,
+   "numLandTiles": 379907,
+   "terrainSha256": "c7ff9f67af9a2f267776830718e399927d1d51132fecb8952ad5a1a61c3ad78f"
+  },
+  "mini": {
+   "width": 625,
+   "height": 416,
+   "numLandTiles": 89831,
+   "terrainSha256": "e1d45d058f8d874ba44a0f41336ece66d9883622cbb5584eb3cb5233b5e7ccda"
+  },
+  "nations": 21,
+  "nationsSha256": "8309090204c8892a4cd80fd699d672fb991d70fe00f44b57cb365fe92b3ee2d7",
+  "additionalNationsSha256": "fd8cb01899b9163e9a8382758aa6f9921ee7c33a84b91ed35a5dbc31af45cfae",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Oceania|Normal": {
+  "map": {
+   "width": 1664,
+   "height": 1000,
+   "numLandTiles": 197878,
+   "terrainSha256": "cafca40c6f50ff46d79b868c59eb5c735ac2e221e0794b255c88294e3b5997b3"
+  },
+  "mini": {
+   "width": 832,
+   "height": 500,
+   "numLandTiles": 46580,
+   "terrainSha256": "0f77eca8dd7246c6cd10ea2255971ea2b69cfca6a9778b75194f28f0fca66094"
+  },
+  "nations": 22,
+  "nationsSha256": "85d5d38cc411282a3e31d3c2baeac7af4ed533826d97fedd86d0e48e5cc97dfc",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Oceania|Compact": {
+  "map": {
+   "width": 832,
+   "height": 500,
+   "numLandTiles": 46580,
+   "terrainSha256": "0f77eca8dd7246c6cd10ea2255971ea2b69cfca6a9778b75194f28f0fca66094"
+  },
+  "mini": {
+   "width": 416,
+   "height": 250,
+   "numLandTiles": 10889,
+   "terrainSha256": "914a77d0ebe4b898ad9d366c16f89b4380c8f9cff105cf93072fef9b69c52c5a"
+  },
+  "nations": 22,
+  "nationsSha256": "89f11e36c6d5d3d66a140c4504dd8293b62c27bf92be3f5215abb581bb1ad7e9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Onion|Normal": {
+  "map": {
+   "width": 512,
+   "height": 512,
+   "numLandTiles": 210555,
+   "terrainSha256": "262f9e6a0ed3719972e2710c41eb5bfb9e632ef43728692ef489cfb09387c1f1"
+  },
+  "mini": {
+   "width": 256,
+   "height": 256,
+   "numLandTiles": 51713,
+   "terrainSha256": "d290b69a405b23899e25dd95244a0ee494f3711373ee4abf502a3ca6c734ea6e"
+  },
+  "nations": 3,
+  "nationsSha256": "ecf29081283a60190551b21aaa3ccc3510264104e8f8fbfff73ff32b6e082ae1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Onion|Compact": {
+  "map": {
+   "width": 256,
+   "height": 256,
+   "numLandTiles": 51713,
+   "terrainSha256": "d290b69a405b23899e25dd95244a0ee494f3711373ee4abf502a3ca6c734ea6e"
+  },
+  "mini": {
+   "width": 128,
+   "height": 128,
+   "numLandTiles": 12499,
+   "terrainSha256": "407d902f436a6fac2a23d83c1607b3453e285a7ba34afe4d7dc9eee54f495137"
+  },
+  "nations": 3,
+  "nationsSha256": "99fc74fca5132d149839b6d86f169c6a8814cde5b417dc7c27758e09e60af0db",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Pangaea|Normal": {
+  "map": {
+   "width": 1000,
+   "height": 1000,
+   "numLandTiles": 420335,
+   "terrainSha256": "560b59833c826ab73ca01fd3e6a94fdf4189b0a09f4b773906fda429a64b5326"
+  },
+  "mini": {
+   "width": 500,
+   "height": 500,
+   "numLandTiles": 102211,
+   "terrainSha256": "55bdf9fc1ffc509af10912e82e503891349ac5b44b16443e659e52f05cf8d573"
+  },
+  "nations": 29,
+  "nationsSha256": "110e27140d99b38a0338d4b7fbb1e175720b644c4eaf1cd8be6443b51a98c1ae",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Pangaea|Compact": {
+  "map": {
+   "width": 500,
+   "height": 500,
+   "numLandTiles": 102211,
+   "terrainSha256": "55bdf9fc1ffc509af10912e82e503891349ac5b44b16443e659e52f05cf8d573"
+  },
+  "mini": {
+   "width": 250,
+   "height": 250,
+   "numLandTiles": 24365,
+   "terrainSha256": "9ed81014f99798dd6ceac2fc24eec885d15c79e5bc8f4b560e39fdc90db5fe41"
+  },
+  "nations": 29,
+  "nationsSha256": "0b91801032c50fc68a515a2ec7b0bd9e3e915d005327ca445b3852d5519e8757",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Passage|Normal": {
+  "map": {
+   "width": 6000,
+   "height": 400,
+   "numLandTiles": 803994,
+   "terrainSha256": "5b05975bab267a4e552707cfbdead7c172dcba9b327d7f7ebc5c8139c482d595"
+  },
+  "mini": {
+   "width": 3000,
+   "height": 200,
+   "numLandTiles": 195716,
+   "terrainSha256": "9666560ed4ff5d712ad2147cfc1db25bfeaaec2aced1c2e713c6b41831ac1932"
+  },
+  "nations": 16,
+  "nationsSha256": "a6a89d8415983f77eb2e66f6b7fdd17b9c141107b94ff0cc2ff4c97ce1f30b37",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Passage|Compact": {
+  "map": {
+   "width": 3000,
+   "height": 200,
+   "numLandTiles": 195716,
+   "terrainSha256": "9666560ed4ff5d712ad2147cfc1db25bfeaaec2aced1c2e713c6b41831ac1932"
+  },
+  "mini": {
+   "width": 1500,
+   "height": 100,
+   "numLandTiles": 46344,
+   "terrainSha256": "393f40aa9af683dcc1f866bdfdcda399923da039040c225e6e587fa2b95dcd2f"
+  },
+  "nations": 16,
+  "nationsSha256": "c019da3ad8711a6d1027762bc369aab4833dc7216008292ed5e0d42ec86edcd3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Pluto|Normal": {
+  "map": {
+   "width": 2100,
+   "height": 1300,
+   "numLandTiles": 1987279,
+   "terrainSha256": "5d6ed9ebb46254b315c00bc630e52604f255dc3061c44721471681b448bb0d8b"
+  },
+  "mini": {
+   "width": 1050,
+   "height": 650,
+   "numLandTiles": 489070,
+   "terrainSha256": "1f6a08a50757377ed65b6b06d00c922ae0368429048de590cebe2215cf823a82"
+  },
+  "nations": 16,
+  "nationsSha256": "a8e542c4533c3849b8c8e4a86e52e732d532be6e9260ca2ce82f6a03d55706b0",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "e772ce34ff27d58df93f9239bf1d9d05226b18e260abe4e24e41dd89ece68a3b"
+ },
+ "Pluto|Compact": {
+  "map": {
+   "width": 1050,
+   "height": 650,
+   "numLandTiles": 489070,
+   "terrainSha256": "1f6a08a50757377ed65b6b06d00c922ae0368429048de590cebe2215cf823a82"
+  },
+  "mini": {
+   "width": 525,
+   "height": 325,
+   "numLandTiles": 118923,
+   "terrainSha256": "4fd443f7338da573d087b9c66b8d4553c7ec56181e5d1170ebf4fd68b1fa2093"
+  },
+  "nations": 16,
+  "nationsSha256": "9f69080cbfcbc0ae6fe94262ae9d912f7dc8711b1e5221dbc7c9a6424f11e2f1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "2bbfdc2382b1bd83190bfbe96a132bd36dbc79b9b110b62a38ec3796d72d82a5"
+ },
+ "Qing China|Normal": {
+  "map": {
+   "width": 2248,
+   "height": 2024,
+   "numLandTiles": 1830648,
+   "terrainSha256": "1120e4eda956cb15598ed24d0a1a98ea5d6e4ce654ab7eb9039da63ce9177910"
+  },
+  "mini": {
+   "width": 1124,
+   "height": 1012,
+   "numLandTiles": 451836,
+   "terrainSha256": "cc36e6ccb58d5f5ea143e519be52272e357ba306e39f6e28703da30a52fc4d83"
+  },
+  "nations": 32,
+  "nationsSha256": "4f14bb9e529085aef8c664d99d1a11b77e2c2c1d6bf8710b87372628384c1a0a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Qing China|Compact": {
+  "map": {
+   "width": 1124,
+   "height": 1012,
+   "numLandTiles": 451836,
+   "terrainSha256": "cc36e6ccb58d5f5ea143e519be52272e357ba306e39f6e28703da30a52fc4d83"
+  },
+  "mini": {
+   "width": 562,
+   "height": 506,
+   "numLandTiles": 110247,
+   "terrainSha256": "195538464b6cf9ce40726372f276e39a575eff69548ba21092efe24e4305cb8a"
+  },
+  "nations": 32,
+  "nationsSha256": "798a3d694595f664eb892a0006ff40f19b97354279404372200eac7c1ba88730",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Russia|Normal": {
+  "map": {
+   "width": 3200,
+   "height": 1688,
+   "numLandTiles": 2540087,
+   "terrainSha256": "32678ec5ba7e597d1c1258cd7c165839a0501040efafbd49bd9527432a9faab4"
+  },
+  "mini": {
+   "width": 1600,
+   "height": 844,
+   "numLandTiles": 620898,
+   "terrainSha256": "9cb95637e9b035a8313ac75750a665583881e5fef0ab7f619aeb294a2e197ab7"
+  },
+  "nations": 82,
+  "nationsSha256": "9afd6ca33b80243afdd842b0662434f302a33c50a8596116e1e88f7bd2466cea",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Russia|Compact": {
+  "map": {
+   "width": 1600,
+   "height": 844,
+   "numLandTiles": 620898,
+   "terrainSha256": "9cb95637e9b035a8313ac75750a665583881e5fef0ab7f619aeb294a2e197ab7"
+  },
+  "mini": {
+   "width": 800,
+   "height": 422,
+   "numLandTiles": 149066,
+   "terrainSha256": "6f5b97de57b4f390e76dc107c722c11c11bb19d0b6bcb18b608ee1b872821e71"
+  },
+  "nations": 82,
+  "nationsSha256": "db88feff9211501f1f53324d411630ce12fee9dc79d2eef2b48b51b5c6e1d6e0",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "San Francisco|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1700,
+   "numLandTiles": 1887961,
+   "terrainSha256": "89b3d439bd8e1e459981ba57ca12b55a618b54a44ba4353f6335487190e33541"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 850,
+   "numLandTiles": 464870,
+   "terrainSha256": "fb8017698d67fbb57f8ec17f9a2adcfb97802d0585c23e14028040b3cb156bd5"
+  },
+  "nations": 21,
+  "nationsSha256": "3c2b1957e355a8298893c657fba191cb2cc1cbfeef6f36e2cb108a482ddc92bd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "San Francisco|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 850,
+   "numLandTiles": 464870,
+   "terrainSha256": "fb8017698d67fbb57f8ec17f9a2adcfb97802d0585c23e14028040b3cb156bd5"
+  },
+  "mini": {
+   "width": 500,
+   "height": 425,
+   "numLandTiles": 112962,
+   "terrainSha256": "e4e302425f6324d323a85599ad9af72f34675c4e25163c604433cf6f8c88a5ac"
+  },
+  "nations": 21,
+  "nationsSha256": "d8a288b45e1134b49742a33c1f5951ae3867d15f01f520f5c5508ae0b0802aba",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Scandinavia|Normal": {
+  "map": {
+   "width": 2004,
+   "height": 2240,
+   "numLandTiles": 2475461,
+   "terrainSha256": "e7eb656b46828d2c49b6ed670fb77dc3a710c88ae80fccac7a86e1b1af8d4bc5"
+  },
+  "mini": {
+   "width": 1002,
+   "height": 1120,
+   "numLandTiles": 605086,
+   "terrainSha256": "67c1f3c5492e296f843f7521b4cf834f769b623686c5fa88296b68f987f14514"
+  },
+  "nations": 24,
+  "nationsSha256": "ff9d68e183cb99684726750783b84fcc766fc90fc3159287206950512d53ee4c",
+  "additionalNationsSha256": "1c9e9734d998c5431c8ee12a05bc733b5f9cd00428d75ddc25fecbcd1b62b246",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Scandinavia|Compact": {
+  "map": {
+   "width": 1002,
+   "height": 1120,
+   "numLandTiles": 605086,
+   "terrainSha256": "67c1f3c5492e296f843f7521b4cf834f769b623686c5fa88296b68f987f14514"
+  },
+  "mini": {
+   "width": 501,
+   "height": 560,
+   "numLandTiles": 145629,
+   "terrainSha256": "96e0521f18adad8c9ed7cd0554495250deceb5f4e5b9c2b7e8dc24cc0c74d937"
+  },
+  "nations": 24,
+  "nationsSha256": "25ba4b039dbf67b9c6a02c06c8cb72547e8c5eb28a4876baaa3968999414d373",
+  "additionalNationsSha256": "77fc8a31038cb8964b4add6f0e6b147de84c01eb4d5b0eda36867b0e412fc398",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Sierpinski|Normal": {
+  "map": {
+   "width": 1400,
+   "height": 1400,
+   "numLandTiles": 582988,
+   "terrainSha256": "8cc8f8c01b7f526d9809aa372da96f21a645ac92ddb5cfa931f8cd91fa2784fb"
+  },
+  "mini": {
+   "width": 700,
+   "height": 700,
+   "numLandTiles": 143268,
+   "terrainSha256": "a9035551d421da9115e81cb6c91c8cfe5dc8221d962c44e07c5a7ae9659db8da"
+  },
+  "nations": 9,
+  "nationsSha256": "749bf4795a3cfa1bd236c572b2bbaa20cc5308cc4b3f908f381753aace29bdd5",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Sierpinski|Compact": {
+  "map": {
+   "width": 700,
+   "height": 700,
+   "numLandTiles": 143268,
+   "terrainSha256": "a9035551d421da9115e81cb6c91c8cfe5dc8221d962c44e07c5a7ae9659db8da"
+  },
+  "mini": {
+   "width": 350,
+   "height": 350,
+   "numLandTiles": 34656,
+   "terrainSha256": "5e6701669f5774e3e3a944497d3e211657e65cdd388d03fd1fa29b57eeff4227"
+  },
+  "nations": 9,
+  "nationsSha256": "64e51f06def1ffaaa3c7ede023616de0d28815fda8ec32ed76013211ca721189",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Sol|Normal": {
+  "map": {
+   "width": 4432,
+   "height": 2528,
+   "numLandTiles": 877664,
+   "terrainSha256": "6d35f5924b57ce4298be3e456c511f1e0b15029c90336bb957f1d342961ef806"
+  },
+  "mini": {
+   "width": 2216,
+   "height": 1264,
+   "numLandTiles": 209669,
+   "terrainSha256": "84eb6a0403e7ce0117f37ff2d29205d966e1d662cc3fe94bfe3adcd28988001d"
+  },
+  "nations": 53,
+  "nationsSha256": "196ea157771b10a79bee812c8a58302c243b605f6bd2981f675032be75b80895",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Sol|Compact": {
+  "map": {
+   "width": 2216,
+   "height": 1264,
+   "numLandTiles": 209669,
+   "terrainSha256": "84eb6a0403e7ce0117f37ff2d29205d966e1d662cc3fe94bfe3adcd28988001d"
+  },
+  "mini": {
+   "width": 1108,
+   "height": 632,
+   "numLandTiles": 49639,
+   "terrainSha256": "974d3373df4b77e4fbedb50070cac565f0f0ccab92da3062d53658a0aa718643"
+  },
+  "nations": 53,
+  "nationsSha256": "4c0284b321b5e7469d994e931d99184dd792c3838d81a3db4625e06bc8ce7403",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "South America|Normal": {
+  "map": {
+   "width": 1744,
+   "height": 2376,
+   "numLandTiles": 1411064,
+   "terrainSha256": "a11558c0cf7c7a6f54601557d9062f0d8ad9f027b2a3e274735d74846e070d5f"
+  },
+  "mini": {
+   "width": 872,
+   "height": 1188,
+   "numLandTiles": 342275,
+   "terrainSha256": "5b3a7d14a0c6a17090cc1053112c68ef8714de3ca80f200fb86b24ade1319466"
+  },
+  "nations": 25,
+  "nationsSha256": "d841c288f315797469722466ec7ce0b74bc638505b37de097ba0e6f19c92854a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "South America|Compact": {
+  "map": {
+   "width": 872,
+   "height": 1188,
+   "numLandTiles": 342275,
+   "terrainSha256": "5b3a7d14a0c6a17090cc1053112c68ef8714de3ca80f200fb86b24ade1319466"
+  },
+  "mini": {
+   "width": 436,
+   "height": 594,
+   "numLandTiles": 81160,
+   "terrainSha256": "e1132a5e0a5a0a55c7048f6a8627f9b0f2f9656da0967b2bf6c2e53d93359f68"
+  },
+  "nations": 25,
+  "nationsSha256": "7cdb3aecfe76ed83364430a23e32761bf75f5d1a2ade4cc2b252d97286375ca9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "SoutheastAsia|Normal": {
+  "map": {
+   "width": 2812,
+   "height": 1672,
+   "numLandTiles": 977094,
+   "terrainSha256": "471288202782016b22ad638efc231bd9881dae8cffa0842833c5e8744d7eece7"
+  },
+  "mini": {
+   "width": 1406,
+   "height": 836,
+   "numLandTiles": 235008,
+   "terrainSha256": "069e8c542314913bbc01312f741306293ee021cacb415df3c90b380c5d728565"
+  },
+  "nations": 31,
+  "nationsSha256": "d4e69dc5fc4599fe679987cd362abd5315faf47e4bba70fd572cb3ef16a5ee1b",
+  "additionalNationsSha256": "ce9e38074ee162748032ae412e46bf8190997e19c292d124f4f18672f60d0dae",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "SoutheastAsia|Compact": {
+  "map": {
+   "width": 1406,
+   "height": 836,
+   "numLandTiles": 235008,
+   "terrainSha256": "069e8c542314913bbc01312f741306293ee021cacb415df3c90b380c5d728565"
+  },
+  "mini": {
+   "width": 703,
+   "height": 418,
+   "numLandTiles": 55472,
+   "terrainSha256": "7dc0893d81f84f1a3391e758b6e529b4fae95d8d175f6ddc7967377e3d644483"
+  },
+  "nations": 31,
+  "nationsSha256": "84c4e33f065d935ade9ae420b68af96a2cbb964924c0c59b9287e91f266dee6c",
+  "additionalNationsSha256": "f4fdda1e0000b4acb0aee71ade98160a0400e4ab1d98c248dec9caf108d67dd1",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Strait Of Malacca|Normal": {
+  "map": {
+   "width": 1832,
+   "height": 1644,
+   "numLandTiles": 865820,
+   "terrainSha256": "af1901ad24fc25303498574a83cc63843ae8eacc637f3019ccb5a2d62e4adb44"
+  },
+  "mini": {
+   "width": 916,
+   "height": 822,
+   "numLandTiles": 211494,
+   "terrainSha256": "a0274a052de3f98fa9cbdcefa22edc6d50429a51836cd2c20b1dc24e6f148fb9"
+  },
+  "nations": 13,
+  "nationsSha256": "b851ee494a79a2293f3afba078fc128d5399b78486fee6eab3e28a89678c75fd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Strait Of Malacca|Compact": {
+  "map": {
+   "width": 916,
+   "height": 822,
+   "numLandTiles": 211494,
+   "terrainSha256": "a0274a052de3f98fa9cbdcefa22edc6d50429a51836cd2c20b1dc24e6f148fb9"
+  },
+  "mini": {
+   "width": 458,
+   "height": 411,
+   "numLandTiles": 50740,
+   "terrainSha256": "178e227a64c82b557f1a3b32ebb23283b427e81fdbd6bc96d0c8c53beb362f04"
+  },
+  "nations": 13,
+  "nationsSha256": "501631ad38b78e6baf106a848909deede63a113e8677bf0776a3271d4dbe6f77",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Strait of Gibraltar|Normal": {
+  "map": {
+   "width": 2900,
+   "height": 1476,
+   "numLandTiles": 1957694,
+   "terrainSha256": "116c2e8042e2248820435a5c6e20b2269fa916b55f0fa5d1a96462feb72245fd"
+  },
+  "mini": {
+   "width": 1450,
+   "height": 738,
+   "numLandTiles": 486917,
+   "terrainSha256": "5e2fc71785173436e4d40f96ca1501b6614dcde02d78b0cac52ad9b6e4d510f4"
+  },
+  "nations": 16,
+  "nationsSha256": "833edb2221dd015abb172c01dd8df85aef51003a655313b7f3d8590fee52c184",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "b30959259a8d5d4c3dcd7b2fc343b2eabbb0649d4d2a4d4fea84c40600405c22"
+ },
+ "Strait of Gibraltar|Compact": {
+  "map": {
+   "width": 1450,
+   "height": 738,
+   "numLandTiles": 486917,
+   "terrainSha256": "5e2fc71785173436e4d40f96ca1501b6614dcde02d78b0cac52ad9b6e4d510f4"
+  },
+  "mini": {
+   "width": 725,
+   "height": 369,
+   "numLandTiles": 120614,
+   "terrainSha256": "d4d4898e6c5eef71b658f749fcbcc3d5f9c3375129332eef184a27357b40d00c"
+  },
+  "nations": 16,
+  "nationsSha256": "b48fe6f6fca4474447a96c254b1b11fa671a6ac7e55adf42dae15d83cd635d81",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "0c17d11f0cbff2479cc2bed2d3cbaca4d6575a3045f717d33caf7dc387bba5d0"
+ },
+ "Strait of Hormuz|Normal": {
+  "map": {
+   "width": 1800,
+   "height": 1200,
+   "numLandTiles": 1255327,
+   "terrainSha256": "16f03442304eeec21bbe9152624a23305e442bc8f70ce0ec6cbab42645f82034"
+  },
+  "mini": {
+   "width": 900,
+   "height": 600,
+   "numLandTiles": 312041,
+   "terrainSha256": "78541e482bd5f056b4cbc4e4b4eb703c8e39963d1c461786e9f2721f0470b4f4"
+  },
+  "nations": 21,
+  "nationsSha256": "1f5624ebc1730f57a26a000367056611821f327969329a2f56caac6d4d4cce82",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "7a7cf479aefc12abddaade5d648a264ef6ded281475908f912fb50bdc9e2bceb"
+ },
+ "Strait of Hormuz|Compact": {
+  "map": {
+   "width": 900,
+   "height": 600,
+   "numLandTiles": 312041,
+   "terrainSha256": "78541e482bd5f056b4cbc4e4b4eb703c8e39963d1c461786e9f2721f0470b4f4"
+  },
+  "mini": {
+   "width": 450,
+   "height": 300,
+   "numLandTiles": 77223,
+   "terrainSha256": "f18114d083e61fe5cc9a46d2dcfa8a3215dffe8d60f29c4881029ae1c5ec1fa1"
+  },
+  "nations": 21,
+  "nationsSha256": "f70b207d10498be0a7061b142ce2f6cdcc7f811b299a502ac28082fc38f94eba",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "de142aa1f3fd70880fb84521807f1ff25219343021d76184e26d1e33fc7e7c60"
+ },
+ "Surrounded|Normal": {
+  "map": {
+   "width": 1976,
+   "height": 1976,
+   "numLandTiles": 767607,
+   "terrainSha256": "a9b7673b70a0afcf33fac8714060581b941de7532c9d3dfd131bb1ae2871885c"
+  },
+  "mini": {
+   "width": 988,
+   "height": 988,
+   "numLandTiles": 188986,
+   "terrainSha256": "3c1f65676d4ae80006fb3649797b4e1bfdefa6272eaba8ab15d594e2cbb3f9a3"
+  },
+  "nations": 8,
+  "nationsSha256": "cd850310aa859269bd3c452820ac87c4d6feec8035debf9b81f3bf37277a0523",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "1966f613aae4d06029c303185c771f15f1ec49f753e016e1560f2576c1d3662c"
+ },
+ "Surrounded|Compact": {
+  "map": {
+   "width": 988,
+   "height": 988,
+   "numLandTiles": 188986,
+   "terrainSha256": "3c1f65676d4ae80006fb3649797b4e1bfdefa6272eaba8ab15d594e2cbb3f9a3"
+  },
+  "mini": {
+   "width": 494,
+   "height": 494,
+   "numLandTiles": 45797,
+   "terrainSha256": "60221a3dd6deb5886a73d3c8ac3b56abe4ff03e84ee065478bb4db05e8caef92"
+  },
+  "nations": 8,
+  "nationsSha256": "6a45757505b175c62f56fa0d6b7002ef9ae3b2f69fe52d81b9c6f7dc8ff390a3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "cf4088e719456f512188033d1c3c66aebddc983e1dc1f685d20d831c86c60e3d"
+ },
+ "Svalmel|Normal": {
+  "map": {
+   "width": 1700,
+   "height": 1580,
+   "numLandTiles": 1011623,
+   "terrainSha256": "55edf1d4ea62511bd2e8103458f671577c6e21a6285db707001f720ccf593a8f"
+  },
+  "mini": {
+   "width": 850,
+   "height": 790,
+   "numLandTiles": 248032,
+   "terrainSha256": "c7766a6f05fecd449037047e599a81b9646417c2941265a3c3749a89feeb3692"
+  },
+  "nations": 5,
+  "nationsSha256": "da0783edb2e6b49f6b1dfe7b3b27370bdcf07ddff98be024b05d4c69054f7590",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Svalmel|Compact": {
+  "map": {
+   "width": 850,
+   "height": 790,
+   "numLandTiles": 248032,
+   "terrainSha256": "c7766a6f05fecd449037047e599a81b9646417c2941265a3c3749a89feeb3692"
+  },
+  "mini": {
+   "width": 425,
+   "height": 395,
+   "numLandTiles": 59683,
+   "terrainSha256": "89efce70e42b3ddf7c2e265864f3ff6ea40e1e1438481521650d1378023f17cf"
+  },
+  "nations": 5,
+  "nationsSha256": "386fe4b9dca8fa83a31bf2c6ce7e296341712d5e2ef5a98f34e5802346b1e30a",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Taiwan Strait|Normal": {
+  "map": {
+   "width": 1600,
+   "height": 1600,
+   "numLandTiles": 907469,
+   "terrainSha256": "b84cad3adf7136fa0e018a3a1a94a67423af262f9a95f0f8b67a1ec25d7b720a"
+  },
+  "mini": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 224367,
+   "terrainSha256": "280fa839a44256aa91e8282ffd35c87d10f062d01811688d35501f735f527807"
+  },
+  "nations": 25,
+  "nationsSha256": "59d0f7592ffb8028d98696a0bb18e2e847c514afa43b05b5d946afb6ffc0a9af",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "dc2c29e64685cb8ed3b2187d0901e76ede86cd296bfb9a1dbb55abb97cf7111d"
+ },
+ "Taiwan Strait|Compact": {
+  "map": {
+   "width": 800,
+   "height": 800,
+   "numLandTiles": 224367,
+   "terrainSha256": "280fa839a44256aa91e8282ffd35c87d10f062d01811688d35501f735f527807"
+  },
+  "mini": {
+   "width": 400,
+   "height": 400,
+   "numLandTiles": 55147,
+   "terrainSha256": "e252e7078ff773e298ca40ab1ac64c20202856b26999aff01afd669c2afa908b"
+  },
+  "nations": 25,
+  "nationsSha256": "84c36b8a267510de3876dc1ddc98c146aaef04d356558cc2b2d061f8ff777aef",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "f5e2352aec112dafa4730859cd46fdd4f51aff86b9a77d9b5ab027f81c5d2ed4"
+ },
+ "The Box|Normal": {
+  "map": {
+   "width": 2048,
+   "height": 2048,
+   "numLandTiles": 4194304,
+   "terrainSha256": "1326760bb3065c4f0ea36c36b06e2bf52ed70b36d6045fa32c475ea6d26f82cc"
+  },
+  "mini": {
+   "width": 1024,
+   "height": 1024,
+   "numLandTiles": 1048576,
+   "terrainSha256": "9bd6d27fdc3cc8deaa9e8fed84c7034f078c2c588fd6d4cb3dab314a820304fd"
+  },
+  "nations": 13,
+  "nationsSha256": "9f5361004712f7801544fbac768e3c93051afbd2f1a63f39ef7f820ee1e87722",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "The Box|Compact": {
+  "map": {
+   "width": 1024,
+   "height": 1024,
+   "numLandTiles": 1048576,
+   "terrainSha256": "9bd6d27fdc3cc8deaa9e8fed84c7034f078c2c588fd6d4cb3dab314a820304fd"
+  },
+  "mini": {
+   "width": 512,
+   "height": 512,
+   "numLandTiles": 262144,
+   "terrainSha256": "d179fded59037088cb043b3ffc41d714f9bd8105227d8aac28ecac9943ee1e67"
+  },
+  "nations": 13,
+  "nationsSha256": "908a3bbcfe1726edf8f8a9e3fa1a8c3eac88ca5f97c4ba9c11163bf458a8e97f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tierra Del Fuego|Normal": {
+  "map": {
+   "width": 2504,
+   "height": 1664,
+   "numLandTiles": 822917,
+   "terrainSha256": "5166e1e877a7a08a8d8861faa84d874b47bd38f048ff9f010a53bd0c432f87db"
+  },
+  "mini": {
+   "width": 1252,
+   "height": 832,
+   "numLandTiles": 197190,
+   "terrainSha256": "381d79bba34803edfeafb2e69d1a024504512bf5f1dc71aa83636ea518450830"
+  },
+  "nations": 20,
+  "nationsSha256": "a181d5ac8ebbeaad8417fd25015384b8c8bd829919db6ecfabfa6d50ab7baf14",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tierra Del Fuego|Compact": {
+  "map": {
+   "width": 1252,
+   "height": 832,
+   "numLandTiles": 197190,
+   "terrainSha256": "381d79bba34803edfeafb2e69d1a024504512bf5f1dc71aa83636ea518450830"
+  },
+  "mini": {
+   "width": 626,
+   "height": 416,
+   "numLandTiles": 45863,
+   "terrainSha256": "3c6d49151f9e1d7bea4991d9a2e20f2f377010a1abf0bce03ff9ba27e153eeb4"
+  },
+  "nations": 20,
+  "nationsSha256": "f6fba64722d2374d94fef9d1c300ba006bdcd5454074441bb9bef28e3d851ffd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Titan|Normal": {
+  "map": {
+   "width": 1232,
+   "height": 2160,
+   "numLandTiles": 1626582,
+   "terrainSha256": "4793a530acfabde5903bf695013508801d7b22f8744ce1210ad78d224fdddbfb"
+  },
+  "mini": {
+   "width": 616,
+   "height": 1080,
+   "numLandTiles": 398463,
+   "terrainSha256": "e3c091a991c4058997d1393218e2218477b613028f14c07f304841aff2162a41"
+  },
+  "nations": 28,
+  "nationsSha256": "fdb1e02235d1c69db15a3a0c7a6b54544f98b207ab8d61926e6ccc0615290066",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Titan|Compact": {
+  "map": {
+   "width": 616,
+   "height": 1080,
+   "numLandTiles": 398463,
+   "terrainSha256": "e3c091a991c4058997d1393218e2218477b613028f14c07f304841aff2162a41"
+  },
+  "mini": {
+   "width": 308,
+   "height": 540,
+   "numLandTiles": 96568,
+   "terrainSha256": "ac088bf2e0637c50cccc9c8ec6aa48b165cf68daba820ff0700f8762ba87aee3"
+  },
+  "nations": 28,
+  "nationsSha256": "fdb1e02235d1c69db15a3a0c7a6b54544f98b207ab8d61926e6ccc0615290066",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 2 Teams|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1500,
+   "numLandTiles": 984577,
+   "terrainSha256": "cab3f0290758fbbb12ec0ad6d2e940a7385900fbcfc80d9b40cf6216e364c57b"
+  },
+  "mini": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 244567,
+   "terrainSha256": "517da28654daa4ddfa105b742521d218d95825ad8a6134bebdbe594483328bbe"
+  },
+  "nations": 2,
+  "nationsSha256": "96750eb5613e5abf33c9f1f41573a15895abbfdc48b670cd57730de9194b6903",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 2 Teams|Compact": {
+  "map": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 244567,
+   "terrainSha256": "517da28654daa4ddfa105b742521d218d95825ad8a6134bebdbe594483328bbe"
+  },
+  "mini": {
+   "width": 375,
+   "height": 375,
+   "numLandTiles": 60237,
+   "terrainSha256": "0c59ce3b46ebb69ca3da36bcf63dbfd0464eea801f783ea4f63a1fb2d551b2c9"
+  },
+  "nations": 2,
+  "nationsSha256": "28e06d2c4fd65aa1e02316e7cf85444274467c278675f59c12be35bccdbe31cd",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 3 Teams|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1500,
+   "numLandTiles": 1024327,
+   "terrainSha256": "52081d17691355582f8373c762b85d4eef857e55444763aaa40333af3a8a9d12"
+  },
+  "mini": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 254300,
+   "terrainSha256": "b7ff1b87d763e77b332de4831fdb296e14e4ee7e2f05cbc8383d36758d9e34b8"
+  },
+  "nations": 3,
+  "nationsSha256": "f8b338f715c6f538bfa6dced27bc80ceb95e51c3290358782d4a127f0340a685",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 3 Teams|Compact": {
+  "map": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 254300,
+   "terrainSha256": "b7ff1b87d763e77b332de4831fdb296e14e4ee7e2f05cbc8383d36758d9e34b8"
+  },
+  "mini": {
+   "width": 375,
+   "height": 375,
+   "numLandTiles": 62691,
+   "terrainSha256": "21750570bdfd8255ac8e879f75121d01482e2ed3c22d4fc6eddcf02aea65ec67"
+  },
+  "nations": 3,
+  "nationsSha256": "ad63e205019cbae990a11f2a47e7e610d55a7df9afebf2ce5f8ffc9ad4c6a742",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 4 Teams|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1500,
+   "numLandTiles": 1008007,
+   "terrainSha256": "f915c63dec3a0e19b575cc2056437ec2d5f2ade1293478eb5994e2cbf7ded6f0"
+  },
+  "mini": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 250191,
+   "terrainSha256": "daf1f515b77adc83921db4399937b151370c7333a1b84655334ebe803d275020"
+  },
+  "nations": 4,
+  "nationsSha256": "fa3d5af19637092c85f0a45cf4d744b350297c64d73dbf32b5cee08150dccab1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 4 Teams|Compact": {
+  "map": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 250191,
+   "terrainSha256": "daf1f515b77adc83921db4399937b151370c7333a1b84655334ebe803d275020"
+  },
+  "mini": {
+   "width": 375,
+   "height": 375,
+   "numLandTiles": 61644,
+   "terrainSha256": "dd3691afb54d30949770244869a017c09e812c13e443b93c34b7ef1d9694b221"
+  },
+  "nations": 4,
+  "nationsSha256": "5757f6bb14e1fc93800506b3a86d8dcb6865c455159973dabbe8470204092269",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 8 Teams|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1500,
+   "numLandTiles": 905705,
+   "terrainSha256": "ace6c0d28f0611220aaca5ad0f8f008af20a8d9ca12587e9dcacbb4d966f6378"
+  },
+  "mini": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 224342,
+   "terrainSha256": "e86f2a279b8b4e374f22ebe4f1bad6bda4df137eabbeca3900bdf0914b33b454"
+  },
+  "nations": 8,
+  "nationsSha256": "639a1fdeab270e49db05c58b8dc05659a63805eb8f5c55a07ce78ba90577144b",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Tourney 8 Teams|Compact": {
+  "map": {
+   "width": 750,
+   "height": 750,
+   "numLandTiles": 224342,
+   "terrainSha256": "e86f2a279b8b4e374f22ebe4f1bad6bda4df137eabbeca3900bdf0914b33b454"
+  },
+  "mini": {
+   "width": 375,
+   "height": 375,
+   "numLandTiles": 54860,
+   "terrainSha256": "2513c55b4a6717d7eac322859132abffa51740f0d1b85922c1725d729916dac0"
+  },
+  "nations": 8,
+  "nationsSha256": "5ab1a34ca41f5350220bee4446319dc37c9edc822a258bbf44c965d23e121f8c",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Traders Dream|Normal": {
+  "map": {
+   "width": 2200,
+   "height": 1920,
+   "numLandTiles": 972041,
+   "terrainSha256": "6b43f1f5d1244f299dbc5678eca7d747891a33bac11cffb9ced1fe58be6847a6"
+  },
+  "mini": {
+   "width": 1100,
+   "height": 960,
+   "numLandTiles": 240669,
+   "terrainSha256": "42d1ff5d5dca2581ed60b3d3ec03a4ebb2d9b1bf93abdaa8d480080ae6392a33"
+  },
+  "nations": 13,
+  "nationsSha256": "6b4892520f5e4c947a1e0134e476ed6426121fe4328c2306d96778ceb49ab4d2",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "bd3e3293d5420721ccf64e0fdc0c024511896fcca3829183369205b8097b2548"
+ },
+ "Traders Dream|Compact": {
+  "map": {
+   "width": 1100,
+   "height": 960,
+   "numLandTiles": 240669,
+   "terrainSha256": "42d1ff5d5dca2581ed60b3d3ec03a4ebb2d9b1bf93abdaa8d480080ae6392a33"
+  },
+  "mini": {
+   "width": 550,
+   "height": 480,
+   "numLandTiles": 58992,
+   "terrainSha256": "d72243351b684cb71568f6e308580cc5e22d96c614174e898f5b829623e6cfca"
+  },
+  "nations": 13,
+  "nationsSha256": "e57326eb1face48d5183680364d31e3e8bf9e1b3aab206f8068d26bd5207e606",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "2c2f06017998dcadf4e1eb7a8887a70edd64565a65d845bbfe869eb0342492c1"
+ },
+ "Two Lakes|Normal": {
+  "map": {
+   "width": 2100,
+   "height": 1840,
+   "numLandTiles": 3426935,
+   "terrainSha256": "5d5d9776b4713bad3ef82a55a3b3b0cd1aaeb70f45c8f01adc9cb650dea5ef03"
+  },
+  "mini": {
+   "width": 1050,
+   "height": 920,
+   "numLandTiles": 853578,
+   "terrainSha256": "024403ca75060a8b17ca08c6e8720d250d2411606802d2bd442cfa0c1f5d5295"
+  },
+  "nations": 5,
+  "nationsSha256": "8064bc55c601f127f30cbe88cf47641029d18513cfd3b78267f477018dbd8031",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Two Lakes|Compact": {
+  "map": {
+   "width": 1050,
+   "height": 920,
+   "numLandTiles": 853578,
+   "terrainSha256": "024403ca75060a8b17ca08c6e8720d250d2411606802d2bd442cfa0c1f5d5295"
+  },
+  "mini": {
+   "width": 525,
+   "height": 460,
+   "numLandTiles": 211859,
+   "terrainSha256": "0f8de54c17df03a902461b879ace9e7ffa1b2d228da00dac86baa263d2373510"
+  },
+  "nations": 5,
+  "nationsSha256": "76bd334265474d20976827c0a78ae29ba6ab9d8b4b9a2fa25b4257c55fee7718",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "United States|Normal": {
+  "map": {
+   "width": 2800,
+   "height": 1548,
+   "numLandTiles": 1868818,
+   "terrainSha256": "46da69d2bac2496b1aab8240dce2a5648a984921af38040dff0364ff6b1a2bad"
+  },
+  "mini": {
+   "width": 1400,
+   "height": 774,
+   "numLandTiles": 458394,
+   "terrainSha256": "a13035dcde032d71a36a89e907fa2269150cdc9a90afb7252cfb9efd387b67ff"
+  },
+  "nations": 49,
+  "nationsSha256": "b0610b6bba7c7c904a0646a0c0d1855dae4def0979f47d8102389303f9abbf23",
+  "additionalNationsSha256": "3fb3c3dce17934f3ba26a31d522e1107c5b0c17746ebeb44a391d0734b1a5e17",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "United States|Compact": {
+  "map": {
+   "width": 1400,
+   "height": 774,
+   "numLandTiles": 458394,
+   "terrainSha256": "a13035dcde032d71a36a89e907fa2269150cdc9a90afb7252cfb9efd387b67ff"
+  },
+  "mini": {
+   "width": 700,
+   "height": 387,
+   "numLandTiles": 110657,
+   "terrainSha256": "c2f192d3c56a513074c7f014ee583791077ccec247b77f6dfa1464985eb491a7"
+  },
+  "nations": 49,
+  "nationsSha256": "70a27383117ce72b4115f92660b467697b2c9146ed5769c11740a77d08ee590c",
+  "additionalNationsSha256": "473ad506cc7a89860a07792940214cd633a9368bc41b729dfd092cd073d12318",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Venice|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1500,
+   "numLandTiles": 823860,
+   "terrainSha256": "2c1bc7eec8b61b306fdd80938c1762dd2207799977673677b38c5de7a81705e3"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 198423,
+   "terrainSha256": "aa0b8b7f80ddf13f74c720da7c9d0fdc52fa231ca2ea01b002520997a4d7e4f5"
+  },
+  "nations": 15,
+  "nationsSha256": "c695df78fcac1f45f4414da2d6bbfa62c461c2937e03d9a223c79aff3b5da3b1",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Venice|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 750,
+   "numLandTiles": 198423,
+   "terrainSha256": "aa0b8b7f80ddf13f74c720da7c9d0fdc52fa231ca2ea01b002520997a4d7e4f5"
+  },
+  "mini": {
+   "width": 500,
+   "height": 375,
+   "numLandTiles": 46052,
+   "terrainSha256": "3f0a032519b2eaef74cc422a9e1daf49a7abd5f0a844adfc365af71c9b516601"
+  },
+  "nations": 15,
+  "nationsSha256": "93808ee0f854afd29330b241e3c79dc0d28aa2e7fab534780809afd5089c567f",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Vietnam|Normal": {
+  "map": {
+   "width": 1976,
+   "height": 3560,
+   "numLandTiles": 1504043,
+   "terrainSha256": "b4ee3de4353ae451de2f54805aff2cd244fc30ccd6fc25bf5cc9fda89875b5b1"
+  },
+  "mini": {
+   "width": 988,
+   "height": 1780,
+   "numLandTiles": 371348,
+   "terrainSha256": "e741323156560c979cf43468e34813fa737af4a331da80013f784a21b67e64a6"
+  },
+  "nations": 15,
+  "nationsSha256": "7d414c4fbef838d5bb1de65e318828c0e47b9d1c43c5ad93eb2f8e20e86eac4b",
+  "additionalNationsSha256": "a7c7acddb82e033ff80935fab9b48d1d3ed0bca4ecb6e46b2923fb59ca66291f",
+  "teamSpawnAreasSha256": "09fe13bd37e266f95c94d9ec3c620964a21713b6001b8c982edc5ba38e114502"
+ },
+ "Vietnam|Compact": {
+  "map": {
+   "width": 988,
+   "height": 1780,
+   "numLandTiles": 371348,
+   "terrainSha256": "e741323156560c979cf43468e34813fa737af4a331da80013f784a21b67e64a6"
+  },
+  "mini": {
+   "width": 494,
+   "height": 890,
+   "numLandTiles": 90606,
+   "terrainSha256": "844b2a8f66c3c25dba020d97cd767e4af1439fe2e12f1d932f7a81ac70bedd8e"
+  },
+  "nations": 15,
+  "nationsSha256": "306892bc8f07c0b654cf599d120b17eae1ea747e528f748cd01157f37050ae9c",
+  "additionalNationsSha256": "6ed150be3307bf9ebf8bc37b35db6e62a39a808945857c588de302c4da66295d",
+  "teamSpawnAreasSha256": "6d10bdf31a41f534df1b94dc8f4db00ceff56a8b4af146e80d35c76e66cbe5c9"
+ },
+ "Warship Warship|Normal": {
+  "map": {
+   "width": 3000,
+   "height": 1396,
+   "numLandTiles": 1122343,
+   "terrainSha256": "7a9fdacde9012b599ed9e61addb319abbe24e34a0cd67f6323b4b12f7a0b0632"
+  },
+  "mini": {
+   "width": 1500,
+   "height": 698,
+   "numLandTiles": 279822,
+   "terrainSha256": "1e385e8131a4dcbf9817ed0f7350e7d4c2e3921701cb4d4f1a9e99e7525c9627"
+  },
+  "nations": 10,
+  "nationsSha256": "8866167572afa7ad89ce6fb1f4df1cbe5fdfb3f270d59af089164b05acbbb797",
+  "additionalNationsSha256": "67acd3836e15d315dc4bd65fbf0f8192e8c80a6a539e96332b7f2b8f6f2b4c90",
+  "teamSpawnAreasSha256": "27d6da834075f420b6f6283a0073a66e0e69f1f8954daf89a74adf34d1797c1b"
+ },
+ "Warship Warship|Compact": {
+  "map": {
+   "width": 1500,
+   "height": 698,
+   "numLandTiles": 279822,
+   "terrainSha256": "1e385e8131a4dcbf9817ed0f7350e7d4c2e3921701cb4d4f1a9e99e7525c9627"
+  },
+  "mini": {
+   "width": 750,
+   "height": 349,
+   "numLandTiles": 68553,
+   "terrainSha256": "93f8f391d11355f973281a0a3da22a5ddf87868a816bc9590fdba4568969548f"
+  },
+  "nations": 10,
+  "nationsSha256": "b940f69143101e024d9b65d519d20c6ab3c4c181cd5c6edf8c2b86c19e489961",
+  "additionalNationsSha256": "67acd3836e15d315dc4bd65fbf0f8192e8c80a6a539e96332b7f2b8f6f2b4c90",
+  "teamSpawnAreasSha256": "fcd1222e104e82b0005d28861f1aa0260a5b8abb46558fabec3a8a122a055c66"
+ },
+ "World|Normal": {
+  "map": {
+   "width": 2000,
+   "height": 1000,
+   "numLandTiles": 651569,
+   "terrainSha256": "a0d7b174f90dfd654c6d660e498d25944caadae07fbb980600452115422398f9"
+  },
+  "mini": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 158068,
+   "terrainSha256": "d5db77572958fef4400b291c27da92aa44a882e4f5ed58478bca4c3f1b578fbf"
+  },
+  "nations": 72,
+  "nationsSha256": "9ba24081f345f0359de1fde2cbe6caa37f780de21b4611c8c9a77fae2d16b577",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "World|Compact": {
+  "map": {
+   "width": 1000,
+   "height": 500,
+   "numLandTiles": 158068,
+   "terrainSha256": "d5db77572958fef4400b291c27da92aa44a882e4f5ed58478bca4c3f1b578fbf"
+  },
+  "mini": {
+   "width": 500,
+   "height": 250,
+   "numLandTiles": 37575,
+   "terrainSha256": "fbee00a7dc706702744dc12385b1622c5ff8772980572d7cc6fcc2838bfbb1c4"
+  },
+  "nations": 72,
+  "nationsSha256": "b7ca5509481c84a88bae1d83e4173304c4d352e0d1bd12d87c2497a62ab2bf40",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "World Inverted|Normal": {
+  "map": {
+   "width": 2500,
+   "height": 1248,
+   "numLandTiles": 1561743,
+   "terrainSha256": "10ad285cb6b7b76cf43d6bf1047726d9b320810fe29f8cc39499404e80c7714d"
+  },
+  "mini": {
+   "width": 1250,
+   "height": 624,
+   "numLandTiles": 381490,
+   "terrainSha256": "ec4defd1537a7a56fc8f259a145d5278eafd57bfe99a5ee8986c0146dd8425e6"
+  },
+  "nations": 93,
+  "nationsSha256": "5cfccb982c9b18c3d344d6a980abaa3400312dc47b75d07034293b583880b037",
+  "additionalNationsSha256": "3392a5940e42cfef82e6a9490e176dabc297cbf9dd1238d5e8337f60e88a7a2f",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "World Inverted|Compact": {
+  "map": {
+   "width": 1250,
+   "height": 624,
+   "numLandTiles": 381490,
+   "terrainSha256": "ec4defd1537a7a56fc8f259a145d5278eafd57bfe99a5ee8986c0146dd8425e6"
+  },
+  "mini": {
+   "width": 625,
+   "height": 312,
+   "numLandTiles": 91866,
+   "terrainSha256": "cc63b17c6e5a73baee106f1f87f91b4893cda8bcba150470611dafafc5867330"
+  },
+  "nations": 93,
+  "nationsSha256": "aeddb62e530b1e1d7cc842810916c0650b089462e3077cefc138d44e2decd7e0",
+  "additionalNationsSha256": "e205e7f4236f4f35089027c0b72e82039d4de1b7a38641815a2a68452898c7b7",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yangtze River|Normal": {
+  "map": {
+   "width": 3840,
+   "height": 2552,
+   "numLandTiles": 1877550,
+   "terrainSha256": "fb68ee6e07b3b6ecd2655cd334ae4a722d8f503bce0b5d38348d5c455bb27791"
+  },
+  "mini": {
+   "width": 1920,
+   "height": 1276,
+   "numLandTiles": 464270,
+   "terrainSha256": "bb6b3ed4c41aac9738ddc8a449356526205d2d353169412bcf39d944e2d4ac84"
+  },
+  "nations": 9,
+  "nationsSha256": "489229be04ff466aa27a777c52f97dcd689b955863a85b569c7e50dbaf8a5945",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yangtze River|Compact": {
+  "map": {
+   "width": 1920,
+   "height": 1276,
+   "numLandTiles": 464270,
+   "terrainSha256": "bb6b3ed4c41aac9738ddc8a449356526205d2d353169412bcf39d944e2d4ac84"
+  },
+  "mini": {
+   "width": 960,
+   "height": 638,
+   "numLandTiles": 113792,
+   "terrainSha256": "c91be1c7c390247f855ce4a5e54b8eac57bf0899c86455eee43121963621bb85"
+  },
+  "nations": 9,
+  "nationsSha256": "2fe5b32ef592cdf37b97f633f5b57e6be07bf26ccbc33aa44b939d7901293f14",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yellow Sea|Normal": {
+  "map": {
+   "width": 1500,
+   "height": 1152,
+   "numLandTiles": 1042745,
+   "terrainSha256": "4d8b85dc903c287fa29d3da60abc59ba88d00ccdb27b0eefc96fe334009555e4"
+  },
+  "mini": {
+   "width": 750,
+   "height": 576,
+   "numLandTiles": 258545,
+   "terrainSha256": "1440dce8bae175d63c58deefd1e97333bb1dc1d60a06e245a6a5dc91712264cb"
+  },
+  "nations": 8,
+  "nationsSha256": "24b683f5339b37ec1e474b08d65b265a9a31b72f3780ea4be662bd46e35052b6",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yellow Sea|Compact": {
+  "map": {
+   "width": 750,
+   "height": 576,
+   "numLandTiles": 258545,
+   "terrainSha256": "1440dce8bae175d63c58deefd1e97333bb1dc1d60a06e245a6a5dc91712264cb"
+  },
+  "mini": {
+   "width": 375,
+   "height": 288,
+   "numLandTiles": 63926,
+   "terrainSha256": "ee3b68fe1ab60e33018da94b5b3a07a1854981ebb1085a79e802c826aa00d28f"
+  },
+  "nations": 8,
+  "nationsSha256": "57fa61949b502ec09c7c18b6ba370681972c74f1889018842f8485c90b334ba3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yenisei|Normal": {
+  "map": {
+   "width": 1200,
+   "height": 1500,
+   "numLandTiles": 1207315,
+   "terrainSha256": "1b88b79873ce666ebc4b75f911d75cfecca160724cbf6361883e0b00dab35b6b"
+  },
+  "mini": {
+   "width": 600,
+   "height": 750,
+   "numLandTiles": 294828,
+   "terrainSha256": "4d46148f74649ec93cbb4ff34b8c74e37111fb4c5a55e448d42008bab972e30d"
+  },
+  "nations": 6,
+  "nationsSha256": "9c545ad7f354869218f3a81e5a679d2ebe9d0102d0f7ebf86f9798e0ac4525c3",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ },
+ "Yenisei|Compact": {
+  "map": {
+   "width": 600,
+   "height": 750,
+   "numLandTiles": 294828,
+   "terrainSha256": "4d46148f74649ec93cbb4ff34b8c74e37111fb4c5a55e448d42008bab972e30d"
+  },
+  "mini": {
+   "width": 300,
+   "height": 375,
+   "numLandTiles": 70740,
+   "terrainSha256": "057dd88191026e9fc012d828ade52cfb5d0f206e71a4768b180d5abfd74a6142"
+  },
+  "nations": 6,
+  "nationsSha256": "89e699ef1601c724c7244148fcfd16e14851d42b08b928b538ee4bff282a06f9",
+  "additionalNationsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "teamSpawnAreasSha256": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b"
+ }
+}
