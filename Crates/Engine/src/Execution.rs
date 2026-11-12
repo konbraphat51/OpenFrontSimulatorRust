@@ -15,6 +15,8 @@ pub mod PauseExecution;
 pub mod PlayerExecution;
 pub mod QuickChatExecution;
 pub mod RecomputeRailClusterExecution;
+pub mod SAMLauncherExecution;
+pub mod SAMMissileExecution;
 pub mod SpawnExecution;
 pub mod SpawnTimerExecution;
 pub mod TribeSpawner;

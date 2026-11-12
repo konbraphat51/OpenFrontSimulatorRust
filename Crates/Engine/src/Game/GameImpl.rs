@@ -13,9 +13,9 @@ use super::AllianceImpl::AllianceImpl;
 use super::AllianceRequestImpl::{AllianceRequestImpl, RequestStatus};
 use super::AttackImpl::AttackImpl;
 use super::Game::{
-    AllianceId, AllianceRequestId, AttackId, COLORED_TEAMS, Cell, GameMode, Gold, Nation,
-    PlayerInfo, PlayerType, SmallId, Team, TeamCountConfig, TeamGameSpawnAreas, Tick, UnitId,
-    UnitParams, UnitType,
+    AllianceId, AllianceRequestId, AttackId, COLORED_TEAMS, Cell, GameMode, Gold, NUM_UNIT_TYPES,
+    Nation, PlayerInfo, PlayerType, SmallId, Team, TeamCountConfig, TeamGameSpawnAreas, Tick,
+    UnitId, UnitParams, UnitType,
 };
 use super::GameMap::{GameMapImpl, TileRef};
 use super::PlayerImpl::{PlayerImpl, PlayerMut, PlayerRef};
@@ -105,6 +105,8 @@ pub struct GameImpl {
     winner: Option<Winner>,
     team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     units_version: u32,
+    /// `unitCountMemo`: per unit type, the units version and the count computed at it.
+    unit_count_memo: std::cell::RefCell<[Option<(u32, i64)>; NUM_UNIT_TYPES]>,
     territory_version: u32,
     /// Shared tile traversal scratch.
     pub scratch: TileTraversalScratch,
@@ -153,6 +155,7 @@ impl GameImpl {
             winner: None,
             team_game_spawn_areas,
             units_version: 0,
+            unit_count_memo: std::cell::RefCell::new([None; NUM_UNIT_TYPES]),
             territory_version: 0,
             scratch: TileTraversalScratch {
                 visited: vec![0; tiles],
@@ -490,10 +493,16 @@ impl GameImpl {
     }
     /// `unitCount(type)`: level-weighted count across all players.
     pub fn unit_count(&self, t: UnitType) -> i64 {
+        if let Some((version, count)) = self.unit_count_memo.borrow()[t.index()]
+            && version == self.units_version
+        {
+            return count;
+        }
         let mut total = 0;
         for p in &self.players {
             total += self.player(p.small_id).unit_count(t);
         }
+        self.unit_count_memo.borrow_mut()[t.index()] = Some((self.units_version, total));
         total
     }
 
