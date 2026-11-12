@@ -70,7 +70,7 @@ fn js_trim(s: &str) -> &str {
     s.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}')
 }
 
-/// `censorNameWithClanTag(username)`: profane names are replaced, a clan tag is upper-cased unless profane.
+/// `censorNameWithClanTag(username)`: profane names are replaced, a non-profane clan tag is kept in its original case.
 fn censor_name_with_clan_tag(username: &str) -> String {
     let clan_tag = clan_tag_original_case(username);
     let name_without_clan = match &clan_tag {
@@ -78,13 +78,16 @@ fn censor_name_with_clan_tag(username: &str) -> String {
         None => username.to_string(),
     };
     let clan_tag_is_profane = clan_tag.as_ref().is_some_and(|t| Obscenity::has_match(t));
-    let censored = if Obscenity::has_match(&name_without_clan) {
+    let name_is_profane = Obscenity::has_match(&name_without_clan);
+    let censored = if name_is_profane {
         SHADOW_NAMES[simple_hash(&name_without_clan) as usize % SHADOW_NAMES.len()].to_string()
     } else {
         name_without_clan
     };
     match clan_tag {
-        Some(tag) if !clan_tag_is_profane => format!("[{}] {}", tag.to_uppercase(), censored),
+        // An unobjectionable username is returned as typed (original case, spacing).
+        Some(_) if !clan_tag_is_profane && !name_is_profane => username.to_string(),
+        Some(tag) if !clan_tag_is_profane => format!("[{tag}] {censored}"),
         _ => censored,
     }
 }
