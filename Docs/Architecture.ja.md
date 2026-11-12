@@ -81,7 +81,7 @@ pub trait Execution {
 - Execution は `Execution { init, tick, is_active, active_during_spawn_phase }` を実装し (すべて `&mut GameImpl` を取る)、`game.add_execution(Box::new(..))` で追加する。`Runner/Executor.rs` が intent を Execution に対応付ける。Execution を移植したら、その intent の `NotPorted::at_creation("<Name>")` の分岐を置き換え、`Reference/InertPatch.ts` の `PORTED_INTENTS` に intent を追加する。`GameRunner::init` はすべてのゲームが最初に持つ Execution を作る。
 - `NotPorted` の Execution は `not ported: <Name>` でパニックし、`ofsim verify` がそのティックとメッセージを報告する。本物の `WaterManager`、水上系 Execution (輸送船、帰投、交易船、軍艦、軍艦移動)、鉄道網 (駅・線路・クラスタ・列車は `Game/RailNetwork.rs` と `Game/TrainStation.rs`) は移植済み。水上系 Execution の差分シナリオは `Reference/NavalScenarioDump.ts` (`ofsim naval-scenario`、トレーサ側は `OFSIM_INERT_CLASSES=Attack,Shell` で実行)。
 - クライアント専用の処理は移植しない (更新、名前配置、UI 向けクエリ、ほとんどの `stats()` 呼び出し)。シミュレーションが読み戻すのは人間が送った攻撃数と MIRV の発射数だけで、`StatsImpl` に保持する。
-- デバッグ: `Tools/VerifyAll.sh` (一覧表)、`Tools/TraceCompare.sh` (参照トレース、`ofsim trace`、`TraceDiff`。`--inert` で未移植の Execution を両側で無効化)、シード付きの領土シナリオ (`ofsim scenario`、`Reference/ScenarioDump.ts`)。`Crates/Engine/tests/VerifyRecordsTest.rs` は `tests/Golden/VerifyMinimums.json` の一致ハッシュ数が後退しないことを保証する。
+- デバッグ: `Tools/VerifyAll.sh` (一覧表)、`Tools/TraceCompare.sh` (参照トレース、`ofsim trace`、`TraceDiff`。`--inert` で未移植の Execution を両側で無効化)、シード付きの領土シナリオ (`ofsim scenario`、`Reference/ScenarioDump.ts`)、シード付きの核・SAM・Doomsday Clock シナリオ (`ofsim nuke-scenario`、`Reference/NukeScenarioDump.ts`、`Tools/NukeScenarioCompare.sh`。毎 tick のタイル状態ダイジェストで放射性降下物と水変換も比較する)。`Crates/Engine/tests/VerifyRecordsTest.rs` は `tests/Golden/VerifyMinimums.json` の一致ハッシュ数が後退しないことを保証する。
 
 ## 決定性ルール (移植の契約)
 

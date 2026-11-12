@@ -2,6 +2,7 @@
 //! `ofsim`: command-line replayer for OpenFront game records (unofficial port, see NOTICE).
 
 mod Naval;
+mod NukeScenario;
 mod Scenario;
 mod Trace;
 
@@ -116,6 +117,43 @@ enum Command {
         #[arg(long, default_value_t = 6)]
         players: usize,
     },
+    /// Seeded nuke, SAM and doomsday program for differential tests (see Reference/NukeScenarioDump.ts)
+    #[command(hide = true)]
+    NukeScenario {
+        /// Game record (.json.gz)
+        #[arg(long)]
+        record: PathBuf,
+        /// Directory of upstream map resources
+        #[arg(long)]
+        maps: PathBuf,
+        /// Output NDJSON file (a `.digest` file is written next to it)
+        #[arg(long)]
+        out: PathBuf,
+        /// Ticks of the record to run first
+        #[arg(long)]
+        warm: u32,
+        /// Number of launch rounds
+        #[arg(long)]
+        rounds: u32,
+        /// Ticks per round
+        #[arg(long, default_value_t = 40)]
+        spacing: u32,
+        /// Ticks after the last round
+        #[arg(long, default_value_t = 150)]
+        tail: u32,
+        /// Doomsday clock speed (slow, normal, fast, veryfast); off when absent
+        #[arg(long)]
+        doomsday: Option<String>,
+        /// Number of launching players
+        #[arg(long, default_value_t = 4)]
+        attackers: usize,
+        /// Manhattan radius of the grow phase around each spawn
+        #[arg(long, default_value_t = 25)]
+        grow: i32,
+        /// One in this many players gets a SAM launcher (0 = none)
+        #[arg(long, default_value_t = 25)]
+        sam_mod: usize,
+    },
     /// Replay a record and write state snapshots
     Replay {
         /// Game record (.json.gz)
@@ -211,6 +249,37 @@ fn main() -> ExitCode {
             Ok(()) => ExitCode::SUCCESS,
             Err(e) => {
                 eprintln!("ofsim naval-scenario: {e:#}");
+                ExitCode::from(2)
+            }
+        },
+        Command::NukeScenario {
+            record,
+            maps,
+            out,
+            warm,
+            rounds,
+            spacing,
+            tail,
+            doomsday,
+            attackers,
+            grow,
+            sam_mod,
+        } => match NukeScenario::nuke_scenario(&NukeScenario::NukeScenarioArgs {
+            record: &record,
+            maps: &maps,
+            out: &out,
+            warm,
+            rounds,
+            spacing,
+            tail,
+            doomsday: doomsday.as_deref(),
+            attackers,
+            grow,
+            sam_mod,
+        }) {
+            Ok(()) => ExitCode::SUCCESS,
+            Err(e) => {
+                eprintln!("ofsim nuke-scenario: {e:#}");
                 ExitCode::from(2)
             }
         },
