@@ -34,7 +34,7 @@ cargo run --release --bin ofsim -- replay --record game.json.gz --maps <OpenFron
 
 - Checks: `cargo fmt --all && cargo clippy --all-targets && cargo test`
 - Design and porting rules: [Docs/Architecture.md](Docs/Architecture.md)
-- Differential debugging against the upstream engine: [Reference/README.md](Reference/README.md)
+- Differential debugging against the upstream engine (`Reference/Setup.sh`, `TraceDumper.ts`, `TraceDiff.ts`) and fetching records (`Tools/FetchRecords.py`): [Reference/README.md](Reference/README.md)
 
 ## License
 
