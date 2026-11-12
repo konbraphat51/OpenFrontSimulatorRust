@@ -49,6 +49,14 @@ pub enum Intent {
         /// Requestor id.
         requestor: String,
     },
+    /// `allianceRequestReply` (builds before PR 3155 answer a request with accept or reject).
+    #[serde(rename = "allianceRequestReply")]
+    AllianceRequestReply {
+        /// Requestor id.
+        requestor: String,
+        /// True to accept the request.
+        accept: bool,
+    },
     /// `breakAlliance`.
     #[serde(rename = "breakAlliance")]
     BreakAlliance {
@@ -228,6 +236,7 @@ impl Intent {
             Self::Boat { .. } => "boat",
             Self::AllianceRequest { .. } => "allianceRequest",
             Self::AllianceReject { .. } => "allianceReject",
+            Self::AllianceRequestReply { .. } => "allianceRequestReply",
             Self::BreakAlliance { .. } => "breakAlliance",
             Self::TargetPlayer { .. } => "targetPlayer",
             Self::Emoji { .. } => "emoji",

@@ -9,6 +9,7 @@ use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
 use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
+use crate::Execution::Alliance::AllianceRequestReplyExecution::AllianceRequestReplyExecution;
 use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
@@ -94,6 +95,9 @@ impl Executor {
             Intent::AllianceRequest { recipient } => {
                 Box::new(AllianceRequestExecution::new(player, recipient.clone()))
             }
+            Intent::AllianceRequestReply { requestor, accept } => Box::new(
+                AllianceRequestReplyExecution::new(requestor.clone(), player, *accept),
+            ),
             Intent::AllianceReject { requestor } => {
                 Box::new(AllianceRejectExecution::new(requestor.clone(), player))
             }

@@ -4,4 +4,5 @@
 pub mod AllianceExtensionExecution;
 pub mod AllianceRejectExecution;
 pub mod AllianceRequestExecution;
+pub mod AllianceRequestReplyExecution;
 pub mod BreakAllianceExecution;
