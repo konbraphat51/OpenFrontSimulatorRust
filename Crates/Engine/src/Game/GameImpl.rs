@@ -28,7 +28,9 @@ use super::WaterManager::WaterManager;
 use crate::Configuration::Config::Config;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
+use crate::Pathfinding::Spatial::SpatialQuery::SpatialQuery;
 use ofsim_map::SpawnArea;
+use std::cell::RefCell;
 use std::collections::HashMap;
 
 /// Winner of a game: a player or a team.
@@ -108,6 +110,12 @@ pub struct GameImpl {
     territory_version: u32,
     /// Shared tile traversal scratch.
     pub scratch: TileTraversalScratch,
+    /// Shore queries for boats (upstream builds one per call; its caches are pure).
+    pub spatial: RefCell<SpatialQuery>,
+    /// `TransportShipExecution._staggerCounter` (static upstream, one game per process there).
+    pub transport_ship_stagger: u32,
+    /// `TradeShipExecution._staggerCounter`.
+    pub trade_ship_stagger: u32,
 }
 
 impl GameImpl {
@@ -160,6 +168,9 @@ impl GameImpl {
                 cluster_index_map: vec![0; tiles],
                 gen_: 0,
             },
+            spatial: RefCell::new(SpatialQuery::new()),
+            transport_ship_stagger: 0,
+            trade_ship_stagger: 0,
         };
         if game.config.game_config().game_mode == GameMode::Team {
             game.populate_teams();

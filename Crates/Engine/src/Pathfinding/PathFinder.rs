@@ -149,6 +149,11 @@ impl WaterPathFinder {
         std::mem::take(&mut self.rebuilt)
     }
 
+    /// Runs the freshness check without a query (the call upstream's discarded motion-plan queries make).
+    pub fn touch(&mut self, water: &WaterManager) {
+        self.ensure_fresh(water);
+    }
+
     fn ensure_fresh(&mut self, water: &WaterManager) {
         let v = water.water_graph_version();
         if v == self.water_graph_version {
