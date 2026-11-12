@@ -5,9 +5,11 @@
 //! The stats calls (`goldWork`, `recordDeathPosition`, `playerKilled`) are record-keeping only
 //! and dropped. Flood fills use the game's shared generation-stamped scratch like upstream.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::Util::{get_mode, simple_hash};
 use crate::Execution::Execution::Execution;
+use crate::Execution::SeveredLand::{CLUSTER_SURROUNDED, SeveredCandidates};
 use crate::Game::Game::{Cell, STRUCTURES, SmallId, Tick, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
@@ -19,7 +21,7 @@ type IncludeFn<'a> = &'a dyn Fn(&[u32], TileRef) -> bool;
 
 /// Upkeep of one player: relations decay, structure capture, troops and gold, alliances, clusters.
 pub struct PlayerExecution {
-    player: SmallId,
+    pub(super) player: SmallId,
     active: bool,
     last_calc: f64,
 }
@@ -54,10 +56,18 @@ impl PlayerExecution {
                 boxes[2],
                 boxes[3],
             );
+            let severed_land = if game.config().rules().has(Change::SeveredLandAnnex5955) {
+                self.severed_land(game, &clusters[0], &boxes, 0, None, None)
+            } else {
+                None
+            };
             if let Some(s) = surrounded_by
                 && !game.player(s).is_friendly(player, false)
             {
                 self.remove_cluster(game, &clusters[0]);
+            }
+            if let Some(land) = severed_land {
+                self.annex_severed_clusters(game, &land.candidates, &land.main_tiles);
             }
             return;
         }
@@ -195,6 +205,57 @@ impl PlayerExecution {
             boxes[l_idx + 2],
             boxes[l_idx + 3],
         );
+        // v0.35.0 on: every other cluster is judged before any land changes hands.
+        if game.config().rules().has(Change::SeveredLandAnnex5955) {
+            let mut classes = vec![0u8; clusters.len()];
+            let mut severed = SeveredCandidates::new();
+            let mut open = SeveredCandidates::new();
+            for (i, cluster) in clusters.iter().enumerate() {
+                if i == largest_index {
+                    continue;
+                }
+                let idx = i * 4;
+                let bx = [boxes[idx], boxes[idx + 1], boxes[idx + 2], boxes[idx + 3]];
+                let result = self.classify_cluster(game, cluster, bx);
+                classes[i] = result;
+                if result & 2 != 0 {
+                    severed.push(cluster, bx);
+                }
+                if result & 4 != 0 {
+                    open.push(cluster, bx);
+                }
+            }
+            let severed_land = self.severed_land(
+                game,
+                largest_cluster,
+                &boxes,
+                l_idx,
+                if severed.clusters.is_empty() {
+                    None
+                } else {
+                    Some(&severed)
+                },
+                if open.clusters.is_empty() {
+                    None
+                } else {
+                    Some(&open)
+                },
+            );
+            if let Some(s) = surrounded_by
+                && !game.player(s).is_friendly(player, false)
+            {
+                self.remove_cluster(game, largest_cluster);
+            }
+            for (i, cluster) in clusters.iter().enumerate() {
+                if classes[i] & CLUSTER_SURROUNDED != 0 {
+                    self.remove_cluster(game, cluster);
+                }
+            }
+            if let Some(land) = severed_land {
+                self.annex_severed_clusters(game, &land.candidates, &land.main_tiles);
+            }
+            return;
+        }
         if let Some(s) = surrounded_by
             && !game.player(s).is_friendly(player, false)
         {
@@ -445,7 +506,11 @@ impl PlayerExecution {
         true
     }
 
-    fn get_capturing_player(&self, game: &GameImpl, cluster: &[TileRef]) -> Option<SmallId> {
+    pub(super) fn get_capturing_player(
+        &self,
+        game: &GameImpl,
+        cluster: &[TileRef],
+    ) -> Option<SmallId> {
         let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
         let map = &game.map;
         let my_small_id = self.player;
