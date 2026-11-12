@@ -10,8 +10,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import zlib from "zlib";
 import { GameMapType } from "../src/core/game/Game";
-import { GameMapLoader, MapData } from "../src/core/game/GameMapLoader";
-import { MapManifest } from "../src/core/game/TerrainMapLoader";
+import * as mapLoaderModule from "../src/core/game/GameMapLoader";
+import type { GameMapLoader, MapData } from "../src/core/game/GameMapLoader";
+import type { MapManifest } from "../src/core/game/TerrainMapLoader";
+import { createGameRunner } from "../src/core/GameRunner";
 import { GameRecord, GameStartInfo } from "../src/core/Schemas";
 import { decompressGameRecord, toWireGameStartInfo } from "../src/core/Util";
 
@@ -37,7 +39,10 @@ export class FileSystemMapLoader implements GameMapLoader {
       layerPng: async () => {
         throw new Error("layer images are not needed for simulation");
       },
-    };
+      layerImage: async () => {
+        throw new Error("layer images are not needed for simulation");
+      },
+    } as unknown as MapData;
   }
 }
 
@@ -72,6 +77,24 @@ export function resolveWorktree(scriptUrl: string): string {
 /** Map loader rooted at a worktree. */
 export function createMapLoader(worktree: string): FileSystemMapLoader {
   return new FileSystemMapLoader(path.join(worktree, "resources", "maps"));
+}
+
+/**
+ * Creates the game runner of the worktree's build: v0.35.0 on `createGameRunner` takes the loaded map
+ * files (`loadMapFiles`), earlier builds take the map loader.
+ */
+export async function createRunnerFor(
+  gameStart: Parameters<typeof createGameRunner>[0],
+  worktree: string,
+  callback: Parameters<typeof createGameRunner>[3],
+): Promise<Awaited<ReturnType<typeof createGameRunner>>> {
+  const loader = createMapLoader(worktree);
+  const loadMapFiles = (mapLoaderModule as Record<string, unknown>).loadMapFiles as
+    | ((l: GameMapLoader, map: unknown, size: unknown) => Promise<unknown>)
+    | undefined;
+  const config = gameStart.config as { gameMap: unknown; gameMapSize: unknown };
+  const mapArgument = loadMapFiles ? await loadMapFiles(loader, config.gameMap, config.gameMapSize) : loader;
+  return createGameRunner(gameStart, undefined, mapArgument as never, callback);
 }
 
 /** Splits argv into positional arguments and `--key value` options. */

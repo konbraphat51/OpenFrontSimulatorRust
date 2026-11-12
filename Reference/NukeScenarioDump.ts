@@ -17,7 +17,7 @@ import { SAMLauncherExecution } from "../src/core/execution/SAMLauncherExecution
 import { PlayerType, UnitType } from "../src/core/game/Game";
 import { createGameRunner } from "../src/core/GameRunner";
 import { applyInertPatch } from "./InertPatch";
-import { createMapLoader, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
+import { createRunnerFor, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
 
 void DoomsdayClockExecution;
 silenceEngineLogs();
@@ -34,7 +34,7 @@ const { record, gameStart } = loadRecord(recordPath);
 if (doomsdayArg !== "none") {
   (gameStart.config as { doomsdayClock?: unknown }).doomsdayClock = { enabled: true, speed: doomsdayArg };
 }
-const runner = await createGameRunner(gameStart, undefined, createMapLoader(resolveWorktree(import.meta.url)), () => {});
+const runner = await createRunnerFor(gameStart, resolveWorktree(import.meta.url), () => {});
 const game = runner.game;
 const out = fs.openSync(outPath, "w");
 const digest = fs.openSync(`${outPath}.digest`, "w");

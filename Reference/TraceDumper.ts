@@ -13,7 +13,7 @@ import { PlayerType } from "../src/core/game/Game";
 import { createGameRunner } from "../src/core/GameRunner";
 import { applyInertPatch } from "./InertPatch";
 import {
-  createMapLoader,
+  createRunnerFor,
   loadRecord,
   parseArguments,
   resolveWorktree,
@@ -65,7 +65,7 @@ async function main(): Promise<void> {
   const { record, gameStart } = loadRecord(recordPath);
 
   let tickError: string | null = null;
-  const runner = await createGameRunner(gameStart, undefined, createMapLoader(worktree), (update) => {
+  const runner = await createRunnerFor(gameStart, worktree, (update) => {
     if ("errMsg" in update) tickError = `${update.errMsg}\n${update.stack ?? ""}`;
   });
   const game = runner.game as unknown as { hash(): number } & typeof runner.game;

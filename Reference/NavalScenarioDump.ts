@@ -17,7 +17,7 @@ import { TransportShipExecution } from "../src/core/execution/TransportShipExecu
 import { WarshipExecution } from "../src/core/execution/WarshipExecution";
 import { createGameRunner } from "../src/core/GameRunner";
 import { applyInertPatch } from "./InertPatch";
-import { createMapLoader, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
+import { createRunnerFor, loadRecord, resolveWorktree, silenceEngineLogs } from "./EngineSupport";
 
 silenceEngineLogs();
 const [recordPath, outPath, warmArg, ticksArg, playersArg = "6"] = process.argv.slice(2);
@@ -26,7 +26,7 @@ const totalTicks = Number(ticksArg);
 const maxPlayers = Number(playersArg);
 applyInertPatch();
 const { record, gameStart } = loadRecord(recordPath);
-const runner = await createGameRunner(gameStart, undefined, createMapLoader(resolveWorktree(import.meta.url)), () => {});
+const runner = await createRunnerFor(gameStart, resolveWorktree(import.meta.url), () => {});
 const game = runner.game;
 const out = fs.openSync(outPath, "w");
 
