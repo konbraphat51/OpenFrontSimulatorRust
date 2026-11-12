@@ -11,7 +11,6 @@
 import fs from "fs";
 import { PlayerType } from "../src/core/game/Game";
 import { createGameRunner } from "../src/core/GameRunner";
-import { applyInertPatch } from "./InertPatch";
 import {
   createRunnerFor,
   loadRecord,
@@ -24,7 +23,8 @@ import {
 function captureFull(runner: Awaited<ReturnType<typeof createGameRunner>>, tick: number): string {
   const game = runner.game;
   const map = game.map();
-  const state = map.tileStateBuffer();
+  // Builds before v0.32 keep the packed tile state in a private array
+  const state: Uint16Array = typeof map.tileStateBuffer === "function" ? map.tileStateBuffer() : (map as unknown as { state: Uint16Array }).state;
   const owners = new Array<number>(state.length);
   for (let i = 0; i < state.length; i++) owners[i] = state[i] & 0x0fff;
   const units = game.units().map((u) => ({
@@ -59,7 +59,8 @@ async function main(): Promise<void> {
   }
   const [recordPath, outPath] = positional;
   const fullAt = new Set((options.get("--full-at") ?? "").split(",").filter((s) => s !== "").map(Number));
-  if (options.has("--inert")) applyInertPatch();
+  // Loaded on demand: builds without NationExecution cannot import it
+  if (options.has("--inert")) (await import("./InertPatch")).applyInertPatch();
   const until = options.has("--until") ? Number(options.get("--until")) : Infinity;
   const worktree = resolveWorktree(import.meta.url);
   const { record, gameStart } = loadRecord(recordPath);
@@ -81,7 +82,9 @@ async function main(): Promise<void> {
       const tick = game.ticks();
       if (tick > until) break;
       runner.addTurn(turn);
-      if (!runner.executeNextTick()) throw new Error(tickError ?? `tick ${tick} failed`);
+      // Builds before v0.29.0 return nothing from executeNextTick: only the error callback reports a failure
+      const ran = runner.executeNextTick() as unknown as boolean | undefined;
+      if (ran === false || (ran === undefined && tickError !== null)) throw new Error(tickError ?? `tick ${tick} failed`);
       // State is read after executeNextTick(), i.e. after the tick `tick` ran (ticks() is now tick + 1).
       const hash = game.hash();
       const recordHash = turn.hash ?? null;
