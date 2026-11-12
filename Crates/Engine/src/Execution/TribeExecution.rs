@@ -149,6 +149,14 @@ impl Execution for TribeExecution {
             self.attack_behavior = Some(behavior);
             return;
         }
+        // The tutorial's tribe only grows into free land and accepts no alliance.
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            self.attack_behavior
+                .as_mut()
+                .expect("set above")
+                .expand_into_free_land(game);
+            return;
+        }
         self.accept_all_alliance_requests(game);
         self.delete_next_structure(game);
         self.maybe_attack(game);

@@ -279,6 +279,9 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub disable_alliances: Option<bool>,
+    /// The onboarding tutorial (v0.35.7 on).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tutorial: Option<bool>,
     /// Disable clan tags.
     #[serde(
         default,

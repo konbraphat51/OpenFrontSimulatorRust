@@ -50,6 +50,10 @@ pub enum Change {
     AttackInactiveBeforeRetreat6089,
     /// PR 6016: a water nuke turns a mini map land tile to water when any of its four tiles is water.
     WaterNukeMiniTile6016,
+    /// PR 6204 and siblings: the onboarding tutorial mode (nations and tribes only grow into free land).
+    TutorialMode6204,
+    /// PR 6242: the tutorial's scripted silo, warship and collapse, smaller atom bombs.
+    TutorialSilo6242,
     /// PR 5719: a train reconciles a split of the railroad it is on.
     TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
@@ -183,6 +187,36 @@ const EDGES: &[Edge] = &[
             Change::AttackInactiveBeforeRetreat6089,
             Change::WaterNukeMiniTile6016,
         ],
+        remove: &[],
+    },
+    Edge {
+        class: "C084",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C085",
+        add: &[Change::TutorialMode6204],
+        remove: &[],
+    },
+    Edge {
+        class: "C086",
+        add: &[Change::TutorialSilo6242],
+        remove: &[],
+    },
+    Edge {
+        class: "C087",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C088",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C089",
+        add: &[],
         remove: &[],
     },
     Edge {

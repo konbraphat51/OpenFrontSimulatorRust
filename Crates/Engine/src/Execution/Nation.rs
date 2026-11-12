@@ -15,6 +15,7 @@ pub mod NationStructureBehavior;
 pub mod NationUtils;
 pub mod NationWarshipBehavior;
 pub mod SharedWaterCache;
+pub mod TutorialNation;
 
 /// The one `PseudoRandom` a `NationExecution` shares with all its behaviours (upstream passes the
 /// same instance, so draws interleave); borrow it only for the duration of a single draw.

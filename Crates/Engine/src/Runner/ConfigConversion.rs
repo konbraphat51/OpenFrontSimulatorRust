@@ -88,6 +88,7 @@ pub fn game_config_from_record(c: &RecordConfig::GameConfig) -> Result<GameConfi
         instant_build: c.instant_build,
         disable_nav_mesh: c.disable_nav_mesh,
         disable_alliances: c.disable_alliances,
+        tutorial: c.tutorial,
         water_nukes: c.water_nukes,
         random_spawn: c.random_spawn,
         max_players: c.max_players,

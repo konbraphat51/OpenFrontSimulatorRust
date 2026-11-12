@@ -94,6 +94,8 @@ pub struct GameConfig {
     pub disable_nav_mesh: Option<bool>,
     /// Legacy alliance switch.
     pub disable_alliances: Option<bool>,
+    /// The onboarding tutorial.
+    pub tutorial: Option<bool>,
     /// Water nukes.
     pub water_nukes: Option<bool>,
     /// Random spawn.
@@ -1096,11 +1098,20 @@ impl Config {
                 Difficulty::Impossible => 31_250.0,
             };
         }
+        // The onboarding tutorial's player starts about half full, where troops grow fastest.
+        if self.rules.has(Change::TutorialSilo6242) && self.game_config.tutorial.unwrap_or(false) {
+            return 60_000.0;
+        }
         if self.has_infinite_troops_for(is_lobby_creator) {
             1_000_000.0
         } else {
             25_000.0
         }
+    }
+
+    /// True in the onboarding tutorial.
+    pub fn tutorial(&self) -> bool {
+        self.game_config.tutorial.unwrap_or(false)
     }
 
     /// Troop cap of a player.
@@ -1113,6 +1124,14 @@ impl Config {
             2.0 * (self.pow(p.num_tiles_owned, 0.6) * 1000.0 + 50000.0)
                 + p.city_level_sum * self.city_troop_increase()
         };
+
+        // The tutorial's nations and tribe never spend troops on attacks.
+        if self.rules.has(Change::TutorialMode6204)
+            && self.tutorial()
+            && p.player_type != PlayerType::Human
+        {
+            return max_troops * 0.1;
+        }
 
         if p.player_type == PlayerType::Bot {
             return max_troops / 3.0;
@@ -1166,10 +1185,20 @@ impl Config {
                 inner: 12.0,
                 outer: 18.0,
             },
-            UnitType::AtomBomb => NukeMagnitude {
-                inner: 12.0,
-                outer: 30.0,
-            },
+            UnitType::AtomBomb => {
+                // The tutorial's nukes hurt without wiping out a new player's small territory.
+                if self.rules.has(Change::TutorialSilo6242) && self.tutorial() {
+                    NukeMagnitude {
+                        inner: 8.0,
+                        outer: 16.0,
+                    }
+                } else {
+                    NukeMagnitude {
+                        inner: 12.0,
+                        outer: 30.0,
+                    }
+                }
+            }
             UnitType::HydrogenBomb => NukeMagnitude {
                 inner: 80.0,
                 outer: 100.0,
@@ -1393,6 +1422,7 @@ mod tests {
             instant_build: j["instantBuild"].as_bool().unwrap(),
             disable_nav_mesh: opt_bool("disableNavMesh"),
             disable_alliances: opt_bool("disableAlliances"),
+            tutorial: opt_bool("tutorial"),
             water_nukes: opt_bool("waterNukes"),
             random_spawn: j["randomSpawn"].as_bool().unwrap(),
             max_players: None,

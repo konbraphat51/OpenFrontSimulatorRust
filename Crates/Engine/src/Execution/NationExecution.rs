@@ -13,6 +13,9 @@ use crate::Execution::Nation::NationMIRVBehavior::NationMIRVBehavior;
 use crate::Execution::Nation::NationNukeBehavior::NationNukeBehavior;
 use crate::Execution::Nation::NationStructureBehavior::NationStructureBehavior;
 use crate::Execution::Nation::NationWarshipBehavior::NationWarshipBehavior;
+use crate::Execution::Nation::TutorialNation::{
+    tutorial_collapse, tutorial_silo, tutorial_warship,
+};
 use crate::Execution::Nation::{Shared, SharedRandom};
 use crate::Execution::Utils::AiAttackBehavior::AiAttackBehavior;
 use crate::Game::Game::{
@@ -255,6 +258,7 @@ impl Execution for NationExecution {
         if let (Some(b), Some(player)) = (self.behaviors.as_mut(), self.player)
             && game.player(player).is_alive()
             && game.config().game_config().difficulty != Difficulty::Easy
+            && !(game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial())
             && game.player(player).units_constructed(UnitType::Port) != 0
             && !game.config().is_unit_disabled(UnitType::Warship)
         {
@@ -320,6 +324,25 @@ impl Execution for NationExecution {
             return;
         }
 
+        // The tutorial's nations only grow into free land (and, from v0.35.9, script a silo and a warship).
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            let attack = self.behaviors.as_ref().expect("initialized").attack.clone();
+            let attack_tick = ticks % self.attack_rate == self.attack_tick;
+            if game.config().rules().has(Change::TutorialSilo6242) {
+                tutorial_collapse(game, player);
+                if !game.player(player).is_alive() {
+                    return;
+                }
+                if attack_tick {
+                    attack.borrow_mut().expand_into_free_land(game);
+                }
+                tutorial_silo(game, player, attack_tick);
+                tutorial_warship(game, player, ticks);
+            } else if attack_tick {
+                attack.borrow_mut().expand_into_free_land(game);
+            }
+            return;
+        }
         let attack_now = self.behaviors.as_ref().expect("initialized").attack.clone();
         attack_now.borrow_mut().follow_up_landings(game);
         self.behaviors

@@ -1444,6 +1444,14 @@ impl AiAttackBehavior {
         }
     }
 
+    /// `expandIntoFreeLand()`: grows into free land we border, never by boat and never into a player.
+    pub fn expand_into_free_land(&mut self, game: &mut GameImpl) -> bool {
+        if !self.has_land_border_with_terra_nullius(game) {
+            return false;
+        }
+        self.send_land_attack(game, 0, None, None)
+    }
+
     /// `forceSendAttack(target)`: attacks with half of the troops regardless of the checks.
     pub fn force_send_attack(&mut self, game: &mut GameImpl, target: SmallId) {
         let troops = self.troops(game) / 2.0;

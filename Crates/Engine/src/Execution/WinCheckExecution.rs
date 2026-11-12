@@ -2,6 +2,7 @@
 //! Port of src/core/execution/WinCheckExecution.ts: declares the winner of FFA and team games.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{GameMode, PlayerType, RankedType, Team, Tick};
 use crate::Game::GameImpl::{GameImpl, Winner};
@@ -65,6 +66,17 @@ impl WinCheckExecution {
                 .cmp(&game.player(a).num_tiles_owned())
         });
         if sorted.is_empty() {
+            return;
+        }
+        // The tutorial is won by conquering its nations and tribe, and nothing else ends it.
+        if game.config().rules().has(Change::TutorialMode6204) && game.config().tutorial() {
+            if sorted
+                .iter()
+                .all(|&p| game.player(p).player_type() == PlayerType::Human)
+            {
+                game.set_winner(Some(Winner::Player(sorted[0])));
+                self.active = false;
+            }
             return;
         }
         let ranked_type = game.config().game_config().ranked_type;
