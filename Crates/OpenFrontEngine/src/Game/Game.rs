@@ -303,6 +303,19 @@ pub struct UnitInfo {
     pub upgradable: Option<bool>,
 }
 
+/// Port of `SamLauncherState`: an in-progress SAM upgrade.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SamLauncherState {
+    /// Tick the upgrade started, when one is running.
+    pub upgrade_start_tick: Option<f64>,
+    /// Range when the upgrade started.
+    pub start_range: f64,
+    /// Level after the upgrade.
+    pub target_level: f64,
+    /// Upgrade length in ticks.
+    pub duration: f64,
+}
+
 /// Port of `PlayerInfo`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct PlayerInfo {
