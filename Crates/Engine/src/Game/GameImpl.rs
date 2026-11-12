@@ -136,6 +136,10 @@ impl GameImpl {
         team_game_spawn_areas: Option<TeamGameSpawnAreas>,
     ) -> Self {
         let unit_grid = UnitGrid::new(&map);
+        let mut rail_network = RailNetwork::new();
+        rail_network.leave_same_cluster = !config
+            .rules()
+            .has(crate::Builds::Rules::Change::StationClusterSame5096);
         let water_manager = WaterManager::new(mini_map, config.disable_nav_mesh());
         let tiles = map.width() as usize * map.height() as usize;
         let mut game = Self {
@@ -158,7 +162,7 @@ impl GameImpl {
             map,
             config,
             stats: StatsImpl::default(),
-            rail_network: RailNetwork::new(),
+            rail_network,
             water_manager,
             shared_water_cache: SharedWaterCache::new(),
             recent_mirv_targets: HashMap::new(),

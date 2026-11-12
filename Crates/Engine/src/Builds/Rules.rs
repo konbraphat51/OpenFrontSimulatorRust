@@ -90,6 +90,10 @@ pub enum Change {
     RailNoImpassable4903,
     /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
     WaterNukeMinimap4975,
+    /// PR 5096: a station set to its own cluster does not leave it first.
+    StationClusterSame5096,
+    /// PR 5062: overtime lowers the win bar late in a game.
+    Overtime5062,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -226,6 +230,56 @@ const EDGES: &[Edge] = &[
             Change::WaterNukeMinimap4975,
         ],
     },
+    Edge {
+        class: "C014",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C015",
+        add: &[],
+        remove: &[Change::StationClusterSame5096],
+    },
+    Edge {
+        class: "C016",
+        add: &[],
+        remove: &[Change::Overtime5062],
+    },
+    Edge {
+        class: "C017",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C018",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C019",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C020",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C021",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C022",
+        add: &[],
+        remove: &[],
+    },
+    Edge {
+        class: "C080",
+        add: &[],
+        remove: &[],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -266,6 +320,8 @@ const ROOT_CHANGES: &[Change] = &[
     Change::RailFactoryDirection5246,
     Change::RailNoImpassable4903,
     Change::WaterNukeMinimap4975,
+    Change::StationClusterSame5096,
+    Change::Overtime5062,
 ];
 
 /// Commit of the baseline build v0.34.22.

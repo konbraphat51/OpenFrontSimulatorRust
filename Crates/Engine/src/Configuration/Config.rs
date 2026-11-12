@@ -921,7 +921,7 @@ impl Config {
             PERCENT_TILES_OWNED_TO_WIN
         };
         let sd = self.overtime_config();
-        if !sd.enabled {
+        if !sd.enabled || !self.rules.has(Change::Overtime5062) {
             return base;
         }
         let seconds_past_start = elapsed_game_seconds.floor() - sd.start_minutes * 60.0;

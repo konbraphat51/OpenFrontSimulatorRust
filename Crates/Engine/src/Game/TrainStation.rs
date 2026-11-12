@@ -115,7 +115,7 @@ impl RailNetwork {
     /// `TrainStation.setCluster`: leaves the previous cluster first.
     pub(crate) fn station_set_cluster(&mut self, id: StationId, cluster: Option<ClusterId>) {
         if let Some(old) = self.station(id).cluster
-            && Some(old) != cluster
+            && (self.leave_same_cluster || Some(old) != cluster)
         {
             self.cluster_remove_station(old, id);
         }
