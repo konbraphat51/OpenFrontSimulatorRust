@@ -313,7 +313,11 @@ impl NukeExecution {
                 continue;
             }
             if (game.map.euclidean_dist_squared(dst, tile) as f64) < outer2 {
-                let friendly = game.player(self.player).is_friendly(owner, true);
+                let friendly = game
+                    .config()
+                    .rules()
+                    .has(crate::Builds::Rules::Change::NukeFriendlyKillNoCredit5525)
+                    && game.player(self.player).is_friendly(owner, true);
                 game.unit_mut(unit)
                     .delete(Some(true), if friendly { None } else { Some(self.player) });
             }

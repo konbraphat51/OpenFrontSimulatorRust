@@ -24,6 +24,8 @@ pub enum Change {
     SaturationMidpoints5587,
     /// PR 5545: `PlayerExecution` skips a hole cluster when picking the largest border cluster.
     InternalBorderAnnexFix5545,
+    /// PR 5525: nukes credit no kill for units of friendly (ally, teammate) owners.
+    NukeFriendlyKillNoCredit5525,
     /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
     ChannelIslandsTribes5564,
 }
@@ -103,6 +105,11 @@ const EDGES: &[Edge] = &[
             Change::SaturationMidpoints5587,
         ],
     },
+    Edge {
+        class: "C008",
+        add: &[],
+        remove: &[Change::NukeFriendlyKillNoCredit5525],
+    },
 ];
 
 /// Changes of the baseline class C000.
@@ -111,6 +118,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::Sfc32PseudoRandom4233,
     Change::SaturationMidpoints5587,
     Change::InternalBorderAnnexFix5545,
+    Change::NukeFriendlyKillNoCredit5525,
     Change::ChannelIslandsTribes5564,
 ];
 
