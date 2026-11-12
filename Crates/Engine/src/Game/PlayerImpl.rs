@@ -1000,7 +1000,13 @@ impl<'a> PlayerRef<'a> {
         if self.gold < cost {
             return false;
         }
-        if unit_type != UnitType::MIRVWarhead && !self.is_alive() {
+        let exempt = unit_type == UnitType::MIRVWarhead
+            && self
+                .game
+                .config()
+                .rules()
+                .has(Change::MirvWarheadsWhenDead3134);
+        if !exempt && !self.is_alive() {
             return false;
         }
         true

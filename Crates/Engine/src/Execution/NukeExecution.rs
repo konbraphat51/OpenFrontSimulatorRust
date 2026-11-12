@@ -382,8 +382,8 @@ impl NukeExecution {
                 let u = game.unit_any(unit);
                 (u.unit_type, u.tile(), u.owner_id())
             };
-            let skips_sam_missile =
-                game.config().rules().has(Change::SamTargetingFix3223) && t == UnitType::SAMMissile;
+            let skips_sam_missile = game.config().rules().has(Change::SamMissileImmunity3167)
+                && t == UnitType::SAMMissile;
             if matches!(
                 t,
                 UnitType::AtomBomb
