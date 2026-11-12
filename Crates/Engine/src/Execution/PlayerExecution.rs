@@ -37,7 +37,7 @@ impl PlayerExecution {
     }
 
     fn remove_clusters(&mut self, game: &mut GameImpl) {
-        if game.config().rules().has(Change::PlayerClusterRewrite36) {
+        if game.has(Change::PlayerClusterRewrite36) {
             self.remove_clusters_v36(game);
             return;
         }
@@ -60,7 +60,7 @@ impl PlayerExecution {
                 boxes[2],
                 boxes[3],
             );
-            let severed_land = if game.config().rules().has(Change::SeveredLandAnnex5955) {
+            let severed_land = if game.has(Change::SeveredLandAnnex5955) {
                 self.severed_land(game, &clusters[0], &boxes, 0, None, None)
             } else {
                 None
@@ -92,11 +92,7 @@ impl PlayerExecution {
         let mut next_territory_id = 1i32;
 
         // Before PR 5545 the largest border cluster was never tested for being a hole.
-        let hole_scan_end = if game
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::InternalBorderAnnexFix5545)
-        {
+        let hole_scan_end = if game.has(Change::InternalBorderAnnexFix5545) {
             clusters.len()
         } else {
             0
@@ -210,7 +206,7 @@ impl PlayerExecution {
             boxes[l_idx + 3],
         );
         // v0.35.0 on: every other cluster is judged before any land changes hands.
-        if game.config().rules().has(Change::SeveredLandAnnex5955) {
+        if game.has(Change::SeveredLandAnnex5955) {
             let mut classes = vec![0u8; clusters.len()];
             let mut severed = SeveredCandidates::new();
             let mut open = SeveredCandidates::new();
@@ -390,7 +386,7 @@ impl PlayerExecution {
         if enemies.len() != 1 {
             return None;
         }
-        if !game.config().rules().has(Change::ClusterLocalEnemyBox3455) {
+        if !game.has(Change::ClusterLocalEnemyBox3455) {
             // Before v0.30.10 the box of the enemy's whole border is compared.
             let enemy = enemies[0];
             let (mut min_x, mut min_y, mut max_x, mut max_y) = (
@@ -474,9 +470,7 @@ impl PlayerExecution {
         let Some(&first_tile) = cluster.first() else {
             return;
         };
-        if game.config().rules().has(Change::AnnexEnclosedOnly5027)
-            && !self.is_enclosed(game, first_tile)
-        {
+        if game.has(Change::AnnexEnclosedOnly5027) && !self.is_enclosed(game, first_tile) {
             return;
         }
         let tiles = {
@@ -504,7 +498,7 @@ impl PlayerExecution {
 
     /// `isOnEdgeOfMap`: impassable neighbours count only since PR 5027.
     fn on_edge(&self, game: &GameImpl, tile: TileRef) -> bool {
-        if game.config().rules().has(Change::AnnexEnclosedOnly5027) {
+        if game.has(Change::AnnexEnclosedOnly5027) {
             game.map.is_on_edge_of_map(tile)
         } else {
             game.map.is_on_map_boundary(tile)
@@ -636,7 +630,9 @@ impl PlayerExecution {
                 game.unit_mut(u).delete(None, None);
             }
         }
-        game.player_mut(player).remove_all_alliances();
+        if game.has(Change::AllianceRemovedOnDeath3168) {
+            game.player_mut(player).remove_all_alliances();
+        }
     }
 }
 
@@ -719,7 +715,7 @@ pub(super) fn flood_fill_with_gen(
 
 impl Execution for PlayerExecution {
     fn init(&mut self, game: &mut GameImpl, ticks: Tick) {
-        let by_id = game.config().rules().has(Change::ClusterOffsetFromId4426);
+        let by_id = game.has(Change::ClusterOffsetFromId4426);
         let player = game.player(self.player);
         let h = simple_hash(if by_id { player.id() } else { player.name() }) as f64;
         self.last_calc = ticks as f64 + (h % TICKS_PER_CLUSTER_CALC);
@@ -744,7 +740,7 @@ impl Execution for PlayerExecution {
             }
             let captor = owner;
             if t == UnitType::DefensePost {
-                if game.config().rules().has(Change::DefensePostDestroyed1563) {
+                if game.has(Change::DefensePostDestroyed1563) {
                     game.unit_mut(u).delete(Some(true), Some(captor));
                 } else {
                     game.unit_mut(u).decrease_level(Some(captor));
@@ -784,10 +780,7 @@ impl Execution for PlayerExecution {
             }
         }
 
-        let small_calc = game
-            .config()
-            .rules()
-            .has(Change::ClusterCalcSmallPlayers3448);
+        let small_calc = game.has(Change::ClusterCalcSmallPlayers3448);
         let changed = if small_calc {
             game.player(player).last_tile_change() >= self.last_calc
         } else {

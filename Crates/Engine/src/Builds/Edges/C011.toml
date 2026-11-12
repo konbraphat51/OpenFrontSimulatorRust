@@ -1,0 +1,6 @@
+# Changes class C011 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "TeamCountMinTwo5436",
+  "AttackSpeedDivisor5425",
+]

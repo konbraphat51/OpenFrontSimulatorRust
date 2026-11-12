@@ -38,11 +38,7 @@ impl<'a> TribeSpawner<'a> {
             random: PseudoRandom::for_rules(
                 game.config().rules(),
                 simple_hash(game_id) as f64
-                    + if game
-                        .config()
-                        .rules()
-                        .has(crate::Builds::Rules::Change::BotSpawnerOwnSeed30)
-                    {
+                    + if game.has(Change::BotSpawnerOwnSeed30) {
                         2.0
                     } else {
                         0.0
@@ -78,12 +74,11 @@ impl<'a> TribeSpawner<'a> {
         }
 
         let remaining = num_tribes - tribes.len();
-        let purchased_names: &[String] =
-            if self.game.config().rules().has(Change::TribeNameThemes4647) {
-                purchased_names
-            } else {
-                &[]
-            };
+        let purchased_names: &[String] = if self.game.has(Change::TribeNameThemes4647) {
+            purchased_names
+        } else {
+            &[]
+        };
         let mut purchased_by_slot: OrderedMap<usize, String> = OrderedMap::new();
         if !purchased_names.is_empty() && remaining > 0 {
             let used = &purchased_names[..purchased_names.len().min(remaining)];
@@ -104,6 +99,48 @@ impl<'a> TribeSpawner<'a> {
             slot += 1;
         }
         tribes
+    }
+
+    /// `BotSpawner.spawnBots(numBots)` of v0.28.4: random land tiles at least 30 apart, a name drawn per attempt.
+    pub fn spawn_bots_v28(&mut self, num_bots: usize) -> Vec<SpawnExecution> {
+        let mut bots: Vec<SpawnExecution> = Vec::new();
+        let mut tries = 0;
+        while bots.len() < num_bots {
+            if tries > 10_000 {
+                return bots;
+            }
+            let name = self.random_tribe_name();
+            let x = self.random.next_int(0.0, self.game.width() as f64);
+            let y = self.random.next_int(0.0, self.game.height() as f64);
+            let tile = self.game.tile_ref(x as i32, y as i32);
+            let too_close = bots.iter().any(|b| {
+                b.tile
+                    .is_some_and(|t| self.game.manhattan_dist(t, tile) < 30)
+            });
+            if !self.game.is_land(tile) || too_close {
+                tries += 1;
+                continue;
+            }
+            let id = self.random.next_id();
+            bots.push(SpawnExecution::new(
+                &self.game_id,
+                PlayerInfo::new(
+                    name,
+                    PlayerType::Bot,
+                    None,
+                    id,
+                    false,
+                    None,
+                    vec![],
+                    None,
+                    None,
+                ),
+                Some(tile),
+                false,
+                self.game.config().rules(),
+            ));
+        }
+        bots
     }
 
     fn spawn_tribe(&mut self, tribe_name: String) -> SpawnExecution {

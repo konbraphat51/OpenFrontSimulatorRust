@@ -186,7 +186,7 @@ impl NationMIRVBehavior {
     }
 
     fn steamroll_city_gap_multiplier(game: &GameImpl) -> f64 {
-        let new = game.config().rules().has(Change::NationBehaviorTweaks31);
+        let new = game.has(Change::NationBehaviorTweaks31);
         match Self::difficulty(game) {
             Difficulty::Easy => {
                 if new {
@@ -216,7 +216,7 @@ impl NationMIRVBehavior {
     fn steamroll_min_leader_cities(game: &GameImpl) -> f64 {
         match Self::difficulty(game) {
             Difficulty::Easy => {
-                if game.config().rules().has(Change::NationBehaviorTweaks31) {
+                if game.has(Change::NationBehaviorTweaks31) {
                     20.0
                 } else {
                     15.0
@@ -247,7 +247,7 @@ impl NationMIRVBehavior {
             return false;
         }
 
-        let v2 = game.config().rules().has(Change::NationsLikeHumans5899);
+        let v2 = game.has(Change::NationsLikeHumans5899);
         if let Some(sender) = self.select_counter_mirv_target(game)
             && self.is_worth_mirving(game, sender, v2)
         {
@@ -281,7 +281,7 @@ impl NationMIRVBehavior {
     }
 
     fn is_worth_mirving(&self, game: &GameImpl, target: SmallId, v2: bool) -> bool {
-        !self.was_recently_mirved(game, target)
+        (!game.has(Change::NationBehaviorUpdate3246) || !self.was_recently_mirved(game, target))
             && (!v2 || mirv_gets_through(game, self.player, target))
     }
 
@@ -334,10 +334,7 @@ impl NationMIRVBehavior {
             return None;
         }
         // Compared against tiles * 100; severity ranks by tile count.
-        let percent = game
-            .config()
-            .rules()
-            .has(Change::NationVictoryDenialPercent5223);
+        let percent = game.has(Change::NationVictoryDenialPercent5223);
         let scaled_threshold = total_land * Self::victory_denial_threshold_percent(game);
         let (team_share_limit, solo_share_limit) = match Self::difficulty(game) {
             Difficulty::Easy => (0.9, 0.75),
@@ -441,6 +438,9 @@ impl NationMIRVBehavior {
     }
 
     fn record_mirv_hit(&self, game: &mut GameImpl, target: SmallId) {
+        if !game.has(Change::NationBehaviorUpdate3246) {
+            return;
+        }
         let id = game.player(target).id().to_string();
         let tick = game.ticks();
         game.recent_mirv_targets.insert(id, tick);

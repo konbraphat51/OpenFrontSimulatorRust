@@ -11,6 +11,7 @@ use crate::Execution::NukeExecution::NukeExecution;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
+use crate::Pathfinding::Legacy28::PathFinding::ParabolaPathFinder;
 use crate::Pathfinding::Line::DistanceBasedBezierCurve;
 use crate::Pathfinding::PathFinderParabola::{
     ParabolaOptions, ParabolaUniversalPathFinder, get_parabola_control_points,
@@ -72,6 +73,9 @@ pub struct MirvExecution {
     legacy: bool,
     legacy_speed: f64,
     legacy_path_finder: ParabolaUniversalPathFinder,
+    /// v0.28.4 flight: one-sided betrayal at init, control-point Bezier, warheads scattered by `nextInt`.
+    v28: bool,
+    v28_path: ParabolaPathFinder,
     /// Box of the target range clipped to the map (v0.36.0 on): min x, max x, min y, max y.
     bounds: [i32; 4],
     consecutive_overlap_failures: u32,
@@ -101,6 +105,8 @@ impl MirvExecution {
             legacy: false,
             legacy_speed: -1.0,
             legacy_path_finder: ParabolaUniversalPathFinder::default(),
+            v28: false,
+            v28_path: ParabolaPathFinder::new(),
             bounds: [0; 4],
             consecutive_overlap_failures: 0,
             spatial_grid: Vec::new(),
@@ -108,7 +114,7 @@ impl MirvExecution {
     }
 
     fn grid_rules(game: &GameImpl) -> bool {
-        game.config().rules().has(Change::MirvTargetGrid36)
+        game.has(Change::MirvTargetGrid36)
     }
 
     /// Grid cell offset of a tile, or None when outside the grid.
@@ -297,7 +303,7 @@ impl MirvExecution {
         self.legacy_path_finder = ParabolaUniversalPathFinder::new(ParabolaOptions {
             increment: Some(self.legacy_speed),
             legacy_curve: true,
-            legacy_reset: !game.config().rules().has(Change::SamTargetingFixes4770),
+            legacy_reset: !game.has(Change::SamTargetingFixes4770),
             ..Default::default()
         });
         if self.target_player != 0 {
@@ -307,10 +313,130 @@ impl MirvExecution {
             if self.target_player != self.player {
                 game.player_mut(self.target_player)
                     .update_relation(self.player, -100.0);
-                game.player_mut(self.player)
-                    .update_relation(self.target_player, -100.0);
+                if game.has(Change::MirvRelationBoth3206) {
+                    game.player_mut(self.player)
+                        .update_relation(self.target_player, -100.0);
+                }
             }
         }
+    }
+
+    /// `init` of v0.28.4: betrayal on launch, the target loses relation towards the sender.
+    fn init_v28(&mut self, game: &mut GameImpl) {
+        if self.target_player != 0 {
+            if let Some(alliance) = game.player(self.player).alliance_with(self.target_player) {
+                game.player_mut(self.player).break_alliance(alliance);
+            }
+            if self.target_player != self.player {
+                game.player_mut(self.target_player)
+                    .update_relation(self.player, -100.0);
+            }
+        }
+    }
+
+    /// `tick` of v0.28.4.
+    fn tick_v28(&mut self, game: &mut GameImpl) {
+        if self.nuke.is_none() {
+            let Some(spawn) = game
+                .player(self.player)
+                .can_build(UnitType::MIRV, self.dst, None)
+            else {
+                self.active = false;
+                return;
+            };
+            self.spawn_tile = spawn;
+            let nuke = game.player_mut(self.player).build_unit(
+                UnitType::MIRV,
+                spawn,
+                UnitParams {
+                    target_tile: Some(self.dst),
+                    ..Default::default()
+                },
+            );
+            self.nuke = Some(nuke);
+            game.stats_mut().mirv_launched();
+            let x = ((game.x(self.dst) as f64 + game.x(game.unit_any(nuke).tile()) as f64) / 2.0)
+                .floor();
+            let y = f64::max(0.0, game.y(self.dst) as f64 - 500.0) + 50.0;
+            self.separate_dst = game.tile_ref(x as i32, y as i32);
+            self.v28_path
+                .compute_control_points(&game.map, spawn, self.separate_dst, 3.0, true);
+        }
+        let nuke = self.nuke.expect("launched above");
+        let speed = game.config().nuke_speed(UnitType::MIRV);
+        match self.v28_path.next_tile(&game.map, speed) {
+            None => {
+                self.separate_v28(game, nuke);
+                self.active = false;
+            }
+            Some(tile) => game.unit_mut(nuke).move_to(tile),
+        }
+    }
+
+    fn separate_v28(&mut self, game: &mut GameImpl, nuke: UnitId) {
+        let dst = self.dst;
+        let mut dsts: Vec<TileRef> = vec![dst];
+        let mut attempts = 1000;
+        while attempts > 0 && dsts.len() < WARHEAD_COUNT {
+            attempts -= 1;
+            if let Some(potential) = self.random_land_v28(game, dst, &dsts) {
+                dsts.push(potential);
+            }
+        }
+        dsts.sort_by(|&a, &b| {
+            game.manhattan_dist(b, dst)
+                .cmp(&game.manhattan_dist(a, dst))
+        });
+        let src = game.unit_any(nuke).tile();
+        for (i, &d) in dsts.iter().enumerate() {
+            let speed = 15.0 + ((i as f64 / WARHEAD_COUNT as f64) * 5.0).floor();
+            let wait = self.random.next_int(0.0, 15.0);
+            game.add_execution(Box::new(NukeExecution::new(
+                UnitType::MIRVWarhead,
+                self.player,
+                d,
+                Some(src),
+                speed,
+                wait,
+                None,
+            )));
+        }
+        game.unit_mut(nuke).delete(Some(false), None);
+    }
+
+    fn random_land_v28(
+        &mut self,
+        game: &GameImpl,
+        reference: TileRef,
+        taken: &[TileRef],
+    ) -> Option<TileRef> {
+        let range2 = RANGE_SQUARED as u64;
+        let (rx, ry) = (game.x(reference) as f64, game.y(reference) as f64);
+        for _ in 0..100 {
+            let x = self.random.next_int(rx - RANGE, rx + RANGE);
+            let y = self.random.next_int(ry - RANGE, ry + RANGE);
+            if !game.is_valid_coord(x as i32, y as i32) {
+                continue;
+            }
+            let tile = game.tile_ref(x as i32, y as i32);
+            if !game.is_land(tile) {
+                continue;
+            }
+            if game.map.euclidean_dist_squared(tile, reference) > range2 {
+                continue;
+            }
+            if game.owner_id(tile) != self.target_player {
+                continue;
+            }
+            if taken
+                .iter()
+                .any(|&t| (game.manhattan_dist(tile, t) as f64) < MINIMUM_SPREAD)
+            {
+                continue;
+            }
+            return Some(tile);
+        }
+        None
     }
 
     /// Pre-PR-5188 `tick`.
@@ -345,7 +471,7 @@ impl MirvExecution {
                 .into_iter()
                 .find(|&s| game.unit_any(s).tile() == spawn);
             if let Some(silo) = silo
-                && game.config().rules().has(Change::MirvSiloCooldown4707)
+                && game.has(Change::MirvSiloCooldown4707)
             {
                 game.unit_mut(silo).launch();
             }
@@ -578,13 +704,22 @@ impl Execution for MirvExecution {
             ];
             self.build_overlap_grid(game);
         }
-        self.legacy = !game.config().rules().has(Change::MirvNormalize5188);
+        self.v28 = game.has(Change::LegacyProjectiles28);
+        if self.v28 {
+            self.init_v28(game);
+            return;
+        }
+        self.legacy = !game.has(Change::MirvNormalize5188);
         if self.legacy {
             self.init_legacy(game);
         }
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if self.v28 {
+            self.tick_v28(game);
+            return;
+        }
         if self.legacy {
             self.tick_legacy(game);
             return;
@@ -618,8 +753,10 @@ impl Execution for MirvExecution {
                 if self.target_player != self.player {
                     game.player_mut(self.target_player)
                         .update_relation(self.player, -100.0);
-                    game.player_mut(self.player)
-                        .update_relation(self.target_player, -100.0);
+                    if game.has(Change::MirvRelationBoth3206) {
+                        game.player_mut(self.player)
+                            .update_relation(self.target_player, -100.0);
+                    }
                 }
             }
             let x = ((self.base_x + game.x(game.unit_any(nuke).tile()) as f64) / 2.0).floor();

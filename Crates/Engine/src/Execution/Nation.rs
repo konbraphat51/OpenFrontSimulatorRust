@@ -12,6 +12,7 @@ pub mod NationEmojiBehavior;
 pub mod NationMIRVBehavior;
 pub mod NationNukeBehavior;
 pub mod NationStructureBehavior;
+pub mod NationUnitsV29;
 pub mod NationUtils;
 pub mod NationWarshipBehavior;
 pub mod SharedWaterCache;

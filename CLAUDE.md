@@ -22,9 +22,9 @@ Hash-exact Rust replay of the OpenFront engine (upstream `openfrontio/OpenFrontI
 ## Porting a class
 
 1. Read `Tools/ClassDigest.py <class>`; open only the upstream files and Rust ports it lists.
-2. One `Change` variant per upstream behaviour change in `Builds/Rules.rs`, named after the upstream PR (`WaterHpaSharedFinder4979`); `rules.has(X)` is true for the newer behaviour. Branch exactly where upstream diverged.
-3. Large rewrites become side-by-side variant modules (`PlayerExecutionV36.rs`, `FakeHumanExecution.rs`), not many flags threaded through one function.
-4. Add the class edge, run `Tools/VerifyClass.sh`, then `Tools/Triage.sh` on the first failing record.
+2. One `Change` variant per upstream behaviour change in `Builds/Rules.rs`, named after the upstream PR (`WaterHpaSharedFinder4979`); `game.has(X)` is true for the newer behaviour. Branch exactly where upstream diverged.
+3. Large rewrites become side-by-side variant modules (`PlayerExecutionV36.rs`, `FakeHumanExecutionV28.rs`; naming rule in `Docs/Architecture.md`, "Variant module naming": `<Name>V<NN>.rs` with the minor version of the variant's build nearest the baseline, `Legacy<NN>/` for whole subsystems), not many flags threaded through one function.
+4. Add the class edge as `Builds/Edges/<class>.toml`, run `Tools/VerifyClass.sh`, then `Tools/Triage.sh` on the first failing record.
 5. Run `Tools/QuickRegression.sh` and update `Docs/Plan.md`/`.ja.md`, `Docs/BuildStatus.json` and long records in `Crates/Engine/tests/Golden/VerifyMinimums.json`.
 
 ## Rules

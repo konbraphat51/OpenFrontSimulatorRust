@@ -57,7 +57,7 @@ impl NationAllianceBehavior {
         for req in game.player(self.player).incoming_alliance_requests() {
             // Requests created during the spawn phase run on the first tick after it: reject them.
             if game.alliance_request(req).created_at() <= game.config().num_spawn_phase_turns() + 1
-                && game.config().rules().has(Change::AllianceSpawnReject30)
+                && game.has(Change::AllianceSpawnReject30)
             {
                 game.reject_request(req);
                 continue;
@@ -145,9 +145,7 @@ impl NationAllianceBehavior {
             return false;
         }
         // Do not help a runaway leader grow even further (Medium and up).
-        if game.config().rules().has(Change::NationsLikeHumans5899)
-            && find_runaway_leader(game) == Some(other)
-        {
+        if game.has(Change::NationsLikeHumans5899) && find_runaway_leader(game) == Some(other) {
             return false;
         }
         // Check whether the other player is a threat before looking at the relation.
@@ -189,19 +187,18 @@ impl NationAllianceBehavior {
         if difficulty != Difficulty::Hard && difficulty != Difficulty::Impossible {
             return false;
         }
+        let updated = game.has(Change::NationBehaviorUpdate3246);
         let total_players = game
             .players()
             .into_iter()
-            .filter(|&p| game.player(p).player_type() != PlayerType::Bot)
+            .filter(|&p| !updated || game.player(p).player_type() != PlayerType::Bot)
             .count() as f64;
         let mut other_alliances = game.player(other).alliances().len() as f64;
         // An alliance with us is the one being renewed, not another one.
-        if game.config().rules().has(Change::NationAiSplit6087)
-            && game.player(other).is_allied_with(self.player)
-        {
+        if game.has(Change::NationAiSplit6087) && game.player(other).is_allied_with(self.player) {
             other_alliances -= 1.0;
         }
-        if difficulty == Difficulty::Hard {
+        if difficulty == Difficulty::Hard || !updated {
             other_alliances >= total_players * 0.5
         } else {
             other_alliances >= total_players * 0.25
@@ -253,6 +250,14 @@ impl NationAllianceBehavior {
     fn should_reject_in_team_game(&self, game: &GameImpl) -> bool {
         if game.config().game_config().game_mode != GameMode::Team {
             return false;
+        }
+        if !game.has(Change::NationTeamRejectHarder2971) {
+            return match game.config().game_config().difficulty {
+                Difficulty::Easy => false,
+                Difficulty::Medium => self.next_int(0.0, 100.0) < 20.0,
+                Difficulty::Hard => self.next_int(0.0, 100.0) < 40.0,
+                Difficulty::Impossible => self.next_int(0.0, 100.0) < 60.0,
+            };
         }
         match game.config().game_config().difficulty {
             Difficulty::Easy => self.next_int(0.0, 100.0) < 25.0,
@@ -344,7 +349,7 @@ impl NationAllianceBehavior {
         }
         let difficulty = game.config().game_config().difficulty;
 
-        if game.config().rules().has(Change::NationBetray5330) {
+        if game.has(Change::NationBetray5330) {
             // Betray our juiciest ally when everybody around us is weak.
             if (difficulty == Difficulty::Hard || difficulty == Difficulty::Impossible)
                 && juiciest_ally == Some(other_player)
@@ -374,7 +379,7 @@ impl NationAllianceBehavior {
         if (difficulty == Difficulty::Easy || difficulty == Difficulty::Medium)
             && !(difficulty == Difficulty::Easy
                 && game.player(other_player).player_type() == PlayerType::Human
-                && game.config().rules().has(Change::NationBehaviorTweaks31))
+                && game.has(Change::NationBehaviorTweaks31))
             && game.player(self.player).troops() >= game.player(other_player).troops() * 10.0
         {
             self.betray(game, other_player);

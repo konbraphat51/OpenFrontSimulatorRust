@@ -1,0 +1,6 @@
+# Changes class C021 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "DoomsdayRotLadder4893",
+  "DoomsdayIdleOnWinner4953",
+]

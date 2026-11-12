@@ -3,5 +3,6 @@
 
 pub mod Arc4;
 pub mod DetMath;
+pub mod Obscenity;
 pub mod PseudoRandom;
 pub mod Util;

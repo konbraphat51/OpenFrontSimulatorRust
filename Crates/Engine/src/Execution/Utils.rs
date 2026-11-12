@@ -2,7 +2,10 @@
 //! Helpers of the executions (upstream `execution/utils/`).
 
 pub mod AiAttackBehavior;
+pub mod AllianceBehaviorV28;
+pub mod BotBehaviorV28;
 pub mod EmojiIds;
 pub mod FlatBinaryHeap;
 pub mod PlayerSpawner;
+pub mod StructureSpawnTileValueV28;
 pub mod TribeNames;

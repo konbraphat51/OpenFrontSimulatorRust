@@ -50,8 +50,8 @@ pub struct GameStartInfo {
     /// Game id (seeds the game's `PseudoRandom`).
     #[serde(rename = "gameID")]
     pub game_id: String,
-    /// Lobby creation time (ms).
-    #[serde(rename = "lobbyCreatedAt")]
+    /// Lobby creation time (ms; absent, so 0, in older builds).
+    #[serde(default, rename = "lobbyCreatedAt")]
     pub lobby_created_at: f64,
     /// Publicly listed lobby (unused by the simulation).
     #[serde(default, skip_serializing_if = "Option::is_none")]

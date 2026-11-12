@@ -1,0 +1,6 @@
+# Changes class C056 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "NavalInvasionPathing2932",
+  "LobbyGoldOptions2915",
+]

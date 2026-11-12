@@ -1,0 +1,10 @@
+# Changes class C048 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "TrainSpawnRate25Beta2",
+  "HardTimeLimit170Min30",
+  "AllianceSpawnReject30",
+  "BotSpawnerOwnSeed30",
+  "NationCreationConfigurable30",
+  "TransportRetreatNearest3286",
+]

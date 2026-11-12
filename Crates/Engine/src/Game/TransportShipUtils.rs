@@ -14,6 +14,9 @@ pub fn can_build_transport_ship(
     player: SmallId,
     tile: TileRef,
 ) -> Option<TileRef> {
+    if game.has(Change::LegacyAStar28) {
+        return super::TransportShipUtilsV28::can_build_transport_ship(game, player, tile);
+    }
     if game.player(player).unit_count(UnitType::TransportShip)
         >= game.config().boat_max_number() as i64
     {
@@ -37,11 +40,10 @@ pub fn can_build_transport_ship(
 
 /// `targetTransportTile`: the landing shore the attacker can reach by water.
 pub fn target_transport_tile(game: &GameImpl, attacker: SmallId, tile: TileRef) -> Option<TileRef> {
-    if !game
-        .config()
-        .rules()
-        .has(Change::ReachableShoreTransport4577)
-    {
+    if game.has(Change::LegacyAStar28) {
+        return super::TransportShipUtilsV28::target_transport_tile(game, tile);
+    }
+    if !game.has(Change::ReachableShoreTransport4577) {
         return game.spatial.borrow_mut().closest_shore(
             &game,
             game.owner_id(tile),
@@ -65,6 +67,9 @@ pub fn best_shore_deployment_source(
     player: SmallId,
     dst: TileRef,
 ) -> Option<TileRef> {
+    if game.has(Change::LegacyAStar28) {
+        return super::TransportShipUtilsV28::best_shore_deployment_source(game, player, dst);
+    }
     game.spatial
         .borrow_mut()
         .closest_shore_by_water(&mut &*game, player, dst)

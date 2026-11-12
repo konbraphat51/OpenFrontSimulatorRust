@@ -2,6 +2,7 @@
 //! Port of the nuke blast helpers of src/core/execution/Util.ts: weighted blast counts and the list of players a nuke angers (`wouldNukeBreakAlliance` is in `Util`).
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Configuration::Config::NukeMagnitude;
 use crate::Game::Game::{STRUCTURES, SmallId};
@@ -50,6 +51,33 @@ pub fn list_nuke_break_alliance(
     for (id, _) in game.nearby_units(target_tile, magnitude.outer, STRUCTURES, None, false) {
         let owner = game.unit_any(id).owner;
         if !players.contains(&owner) {
+            players.push(owner);
+        }
+    }
+    players
+}
+
+/// The players a nuke angers before PR 2912: over the weighted threshold, or owning a structure of an ally of the launcher.
+pub fn list_nuke_break_ally_legacy(
+    game: &GameImpl,
+    launcher: SmallId,
+    target_tile: TileRef,
+    magnitude: NukeMagnitude,
+    threshold: f64,
+) -> Vec<SmallId> {
+    let mut players: Vec<SmallId> = Vec::new();
+    let counts = compute_nuke_blast_counts(game, target_tile, magnitude);
+    for (&player, &weight) in counts.iter() {
+        if weight > threshold && !players.contains(&player) {
+            players.push(player);
+        }
+    }
+    if !game.has(Change::NukeBreakAlliedStructures2878) {
+        return players;
+    }
+    for (id, _) in game.nearby_units(target_tile, magnitude.outer, STRUCTURES, None, false) {
+        let owner = game.unit_any(id).owner;
+        if owner != 0 && game.player(launcher).is_allied_with(owner) && !players.contains(&owner) {
             players.push(owner);
         }
     }
