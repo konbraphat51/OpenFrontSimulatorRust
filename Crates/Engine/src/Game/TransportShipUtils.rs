@@ -5,6 +5,7 @@
 use super::Game::SmallId;
 use super::GameImpl::GameImpl;
 use super::GameMap::TileRef;
+use crate::Execution::NotPorted::inert_mode;
 
 /// `canBuildTransportShip`.
 pub fn can_build_transport_ship(
@@ -12,6 +13,9 @@ pub fn can_build_transport_ship(
     _player: SmallId,
     _tile: TileRef,
 ) -> Option<TileRef> {
+    if inert_mode() {
+        return None;
+    }
     panic!("not ported: TransportShipUtils::can_build_transport_ship");
 }
 
@@ -21,6 +25,9 @@ pub fn target_transport_tile(
     _attacker: SmallId,
     _tile: TileRef,
 ) -> Option<TileRef> {
+    if inert_mode() {
+        return None;
+    }
     panic!("not ported: TransportShipUtils::target_transport_tile");
 }
 

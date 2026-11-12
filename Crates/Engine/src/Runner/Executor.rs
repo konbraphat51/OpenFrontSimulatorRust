@@ -6,6 +6,16 @@
 //! `not ported: <Name>` the moment it is created. Replace the arm of the matching intent when an
 //! execution lands. `Executor.random` is seeded but never drawn from upstream, so it is not kept.
 
+use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
+use crate::Execution::Alliance::AllianceRejectExecution::AllianceRejectExecution;
+use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecution;
+use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
+use crate::Execution::AttackExecution::AttackExecution;
+use crate::Execution::DeleteUnitExecution::DeleteUnitExecution;
+use crate::Execution::DonateGoldExecution::DonateGoldExecution;
+use crate::Execution::DonateTroopExecution::DonateTroopsExecution;
+use crate::Execution::EmbargoAllExecution::EmbargoAllExecution;
+use crate::Execution::EmbargoExecution::EmbargoExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
@@ -13,7 +23,9 @@ use crate::Execution::NoOpExecution::NoOpExecution;
 use crate::Execution::NotPorted::NotPorted;
 use crate::Execution::PauseExecution::PauseExecution;
 use crate::Execution::QuickChatExecution::QuickChatExecution;
+use crate::Execution::RetreatExecution::RetreatExecution;
 use crate::Execution::SpawnExecution::SpawnExecution;
+use crate::Execution::TargetPlayerExecution::TargetPlayerExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
 use crate::Execution::Utils::PlayerSpawner::spawn_players;
 use crate::Game::Game::Cell;
@@ -50,8 +62,16 @@ impl Executor {
             return Box::new(NoOpExecution);
         };
         match &intent.intent {
-            Intent::Attack { .. } => NotPorted::at_creation("AttackExecution"),
-            Intent::CancelAttack { .. } => NotPorted::at_creation("RetreatExecution"),
+            Intent::Attack { target_id, troops } => Box::new(AttackExecution::new(
+                *troops,
+                player,
+                target_id.clone(),
+                None,
+                true,
+            )),
+            Intent::CancelAttack { attack_id } => {
+                Box::new(RetreatExecution::new(player, attack_id.clone()))
+            }
             Intent::CancelBoat { .. } => NotPorted::at_creation("BoatRetreatExecution"),
             Intent::MoveWarship { .. } => NotPorted::at_creation("MoveWarshipExecution"),
             Intent::Spawn { tile } => Box::new(SpawnExecution::new(
@@ -61,25 +81,45 @@ impl Executor {
                 true,
             )),
             Intent::Boat { .. } => NotPorted::at_creation("TransportShipExecution"),
-            Intent::AllianceRequest { .. } => NotPorted::at_creation("AllianceRequestExecution"),
-            Intent::AllianceReject { .. } => NotPorted::at_creation("AllianceRejectExecution"),
-            Intent::BreakAlliance { .. } => NotPorted::at_creation("BreakAllianceExecution"),
-            Intent::TargetPlayer { .. } => NotPorted::at_creation("TargetPlayerExecution"),
+            Intent::AllianceRequest { recipient } => {
+                Box::new(AllianceRequestExecution::new(player, recipient.clone()))
+            }
+            Intent::AllianceReject { requestor } => {
+                Box::new(AllianceRejectExecution::new(requestor.clone(), player))
+            }
+            Intent::BreakAlliance { recipient } => {
+                Box::new(BreakAllianceExecution::new(player, recipient.clone()))
+            }
+            Intent::TargetPlayer { target } => {
+                Box::new(TargetPlayerExecution::new(player, target.clone()))
+            }
             Intent::Emoji { recipient, emoji } => Box::new(EmojiExecution::new(
                 player,
                 recipient.clone(),
                 *emoji as f64,
             )),
-            Intent::DonateTroops { .. } => NotPorted::at_creation("DonateTroopsExecution"),
-            Intent::DonateGold { .. } => NotPorted::at_creation("DonateGoldExecution"),
-            Intent::Embargo { .. } => NotPorted::at_creation("EmbargoExecution"),
-            Intent::EmbargoAll { .. } => NotPorted::at_creation("EmbargoAllExecution"),
+            Intent::DonateTroops { recipient, troops } => Box::new(DonateTroopsExecution::new(
+                player,
+                recipient.clone(),
+                *troops,
+            )),
+            Intent::DonateGold { recipient, gold } => {
+                Box::new(DonateGoldExecution::new(player, recipient.clone(), *gold))
+            }
+            Intent::Embargo { target_id, action } => Box::new(EmbargoExecution::new(
+                player,
+                target_id.clone(),
+                action.clone(),
+            )),
+            Intent::EmbargoAll { action } => {
+                Box::new(EmbargoAllExecution::new(player, action.clone()))
+            }
             Intent::BuildUnit { .. } => NotPorted::at_creation("ConstructionExecution"),
-            Intent::AllianceExtension { .. } => {
-                NotPorted::at_creation("AllianceExtensionExecution")
+            Intent::AllianceExtension { recipient } => {
+                Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
             }
             Intent::UpgradeStructure { .. } => NotPorted::at_creation("UpgradeStructureExecution"),
-            Intent::DeleteUnit { .. } => NotPorted::at_creation("DeleteUnitExecution"),
+            Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
                 Box::new(QuickChatExecution::new(player, recipient.clone()))
             }

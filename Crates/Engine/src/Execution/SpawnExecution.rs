@@ -2,8 +2,8 @@
 //! Port of src/core/execution/SpawnExecution.ts: places a player on the map.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use super::NotPorted::NotPorted;
 use super::PlayerExecution::PlayerExecution;
+use super::TribeExecution::TribeExecution;
 use super::Util::get_spawn_tiles;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
@@ -158,7 +158,8 @@ impl Execution for SpawnExecution {
         if !game.player(player).has_spawned() {
             game.add_execution(Box::new(PlayerExecution::new(player)));
             if game.player(player).player_type() == PlayerType::Bot {
-                game.add_execution(NotPorted::at_init("TribeExecution", false));
+                let tribe_id = game.player(player).id().to_string();
+                game.add_execution(Box::new(TribeExecution::new(player, &tribe_id)));
             }
         }
 
