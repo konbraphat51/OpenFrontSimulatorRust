@@ -8,6 +8,7 @@ pub mod AttackImpl;
 pub mod Game;
 pub mod GameImpl;
 pub mod GameMap;
+pub mod GameViews;
 pub mod NationCreation;
 pub mod PlayerImpl;
 pub mod RailNetwork;

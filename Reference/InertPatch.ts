@@ -5,10 +5,12 @@
  * `ofsim` with `OFSIM_INERT=1` and the tracer with `--inert 1`). Traces made this way never match
  * the record hashes; they only compare the two engines with each other.
  */
+import { AttackExecution } from "../src/core/execution/AttackExecution";
 import { DoomsdayClockExecution } from "../src/core/execution/DoomsdayClockExecution";
 import { Executor } from "../src/core/execution/ExecutionManager";
 import { NationExecution } from "../src/core/execution/NationExecution";
 import { NoOpExecution } from "../src/core/execution/NoOpExecution";
+import { ShellExecution } from "../src/core/execution/ShellExecution";
 import { TribeExecution } from "../src/core/execution/TribeExecution";
 import { AllianceExtensionExecution } from "../src/core/execution/alliance/AllianceExtensionExecution";
 import { AllianceRequestExecution } from "../src/core/execution/alliance/AllianceRequestExecution";
@@ -25,10 +27,21 @@ for (const t of (process.env.OFSIM_PORTED_INTENTS ?? "").split(",")) if (t) PORT
 /** Engine-created executions kept active (comma list in `OFSIM_PORTED_EXECS`: Nation, Tribe, DoomsdayClock). */
 const PORTED_EXECS = new Set((process.env.OFSIM_PORTED_EXECS ?? "").split(",").filter((t) => t));
 
-/** Classes made inert one by one (comma list in `OFSIM_INERT_CLASSES`) while the Rust side has only a stub of them. */
-const INERT_CLASSES = new Set((process.env.OFSIM_INERT_CLASSES ?? "").split(",").filter((t) => t));
+/** Classes made inert one by one (comma list in `OFSIM_INERT_CLASSES`; `Attack` also matches `AttackExecution`) while the Rust side has only a stub of them. */
+const INERT_CLASSES = new Set(
+  (process.env.OFSIM_INERT_CLASSES ?? "")
+    .split(",")
+    .filter((t) => t)
+    .flatMap((t) => [t, `${t}Execution`]),
+);
 /** Executions created from inside ported code: init and tick do nothing. */
-const INERT_EXECUTIONS = { AllianceExtensionExecution, AllianceRequestExecution, ConstructionExecution } as const;
+const INERT_EXECUTIONS = {
+  AllianceExtensionExecution,
+  AllianceRequestExecution,
+  AttackExecution,
+  ConstructionExecution,
+  ShellExecution,
+} as const;
 /** Behaviour classes: each listed method does nothing and returns the given value. */
 const INERT_BEHAVIOURS: Record<string, [{ prototype: object }, Record<string, unknown>]> = {
   AiAttackBehavior: [
