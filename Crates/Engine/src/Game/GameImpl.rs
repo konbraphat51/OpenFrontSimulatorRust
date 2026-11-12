@@ -28,10 +28,11 @@ use super::WaterManager::WaterManager;
 use crate::Configuration::Config::Config;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
+use crate::Execution::Nation::SharedWaterCache::SharedWaterCache;
 use crate::Pathfinding::Spatial::SpatialQuery::SpatialQuery;
 use ofsim_map::SpawnArea;
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Winner of a game: a player or a team.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -99,6 +100,9 @@ pub struct GameImpl {
     pub rail_network: RailNetwork,
     /// Water manager (stub until p2-path lands).
     pub water_manager: WaterManager,
+    shared_water_cache: SharedWaterCache,
+    /// Upstream's static `NationMIRVBehavior.recentMirvTargets` (kept per game): player id to the last tick a MIRV was sent at it.
+    pub recent_mirv_targets: HashMap<String, Tick>,
     humans: Vec<PlayerInfo>,
     nations: Vec<Nation>,
     player_teams: Vec<Team>,
@@ -153,6 +157,8 @@ impl GameImpl {
             stats: StatsImpl::default(),
             rail_network: RailNetwork::new(),
             water_manager,
+            shared_water_cache: SharedWaterCache::new(),
+            recent_mirv_targets: HashMap::new(),
             humans,
             nations,
             player_teams: Vec::new(),
@@ -611,6 +617,14 @@ impl GameImpl {
             predicate,
             include_under_construction,
         )
+    }
+
+    /// `sharedWaterComponents(player)`: water components shared with a trade partner (see `SharedWaterCache`).
+    pub fn shared_water_components(&mut self, player: SmallId) -> Option<HashSet<i64>> {
+        let mut cache = std::mem::take(&mut self.shared_water_cache);
+        let result = cache.get(&*self, self.ticks, player).cloned();
+        self.shared_water_cache = cache;
+        result
     }
 
     // ---- executions -----------------------------------------------------------------------

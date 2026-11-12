@@ -6,6 +6,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 pub mod NationAllianceBehavior;
+pub mod NationBehaviorPorts;
 pub mod NationEmojiBehavior;
 pub mod NationMIRVBehavior;
 pub mod NationNukeBehavior;

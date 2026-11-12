@@ -76,6 +76,18 @@ impl RailNetwork {
         }
     }
 
+    /// Every registered station as (unit, cluster) in `stationManager().getAll()` order; `None` for
+    /// a station outside any cluster.
+    pub fn station_clusters(&self) -> Vec<(UnitId, Option<ClusterId>)> {
+        self.station_set
+            .iter()
+            .map(|&s| {
+                let station = self.station(s);
+                (station.unit, station.cluster)
+            })
+            .collect()
+    }
+
     /// `stationManager().findStation(unit)`: the first registered station of the unit.
     pub fn find_station(&self, unit: UnitId) -> Option<StationId> {
         self.station_set

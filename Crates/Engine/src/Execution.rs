@@ -16,6 +16,7 @@ pub mod EmojiExecution;
 #[allow(clippy::module_inception)]
 pub mod Execution;
 pub mod FactoryExecution;
+#[allow(clippy::upper_case_acronyms)]
 pub mod MIRVExecution;
 pub mod MarkDisconnectedExecution;
 pub mod MissileSiloExecution;
