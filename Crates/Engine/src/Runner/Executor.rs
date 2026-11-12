@@ -12,6 +12,7 @@ use crate::Execution::Alliance::AllianceRequestExecution::AllianceRequestExecuti
 use crate::Execution::Alliance::BreakAllianceExecution::BreakAllianceExecution;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::BoatRetreatExecution::BoatRetreatExecution;
+use crate::Execution::ConstructionExecution::ConstructionExecution;
 use crate::Execution::DeleteUnitExecution::DeleteUnitExecution;
 use crate::Execution::DonateGoldExecution::DonateGoldExecution;
 use crate::Execution::DonateTroopExecution::DonateTroopsExecution;
@@ -31,8 +32,9 @@ use crate::Execution::SpawnExecution::SpawnExecution;
 use crate::Execution::TargetPlayerExecution::TargetPlayerExecution;
 use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::TribeSpawner::TribeSpawner;
+use crate::Execution::UpgradeStructureExecution::UpgradeStructureExecution;
 use crate::Execution::Utils::PlayerSpawner::spawn_players;
-use crate::Game::Game::Cell;
+use crate::Game::Game::{Cell, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use ofsim_record::Intents::{Intent, StampedIntent};
 use ofsim_record::Records::Turn;
@@ -122,11 +124,24 @@ impl Executor {
             Intent::EmbargoAll { action } => {
                 Box::new(EmbargoAllExecution::new(player, action.clone()))
             }
-            Intent::BuildUnit { .. } => NotPorted::at_creation("ConstructionExecution"),
+            Intent::BuildUnit {
+                unit,
+                tile,
+                rocket_direction_up,
+                amount,
+            } => Box::new(ConstructionExecution::new(
+                player,
+                UnitType::from_str(unit).unwrap_or_else(|| panic!("unknown unit type {unit}")),
+                *tile,
+                *rocket_direction_up,
+                *amount,
+            )),
             Intent::AllianceExtension { recipient } => {
                 Box::new(AllianceExtensionExecution::new(player, recipient.clone()))
             }
-            Intent::UpgradeStructure { .. } => NotPorted::at_creation("UpgradeStructureExecution"),
+            Intent::UpgradeStructure {
+                unit_id, amount, ..
+            } => Box::new(UpgradeStructureExecution::new(player, *unit_id, *amount)),
             Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
             Intent::QuickChat { recipient, .. } => {
                 Box::new(QuickChatExecution::new(player, recipient.clone()))
