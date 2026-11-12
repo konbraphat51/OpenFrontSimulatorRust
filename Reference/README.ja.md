@@ -10,7 +10,7 @@ English version: [README.md](README.md)
 Reference/Setup.sh 4e837520e886          # Linux/macOS。Windows: Reference\Setup.ps1 4e837520e886
 ```
 
-`Cache/OpenFrontIO` がなければアップストリームを clone し、ワークツリー `Cache/Worktrees/<commit12>` を追加し、`npm ci --ignore-scripts --engine-strict=false` を実行し (アップストリームは Node 24 を要求するが Node 22 でも動く)、`Reference/*.ts` を `<worktree>/ofsim-reference/` にコピーする。スクリプトを編集したら再実行する。冪等である。スクリプトは `../src/core/...` を import するため、常にそのワークツリーのコミットのエンジンに対して動く (レコードの `gitCommit` に対応するワークツリーを使うこと)。
+`Cache/OpenFrontIO` がなければアップストリームを clone し、ワークツリー `Cache/Worktrees/<commit12>` を追加し、`npm ci --ignore-scripts --engine-strict=false` を実行し (アップストリームは Node 24 を要求するが Node 22 でも動く)、`Reference/*.ts` を `<worktree>/ofsim-reference/` にコピーする。スクリプトを編集したら再実行する。冪等である。ビルドごとに `npm ci` を実行する代わりに、`package-lock.json` が同一の別のワークツリー (または `OFSIM_SHARE_NODE_MODULES=<commit12>` で指定したもの) から `node_modules` をシンボリックリンクする (トレーサーが必要とするのはエンジンの少数の依存だけ)。スクリプトは `../src/core/...` を import するため、常にそのワークツリーのコミットのエンジンに対して動く (レコードの `gitCommit` に対応するワークツリーを使うこと)。
 
 ## TraceDumper
 

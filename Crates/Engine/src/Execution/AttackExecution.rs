@@ -328,6 +328,17 @@ impl Execution for AttackExecution {
             }
         }
 
+        // Nothing to conquer: the attack does not happen.
+        if game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::AttackRetreatNoTargets5823)
+            && self.to_conquer.size() == 0
+        {
+            self.retreat(game, 0.0);
+            return;
+        }
+
         if self.target != 0 {
             let relation_change = match game.config().game_config().difficulty {
                 Difficulty::Easy => -60.0,

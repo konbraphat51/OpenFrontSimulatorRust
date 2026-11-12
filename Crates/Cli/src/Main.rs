@@ -44,6 +44,9 @@ enum Command {
         /// Directory of upstream map resources
         #[arg(long)]
         maps: PathBuf,
+        /// Upstream clone, read for the maps of builds whose map files differ from the baseline
+        #[arg(long, default_value = "Cache/OpenFrontIO")]
+        upstream: PathBuf,
         /// Stop after this tick (inclusive)
         #[arg(long)]
         until: Option<u32>,
@@ -56,6 +59,9 @@ enum Command {
         /// Directory of upstream map resources
         #[arg(long)]
         maps: PathBuf,
+        /// Upstream clone, read for the maps of builds whose map files differ from the baseline
+        #[arg(long, default_value = "Cache/OpenFrontIO")]
+        upstream: PathBuf,
         /// Output NDJSON file
         #[arg(long)]
         out: PathBuf,
@@ -164,6 +170,9 @@ enum Command {
         /// Directory of upstream map resources
         #[arg(long)]
         maps: PathBuf,
+        /// Upstream clone, read for the maps of builds whose map files differ from the baseline
+        #[arg(long, default_value = "Cache/OpenFrontIO")]
+        upstream: PathBuf,
         /// Output directory
         #[arg(long)]
         out: PathBuf,
@@ -197,6 +206,16 @@ enum Command {
     },
 }
 
+/// Maps root for a record: the given baseline maps, or the record's own build maps from `upstream`.
+fn resolve_maps(
+    record: &std::path::Path,
+    maps: &std::path::Path,
+    upstream: &std::path::Path,
+) -> anyhow::Result<PathBuf> {
+    let loaded = ofsim_record::Records::GameRecord::load_decompressed(record)?;
+    ofsim_engine::Builds::Maps::maps_root_for(&loaded, maps, upstream)
+}
+
 fn main() -> ExitCode {
     let cli = Cli::parse();
     ofsim_engine::Runner::Replay::silence_panics();
@@ -204,8 +223,16 @@ fn main() -> ExitCode {
         Command::Verify {
             record,
             maps,
+            upstream,
             until,
         } => {
+            let maps = match resolve_maps(&record, &maps, &upstream) {
+                Ok(m) => m,
+                Err(e) => {
+                    eprintln!("ofsim verify: {e:#}");
+                    return ExitCode::from(2);
+                }
+            };
             let name = record
                 .file_name()
                 .map(|n| n.to_string_lossy().into_owned())
@@ -232,9 +259,12 @@ fn main() -> ExitCode {
         Command::Trace {
             record,
             maps,
+            upstream,
             out,
             until,
-        } => match Trace::trace(&record, &maps, &out, until) {
+        } => match resolve_maps(&record, &maps, &upstream)
+            .and_then(|maps| Trace::trace(&record, &maps, &out, until))
+        {
             Ok(summary) => {
                 eprintln!("{summary}");
                 ExitCode::SUCCESS

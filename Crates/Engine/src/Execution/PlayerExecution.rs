@@ -77,8 +77,18 @@ impl PlayerExecution {
         let mut cluster_territory_ids: Option<Vec<i32>> = None;
         let mut next_territory_id = 1i32;
 
+        // Before PR 5545 the largest border cluster was never tested for being a hole.
+        let hole_scan_end = if game
+            .config()
+            .rules()
+            .has(crate::Builds::Rules::Change::InternalBorderAnnexFix5545)
+        {
+            clusters.len()
+        } else {
+            0
+        };
         let mut is_largest_hole = false;
-        for j in 0..clusters.len() {
+        for j in 0..hole_scan_end {
             if j == largest_index {
                 continue;
             }

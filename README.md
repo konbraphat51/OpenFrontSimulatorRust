@@ -8,7 +8,7 @@ Japanese version: [README.ja.md](README.ja.md)
 
 OfSimRust (binary: `ofsim`) is a fast, deterministic Rust re-implementation of the [OpenFront](https://github.com/openfrontio/OpenFrontIO) game simulation. Given a game record from the public OpenFront API, it replays the game tick by tick and reproduces the exact game state of the upstream engine build that played it, verified against the state hashes stored in the record. Use it to rebuild territory, troops, units, attacks and alliances at any tick for research or tooling.
 
-Status: under construction. See [Docs/Plan.md](Docs/Plan.md) for which builds are supported.
+Status: under construction. Supported builds: the baseline v0.34.19 to v0.34.23 (class C000) and the v0.34 builds of classes C001 to C012 (v0.34.0 to v0.34.18, v0.34.24, v0.34.25); other builds fail with `build <commit> (class Cnnn) not ported yet`. See [Docs/Plan.md](Docs/Plan.md) and [Docs/BuildPlan.md](Docs/BuildPlan.md) for the per-class status.
 
 ## Setup
 
@@ -27,7 +27,9 @@ git clone https://github.com/openfrontio/OpenFrontIO Cache/OpenFrontIO
 ## Usage
 
 ```sh
-# Verify a record against its stored hashes
+# Verify a record against its stored hashes. --maps is the map directory of the baseline build (v0.34.22);
+# for builds whose map files differ, ofsim reads them from --upstream (default Cache/OpenFrontIO) with git
+# and caches them in Cache/Maps/<commit12>/.
 cargo run --release --bin ofsim -- verify --record game.json.gz --maps <OpenFrontIO>/resources/maps
 
 # Replay and write snapshots every 100 ticks

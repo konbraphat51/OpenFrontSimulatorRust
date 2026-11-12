@@ -207,6 +207,8 @@ const TERRA_NULLIUS_MAX_COST: f64 = 100.0;
 const ATTACKER_LOSS_BASE: f64 = 0.463;
 const ATTACKER_LOSS_PER_DENSITY: f64 = 0.0039;
 const SPEED_COST_DIVISOR: f64 = 8.55;
+/// Speed divisor before PR 5425.
+const SPEED_COST_DIVISOR_OLD: f64 = 7.77;
 const LARGE_ATTACKER_SPEED_DEPTH: f64 = 0.73;
 
 /// Attacker side of `attackLogic`.
@@ -551,7 +553,14 @@ impl Config {
     /// Global train spawn throttle for `num_train_units` trains.
     pub fn train_saturation(&self, num_train_units: f64) -> f64 {
         let boost = 1.0 + 0.5 * self.exp(-num_train_units / 30.0);
-        let damping = 1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 100.0, 560.0);
+        let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
+            560.0
+        } else if self.rules.has(Change::TrainSaturation500Pr5462) {
+            500.0
+        } else {
+            300.0
+        };
+        let damping = 1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 100.0, midpoint);
         let plateau =
             0.25 * (1.0 - self.sigmoid(num_train_units, std::f64::consts::LN_2 / 150.0, 900.0));
         boost * js_max(damping, plateau)
@@ -608,7 +617,12 @@ impl Config {
     /// Global trade ship spawn throttle.
     pub fn trade_ship_saturation(&self, num_trade_ships: f64) -> f64 {
         let boost = 1.0 + 0.45 * self.exp(-num_trade_ships / 120.0);
-        let damping = 1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 50.0, 330.0);
+        let midpoint = if self.rules.has(Change::SaturationMidpoints5587) {
+            330.0
+        } else {
+            230.0
+        };
+        let damping = 1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 50.0, midpoint);
         let plateau =
             0.25 * (1.0 - self.sigmoid(num_trade_ships, std::f64::consts::LN_2 / 100.0, 800.0));
         boost * js_max(damping, plateau)
@@ -981,7 +995,11 @@ impl Config {
 
         let speed_cost = (Util::within(troop_ratio, 0.82, 7.5)
             * Util::within(troop_ratio / 20.0, 1.0, 50.0))
-            / SPEED_COST_DIVISOR;
+            / if self.rules.has(Change::AttackSpeedDivisor5425) {
+                SPEED_COST_DIVISOR
+            } else {
+                SPEED_COST_DIVISOR_OLD
+            };
         let large_attacker_speed_bonus =
             self.large_territory_bonus(attacker.num_tiles, LARGE_ATTACKER_SPEED_DEPTH);
         AttackLogicResult {

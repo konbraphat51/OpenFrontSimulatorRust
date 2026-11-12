@@ -25,6 +25,7 @@ use super::TeamAssignment::{assign_teams, resolve_teams_list};
 use super::UnitGrid::{UnitGrid, UnitPredicate};
 use super::UnitImpl::{UnitImpl, UnitMut, UnitRef};
 use super::WaterManager::WaterManager;
+use crate::Builds::Rules::Change;
 use crate::Configuration::Config::Config;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -190,7 +191,11 @@ impl GameImpl {
 
     fn populate_teams(&mut self) {
         let total = self.humans.len() + self.nations.len();
-        self.player_teams = resolve_teams_list(self.config.player_teams(), total);
+        self.player_teams = resolve_teams_list(
+            self.config.player_teams(),
+            total,
+            self.config.rules().has(Change::TeamCountMinTwo5436),
+        );
     }
 
     fn add_players(&mut self) {

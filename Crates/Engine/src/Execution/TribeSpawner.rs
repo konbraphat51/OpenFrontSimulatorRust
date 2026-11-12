@@ -35,7 +35,10 @@ impl<'a> TribeSpawner<'a> {
             game_id: game_id.to_string(),
             // A different seed than createGameRunner, to avoid id collisions.
             random: PseudoRandom::new(simple_hash(game_id) as f64 + 2.0),
-            tribe_name_data: resolve_tribe_name_data(game.config().game_config().game_map),
+            tribe_name_data: resolve_tribe_name_data(
+                game.config().game_config().game_map,
+                game.config().rules(),
+            ),
             used_custom_tribes: HashSet::new(),
             nation_tiles,
         }

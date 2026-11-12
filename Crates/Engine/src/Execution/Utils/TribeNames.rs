@@ -6,6 +6,7 @@
 //! (`Maps.gen.ts`) are generated into `data/TribeNames.json` by `Tools/GenEngineData.mts`; the
 //! pool sizes decide how many `PseudoRandom` values a tribe name consumes.
 
+use crate::Builds::Rules::{Change, Rules};
 use crate::Game::Game::GameMapType;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -58,22 +59,39 @@ fn tables() -> &'static Tables {
     })
 }
 
+/// Per-map theme list and custom tribes of the build (the data file is the baseline's).
+fn map_entry(map: GameMapType, rules: &Rules) -> (Option<Vec<String>>, Option<Vec<CustomTribe>>) {
+    let name = map.as_str();
+    if name == "Channel Islands" && !rules.has(Change::ChannelIslandsTribes5564) {
+        return (Some(vec!["north_america".to_string()]), None);
+    }
+    if rules.has(Change::NewMapThemes5547) {
+        let theme = match name {
+            "Canary Islands" => Some("africa"),
+            "New Zealand" => Some("oceania"),
+            "Pulicat Lake" => Some("asia"),
+            _ => None,
+        };
+        if let Some(theme) = theme {
+            return (Some(vec![theme.to_string()]), None);
+        }
+    }
+    match tables().maps.get(name) {
+        Some(info) => (info.themes.clone(), info.custom_tribes.clone()),
+        None => (None, None),
+    }
+}
+
 /// `resolveTribeNameData(mapType)`.
-pub fn resolve_tribe_name_data(map: GameMapType) -> TribeNameData {
+pub fn resolve_tribe_name_data(map: GameMapType, rules: &Rules) -> TribeNameData {
     let t = tables();
     let default_theme = t
         .themes
         .get("default")
         .expect("Default theme is missing from tribeNameThemes.json");
-    let Some(info) = t.maps.get(map.as_str()) else {
-        return TribeNameData {
-            prefixes: default_theme.prefixes.clone(),
-            suffixes: default_theme.suffixes.clone(),
-            custom_tribes: None,
-        };
-    };
-    let theme_names: Vec<String> = match &info.themes {
-        Some(v) if !v.is_empty() => v.clone(),
+    let (themes, custom_tribes) = map_entry(map, rules);
+    let theme_names: Vec<String> = match themes {
+        Some(v) if !v.is_empty() => v,
         _ => vec!["default".to_string()],
     };
     let mut prefixes = Vec::new();
@@ -92,6 +110,6 @@ pub fn resolve_tribe_name_data(map: GameMapType) -> TribeNameData {
     TribeNameData {
         prefixes,
         suffixes,
-        custom_tribes: info.custom_tribes.clone().filter(|c| !c.is_empty()),
+        custom_tribes: custom_tribes.filter(|c| !c.is_empty()),
     }
 }
