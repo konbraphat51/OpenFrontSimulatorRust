@@ -5,14 +5,15 @@
 #   Records come from <Cache>/Records/<commit12>/ for each build of the class in BuildClasses.toml; maps and upstream
 #   paths are set for you. NDJSON goes to a temp dir (printed with --keep or --verbose, otherwise deleted).
 # Builds nothing: rebuild the release binary first (a stale binary gives false desyncs).
-# Env: OFSIM_BIN (default target/release/ofsim), OFSIM_MAPS (default <Cache>/Worktrees/4e837520e886/resources/maps),
+# Env: OFSIM_BIN (default target/verify/ofsim, else target/release/ofsim), OFSIM_MAPS (default <Cache>/Worktrees/4e837520e886/resources/maps),
 # OFSIM_UPSTREAM (default <Cache>/OpenFrontIO), OFSIM_RECORDS (default <Cache>/Records), OFSIM_CACHE, OFSIM_TMP.
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -n "${OFSIM_CACHE:-}" ]; then cache="$OFSIM_CACHE"
 elif [ "$(basename "$(dirname "$here")")" = "Wt" ]; then cache="$(dirname "$(dirname "$here")")"
 else cache="$here/Cache"; fi
-bin="${OFSIM_BIN:-$here/target/release/ofsim}"
+bin="${OFSIM_BIN:-}"
+if [ -z "$bin" ]; then bin="$here/target/verify/ofsim"; [ -x "$bin" ] || bin="$here/target/release/ofsim"; fi
 maps="${OFSIM_MAPS:-$cache/Worktrees/4e837520e886/resources/maps}"
 upstream="${OFSIM_UPSTREAM:-$cache/OpenFrontIO}"
 records="${OFSIM_RECORDS:-$cache/Records}"

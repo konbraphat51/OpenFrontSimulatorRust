@@ -8,14 +8,15 @@
 #   --bisect-flags   rerun verify once per Change flag of the class's EDGES entry with OFSIM_TOGGLE=<flag>, one line each
 #   --depth N        with --bisect-flags, also the flags of the N-1 ancestor edges (default 1: own edge only)
 #   --until T        stop each verify at tick T (faster bisect)    --verbose  print the raw verify lines
-# Builds nothing. Env: OFSIM_BIN (default target/release/ofsim), OFSIM_MAPS (default <Cache>/Worktrees/4e837520e886/resources/maps),
+# Builds nothing. Env: OFSIM_BIN (default target/verify/ofsim, else target/release/ofsim), OFSIM_MAPS (default <Cache>/Worktrees/4e837520e886/resources/maps),
 # OFSIM_UPSTREAM (default <Cache>/OpenFrontIO), OFSIM_WORKTREE, OFSIM_OUT (trace output dir), OFSIM_CACHE (Cache/ location).
 set -uo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [ -n "${OFSIM_CACHE:-}" ]; then cache="$OFSIM_CACHE"
 elif [ "$(basename "$(dirname "$here")")" = "Wt" ]; then cache="$(dirname "$(dirname "$here")")"
 else cache="$here/Cache"; fi
-bin="${OFSIM_BIN:-$here/target/release/ofsim}"
+bin="${OFSIM_BIN:-}"
+if [ -z "$bin" ]; then bin="$here/target/verify/ofsim"; [ -x "$bin" ] || bin="$here/target/release/ofsim"; fi
 maps="${OFSIM_MAPS:-$cache/Worktrees/4e837520e886/resources/maps}"
 upstream="${OFSIM_UPSTREAM:-$cache/OpenFrontIO}"
 toml="$here/Crates/Engine/src/Builds/BuildClasses.toml"
