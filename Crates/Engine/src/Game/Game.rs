@@ -94,6 +94,8 @@ string_enum! {
     RankedType {
         OneVOne = "1v1",
         TwoVTwo = "2v2",
+        FreeForAll = "ffa",
+        ClanWars = "clanwars",
     }
 }
 

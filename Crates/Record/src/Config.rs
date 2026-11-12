@@ -23,7 +23,7 @@ wire_enum!(
 );
 wire_enum!(
     /// Upstream `RankedType`.
-    RankedType { OneVOne = "1v1", TwoVTwo = "2v2" }
+    RankedType { OneVOne = "1v1", TwoVTwo = "2v2", FreeForAll = "ffa", ClanWars = "clanwars" }
 );
 
 /// `nations`: a count, or "default" / "disabled".
