@@ -462,6 +462,9 @@ impl Config {
 
     /// Spawn immunity of players, in ticks.
     pub fn spawn_immunity_duration(&self) -> Tick {
+        if self.rules.has(Change::ImmunityByConfig28) {
+            return DEFAULT_SPAWN_IMMUNITY_TICKS;
+        }
         self.game_config
             .spawn_immunity_duration
             .unwrap_or(DEFAULT_SPAWN_IMMUNITY_TICKS)
@@ -1325,6 +1328,14 @@ impl Config {
             return 10_000.0;
         }
         if player_type == PlayerType::Nation {
+            if self.rules.has(Change::NationDifficultyEconomy28) {
+                return match self.game_config.difficulty {
+                    Difficulty::Easy => 18_750.0,
+                    Difficulty::Medium => 25_000.0,
+                    Difficulty::Hard => 31_250.0,
+                    Difficulty::Impossible => 37_500.0,
+                };
+            }
             return match self.game_config.difficulty {
                 Difficulty::Easy => 12_500.0,
                 Difficulty::Medium => 18_750.0,
@@ -1373,6 +1384,14 @@ impl Config {
         if p.player_type == PlayerType::Human {
             return max_troops;
         }
+        if self.rules.has(Change::NationDifficultyEconomy28) {
+            return match self.game_config.difficulty {
+                Difficulty::Easy => max_troops * 0.75,
+                Difficulty::Medium => max_troops * 1.0,
+                Difficulty::Hard => max_troops * 1.25,
+                Difficulty::Impossible => max_troops * 1.5,
+            };
+        }
         match self.game_config.difficulty {
             Difficulty::Easy => max_troops * 0.5,
             Difficulty::Medium => max_troops * 0.75,
@@ -1394,7 +1413,15 @@ impl Config {
                 0.6
             };
         }
-        if p.player_type == PlayerType::Nation {
+        if p.player_type == PlayerType::Nation && self.rules.has(Change::NationDifficultyEconomy28)
+        {
+            match self.game_config.difficulty {
+                Difficulty::Easy => to_add *= 0.95,
+                Difficulty::Medium => to_add *= 1.0,
+                Difficulty::Hard => to_add *= 1.05,
+                Difficulty::Impossible => to_add *= 1.1,
+            }
+        } else if p.player_type == PlayerType::Nation {
             match self.game_config.difficulty {
                 Difficulty::Easy => to_add *= 0.9,
                 Difficulty::Medium => to_add *= 0.95,

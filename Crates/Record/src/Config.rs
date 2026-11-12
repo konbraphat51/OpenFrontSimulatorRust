@@ -266,6 +266,13 @@ pub struct GameConfig {
         skip_serializing_if = "Option::is_none"
     )]
     pub disable_nations: Option<bool>,
+    /// `disableNPCs` of builds before v0.30.0-beta1 (FakeHuman nations).
+    #[serde(
+        default,
+        rename = "disableNPCs",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub disable_npcs: Option<bool>,
     /// Number of tribes (bots).
     pub bots: u32,
     /// Infinite gold.

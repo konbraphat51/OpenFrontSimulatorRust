@@ -726,7 +726,10 @@ impl<'a> PlayerRef<'a> {
         let mut v: Vec<(SmallId, f64)> = self
             .relations
             .iter()
-            .filter(|(p, _)| self.game.player(**p).is_alive())
+            .filter(|(p, _)| {
+                self.game.config().rules().has(Change::RelationPenalties28)
+                    || self.game.player(**p).is_alive()
+            })
             .map(|(p, r)| (*p, *r))
             .collect();
         v.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
@@ -1065,7 +1068,7 @@ impl<'a> PlayerRef<'a> {
     /// `nukeSpawn(tile, nukeType)`: the nearest ready silo's tile.
     pub fn nuke_spawn(&self, tile: TileRef, nuke_type: UnitType) -> Option<TileRef> {
         let mg = self.game;
-        if mg.is_spawn_immunity_active() {
+        if mg.is_spawn_immunity_active() && !mg.config().rules().has(Change::ImmunityByConfig28) {
             return None;
         }
         if mg.map.is_impassable(tile) {
@@ -1330,10 +1333,24 @@ impl<'a> PlayerRef<'a> {
     pub fn can_attack(&self, tile: TileRef) -> bool {
         let mg = self.game;
         let owner = mg.owner_id(tile);
+        let by_config = mg.config().rules().has(Change::ImmunityByConfig28);
+        if by_config
+            && mg.map.has_owner(tile)
+            && mg.config().num_spawn_phase_turns() + mg.config().spawn_immunity_duration()
+                > mg.ticks()
+        {
+            return false;
+        }
         if owner == self.id {
             return false;
         }
-        if owner != 0 && !self.can_attack_player(owner, false) {
+        if owner != 0
+            && if by_config {
+                self.is_friendly(owner, false)
+            } else {
+                !self.can_attack_player(owner, false)
+            }
+        {
             return false;
         }
         if !mg.map.is_land(tile) || mg.map.is_impassable(tile) {

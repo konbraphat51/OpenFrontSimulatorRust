@@ -2,6 +2,7 @@
 //! Port of src/core/execution/alliance/BreakAllianceExecution.ts: breaks an alliance.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick};
 use crate::Game::GameImpl::GameImpl;
@@ -40,6 +41,20 @@ impl Execution for BreakAllianceExecution {
         let alliance = game.player(self.requestor).alliance_with(recipient);
         if let Some(alliance) = alliance {
             game.player_mut(self.requestor).break_alliance(alliance);
+            if game.config().rules().has(Change::RelationPenalties28) {
+                game.player_mut(recipient)
+                    .update_relation(self.requestor, -200.0);
+                for player in game.players() {
+                    if player != self.requestor
+                        && !game.player(player).is_on_same_team(self.requestor)
+                    {
+                        game.player_mut(player)
+                            .update_relation(self.requestor, -40.0);
+                    }
+                }
+                self.active = false;
+                return;
+            }
             game.player_mut(recipient)
                 .update_relation(self.requestor, -100.0);
             let neighbors: Vec<SmallId> = game

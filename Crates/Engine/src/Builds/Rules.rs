@@ -306,6 +306,22 @@ pub enum Change {
     NationCreationConfigurable30,
     /// v0.31: a transport ship order rejects the target's pending alliance request (older: only land attacks do).
     TransportRejectsAlliances31,
+    /// v0.28.4: nations are `FakeHumanExecution` players placed on their manifest cell and tribes use `BotBehavior` (newer: `NationExecution`, `AiAttackBehavior`).
+    FakeHumanNations28,
+    /// v0.28.4: nation start troops, troop cap and growth follow the v0.28 difficulty table.
+    NationDifficultyEconomy28,
+    /// v0.28.4: immunity is the spawn phase plus a fixed 5 seconds for everyone (newer: humans only, `canAttackPlayer`).
+    ImmunityByConfig28,
+    /// v0.28.4: spawn tiles are chosen when the executions are created (`SpawnExecution` always gets a tile; bots retry random land).
+    SpawnByTile28,
+    /// v0.28.4: boats, rails and shipping run on the bidirectional `MiniAStar` (newer: HPA water graph, stepper finders).
+    LegacyAStar28,
+    /// v0.28.4: shells and SAM missiles use one PRNG per finder, nukes and MIRVs a control-point Bezier; MIRVs scatter by `nextInt`.
+    LegacyProjectiles28,
+    /// v0.28.4: relation penalties of attacks, betrayals and insults, and `allRelationsSorted` keeps dead players.
+    RelationPenalties28,
+    /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
+    WarshipLegacy28,
 }
 
 /// Raised for a commit this engine has no rule set for.
@@ -775,6 +791,23 @@ const EDGES: &[Edge] = &[
         add: &[],
         remove: &[Change::AftergameTeammateNukes3410],
     },
+    Edge {
+        class: "C059",
+        add: V28_CHANGES,
+        remove: &[],
+    },
+];
+
+/// The changes that exist only in v0.28.4 and older (class C059).
+const V28_CHANGES: &[Change] = &[
+    Change::FakeHumanNations28,
+    Change::NationDifficultyEconomy28,
+    Change::ImmunityByConfig28,
+    Change::SpawnByTile28,
+    Change::LegacyAStar28,
+    Change::LegacyProjectiles28,
+    Change::RelationPenalties28,
+    Change::WarshipLegacy28,
 ];
 
 /// Changes of the baseline class C000.
@@ -1034,7 +1067,8 @@ fn toggle_for_debugging(changes: &mut BTreeSet<Change>) {
     let Ok(names) = std::env::var("OFSIM_TOGGLE") else {
         return;
     };
-    let all: Vec<Change> = ROOT_CHANGES.to_vec();
+    let mut all: Vec<Change> = ROOT_CHANGES.to_vec();
+    all.extend(V28_CHANGES);
     for name in names.split(',') {
         if let Some(&change) = all.iter().find(|c| format!("{c:?}") == name.trim())
             && !changes.remove(&change)

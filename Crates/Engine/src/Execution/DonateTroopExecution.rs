@@ -84,6 +84,7 @@ impl Execution for DonateTroopsExecution {
                     .update_relation(self.sender, 50.0);
             }
             if game.player(recipient).player_type() == PlayerType::Nation
+                && !game.config().rules().has(Change::RelationPenalties28)
                 && game
                     .player(recipient)
                     .can_send_emoji(EmojiRecipient::Player(self.sender))

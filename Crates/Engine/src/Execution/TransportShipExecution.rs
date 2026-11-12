@@ -116,6 +116,7 @@ impl Execution for TransportShipExecution {
         }
 
         if self.target != 0
+            && !game.config().rules().has(Change::ImmunityByConfig28)
             && !game
                 .player(self.attacker)
                 .can_attack_player(self.target, false)

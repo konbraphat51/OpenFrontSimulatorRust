@@ -2,6 +2,7 @@
 //! Port of src/core/execution/DonateGoldExecution.ts: gold donation with nation reactions.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::to_int;
 use crate::Execution::EmojiExecution::EmojiExecution;
@@ -97,6 +98,7 @@ impl Execution for DonateGoldExecution {
             }
             // Only AI nations answer with an emoji.
             if game.player(recipient).player_type() == PlayerType::Nation
+                && !game.config().rules().has(Change::RelationPenalties28)
                 && game
                     .player(recipient)
                     .can_send_emoji(EmojiRecipient::Player(self.sender))

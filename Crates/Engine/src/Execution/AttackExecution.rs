@@ -275,7 +275,15 @@ impl Execution for AttackExecution {
             }
         }
 
-        if self.target != 0
+        if self.target != 0 && game.config().rules().has(Change::ImmunityByConfig28) {
+            // Nobody may attack a player before the spawn phase and the fixed immunity are over
+            let immune_until =
+                game.config().num_spawn_phase_turns() + game.config().spawn_immunity_duration();
+            if immune_until > game.ticks() {
+                self.active = false;
+                return;
+            }
+        } else if self.target != 0
             && !game
                 .player(self.owner)
                 .can_attack_player(self.target, false)
@@ -367,6 +375,7 @@ impl Execution for AttackExecution {
                 return;
             }
             let relation_change = match game.config().game_config().difficulty {
+                _ if game.config().rules().has(Change::RelationPenalties28) => -80.0,
                 Difficulty::Easy => -60.0,
                 Difficulty::Medium => -70.0,
                 Difficulty::Hard => -80.0,
