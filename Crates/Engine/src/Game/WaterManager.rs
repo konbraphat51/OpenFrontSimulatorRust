@@ -83,6 +83,10 @@ pub struct WaterManager {
     mini_water_cc: Option<Rc<RefCell<ConnectedComponents>>>,
     legacy: bool,
     old_markers: bool,
+    /// Before PR 4979 and from v0.35.0 on, every rebuild creates a new HPA finder instead of swapping the graph.
+    bucket_queue: bool,
+    /// True when one HPA finder lives across rebuilds (upstream v0.34.x).
+    shared_finder: bool,
     builder_bfs: Option<BfsGrid>,
     water_graph_version: u32,
     water_graph_dirty: bool,
@@ -121,6 +125,8 @@ impl WaterManager {
             mini_water_cc: None,
             legacy: false,
             old_markers,
+            bucket_queue,
+            shared_finder: false,
             builder_bfs: None,
             water_graph_version: 0,
             water_graph_dirty: false,
@@ -238,12 +244,28 @@ impl WaterManager {
             };
             self.dirty_mini_tiles.clear();
             if let Some(old) = self.hierarchical_chain.take() {
-                // The finder is shared: swap its graph; the new version's chain only re-decides HPA or simple
-                set_chain_graph(&mut old.hierarchical.borrow_mut(), Rc::clone(&graph));
-                self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
-                    use_hierarchical: graph.node_count() >= 100,
-                    hierarchical: Rc::clone(&old.hierarchical),
-                }));
+                if self.shared_finder {
+                    // One finder lives on: swap its graph; the new chain only re-decides HPA or simple
+                    set_chain_graph(&mut old.hierarchical.borrow_mut(), Rc::clone(&graph));
+                    self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
+                        use_hierarchical: graph.node_count() >= 100,
+                        hierarchical: Rc::clone(&old.hierarchical),
+                    }));
+                } else {
+                    // A new finder and chain per version; finders created earlier keep theirs
+                    let mut hpa =
+                        AStarWaterHierarchical::new(&self.mini_map, Rc::clone(&graph), true);
+                    hpa.set_component_filter(self.old_markers);
+                    hpa.set_bucket_queue(self.bucket_queue);
+                    self.hierarchical_chain = Some(Rc::new(SharedWaterChain {
+                        use_hierarchical: graph.node_count() >= 100,
+                        hierarchical: Rc::new(RefCell::new(build_hierarchical_chain(
+                            &self.mini_map,
+                            hpa,
+                            Rc::clone(&graph),
+                        ))),
+                    }));
+                }
             }
             self.mini_water_graph = Some(graph);
             self.water_graph_version += 1;
@@ -265,6 +287,11 @@ impl WaterManager {
     /// The current abstract water graph.
     pub fn mini_water_graph(&self) -> Option<&Rc<AbstractGraph>> {
         self.mini_water_graph.as_ref()
+    }
+
+    /// Selects one HPA finder shared by all graph versions (upstream v0.34.x `setGraph`).
+    pub fn set_shared_finder(&mut self, shared_finder: bool) {
+        self.shared_finder = shared_finder;
     }
 
     /// The chain of the current graph version, `None` without a nav mesh.

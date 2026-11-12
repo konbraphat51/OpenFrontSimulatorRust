@@ -148,6 +148,7 @@ impl GameImpl {
             config.rules().has(Change::AbstractGraphWideSearch36),
             !config.rules().has(Change::AbstractAStarMinHeap4149),
         );
+        water_manager.set_shared_finder(config.rules().has(Change::WaterHpaSharedFinder4979));
         water_manager.mini_tile_any_water = config.rules().has(Change::WaterNukeMiniTile6016);
         if !config
             .rules()

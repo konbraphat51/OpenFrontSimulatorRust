@@ -84,6 +84,8 @@ pub enum Change {
     TeamAssignDuos4758,
     /// PR 4903: rails cannot start on or cross impassable terrain.
     RailNoImpassable4903,
+    /// PR 4979: one HPA finder swaps its graph on rebuild (older builds and v0.35.0 on create a new finder).
+    WaterHpaSharedFinder4979,
     /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
     WaterNukeMinimap4975,
     /// PR 5096: a station set to its own cluster does not leave it first.
@@ -331,7 +333,7 @@ const EDGES: &[Edge] = &[
             Change::SeveredLandAnnex5955,
             Change::EmbargoAllSkipsAllies5919,
         ],
-        remove: &[],
+        remove: &[Change::WaterHpaSharedFinder4979],
     },
     Edge {
         class: "C082",
@@ -398,6 +400,7 @@ const EDGES: &[Edge] = &[
         class: "C013",
         add: &[],
         remove: &[
+            Change::WaterHpaSharedFinder4979,
             Change::DetMath5191,
             Change::AttackLogicRework5173,
             Change::AttackTroopsDeducted5111,
@@ -647,6 +650,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::TeamAssignDuos4758,
     Change::RailNoImpassable4903,
     Change::WaterNukeMinimap4975,
+    Change::WaterHpaSharedFinder4979,
     Change::StationClusterSame5096,
     Change::Overtime5062,
     Change::BulkPurchase4640,
