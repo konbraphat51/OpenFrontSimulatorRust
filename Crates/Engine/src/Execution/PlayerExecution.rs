@@ -7,6 +7,7 @@
 
 use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
+use crate::Compat::OrderedSet::OrderedSet;
 use crate::Core::Util::{get_mode, simple_hash};
 use crate::Execution::Execution::Execution;
 use crate::Execution::SeveredLand::{CLUSTER_SURROUNDED, SeveredCandidates};
@@ -558,6 +559,9 @@ impl PlayerExecution {
         game: &GameImpl,
         cluster: &[TileRef],
     ) -> Option<SmallId> {
+        if game.has(Change::TmpC078CapturingModeSet) {
+            return self.get_capturing_player_set(game, cluster);
+        }
         let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
         let map = &game.map;
         let my_small_id = self.player;
@@ -598,12 +602,53 @@ impl PlayerExecution {
         get_mode(&neighbors)
     }
 
+    /// TEMP C078: `getCapturingPlayer` of v0.26.0-beta1/2: candidate ids in a set, `getMode` over the set (the first id).
+    fn get_capturing_player_set(&self, game: &GameImpl, cluster: &[TileRef]) -> Option<SmallId> {
+        let mut ids: OrderedSet<SmallId> = OrderedSet::new();
+        let map = &game.map;
+        let mut nbuf = [0; 4];
+        for &t in cluster {
+            let n_neighbors = map.neighbors4_nswe(t, &mut nbuf);
+            for &n in &nbuf[..n_neighbors] {
+                let owner_id = map.owner_id(n);
+                if owner_id != self.player {
+                    ids.insert(owner_id);
+                }
+            }
+        }
+        let mut largest_neighbor_attack: Option<SmallId> = None;
+        let mut largest_troop_count = 0.0;
+        for &id in ids.iter() {
+            if id == 0 || game.player(self.player).is_friendly(id, false) {
+                continue;
+            }
+            for &attack in game.player(id).outgoing_attacks() {
+                let a = &game.attacks[attack as usize];
+                if a.target == self.player && a.troops > largest_troop_count {
+                    largest_troop_count = a.troops;
+                    largest_neighbor_attack = Some(id);
+                }
+            }
+        }
+        if largest_neighbor_attack.is_some() {
+            return largest_neighbor_attack;
+        }
+        // Every id counts once, so the mode is the first id seen
+        match ids.iter().next() {
+            Some(&id) if id != 0 => Some(id),
+            _ => None,
+        }
+    }
+
     /// `getCapturingPlayer` with `neighbors()` in N, S, W, E order (cluster removal of v0.27.10).
     pub(super) fn get_capturing_player_nswe(
         &self,
         game: &GameImpl,
         cluster: &[TileRef],
     ) -> Option<SmallId> {
+        if game.has(Change::TmpC078CapturingModeSet) {
+            return self.get_capturing_player_set(game, cluster);
+        }
         let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
         let map = &game.map;
         let my_small_id = self.player;
@@ -807,7 +852,7 @@ impl Execution for PlayerExecution {
                 continue;
             }
             let captor = owner;
-            if t == UnitType::DefensePost {
+            if t == UnitType::DefensePost && !game.has(Change::TmpC078DefensePostCaptured) {
                 if game.has(Change::DefensePostDestroyed1563) {
                     game.unit_mut(u).delete(Some(true), Some(captor));
                 } else {

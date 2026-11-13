@@ -981,7 +981,10 @@ impl<'a> PlayerRef<'a> {
         if other == self.id && self.game.has(Change::SelfActionGuards4014) {
             return true;
         }
-        if self.game.player(other).is_disconnected && !treat_afk_friendly {
+        if self.game.player(other).is_disconnected
+            && !treat_afk_friendly
+            && !self.game.has(Change::TmpC078FriendlyIgnoresAfk)
+        {
             return false;
         }
         self.is_on_same_team(other) || self.is_allied_with(other)

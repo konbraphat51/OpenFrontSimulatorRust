@@ -509,6 +509,14 @@ pub enum Change {
     NukeRevokesRequests2101,
     /// v0.25.x (C079 and newer): nations and tribes use the v0.26 AI; older builds use `*V25` modules without attack chances, betrayal, structure values or reserve ratios.
     NationAiV26Base25,
+
+    // TEMP C078: placeholders until the C078 port lands; drop or move to the C078 edge at merge.
+    /// C078: `getCapturingPlayer` collects ids in a set and falls back to `getMode` over it.
+    TmpC078CapturingModeSet,
+    /// C078: a captured defense post just changes hands (no `decreaseLevel`).
+    TmpC078DefensePostCaptured,
+    /// C078: `isFriendly` has no disconnected rule.
+    TmpC078FriendlyIgnoresAfk,
 }
 }
 
