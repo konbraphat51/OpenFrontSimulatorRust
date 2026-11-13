@@ -104,7 +104,12 @@ English version: [Plan.md](Plan.md)
 | C060 | v0.28.5, v0.28.7 | `TradeShipDistanceGold150` (PR 3232 以前の交易船ゴールドが 1 タイルあたり 100 でなく 150) | 29/30 (`91a14WVp` はアップストリームでも tick 1050 で不一致) |
 | C061 | v0.28.2, v0.28.3 | `CommunityBotNames2552` (最初の 20 体以降のボットは `COMMUNITY_FULL_ELF_NAMES`、`SPECIAL_FULL_ELF_NAMES`、`COMMUNITY_PREFIXES the Elf` の順、それ以外は `Elf <n>`。`data/BotNamesCommunity28.json`) | 30/30 |
 | C062 | v0.28.1 | `BotsAttackHumans2697` (ボットが人間を攻撃可能、Easy のランダム標的は `chance(2)` 抽選後に人間をスキップ) | 15/15 |
-| C063 | v0.28.0 | `SamHittingChance2665` (発射ごとに `PseudoRandom(samId)` を 1 回抽選、命中率 0.8、MIRV 弾頭 0.5、原爆は常に命中) | 20/20 |
+| C063 | v0.28.0 | `SamNoRng2665` を除去 (発射ごとに `PseudoRandom(samId)` を 1 回抽選、命中率 0.8、MIRV 弾頭 0.5、原爆は常に命中) | 20/20 |
+| C064 | v0.27.10 | `NationDifficultyEconomy27` (Nation の開始兵力 2,500 / 5,000 / 20,000 / 50,000、上限 0.5〜2、増加率 0.9〜1.2)、`ClusterLinearScan2614` を除去 (`PlayerExecutionV27.rs`: FIFO クラスタ、安定なサイズ順ソート、`bfs` のスタック順)、`BotBehaviorStateless28` を除去 (`BotBehaviorV27`、`BotExecutionV27`、`FakeHumanExecutionV27`: 状態を持つ敵選択、同盟返答は `BotBehavior` 内、`AllianceBehavior` なし)、`NoConstructionUnit2378` を除去 (`Construction` ユニットが資金と場所を保持し、建物の Execution は所有者とタイルからユニットを作る)、`SamNoRng2665` を除去 (発射台ごとの命中 PRNG、弾頭は 0.8 と 0.5)、`MirvCostScales2621` を除去 (MIRV は一律 3,500 万)、`TrainAllyGold35kMeta` を除去 (50,000)、`AllianceReplyInit28` を除去 (返答は最初の tick)、`NukeSrcFirst27`、`NoUsernameSanitation2622` を除去 (`sanitizeUsername`)、`CensorKeepsGoodNames27` (問題のない名前はそのまま) | 28/28 件 (長尺の公開戦 18 件) |
+| C065 | v0.27.5, v0.27.6, v0.27.8 | `TrainSpawnRate16V27_5`: 列車の出現率は (工場数 + 10) * 16。v0.27 の表記 "Baikal (Nuke Wars)" も読む | 82/82 件 (長尺の公開戦 41 件) |
+| C066 | v0.27.2, v0.27.3 | エンジンの変更なし (サーバー設定のみ) | 56/56 件 (長尺の公開戦 34 件) |
+| C067 | v0.27.0, v0.27.1 | `EmojiTableFactoryRow2522` を除去 (絵文字 55 個で順序も別。再生中のゲームのテーブルをスレッドローカルに持つ)、`SanitizeThenFixProfane27_0` (ゲームランナーは `sanitize` の後に不適切な名前を丸ごと置換。サンプルのレコードでは未使用) | 56/56 件 (長尺の公開戦 38 件) |
+| C068 | v0.27.0-beta2 | エンジンの変更なし (Yenisei マップのみ) | 使える 3/3 件 (短尺。プレイヤー 0 人のチーム戦 2 件はアップストリームも `Too few teams` で例外) |
 
 C060〜C063 の注記: クラス木はリリース時間と逆向きに進む (f4ed v0.28.0 -> a810 v0.28.1 -> 671c v0.28.2 -> C059 v0.28.4 が #2552 を revert)。ここで基底のバグも修正した: `censorNameWithClanTag` はタグも名前も不適切でない場合に username をそのまま返す (クラスタ計算のオフセットは名前をハッシュする)。これにより、クランタグの後ろに空白がない C060 の 3 件が一致するようになった。
 

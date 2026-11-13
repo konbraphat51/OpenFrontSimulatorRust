@@ -52,6 +52,7 @@ impl Config {
             | UnitType::MIRV
             | UnitType::MIRVWarhead
             | UnitType::TradeShip
+            | UnitType::Construction
             | UnitType::Train => UnitInfo::default(),
         }
     }
@@ -78,6 +79,7 @@ impl Config {
             | UnitType::SAMMissile
             | UnitType::MIRVWarhead
             | UnitType::TradeShip
+            | UnitType::Construction
             | UnitType::Train => 0,
             UnitType::Warship => self.cost_wrapped(
                 ctx,
@@ -92,6 +94,9 @@ impl Config {
             UnitType::AtomBomb => self.cost_wrapped(ctx, |_| 750_000.0, &[UnitType::AtomBomb]),
             UnitType::HydrogenBomb => {
                 self.cost_wrapped(ctx, |_| 5_000_000.0, &[UnitType::HydrogenBomb])
+            }
+            UnitType::MIRV if !self.rules.has(Change::MirvCostScales2621) => {
+                self.cost_wrapped(ctx, |_| 35_000_000.0, &[UnitType::MIRV])
             }
             UnitType::MIRV => {
                 if ctx.player_type == PlayerType::Human

@@ -86,7 +86,7 @@ impl Config {
         100
     }
 
-    /// Chance that a SAM launch intercepts a nuke (`samHittingChance`, builds with `SamHittingChance2665`).
+    /// Chance that a SAM launch intercepts a nuke (`samHittingChance`, builds without `SamNoRng2665`).
     pub fn sam_hitting_chance(&self) -> f64 {
         0.8
     }

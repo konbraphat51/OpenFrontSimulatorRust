@@ -616,7 +616,7 @@ impl SAMLauncherExecution {
             return;
         }
         game.unit_mut(sam).launch();
-        if game.has(Change::SamHittingChance2665) {
+        if !game.has(Change::SamNoRng2665) {
             let unit_type = if warheads.is_empty() {
                 game.unit_any(target.as_ref().expect("a target or warheads").unit)
                     .unit_type()

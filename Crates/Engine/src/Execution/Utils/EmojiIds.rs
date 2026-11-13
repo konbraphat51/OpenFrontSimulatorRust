@@ -2,13 +2,13 @@
 //! Emoji id lists of nation/NationEmojiBehavior.ts that the land executions pick from.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use crate::Core::Util::FLATTENED_EMOJI_TABLE;
+use crate::Core::Util::emoji_table;
 
 /// `list.map(emojiId)`: indices into the flattened emoji table (-1 when absent, like `indexOf`).
 pub fn emoji_ids(list: &[&str]) -> Vec<f64> {
     list.iter()
         .map(|e| {
-            FLATTENED_EMOJI_TABLE
+            emoji_table()
                 .iter()
                 .position(|x| x == e)
                 .map_or(-1.0, |i| i as f64)

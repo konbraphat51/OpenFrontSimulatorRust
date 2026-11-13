@@ -1,5 +1,5 @@
 # Changes class C063 adds to / removes from its parent (parent: BuildClasses.toml).
-add = [
-  "SamHittingChance2665",
+add = []
+remove = [
+  "SamNoRng2665",
 ]
-remove = []

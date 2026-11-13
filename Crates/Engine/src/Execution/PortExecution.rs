@@ -7,8 +7,9 @@ use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Execution::TradeShipExecution::TradeShipExecution;
 use crate::Execution::TrainStationExecution::TrainStationExecution;
-use crate::Game::Game::{Tick, UnitId, UnitType};
+use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
+use crate::Game::GameMap::TileRef;
 
 /// Spawns trade ships from a finished port every ten ticks (offset per port).
 pub struct PortExecution {
@@ -17,6 +18,10 @@ pub struct PortExecution {
     random: Option<PseudoRandom>,
     check_offset: u32,
     trade_ship_spawn_rejections: f64,
+    /// Owner and tile of a port that is built on the first tick (before PR 2378).
+    pending: Option<(SmallId, TileRef)>,
+    /// The port was built by this execution: no station fallback on later ticks.
+    built_here: bool,
 }
 
 impl PortExecution {
@@ -28,7 +33,17 @@ impl PortExecution {
             random: None,
             check_offset: 0,
             trade_ship_spawn_rejections: 0.0,
+            pending: None,
+            built_here: false,
         }
+    }
+
+    /// `new PortExecution(player, tile)`: the port is built on the first tick.
+    pub fn from_tile(player: SmallId, tile: TileRef) -> Self {
+        let mut e = Self::new(0);
+        e.pending = Some((player, tile));
+        e.built_here = true;
+        e
     }
 
     fn should_spawn_trade_ship(&mut self, game: &GameImpl) -> bool {
@@ -162,6 +177,16 @@ impl Execution for PortExecution {
     }
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if let Some((player, tile)) = self.pending.take() {
+            let Some(spawn) = game.player(player).can_build(UnitType::Port, tile, None) else {
+                self.active = false;
+                return;
+            };
+            self.port =
+                game.player_mut(player)
+                    .build_unit(UnitType::Port, spawn, UnitParams::default());
+            self.create_station(game);
+        }
         if !game.unit_any(self.port).is_active() {
             self.active = false;
             return;
@@ -171,7 +196,7 @@ impl Execution for PortExecution {
             return;
         }
 
-        if !game.unit_any(self.port).has_train_station() {
+        if !self.built_here && !game.unit_any(self.port).has_train_station() {
             self.create_station(game);
         }
 
