@@ -401,6 +401,8 @@ pub enum Change {
     NationBehaviorUpdate3246,
     /// v0.28.4: nations are `FakeHumanExecution` players placed on their manifest cell and tribes use `BotBehavior` (newer: `NationExecution`, `AiAttackBehavior`).
     FakeHumanNations28,
+    /// v0.26.14: nations and tribes use the pre-rewrite `BotBehavior` (alliance answers inside it, no MIRV or retaliation AI, plain land attacks, older boat targets and attack chances; newer: `AllianceBehavior` split and the v0.28 AI).
+    PreRewriteNationAi26,
     /// v0.28.4: nation start troops, troop cap and growth follow the v0.28 difficulty table.
     NationDifficultyEconomy28,
     /// v0.28.4: immunity is the spawn phase plus a fixed 5 seconds for everyone (newer: humans only, `canAttackPlayer`).
@@ -431,6 +433,36 @@ pub enum Change {
     NoConstructionUnit2378,
     /// PR 2665: SAM launchers always hit (older: a per-launcher PRNG draw against the hit chance, 0.8 and 0.5 for MIRV warheads).
     SamNoRng2665,
+    /// v0.27: a SAM's range grows with its level and detection scales with the maximum (v0.26.14: one fixed range of 70).
+    SamRangeByLevel27,
+    /// v0.27: a retreating transport ship loses 25% of its troops (v0.26.14: none).
+    TransportRetreatMalus27,
+    /// v0.27: a retreating attack with a source tile keeps the troop correction only when it has none (v0.26.14: always corrects).
+    AttackRetreatSourceTile27,
+    /// v0.27: `maxTimerValue` ends a game with the leader as winner (v0.26.14: no timer win).
+    WinMaxTimer27,
+    /// v0.26.14: `PathFinder.nextTile` keeps its path when the goal is within range (v0.27 clears it).
+    PathFinderKeepsPath26,
+    /// PR 2203: a disconnected player's ships follow a teammate who conquers them (transport takeover and retreat source check, warships and transports captured in `conquerPlayer`).
+    DisconnectedShipHandover2203,
+    /// v0.26.14: a retreating attack that never removed its start troops subtracts them first (v0.26.15: it does not).
+    AttackRetreatStartTroops26,
+    /// v0.26.14: warships treat a disconnected player as a friend when picking targets (v0.26.15: they shoot them).
+    WarshipAfkFriendly2203,
+    /// v0.26.15: a warship of a disconnected player is deleted.
+    WarshipDeleteDisconnected26,
+    /// v0.26.15: a deleted unit is marked and removed after `deletionMarkDuration`; the delete cooldown is 30 s (v0.26.13: deleted at once, cooldown 5 s).
+    UnitDeletionMark26,
+    /// v0.26.15: trade routes near a port get no bonus within `tradeShipShortRangeDebuff` (300) and the trade gold sigmoid uses it (v0.26.13: no debuff, sigmoid centre 200).
+    TradeShortRangeDebuff26,
+    /// v0.26.15: upgrading needs a valid unit (not under construction, not marked, owned) (v0.26.13: type, funds and the `upgradable` flag only).
+    UpgradeUnitValidity26,
+    /// v0.26.11: train spawn rate `(factories + 10) * 20` (v0.26.13: 16).
+    TrainSpawnRate20V26,
+    /// v0.26.9: the clan is a leading `[TAG]` of 2 to 5 letters in the written case (v0.26.11: the first `[TAG]` of letters or digits, upper-cased).
+    ClanTagLeading26,
+    /// v0.26.11: trade ship gold is the flat `floor(100000 + 100 * dist)` (v0.26.13: the sigmoid).
+    TradeShipFlatGold26,
     /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
     MirvCostScales2621,
     /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
@@ -536,6 +568,16 @@ const ROOT_CHANGES: &[Change] = &[
     Change::BotBehaviorStateless28,
     Change::NoConstructionUnit2378,
     Change::SamNoRng2665,
+    Change::SamRangeByLevel27,
+    Change::TransportRetreatMalus27,
+    Change::AttackRetreatSourceTile27,
+    Change::WinMaxTimer27,
+    Change::DisconnectedShipHandover2203,
+    Change::AttackRetreatStartTroops26,
+    Change::UnitDeletionMark26,
+    Change::TradeShortRangeDebuff26,
+    Change::UpgradeUnitValidity26,
+    Change::WarshipAfkFriendly2203,
     Change::MirvCostScales2621,
     Change::TrainAllyGold35kMeta,
     Change::AllianceReplyInit28,

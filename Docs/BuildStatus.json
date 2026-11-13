@@ -78,7 +78,13 @@
     "C065": "ported; 82 of 82 (41 long public)",
     "C066": "ported; 56 of 56 (34 long public)",
     "C067": "ported; 56 of 56 (38 long public)",
-    "C068": "ported; 3 of 3 usable (short; the two team games without players throw `Too few teams` upstream too)"
+    "C068": "ported; 3 of 3 usable (short; the two team games without players throw `Too few teams` upstream too)",
+    "C069": "ported; 20 of 24 (20 long public; the other 4 fail in the upstream engine too)",
+    "C070": "ported; 101 of 102 sampled (the 1 failure fails in the upstream engine too)",
+    "C071": "ported; 19 of 19 sampled (long public)",
+    "C072": "ported; 19 of 19 sampled (long public)",
+    "C073": "ported; 19 of 19 sampled (long public)",
+    "C074": "ported; 23 of 23 sampled (long public)"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -159,6 +165,12 @@
     "C065": "移植済み; 82/82 件 (長尺の公開戦 41 件)",
     "C066": "移植済み; 56/56 件 (長尺の公開戦 34 件)",
     "C067": "移植済み; 56/56 件 (長尺の公開戦 38 件)",
-    "C068": "移植済み; 使える 3/3 件 (短尺。プレイヤー 0 人のチーム戦 2 件はアップストリームも `Too few teams` で例外)"
+    "C068": "移植済み; 使える 3/3 件 (短尺。プレイヤー 0 人のチーム戦 2 件はアップストリームも `Too few teams` で例外)",
+    "C069": "移植済み; 20/24 件 (長尺の公開戦 20 件。残り 4 件はアップストリームのエンジンでも一致しない)",
+    "C070": "移植済み; 抽出 102 件中 101 件 (失敗 1 件はアップストリームのエンジンでも一致しない)",
+    "C071": "移植済み; 抽出 19/19 件 (長尺の公開戦)",
+    "C072": "移植済み; 抽出 19/19 件 (長尺の公開戦)",
+    "C073": "移植済み; 抽出 19/19 件 (長尺の公開戦)",
+    "C074": "移植済み; 抽出 23/23 件 (長尺の公開戦)"
   }
 }

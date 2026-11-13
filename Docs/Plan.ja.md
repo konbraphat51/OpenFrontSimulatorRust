@@ -112,6 +112,12 @@ P6-P (性能パス、ハッシュは不変): 7 世代のレコードでシング
 | C066 | v0.27.2, v0.27.3 | エンジンの変更なし (サーバー設定のみ) | 56/56 件 (長尺の公開戦 34 件) |
 | C067 | v0.27.0, v0.27.1 | `EmojiTableFactoryRow2522` を除去 (絵文字 55 個で順序も別。再生中のゲームのテーブルをスレッドローカルに持つ)、`SanitizeThenFixProfane27_0` (ゲームランナーは `sanitize` の後に不適切な名前を丸ごと置換。サンプルのレコードでは未使用) | 56/56 件 (長尺の公開戦 38 件) |
 | C068 | v0.27.0-beta2 | エンジンの変更なし (Yenisei マップのみ) | 使える 3/3 件 (短尺。プレイヤー 0 人のチーム戦 2 件はアップストリームも `Too few teams` で例外) |
+| C069 | v0.26.14 | `PreRewriteNationAi26` (並置の `BotBehaviorV26`、`FakeHumanExecutionV26`、`BotExecutionV26`: MIRV と報復の AI なし、`AllianceBehavior` なし、通常の陸攻撃、旧式の上陸先選び)、`PathFinderKeepsPath26`。`SamRangeByLevel27`、`TransportRetreatMalus27`、`AttackRetreatSourceTile27`、`WinMaxTimer27` を除去 | 20/24 件 (長尺の公開戦 20 件。残り 4 件 (シングルプレイ 3、公開 1) はアップストリームのエンジンでも一致せず、本実装はそのトレースと tick 単位で一致) |
+| C070 | v0.26.15, v0.26.16, v0.26.17 | `DisconnectedShipHandover2203`、`AttackRetreatStartTroops26`、`WarshipAfkFriendly2203` を除去、`WarshipDeleteDisconnected26` を追加 | 抽出 102 件中 101 件 (各ビルドの大きい順 25 件と日中の 9 件。失敗 1 件はアップストリームのエンジンでも一致しない) |
+| C071 | v0.26.13 | `UnitDeletionMark26` (ユニットは即時削除、クールダウン 5 秒)、`TradeShortRangeDebuff26` (近距離ペナルティなし、シグモイド中心 200)、`UpgradeUnitValidity26` を除去。絵文字表の変更はハッシュに影響しない | 抽出 19/19 件 (すべて長尺の公開戦) |
+| C072 | v0.26.11 | `TrainSpawnRate20V26`、`TradeShipFlatGold26` を追加 | 抽出 19/19 件 (すべて長尺の公開戦) |
+| C073 | v0.26.9 | `ClanTagLeading26` を追加 (クランは先頭の英字 `[TAG]`、書かれたまま) | 抽出 19/19 件 (すべて長尺の公開戦) |
+| C074 | v0.26.7 | エンジンの変更なし (EmbargoAll インテント、Achiran マップ、絵文字表は状態ハッシュに届かない) | 抽出 23/23 件 (長尺の公開戦) |
 
 C060〜C063 の注記: クラス木はリリース時間と逆向きに進む (f4ed v0.28.0 -> a810 v0.28.1 -> 671c v0.28.2 -> C059 v0.28.4 が #2552 を revert)。ここで基底のバグも修正した: `censorNameWithClanTag` はタグも名前も不適切でない場合に username をそのまま返す (クラスタ計算のオフセットは名前をハッシュする)。これにより、クランタグの後ろに空白がない C060 の 3 件が一致するようになった。
 

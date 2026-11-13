@@ -1026,7 +1026,8 @@ impl<'a> PlayerRef<'a> {
         let ut = self.game.unit_any(unit).unit_type;
         self.can_upgrade_unit_type(ut)
             && self.can_build_unit_type(ut, None)
-            && self.is_unit_valid_to_upgrade(unit)
+            && (!self.game.has(Change::UpgradeUnitValidity26)
+                || self.is_unit_valid_to_upgrade(unit))
     }
 
     /// `canBuild(type, targetTile, validTiles)`: the tile to build on, or `None`.

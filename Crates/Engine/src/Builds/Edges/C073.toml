@@ -1,0 +1,3 @@
+# Changes class C073 adds to / removes from its parent (parent: BuildClasses.toml).
+add = ["ClanTagLeading26"]
+remove = []

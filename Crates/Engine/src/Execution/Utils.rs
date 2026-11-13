@@ -3,6 +3,7 @@
 
 pub mod AiAttackBehavior;
 pub mod AllianceBehaviorV28;
+pub mod BotBehaviorV26;
 pub mod BotBehaviorV27;
 pub mod BotBehaviorV28;
 pub mod EmojiIds;

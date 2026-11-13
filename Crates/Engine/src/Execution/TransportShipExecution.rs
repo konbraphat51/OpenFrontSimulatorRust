@@ -117,7 +117,10 @@ impl Execution for TransportShipExecution {
         game.transport_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
         if game.has(Change::LegacyAStar28) {
-            self.legacy_path_finder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
+            self.legacy_path_finder = Some(
+                LegacyPathFinder::mini(10_000.0, true, 100.0)
+                    .with_keep_path_on_arrival(game.has(Change::PathFinderKeepsPath26)),
+            );
         }
 
         let boat_max = game.config().boat_max_number() as i64;
@@ -218,7 +221,8 @@ impl Execution for TransportShipExecution {
 
         // A team mate who conquered a disconnected player now owns the ship: follow the owner
         let boat_owner = game.unit_any(boat).owner_id();
-        if game.player(self.original_owner).is_disconnected()
+        if game.has(Change::DisconnectedShipHandover2203)
+            && game.player(self.original_owner).is_disconnected()
             && boat_owner != self.original_owner
             && game.player(boat_owner).is_on_same_team(self.original_owner)
         {
@@ -235,7 +239,9 @@ impl Execution for TransportShipExecution {
             if game.unit_any(boat).transport_ship_state().is_retreating {
                 // The launch tile is water, so its owner never matches: the spawn is looked up again.
                 let src = self.src.expect("set in init");
-                if game.owner_id(src) != self.attacker {
+                if game.has(Change::DisconnectedShipHandover2203)
+                    && game.owner_id(src) != self.attacker
+                {
                     let dst = self.dst.expect("checked above");
                     self.src = game.player(self.attacker).best_transport_ship_spawn(dst);
                 }
@@ -312,7 +318,11 @@ impl Execution for TransportShipExecution {
             PathResult::Complete(_) => {
                 let boat_troops = game.unit_any(boat).troops();
                 if game.owner_id(dst) == self.attacker {
-                    let deaths = boat_troops * (MALUS_FOR_RETREAT / 100.0);
+                    let deaths = if game.has(Change::TransportRetreatMalus27) {
+                        boat_troops * (MALUS_FOR_RETREAT / 100.0)
+                    } else {
+                        0.0
+                    };
                     let survivors = boat_troops - deaths;
                     game.player_mut(self.attacker).add_troops(survivors);
                     game.unit_mut(boat).delete(Some(false), None);

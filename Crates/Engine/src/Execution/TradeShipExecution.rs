@@ -93,7 +93,10 @@ impl Execution for TradeShipExecution {
         game.trade_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
         if game.has(Change::LegacyAStar28) {
-            self.legacy_path_finder = Some(LegacyPathFinder::mini(2500.0, true, 20.0));
+            self.legacy_path_finder = Some(
+                LegacyPathFinder::mini(2500.0, true, 20.0)
+                    .with_keep_path_on_arrival(game.has(Change::PathFinderKeepsPath26)),
+            );
         }
     }
 

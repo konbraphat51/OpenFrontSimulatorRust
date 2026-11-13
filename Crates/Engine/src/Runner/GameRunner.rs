@@ -54,6 +54,23 @@ fn clan_tag_from_name(name: &str) -> Option<String> {
     clan_tag_original_case(name).map(|t| t.to_uppercase())
 }
 
+/// `PlayerInfo` clan of v0.26.9: a leading `[TAG]` of 2 to 5 ASCII letters, as written.
+fn clan_tag_leading(name: &str) -> Option<String> {
+    if !name.starts_with('[') || !name.contains(']') {
+        return None;
+    }
+    let letters: String = name[1..]
+        .chars()
+        .take_while(|c| c.is_ascii_alphabetic())
+        .collect();
+    let len = letters.chars().count();
+    (2..=5).contains(&len).then(|| {
+        name[1 + letters.len()..]
+            .starts_with(']')
+            .then_some(letters)
+    })?
+}
+
 /// Replacement names of profane usernames (`shadowNames`).
 const SHADOW_NAMES: [&str; 7] = [
     "NicePeopleOnly",
@@ -360,6 +377,8 @@ pub fn create_game_runner(
                 p.is_lobby_creator.unwrap_or(false),
                 if rules.has(Change::ClanTagField31) {
                     p.clan_tag.clone()
+                } else if rules.has(Change::ClanTagLeading26) {
+                    clan_tag_leading(&name)
                 } else {
                     clan_tag_from_name(&name)
                 },

@@ -153,7 +153,7 @@ impl PortExecution {
             let other_owner = other.owner_id();
             let dist = game.map.manhattan_dist(port_tile, other.tile()) as f64;
             weighted_ports.extend(std::iter::repeat_n(other_port, expanded));
-            let too_close = dist < short_range_debuff;
+            let too_close = game.has(Change::TradeShortRangeDebuff26) && dist < short_range_debuff;
             let close_bonus = (i as f64) < close_bonus_ports;
             if !too_close && close_bonus {
                 // If the port is close, but not too close, add it again to increase the chances of trading with it.
