@@ -319,6 +319,7 @@ pub fn create_game_runner(
     maps_root: &Path,
     rules: Rules,
 ) -> Result<GameRunner> {
+    crate::Core::Util::set_legacy_emoji_table(!rules.has(Change::EmojiTableFactoryRow2522));
     let engine_config = game_config_from_record(&start.config)?;
     let config = Config::new(engine_config.clone(), false, rules.clone());
     let size = MapSize::from_wire(start.config.game_map_size.as_str())?;
@@ -332,6 +333,14 @@ pub fn create_game_runner(
             // Builds before PR 3122 censor every name in the game runner (the tracer passes no client id).
             let name = if rules.has(Change::ServerUsernameCensoring3122) {
                 p.username.clone()
+            } else if rules.has(Change::SanitizeThenFixProfane27_0) {
+                // v0.27.0 and v0.27.1: a profane name (clan tag included) is replaced whole.
+                let sanitized = js_sanitize(&p.username);
+                if Obscenity::has_match(&sanitized) {
+                    SHADOW_NAMES[simple_hash(&sanitized) as usize % SHADOW_NAMES.len()].to_string()
+                } else {
+                    sanitized
+                }
             } else if rules.has(Change::CensorKeepsGoodNames27) {
                 censor_name_keeping_good_names(
                     &p.username,

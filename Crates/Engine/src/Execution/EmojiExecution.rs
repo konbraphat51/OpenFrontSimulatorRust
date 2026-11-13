@@ -7,7 +7,7 @@
 
 use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
-use crate::Core::Util::FLATTENED_EMOJI_TABLE;
+use crate::Core::Util::emoji_table;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{
     ALL_PLAYERS, Difficulty, EmojiRecipient, PlayerType, Relation, SmallId, Tick,
@@ -15,7 +15,7 @@ use crate::Game::Game::{
 use crate::Game::GameImpl::GameImpl;
 
 fn emoji_id(e: &str) -> f64 {
-    FLATTENED_EMOJI_TABLE
+    emoji_table()
         .iter()
         .position(|x| *x == e)
         .map_or(-1.0, |i| i as f64)
@@ -68,8 +68,8 @@ impl Execution for EmojiExecution {
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         let recipient = self.recipient.expect("recipient set in init");
-        let emoji_string = if self.emoji >= 0.0 && self.emoji < FLATTENED_EMOJI_TABLE.len() as f64 {
-            Some(FLATTENED_EMOJI_TABLE[self.emoji as usize])
+        let emoji_string = if self.emoji >= 0.0 && self.emoji < emoji_table().len() as f64 {
+            Some(emoji_table()[self.emoji as usize])
         } else {
             None
         };

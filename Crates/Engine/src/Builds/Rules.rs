@@ -439,6 +439,10 @@ pub enum Change {
     CensorKeepsGoodNames27,
     /// v0.27.5 to v0.27.8: trains spawn at (factories + 10) * 16 (v0.27.10: 18).
     TrainSpawnRate16V27_5,
+    /// PR 2522: the emoji table has a factory and train row and another order (v0.27.0 and v0.27.1: 55 emojis).
+    EmojiTableFactoryRow2522,
+    /// v0.27.0 and v0.27.1: the game runner replaces a profane name whole after `sanitize` (v0.27.2 and later: `censorNameWithClanTag`).
+    SanitizeThenFixProfane27_0,
 }
 }
 
@@ -530,6 +534,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::TrainAllyGold35kMeta,
     Change::AllianceReplyInit28,
     Change::NoUsernameSanitation2622,
+    Change::EmojiTableFactoryRow2522,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,
