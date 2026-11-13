@@ -17,7 +17,6 @@ use crate::Game::GameMap::{GameMapImpl, TileRef};
 const TICKS_PER_CLUSTER_CALC: f64 = 20.0;
 
 /// Include predicate of a flood fill: gets the visited array and the candidate tile.
-type IncludeFn<'a> = &'a dyn Fn(&[u32], TileRef) -> bool;
 
 /// Upkeep of one player: relations decay, structure capture, troops and gold, alliances, clusters.
 pub struct PlayerExecution {
@@ -488,7 +487,7 @@ impl PlayerExecution {
                 current_gen,
                 &[first_tile],
                 false,
-                &|_, t| map.owner_id(t) == player,
+                |_, t| map.owner_id(t) == player,
                 None,
             )
         };
@@ -653,7 +652,7 @@ impl PlayerExecution {
                 current_gen,
                 &[start_tile],
                 true,
-                &|visited, t| visited[t as usize] == border_gen,
+                |visited, t| visited[t as usize] == border_gen,
                 Some(&mut out_box),
             );
             clusters.push(cluster);
@@ -693,7 +692,7 @@ pub(super) fn flood_fill_with_gen(
     current_gen: u32,
     start_tiles: &[TileRef],
     diag: bool,
-    include: IncludeFn<'_>,
+    include: impl Fn(&[u32], TileRef) -> bool,
     out_box: Option<&mut [i32; 4]>,
 ) -> Vec<TileRef> {
     let mut result: Vec<TileRef> = Vec::new();

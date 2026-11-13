@@ -10,7 +10,6 @@ const ENDPOINT_REFINEMENT_TILES: i64 = 50;
 const LOCAL_ASTAR_MAX_AREA: usize = 100 * 100;
 const LOS_MIN_MAGNITUDE_PASS1: u8 = 2;
 const LOS_MIN_MAGNITUDE_PASS2: u8 = 3;
-const MAGNITUDE_MASK: u8 = 0x1f;
 const MAX_TILES: i64 = 100_000;
 
 /// Water path smoother: LOS smoothing, endpoint refinement by local A*, LOS smoothing again (on `ctx.mini_map`).
@@ -207,10 +206,8 @@ fn find_tile_at_distance(
 /// True when the Bresenham line between two tiles stays on water at or above `min_magnitude`.
 fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> bool {
     let w = map.width() as i64;
-    let x0 = from as i64 % w;
-    let y0 = from as i64 / w;
-    let x1 = to as i64 % w;
-    let y1 = to as i64 / w;
+    let (x0, y0) = (map.x(from) as i64, map.y(from) as i64);
+    let (x1, y1) = (map.x(to) as i64, map.y(to) as i64);
 
     let dx = (x1 - x0).abs();
     let dy = (y1 - y0).abs();
@@ -222,10 +219,7 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
     let mut iterations = 0;
 
     // Traversable and deep enough
-    let ok = |tile: i64| -> bool {
-        let tile = tile as TileRef;
-        map.is_water(tile) && (map.terrain_byte(tile) & MAGNITUDE_MASK) >= min_magnitude
-    };
+    let ok = |tile: i64| -> bool { map.is_water_at_least(tile as TileRef, min_magnitude) };
 
     loop {
         let over = iterations > MAX_TILES;
@@ -234,12 +228,8 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
             return false;
         }
 
-        let tile = y * w + x;
-        if !map.is_water(tile as TileRef) {
-            return false;
-        }
-        // Avoid shallow water
-        if (map.terrain_byte(tile as TileRef) & MAGNITUDE_MASK) < min_magnitude {
+        // Traversable, and not shallow water
+        if !ok(y * w + x) {
             return false;
         }
 

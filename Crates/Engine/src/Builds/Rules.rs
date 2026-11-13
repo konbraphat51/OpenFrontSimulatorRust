@@ -741,6 +741,17 @@ fn class_table() -> &'static ClassTable {
 pub struct Rules {
     class: String,
     changes: BTreeSet<Change>,
+    /// Bitset mirror of `changes` for the hot `has` lookups.
+    mask: Box<[u64]>,
+}
+
+/// Bitset over `Change` discriminants.
+fn mask_of(changes: &BTreeSet<Change>) -> Box<[u64]> {
+    let mut mask = vec![0u64; Change::ALL.len().div_ceil(64)];
+    for &c in changes {
+        mask[c as usize / 64] |= 1 << (c as usize % 64);
+    }
+    mask.into_boxed_slice()
 }
 
 /// Builds of class C000 (v0.34.19 to v0.34.23): identical simulation code, so the baseline rules apply.
@@ -755,9 +766,11 @@ pub const BASELINE_CLASS_COMMITS: [&str; 5] = [
 impl Rules {
     /// Rules of the baseline build (class C000).
     pub fn baseline() -> Self {
+        let changes: BTreeSet<Change> = ROOT_CHANGES.iter().copied().collect();
         Self {
             class: "C000".to_string(),
-            changes: ROOT_CHANGES.iter().copied().collect(),
+            mask: mask_of(&changes),
+            changes,
         }
     }
 
@@ -785,6 +798,7 @@ impl Rules {
         toggle_for_debugging(&mut changes);
         Some(Self {
             class: class.to_string(),
+            mask: mask_of(&changes),
             changes,
         })
     }
@@ -824,8 +838,10 @@ impl Rules {
     }
 
     /// True when the build contains `change`.
+    #[inline]
     pub fn has(&self, change: Change) -> bool {
-        self.changes.contains(&change)
+        let i = change as usize;
+        self.mask[i / 64] & (1 << (i % 64)) != 0
     }
 }
 

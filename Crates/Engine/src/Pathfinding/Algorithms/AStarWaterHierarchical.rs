@@ -7,9 +7,9 @@ use super::AStarWaterBounded::{AStarWaterBounded, SearchBounds};
 use super::AbstractGraph::{AbstractGraph, AbstractNode};
 use super::BfsGrid::{BfsGrid, Visit};
 use super::ConnectedComponents::LAND_MARKER;
+use crate::Compat::OrderedMap::FxHashMap;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
-use std::collections::HashMap;
 use std::rc::Rc;
 
 /// HPA* over an [`AbstractGraph`] of the mini map; segment paths come from bounded water A*.
@@ -430,7 +430,7 @@ fn resolve_sources_to_nodes(
     sources: &[TileRef],
 ) -> Vec<(u32, TileRef)> {
     let mut node_to_source: Vec<(u32, TileRef)> = Vec::new();
-    let mut node_to_dist: HashMap<u32, (u32, usize)> = HashMap::new();
+    let mut node_to_dist: FxHashMap<u32, (u32, usize)> = FxHashMap::default();
 
     for &source in sources {
         let Some(node) = get_cluster_node(map, graph, source) else {

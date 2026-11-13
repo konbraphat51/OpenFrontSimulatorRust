@@ -30,6 +30,8 @@ English version: [Plan.md](Plan.md)
 
 エンジンコードへの高速化変更 (動作は不変。ベースライン 41 件中 40 件が引き続き通り、`c6dYiNx281` は 3810 で止まるまま): 鉄道 A* は照会ごとに 10 MB を確保せず、スタンプ付きバッファを再利用。`RailNetwork::find_station` はユニットごとの索引を使用。
 
+P6-P (性能パス、ハッシュは不変): 7 世代のレコードでシングルスレッドがさらに 1.2〜1.6 倍 (ベンチマークセット全体で 387 から 506 tick/s、ピーク RSS 約 30% 減)。密なスナップショットの `replay` が高速化し、`batch` は大きい順に処理する。ベンチマーク表、実行方法 (`Tools/Bench.py`)、変更一覧、残りのホットスポットの順位は [Performance.ja.md](Performance.ja.md) を参照。
+
 ## P6 クラス別状況
 
 クラス ID、親、ビルドは [BuildPlan.ja.md](BuildPlan.ja.md) (状態列) と `Crates/Engine/src/Builds/BuildClasses.toml` にある。`Rules.rs` にそのクラスとその祖先の辺があれば対応済みで、それ以外のクラスは `build <commit> (class Cnnn) not ported yet` で失敗する。「一致」はサンプルレコード (`Cache/Records/<commit12>/`、最大約 12,900 ターン) を全ハッシュ一致で再生できた件数。

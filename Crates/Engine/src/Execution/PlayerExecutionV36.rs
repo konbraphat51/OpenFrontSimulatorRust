@@ -180,18 +180,59 @@ impl PlayerExecution {
         let map = &game.map;
         let my = self.player;
         let scratch = &mut game.scratch;
-        scratch.visited[start as usize] = t_gen;
-        scratch.stack.clear();
-        scratch.stack.push(start);
-        let mut size = 0;
-        let mut nbuf = [0; 4];
-        while let Some(cur) = scratch.stack.pop() {
-            size += 1;
-            let n_neighbors = map.neighbors4(cur, &mut nbuf);
-            for &n in &nbuf[..n_neighbors] {
-                if scratch.visited[n as usize] < area_gen && map.owner_id(n) == my {
-                    scratch.visited[n as usize] = t_gen;
-                    scratch.stack.push(n);
+        let (visited, stack) = (&mut scratch.visited, &mut scratch.stack);
+        let state = map.tile_state_buffer();
+        let (w, south_limit) = (map.width(), (map.height() - 1) * map.width());
+        // Scanline fill: only the component size and the stamps matter, so the visiting order is free.
+        // Every tile is stamped (and counted) exactly once; seeds are the first tiles of runs in a row.
+        visited[start as usize] = t_gen;
+        stack.clear();
+        stack.push(start);
+        let mut size = 1;
+        let width = w as usize;
+        while let Some(seed) = stack.pop() {
+            let x = map.x(seed) as usize;
+            let row = seed as usize - x;
+            let (mut left, mut right) = (x, x);
+            {
+                let (row_visited, row_state) =
+                    (&mut visited[row..row + width], &state[row..row + width]);
+                while left > 0
+                    && row_visited[left - 1] < area_gen
+                    && row_state[left - 1] & 0xfff == my
+                {
+                    left -= 1;
+                    row_visited[left] = t_gen;
+                    size += 1;
+                }
+                while right + 1 < width
+                    && row_visited[right + 1] < area_gen
+                    && row_state[right + 1] & 0xfff == my
+                {
+                    right += 1;
+                    row_visited[right] = t_gen;
+                    size += 1;
+                }
+            }
+            for (exists, base) in [
+                (row >= width, row.wrapping_sub(width)),
+                (row < south_limit as usize, row.wrapping_add(width)),
+            ] {
+                if !exists {
+                    continue;
+                }
+                let first = base + left;
+                let run_visited = &mut visited[first..=base + right];
+                let run_state = &state[first..=base + right];
+                let mut previous_eligible = false;
+                for (i, (v, st)) in run_visited.iter_mut().zip(run_state).enumerate() {
+                    let is_eligible = *v < area_gen && *st & 0xfff == my;
+                    if is_eligible && !previous_eligible {
+                        *v = t_gen;
+                        size += 1;
+                        stack.push((first + i) as u32);
+                    }
+                    previous_eligible = is_eligible;
                 }
             }
         }
@@ -664,7 +705,7 @@ impl PlayerExecution {
             current_gen,
             &[start],
             false,
-            &|_, t| map.owner_id(t) == player,
+            |_, t| map.owner_id(t) == player,
             None,
         )
     }

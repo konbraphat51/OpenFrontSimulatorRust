@@ -18,6 +18,7 @@ Hash-exact Rust replay of the OpenFront engine (upstream `openfrontio/OpenFrontI
 - Verify a class: `Tools/VerifyClass.sh C064` (summary of every record; rebuild first). Fast regression over all ported classes: `Tools/QuickRegression.sh`.
 - First divergence of a record: `Tools/Triage.sh <record> [--trace] [--bisect-flags]`.
 - Summarise batch output: `Tools/BatchSummary.py <ndjson>`.
+- Throughput: `Tools/Bench.py` (fixed records of seven eras, ticks/s and peak RSS); compare changes by callgrind instruction counts (`Docs/Performance.md`). Optimisations must keep iteration order and float operation order; never swap a hasher on a map that is iterated.
 
 ## Porting a class
 

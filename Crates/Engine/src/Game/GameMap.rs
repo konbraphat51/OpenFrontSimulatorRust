@@ -31,6 +31,8 @@ pub struct GameMapImpl {
     state: Vec<u16>,
     width: u32,
     height: u32,
+    /// `ceil(2^64 / width)` for division-free `tile % width` and `tile / width` (Lemire's fastmod).
+    div_magic: u64,
     num_land_tiles: i64,
     water_version: u32,
     /// False before PR 4340: magnitude 31 is ordinary mountain, nothing is impassable.
@@ -60,6 +62,7 @@ impl GameMapImpl {
             state: vec![0; n],
             width,
             height,
+            div_magic: (u64::MAX / u64::from(width.max(2))) + 1,
             num_land_tiles,
             water_version: 0,
             impassable_enabled: true,
@@ -90,13 +93,28 @@ impl GameMapImpl {
     }
 
     /// Column of a tile.
+    #[inline]
     pub fn x(&self, tile: TileRef) -> u32 {
-        tile % self.width
+        self.col_of(tile)
     }
 
     /// Row of a tile.
+    #[inline]
     pub fn y(&self, tile: TileRef) -> u32 {
-        tile / self.width
+        if self.width < 2 {
+            return tile;
+        }
+        ((u128::from(self.div_magic) * u128::from(tile)) >> 64) as u32
+    }
+
+    /// `tile % width` without a hardware division.
+    #[inline]
+    fn col_of(&self, tile: TileRef) -> u32 {
+        if self.width < 2 {
+            return 0;
+        }
+        let low = self.div_magic.wrapping_mul(u64::from(tile));
+        ((u128::from(low) * u128::from(self.width)) >> 64) as u32
     }
 
     /// Cell of a tile.
@@ -142,7 +160,7 @@ impl GameMapImpl {
             return false;
         }
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         if x != 0 && self.is_ocean(tile - 1) {
             return true;
         }
@@ -176,6 +194,13 @@ impl GameMapImpl {
     /// Raw terrain byte.
     pub fn terrain_byte(&self, tile: TileRef) -> u8 {
         self.terrain[tile as usize]
+    }
+
+    /// Water whose magnitude is at least `min_magnitude` (one terrain byte read).
+    #[inline]
+    pub fn is_water_at_least(&self, tile: TileRef, min_magnitude: u8) -> bool {
+        let byte = self.terrain[tile as usize];
+        byte & (1 << IS_LAND_BIT) == 0 && (byte & MAGNITUDE_MASK) >= min_magnitude
     }
 
     /// Bumped every time a land tile turns to water.
@@ -256,7 +281,7 @@ impl GameMapImpl {
     /// True when the tile touches the map boundary or an impassable tile.
     pub fn is_on_edge_of_map(&self, tile: TileRef) -> bool {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         if x == 0 || x == w - 1 || tile < w || tile >= (self.height - 1) * w {
             return true;
         }
@@ -269,14 +294,14 @@ impl GameMapImpl {
     /// True when the tile lies on the map boundary (`isOnEdgeOfMap` before impassable tiles counted).
     pub fn is_on_map_boundary(&self, tile: TileRef) -> bool {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         x == 0 || x == w - 1 || tile < w || tile >= (self.height - 1) * w
     }
 
     /// True when a cardinal neighbour has a different owner.
     pub fn is_border(&self, tile: TileRef) -> bool {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         let owner = self.owner_id(tile);
         if x != 0 && self.owner_id(tile - 1) != owner {
             return true;
@@ -349,7 +374,7 @@ impl GameMapImpl {
 
     fn visit_nswe(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         if tile >= w {
             callback(tile - w);
         }
@@ -366,7 +391,7 @@ impl GameMapImpl {
 
     fn visit_wens(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         if x != 0 {
             callback(tile - 1);
         }
@@ -428,7 +453,7 @@ impl GameMapImpl {
     /// Visits the 8 neighbours: (-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1).
     pub fn for_each_neighbor_with_diag(&self, tile: TileRef, mut callback: impl FnMut(TileRef)) {
         let w = self.width;
-        let x = tile % w;
+        let x = self.col_of(tile);
         let has_n = tile >= w;
         let has_s = tile < (self.height - 1) * w;
         if x != 0 {
@@ -536,7 +561,7 @@ impl GameMapImpl {
         let w = self.width;
         let south_limit = (self.height - 1) * w;
         while let Some(curr) = q.pop() {
-            let x = curr % w;
+            let x = self.col_of(curr);
             let mut cand = [0; 4];
             let mut n = 0;
             if curr >= w {
@@ -586,7 +611,7 @@ impl GameMapImpl {
             let curr = q[head];
             head += 1;
             seen.insert(curr);
-            let x = curr % w;
+            let x = self.col_of(curr);
             let mut cand = [0; 4];
             let mut n = 0;
             if curr >= w {
@@ -761,6 +786,18 @@ pub fn and_fn(x: TileFilter, y: TileFilter) -> TileFilter {
 mod tests {
     use super::*;
     use serde_json::Value;
+
+    #[test]
+    fn fastmod_matches_division() {
+        for &w in &[2u32, 3, 7, 64, 100, 999, 1000, 2048, 4096, 7919, 65_535] {
+            let m = GameMapImpl::new(w, 3, vec![0; w as usize * 3], 0).unwrap();
+            let max = (w * 3).max(100_000);
+            for t in (0..max).chain([u32::MAX - 1, u32::MAX, 1 << 31]) {
+                assert_eq!(m.x(t), t % w, "x {t} {w}");
+                assert_eq!(m.y(t), t / w, "y {t} {w}");
+            }
+        }
+    }
 
     fn u32s(v: &Value) -> Vec<u32> {
         v.as_array()

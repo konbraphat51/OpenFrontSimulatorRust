@@ -138,8 +138,8 @@ impl AStarWater {
             }
 
             let current_g = self.g_score[current as usize];
-            let current_x = current % width;
-            let current_y = current / width;
+            let current_x = map.x(current);
+            let current_y = map.y(current);
 
             // North, south, west, east
             for dir in 0..4 {

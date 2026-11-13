@@ -9,6 +9,8 @@ Small tools that cut the tokens and time spent per ported class. All are stdlib-
 | `Tools/QuickRegression.sh [class...]` | Do the largest records of every ported class still pass (minutes, not an hour)? |
 | `Tools/BatchSummary.py <ndjson...>` | What happened in this batch run? |
 | `Tools/Triage.sh <record>` | Where does this record first diverge, and which flag moves it? |
+| `Tools/Bench.py` | How fast is verify and replay on the fixed benchmark records (ticks/s, peak RSS)? See [Performance.md](Performance.md). |
+| `Tools/BuildPgo.sh` | Opt-in profile-guided binary (`target/pgo/release/ofsim`), 0 to 8 percent faster. |
 
 ## ClassDigest
 
