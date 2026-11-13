@@ -28,8 +28,10 @@ impl<'a> GameMapAdapter<'a> {
 }
 
 impl GraphAdapter for GameMapAdapter<'_> {
-    fn neighbors(&self, node: u32) -> Vec<u32> {
-        self.game_map.neighbors(node)
+    fn neighbors(&self, node: u32, out: &mut Vec<u32>) {
+        let mut buffer = [0; 4];
+        let count = self.game_map.neighbors4_nswe(node, &mut buffer);
+        out.extend_from_slice(&buffer[..count]);
     }
 
     fn cost(&self, node: u32) -> f64 {
