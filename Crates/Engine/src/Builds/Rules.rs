@@ -1017,15 +1017,15 @@ mod tests {
                 Err(e) => panic!("{build}: {e}"),
             }
         }
-        assert!(Rules::for_commit("a26585a47b17").is_err());
+        assert!(Rules::for_commit("115da0327634").is_err());
     }
 
     #[test]
     fn unported_class_errors_with_class() {
-        let e = Rules::for_commit("a26585a47b17").unwrap_err();
+        let e = Rules::for_commit("115da0327634").unwrap_err();
         assert_eq!(
             e.to_string(),
-            "build a26585a47b17 (class C079) not ported yet"
+            "build 115da0327634 (class C080) not ported yet"
         );
     }
 
