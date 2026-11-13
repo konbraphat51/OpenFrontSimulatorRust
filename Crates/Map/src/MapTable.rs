@@ -17,6 +17,8 @@ pub const MAP_TABLE: &[(&str, &str)] = &[
     ("Australia", "Australia"),
     ("Baikal", "Baikal"),
     ("BaikalNukeWars", "Baikal Nuke Wars"),
+    // v0.27.x spelling of the same map.
+    ("BaikalNukeWars", "Baikal (Nuke Wars)"),
     ("BajaCalifornia", "Baja California"),
     ("Balkans", "Balkans"),
     ("Balkhash", "Balkhash"),

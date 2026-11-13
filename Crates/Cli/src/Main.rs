@@ -352,7 +352,7 @@ fn main() -> ExitCode {
         } => {
             let run = ofsim_record::Records::GameRecord::load_decompressed(&record).and_then(|r| {
                 let maps = ofsim_engine::Builds::Maps::maps_root_for(&r, &maps, &upstream)?;
-                Dump::dump(&r, &maps, &out, every)
+                Dump::dump(&r, &maps, &out, every, 3)
             });
             match run {
                 Ok(result) => {

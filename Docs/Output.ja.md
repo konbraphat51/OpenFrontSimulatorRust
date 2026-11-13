@@ -29,6 +29,6 @@ English version: [Output.md](Output.md)
 - `--records` はディレクトリ (すべての `*.json`/`*.json.gz`) または `*` と `?` を使う `dir/pattern`。
 - 各レコードは `replay` と同じく `DIR/<name>/` に書きます。`Result.json` が既にあるレコードは `--force` がない限り `skipped` になります。
 - `--verify-only` は何も書かず、常に実行します。
-- レコード単位で並列 (rayon、`--jobs`、既定はコア数)。1 レコードの panic やエラーはその行に報告され、他のレコードは止まりません。
+- レコード単位で並列 (`--jobs`、既定はコア数。大きいレコードから先に開始し、各ワーカーが共有カウンタから次のレコードを取る)。1 レコードの panic やエラーはその行に報告され、他のレコードは止まりません。
 - 標準出力にレコードごとに 1 行の JSON: `record`, `status` (`ok`, `desync`, `error`, `skipped`), `ticks`, `seconds`, `ticksPerSecond`、可能なら `hashesChecked`, `snapshots`, `firstMismatchTick`, `error`。
 - `ok` でも `skipped` でもないレコードがあると終了コード 1。

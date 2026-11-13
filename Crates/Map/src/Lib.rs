@@ -13,12 +13,16 @@ pub use TerrainMapLoader::{
 
 use anyhow::{Result, anyhow};
 
+/// Wire names that older builds used for a map key still in the table (key, old wire name).
+const LEGACY_WIRE_NAMES: [(&str, &str); 1] = [("BaikalNukeWars", "Baikal (Nuke Wars)")];
+
 /// Directory key of a map given its wire name (`GameMapType` value, for example "Black Sea" gives "blacksea").
 ///
 /// Mirrors the lookup of the OpenFrontDs `FileSystemMapLoader`: find the enum key whose value is the name, lowercase it.
 pub fn directory_key_of(wire_name: &str) -> Result<String> {
     MapTable::MAP_TABLE
         .iter()
+        .chain(LEGACY_WIRE_NAMES.iter())
         .find(|(_, value)| *value == wire_name)
         .map(|(key, _)| key.to_lowercase())
         .ok_or_else(|| anyhow!("unknown map: {wire_name}"))
@@ -36,6 +40,10 @@ mod tests {
         assert_eq!(
             directory_key_of("Gulf of St. Lawrence").unwrap(),
             "gulfofstlawrence"
+        );
+        assert_eq!(
+            directory_key_of("Baikal (Nuke Wars)").unwrap(),
+            "baikalnukewars"
         );
         assert!(directory_key_of("Nope").is_err());
     }

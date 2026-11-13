@@ -274,6 +274,110 @@ pub const FLATTENED_EMOJI_TABLE: [&str; 60] = [
     "\u{1f400}",
 ];
 
+/// `sanitizeUsername(str)` of v0.27.10: keeps `[a-zA-Z0-9_[\] 🐈🍀üÜ]`, cuts to 27 UTF-16 units and pads to 3 with `x`.
+pub fn sanitize_username(name: &str) -> String {
+    let kept: String = name
+        .chars()
+        .filter(|c| {
+            c.is_ascii_alphanumeric()
+                || matches!(c, '_' | '[' | ']' | ' ' | '🐈' | '🍀' | 'ü' | 'Ü')
+        })
+        .collect();
+    let mut out = String::new();
+    let mut units = 0usize;
+    for c in kept.chars() {
+        let width = c.len_utf16();
+        if units + width > 27 {
+            // `slice(0, 27)` may cut a surrogate pair in half; a lone surrogate is not valid UTF-8, so drop it.
+            break;
+        }
+        units += width;
+        out.push(c);
+    }
+    while units < 3 {
+        out.push('x');
+        units += 1;
+    }
+    out
+}
+
+/// The emoji table of v0.27.0 and v0.27.1, flattened: no factory and train row, other order.
+pub const FLATTENED_EMOJI_TABLE_V27: [&str; 55] = [
+    "\u{1f600}",
+    "\u{1f60a}",
+    "\u{1f970}",
+    "\u{1f607}",
+    "\u{1f60e}",
+    "\u{1f61e}",
+    "\u{1f97a}",
+    "\u{1f62d}",
+    "\u{1f631}",
+    "\u{1f621}",
+    "\u{1f608}",
+    "\u{1f921}",
+    "\u{1f595}",
+    "\u{1f971}",
+    "\u{1f926}\u{200d}\u{2642}\u{fe0f}",
+    "\u{1f44b}",
+    "\u{1f44f}",
+    "\u{1f90c}",
+    "\u{1f4aa}",
+    "\u{1fae1}",
+    "\u{1f44d}",
+    "\u{1f44e}",
+    "\u{2753}",
+    "\u{1f414}",
+    "\u{1f400}",
+    "\u{1f91d}",
+    "\u{1f198}",
+    "\u{1f54a}\u{fe0f}",
+    "\u{1f3f3}\u{fe0f}",
+    "\u{23f3}",
+    "\u{1f525}",
+    "\u{1f4a5}",
+    "\u{1f480}",
+    "\u{2622}\u{fe0f}",
+    "\u{26a0}\u{fe0f}",
+    "\u{2196}\u{fe0f}",
+    "\u{2b06}\u{fe0f}",
+    "\u{2197}\u{fe0f}",
+    "\u{1f451}",
+    "\u{1f947}",
+    "\u{2b05}\u{fe0f}",
+    "\u{1f3af}",
+    "\u{27a1}\u{fe0f}",
+    "\u{1f948}",
+    "\u{1f949}",
+    "\u{2199}\u{fe0f}",
+    "\u{2b07}\u{fe0f}",
+    "\u{2198}\u{fe0f}",
+    "\u{2764}\u{fe0f}",
+    "\u{1f494}",
+    "\u{1f4b0}",
+    "\u{2693}",
+    "\u{26f5}",
+    "\u{1f3e1}",
+    "\u{1f6e1}\u{fe0f}",
+];
+
+thread_local! {
+    static LEGACY_EMOJI_TABLE: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
+}
+
+/// Selects the emoji table of the game this thread replays (set when a game runner is created).
+pub fn set_legacy_emoji_table(legacy: bool) {
+    LEGACY_EMOJI_TABLE.with(|c| c.set(legacy));
+}
+
+/// `flattenedEmojiTable` of the build being replayed on this thread.
+pub fn emoji_table() -> &'static [&'static str] {
+    if LEGACY_EMOJI_TABLE.with(|c| c.get()) {
+        &FLATTENED_EMOJI_TABLE_V27
+    } else {
+        &FLATTENED_EMOJI_TABLE
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

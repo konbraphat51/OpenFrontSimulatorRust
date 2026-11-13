@@ -29,6 +29,6 @@ Intentional differences: the `error` text of a failed run (Rust panic message an
 - `--records` is a directory (every `*.json`/`*.json.gz`) or `dir/pattern` with `*` and `?`.
 - Each record writes to `DIR/<name>/` like `replay`; records whose `Result.json` exists are reported as `skipped` unless `--force`.
 - `--verify-only` writes nothing and always runs.
-- Parallel over records (rayon, `--jobs`, default one per core). A panic or error in one record is reported on its line and does not stop the others.
+- Parallel over records (`--jobs`, default one per core; largest records are started first, and each worker pulls the next record from a shared counter). A panic or error in one record is reported on its line and does not stop the others.
 - One JSON line per record on stdout: `record`, `status` (`ok`, `desync`, `error`, `skipped`), `ticks`, `seconds`, `ticksPerSecond`, and when available `hashesChecked`, `snapshots`, `firstMismatchTick`, `error`.
 - Exit code 1 when any record is neither `ok` nor `skipped`.

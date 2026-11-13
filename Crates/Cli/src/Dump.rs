@@ -11,7 +11,10 @@ use ofsim_record::Records::GameRecord;
 use std::collections::HashSet;
 use std::fmt::Write as _;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::sync::mpsc::{SyncSender, sync_channel};
+use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
 
 /// Final verdict of a dump, serialized to `Result.json` (field order of the upstream dumper).
 pub struct DumpResult {
@@ -203,16 +206,89 @@ fn compress_tiles(bytes: &[u8]) -> Result<Vec<u8>> {
 /// Tile state as the bytes of a little-endian `u16` array.
 fn tile_bytes(game: &GameImpl) -> Vec<u8> {
     let buffer = game.map.tile_state_buffer();
-    let mut bytes = Vec::with_capacity(buffer.len() * 2);
-    for v in buffer {
-        bytes.extend_from_slice(&v.to_le_bytes());
+    let mut bytes = vec![0u8; buffer.len() * 2];
+    for (chunk, v) in bytes.chunks_exact_mut(2).zip(buffer) {
+        chunk.copy_from_slice(&v.to_le_bytes());
     }
     bytes
 }
 
+/// Compresses and writes tile snapshots on background threads so the engine keeps running.
+struct TileWriter {
+    sender: Option<SyncSender<(u32, Vec<u8>)>>,
+    workers: Vec<JoinHandle<Result<()>>>,
+}
+
+impl TileWriter {
+    fn new(dir: PathBuf, threads: usize) -> Self {
+        let threads = threads.max(1);
+        let (sender, receiver) = sync_channel::<(u32, Vec<u8>)>(threads * 2);
+        let receiver = Arc::new(Mutex::new(receiver));
+        let workers = (0..threads)
+            .map(|_| {
+                let receiver = Arc::clone(&receiver);
+                let dir = dir.clone();
+                std::thread::spawn(move || -> Result<()> {
+                    loop {
+                        let message = receiver.lock().unwrap().recv();
+                        let Ok((tick, bytes)) = message else {
+                            return Ok(());
+                        };
+                        std::fs::write(
+                            dir.join(format!("T{tick:06}.u16.zst")),
+                            compress_tiles(&bytes)?,
+                        )?;
+                    }
+                })
+            })
+            .collect();
+        Self {
+            sender: Some(sender),
+            workers,
+        }
+    }
+
+    /// Queues one snapshot; blocks while the queue is full.
+    fn submit(&self, tick: u32, bytes: Vec<u8>) -> Result<()> {
+        let sender = self.sender.as_ref().expect("writer is open");
+        sender
+            .send((tick, bytes))
+            .map_err(|_| anyhow::anyhow!("snapshot writer stopped"))
+    }
+
+    /// Waits for every queued snapshot; returns the first write error.
+    fn finish(&mut self) -> Result<()> {
+        self.sender = None;
+        let mut first: Option<anyhow::Error> = None;
+        for worker in self.workers.drain(..) {
+            let outcome = worker
+                .join()
+                .unwrap_or_else(|_| Err(anyhow::anyhow!("snapshot writer panicked")));
+            if let Err(e) = outcome
+                && first.is_none()
+            {
+                first = Some(e);
+            }
+        }
+        first.map_or(Ok(()), Err)
+    }
+}
+
+impl Drop for TileWriter {
+    fn drop(&mut self) {
+        let _ = self.finish();
+    }
+}
+
 /// Replays `record` and writes snapshots and `Result.json` into `out`; always writes `Result.json`
 /// when the directory can be created.
-pub fn dump(record: &GameRecord, maps: &Path, out: &Path, every: u32) -> Result<DumpResult> {
+pub fn dump(
+    record: &GameRecord,
+    maps: &Path,
+    out: &Path,
+    every: u32,
+    writer_threads: usize,
+) -> Result<DumpResult> {
     std::fs::create_dir_all(out)?;
     let mut result = DumpResult {
         status: "ok",
@@ -227,7 +303,7 @@ pub fn dump(record: &GameRecord, maps: &Path, out: &Path, every: u32) -> Result<
         snapshot_ticks: Vec::new(),
         error: None,
     };
-    let run = dump_into(record, maps, out, every, &mut result);
+    let run = dump_into(record, maps, out, every, writer_threads, &mut result);
     if let Err(e) = run {
         result.status = "error";
         result.error = Some(format!("{e:#}"));
@@ -241,10 +317,12 @@ fn dump_into(
     maps: &Path,
     out: &Path,
     every: u32,
+    writer_threads: usize,
     result: &mut DumpResult,
 ) -> Result<()> {
     let tiles_dir = out.join("Tiles");
     std::fs::create_dir_all(&tiles_dir)?;
+    let mut tile_writer = TileWriter::new(tiles_dir, writer_threads);
     let mut entities = std::io::BufWriter::new(std::fs::File::create(out.join("Entities.ndjson"))?);
     let mut io_error: Option<anyhow::Error> = None;
     let mut first_call = true;
@@ -253,8 +331,7 @@ fn dump_into(
         if result.snapshot_ticks.last() == Some(&tick) {
             return Ok(());
         }
-        let bytes = compress_tiles(&tile_bytes(game))?;
-        std::fs::write(tiles_dir.join(format!("T{tick:06}.u16.zst")), bytes)?;
+        tile_writer.submit(tick, tile_bytes(game))?;
         entities.write_all(capture_entities(game).as_bytes())?;
         result.snapshot_ticks.push(tick);
         Ok(())
@@ -285,10 +362,13 @@ fn dump_into(
             return false;
         }
         true
-    })?;
+    });
+    let written = tile_writer.finish();
+    let outcome = outcome?;
     if let Some(e) = io_error {
         return Err(e);
     }
+    written?;
     if let Stop::Panic { tick, message } = outcome.stop {
         result.status = "error";
         result.error = Some(format!("{message} (tick {tick})"));

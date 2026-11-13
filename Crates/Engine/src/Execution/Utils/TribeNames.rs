@@ -124,6 +124,36 @@ fn bot_names_v29() -> &'static LegacyNames {
     })
 }
 
+/// The community bot name lists of `BotNames.ts` (PRs 2552 and 2609): full names, special full names, prefixes.
+pub struct CommunityBotNames {
+    /// `COMMUNITY_FULL_ELF_NAMES`.
+    pub community_full: Vec<String>,
+    /// `SPECIAL_FULL_ELF_NAMES`.
+    pub special_full: Vec<String>,
+    /// `COMMUNITY_PREFIXES` (used as `<prefix> the Elf`).
+    pub community_prefixes: Vec<String>,
+}
+
+/// Parsed `COMMUNITY_*` and `SPECIAL_*` lists, shared by every game.
+pub fn community_bot_names() -> &'static CommunityBotNames {
+    static NAMES: OnceLock<CommunityBotNames> = OnceLock::new();
+    NAMES.get_or_init(|| {
+        #[derive(Deserialize)]
+        struct Raw {
+            community_full: Vec<String>,
+            special_full: Vec<String>,
+            community_prefixes: Vec<String>,
+        }
+        let raw: Raw = serde_json::from_str(include_str!("../../../data/BotNamesCommunity28.json"))
+            .expect("BotNamesCommunity28.json is valid");
+        CommunityBotNames {
+            community_full: raw.community_full,
+            special_full: raw.special_full,
+            community_prefixes: raw.community_prefixes,
+        }
+    })
+}
+
 /// `resolveTribeNameData(mapType)`.
 pub fn resolve_tribe_name_data(map: GameMapType, rules: &Rules) -> TribeNameData {
     if !rules.has(Change::TribeNamesRevised30) {

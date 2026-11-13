@@ -62,6 +62,12 @@ impl Hasher for FxHasher {
 /// Build hasher for [`FxHasher`].
 pub type FxBuildHasher = BuildHasherDefault<FxHasher>;
 
+/// `HashMap` with [`FxHasher`]; for lookup-only maps whose iteration order is never observable.
+pub type FxHashMap<K, V> = HashMap<K, V, FxBuildHasher>;
+
+/// `HashSet` with [`FxHasher`]; for lookup-only sets whose iteration order is never observable.
+pub type FxHashSet<T> = std::collections::HashSet<T, FxBuildHasher>;
+
 /// Position in an ordered collection; stays valid across insertions and deletions.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct Cursor {
@@ -73,7 +79,7 @@ pub struct Cursor {
 #[derive(Clone, Debug)]
 pub struct OrderedMap<K, V, S = FxBuildHasher> {
     slots: Vec<Option<(K, V)>>,
-    index: HashMap<K, usize, S>,
+    index: HashMap<K, u32, S>,
     pins: u32,
     epoch: u64,
 }
@@ -113,30 +119,37 @@ impl<K: Hash + Eq + Clone, V, S: BuildHasher + Default> OrderedMap<K, V, S> {
     /// `Map.prototype.get`.
     pub fn get(&self, key: &K) -> Option<&V> {
         let &i = self.index.get(key)?;
-        self.slots[i].as_ref().map(|(_, v)| v)
+        self.slots[i as usize].as_ref().map(|(_, v)| v)
     }
 
     /// Mutable `Map.prototype.get`.
     pub fn get_mut(&mut self, key: &K) -> Option<&mut V> {
         let &i = self.index.get(key)?;
-        self.slots[i].as_mut().map(|(_, v)| v)
+        self.slots[i as usize].as_mut().map(|(_, v)| v)
     }
 
     /// `Map.prototype.set`: replaces the value in place or appends a new entry. Returns the old value.
     pub fn insert(&mut self, key: K, value: V) -> Option<V> {
-        if let Some(&i) = self.index.get(&key) {
-            let slot = self.slots[i].as_mut().expect("indexed slot is live");
-            return Some(std::mem::replace(&mut slot.1, value));
+        use std::collections::hash_map::Entry;
+        match self.index.entry(key.clone()) {
+            Entry::Occupied(e) => {
+                let slot = self.slots[*e.get() as usize]
+                    .as_mut()
+                    .expect("indexed slot is live");
+                Some(std::mem::replace(&mut slot.1, value))
+            }
+            Entry::Vacant(e) => {
+                e.insert(self.slots.len() as u32);
+                self.slots.push(Some((key, value)));
+                None
+            }
         }
-        self.index.insert(key.clone(), self.slots.len());
-        self.slots.push(Some((key, value)));
-        None
     }
 
     /// `Map.prototype.delete`: removes the entry and returns its value.
     pub fn remove(&mut self, key: &K) -> Option<V> {
         let i = self.index.remove(key)?;
-        let (_, v) = self.slots[i].take().expect("indexed slot is live");
+        let (_, v) = self.slots[i as usize].take().expect("indexed slot is live");
         self.maybe_compact();
         Some(v)
     }
@@ -241,7 +254,7 @@ impl<K: Hash + Eq + Clone, V, S: BuildHasher + Default> OrderedMap<K, V, S> {
         self.epoch += 1;
         for (i, s) in self.slots.iter().enumerate() {
             let (k, _) = s.as_ref().expect("retained slots are live");
-            *self.index.get_mut(k).expect("live key is indexed") = i;
+            *self.index.get_mut(k).expect("live key is indexed") = i as u32;
         }
     }
 }

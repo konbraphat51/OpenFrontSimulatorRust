@@ -115,6 +115,8 @@ pub struct GameImpl {
     /// `unitCountMemo`: per unit type, the units version and the count computed at it.
     unit_count_memo: std::cell::RefCell<[Option<(u32, i64)>; NUM_UNIT_TYPES]>,
     territory_version: u32,
+    /// Per tile: the player whose `border_tiles` hold it (0 = none), so unchanged border status skips set operations.
+    border_owner: Vec<SmallId>,
     /// Shared tile traversal scratch.
     pub scratch: TileTraversalScratch,
     /// Shore queries for boats (upstream builds one per call; its caches are pure).
@@ -199,6 +201,7 @@ impl GameImpl {
             units_version: 0,
             unit_count_memo: std::cell::RefCell::new([None; NUM_UNIT_TYPES]),
             territory_version: 0,
+            border_owner: vec![0; tiles],
             scratch: TileTraversalScratch {
                 visited: vec![0; tiles],
                 stack: Vec::new(),
@@ -863,7 +866,9 @@ impl GameImpl {
             p.last_tile_change = now;
             p.tile_change_version += 1;
             p.tiles.delete(tile);
-            p.border_tiles.delete(tile);
+            if p.border_tiles.delete(tile) {
+                self.border_owner[tile as usize] = 0;
+            }
         }
         self.territory_version += 1;
         self.map.set_owner_id(tile, owner as u32);
@@ -888,7 +893,9 @@ impl GameImpl {
         p.last_tile_change = now;
         p.tile_change_version += 1;
         p.tiles.delete(tile);
-        p.border_tiles.delete(tile);
+        if p.border_tiles.delete(tile) {
+            self.border_owner[tile as usize] = 0;
+        }
         self.territory_version += 1;
         self.map.set_owner_id(tile, 0);
         self.update_borders(tile);
@@ -914,11 +921,15 @@ impl GameImpl {
         }
         let owner = self.map.owner_id(t);
         let is_border = self.map.is_border(t);
-        let p = self.player_impl_mut(owner);
+        let in_set = self.border_owner[t as usize];
         if is_border {
-            p.border_tiles.add(t);
-        } else {
-            p.border_tiles.delete(t);
+            if in_set != owner {
+                self.player_impl_mut(owner).border_tiles.add(t);
+                self.border_owner[t as usize] = owner;
+            }
+        } else if in_set == owner {
+            self.player_impl_mut(owner).border_tiles.delete(t);
+            self.border_owner[t as usize] = 0;
         }
     }
 

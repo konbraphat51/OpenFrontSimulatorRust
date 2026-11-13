@@ -110,16 +110,14 @@ impl AttackImpl {
     }
     /// `addBorderTile`.
     pub fn add_border_tile(&mut self, tile: TileRef) {
-        if !self.border.contains(&tile) {
+        if self.border.insert(tile) {
             self.border_size += 1.0;
-            self.border.insert(tile);
         }
     }
     /// `removeBorderTile`.
     pub fn remove_border_tile(&mut self, tile: TileRef) {
-        if self.border.contains(&tile) {
+        if self.border.remove(&tile) {
             self.border_size -= 1.0;
-            self.border.remove(&tile);
         }
     }
     /// The border tiles in insertion order.
@@ -143,6 +141,9 @@ impl GameImpl {
         self.player_impl_mut(attacker)
             .outgoing_attacks
             .retain(|&a| a != id);
-        self.attacks[id as usize].is_active = false;
+        let attack = &mut self.attacks[id as usize];
+        attack.is_active = false;
+        // The handle stays valid, but nothing reads the border of a deleted attack: free its tile set.
+        attack.border = OrderedSet::new();
     }
 }

@@ -482,10 +482,16 @@ impl Execution for NukeExecution {
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         let Some(nuke) = self.nuke else {
-            let Some(spawn) = game
-                .player(self.player)
-                .can_build(self.nuke_type, self.dst, None)
-            else {
+            // v0.27.10: a given source tile is used as is, without asking `canBuild`.
+            let preset_src = if game.has(Change::NukeSrcFirst27) {
+                self.src
+            } else {
+                None
+            };
+            let Some(spawn) = preset_src.or_else(|| {
+                game.player(self.player)
+                    .can_build(self.nuke_type, self.dst, None)
+            }) else {
                 self.active = false;
                 return;
             };

@@ -15,10 +15,19 @@ fn difficulty(d: &RecordConfig::Difficulty) -> Result<Difficulty> {
     Difficulty::from_str(d.as_str()).ok_or_else(|| anyhow!("unknown difficulty {}", d.as_str()))
 }
 
+/// Maps whose wire name changed in a later build (the old name).
+fn legacy_map(wire: &str) -> Option<GameMapType> {
+    match wire {
+        "Baikal (Nuke Wars)" => Some(GameMapType::BaikalNukeWars),
+        _ => None,
+    }
+}
+
 /// Converts a record config; unknown enum values are errors (a build this engine does not know).
 pub fn game_config_from_record(c: &RecordConfig::GameConfig) -> Result<GameConfig> {
-    let game_map =
-        GameMapType::from_str(&c.game_map).ok_or_else(|| anyhow!("unknown map {}", c.game_map))?;
+    let game_map = GameMapType::from_str(&c.game_map)
+        .or_else(|| legacy_map(&c.game_map))
+        .ok_or_else(|| anyhow!("unknown map {}", c.game_map))?;
     let ranked_type = match &c.ranked_type {
         None => None,
         Some(r) => Some(

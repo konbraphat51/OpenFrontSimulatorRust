@@ -220,9 +220,10 @@ impl AStarWaterBounded {
             }
 
             let current_g = self.g_score[cl];
-            let current = to_global(current_local);
-            let current_x = current as i64 % map_width;
-            let current_y = current as i64 / map_width;
+            // Same values as splitting `to_global(current_local)` by the map width, with one division.
+            let current_x = current_local % bounds_width + min_x;
+            let current_y = current_local / bounds_width + min_y;
+            let current = (current_y * map_width + current_x) as TileRef;
 
             // North, south, west, east
             for dir in 0..4 {

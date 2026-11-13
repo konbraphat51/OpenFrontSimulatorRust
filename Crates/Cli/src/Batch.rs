@@ -5,7 +5,6 @@ use crate::Dump::dump;
 use anyhow::{Result, bail};
 use ofsim_engine::Runner::Replay::{Verdict, verify};
 use ofsim_record::Records::GameRecord;
-use rayon::prelude::*;
 use std::io::Write;
 use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
@@ -124,7 +123,7 @@ fn run_one(path: &Path, args: &BatchArgs) -> String {
             }
             return Ok(line(&name, status, report.ticks_run, secs, &extra));
         }
-        let result = dump(&record, &maps, &out, args.every)?;
+        let result = dump(&record, &maps, &out, args.every, 1)?;
         let secs = started.elapsed().as_secs_f64();
         let mut extra = format!(
             ",\"hashesChecked\":{},\"snapshots\":{}",
@@ -158,10 +157,12 @@ fn run_one(path: &Path, args: &BatchArgs) -> String {
 
 /// Runs the batch; returns the number of records that did not end `ok` or `skipped`.
 pub fn batch(args: &BatchArgs) -> Result<usize> {
-    let files = list_records(args.records)?;
+    let mut files = list_records(args.records)?;
     if files.is_empty() {
         bail!("no records match {}", args.records);
     }
+    // Largest records first: long games start early, so no worker is left with one at the end.
+    files.sort_by_key(|f| std::cmp::Reverse(std::fs::metadata(f).map_or(0, |m| m.len())));
     if !args.verify_only {
         std::fs::create_dir_all(args.out)?;
     }
@@ -170,19 +171,27 @@ pub fn batch(args: &BatchArgs) -> Result<usize> {
         .stack_size(256 << 20)
         .build()?;
     let stdout = std::sync::Mutex::new(std::io::stdout());
-    let failures: usize = pool.install(|| {
-        files
-            .par_iter()
-            .map(|path| {
+    // Workers take the next record from a shared counter, so the sorted order is the dispatch order.
+    let next = std::sync::atomic::AtomicUsize::new(0);
+    let failures: usize = pool
+        .broadcast(|_| {
+            let mut bad_count = 0;
+            loop {
+                let index = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                let Some(path) = files.get(index) else {
+                    break;
+                };
                 let text = run_one(path, args);
                 let bad = !(text.contains("\"status\":\"ok\"")
                     || text.contains("\"status\":\"skipped\""));
                 let mut out = stdout.lock().unwrap();
                 let _ = writeln!(out, "{text}");
                 let _ = out.flush();
-                usize::from(bad)
-            })
-            .sum()
-    });
+                bad_count += usize::from(bad);
+            }
+            bad_count
+        })
+        .into_iter()
+        .sum();
     Ok(failures)
 }

@@ -5,7 +5,7 @@
 //! The adapter is passed on every call instead of being owned, because the maps it reads belong to the game.
 
 use super::FastPriorityQueue::{Entry, FastPriorityQueue};
-use std::collections::HashMap;
+use crate::Compat::OrderedMap::FxHashMap;
 
 /// Upstream `PathFindResultType`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -37,10 +37,10 @@ pub trait GraphAdapter {
 pub struct SerialAStar {
     fwd_open_set: FastPriorityQueue,
     bwd_open_set: FastPriorityQueue,
-    fwd_came_from: HashMap<u32, u32>,
-    bwd_came_from: HashMap<u32, u32>,
-    fwd_g_score: HashMap<u32, f64>,
-    bwd_g_score: HashMap<u32, f64>,
+    fwd_came_from: FxHashMap<u32, u32>,
+    bwd_came_from: FxHashMap<u32, u32>,
+    fwd_g_score: FxHashMap<u32, f64>,
+    bwd_g_score: FxHashMap<u32, f64>,
     meeting_point: Option<u32>,
     completed: bool,
     sources: Vec<u32>,
@@ -79,7 +79,7 @@ impl SerialAStar {
     ) -> Self {
         let closest_source = find_closest_source(graph, sources, dst);
         let mut fwd_open_set = FastPriorityQueue::new();
-        let mut fwd_g_score = HashMap::new();
+        let mut fwd_g_score = FxHashMap::default();
         for &start in sources {
             fwd_g_score.insert(start, 0.0);
             fwd_open_set.add(Entry {
@@ -88,7 +88,7 @@ impl SerialAStar {
             });
         }
         let mut bwd_open_set = FastPriorityQueue::new();
-        let mut bwd_g_score = HashMap::new();
+        let mut bwd_g_score = FxHashMap::default();
         bwd_g_score.insert(dst, 0.0);
         bwd_open_set.add(Entry {
             tile: dst,
@@ -97,8 +97,8 @@ impl SerialAStar {
         Self {
             fwd_open_set,
             bwd_open_set,
-            fwd_came_from: HashMap::new(),
-            bwd_came_from: HashMap::new(),
+            fwd_came_from: FxHashMap::default(),
+            bwd_came_from: FxHashMap::default(),
             fwd_g_score,
             bwd_g_score,
             meeting_point: None,

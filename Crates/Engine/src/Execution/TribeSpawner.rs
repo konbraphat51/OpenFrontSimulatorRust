@@ -3,7 +3,9 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::SpawnExecution::SpawnExecution;
-use super::Utils::TribeNames::{CustomTribe, TribeNameData, resolve_tribe_name_data};
+use super::Utils::TribeNames::{
+    CustomTribe, TribeNameData, community_bot_names, resolve_tribe_name_data,
+};
 use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::PseudoRandom::PseudoRandom;
@@ -105,11 +107,17 @@ impl<'a> TribeSpawner<'a> {
     pub fn spawn_bots_v28(&mut self, num_bots: usize) -> Vec<SpawnExecution> {
         let mut bots: Vec<SpawnExecution> = Vec::new();
         let mut tries = 0;
+        let community = self.game.has(Change::CommunityBotNames2552);
+        let mut name_index = 0usize;
         while bots.len() < num_bots {
             if tries > 10_000 {
                 return bots;
             }
-            let name = self.random_tribe_name();
+            let (name, from_list) = if community {
+                self.next_candidate_name_2552(bots.len(), name_index)
+            } else {
+                (self.random_tribe_name(), false)
+            };
             let x = self.random.next_int(0.0, self.game.width() as f64);
             let y = self.random.next_int(0.0, self.game.height() as f64);
             let tile = self.game.tile_ref(x as i32, y as i32);
@@ -122,6 +130,10 @@ impl<'a> TribeSpawner<'a> {
                 continue;
             }
             let id = self.random.next_id();
+            // A list name is only used up once its bot spawned.
+            if from_list {
+                name_index += 1;
+            }
             bots.push(SpawnExecution::new(
                 &self.game_id,
                 PlayerInfo::new(
@@ -141,6 +153,36 @@ impl<'a> TribeSpawner<'a> {
             ));
         }
         bots
+    }
+
+    /// `BotSpawner.nextCandidateName` (PR 2552): the name and whether it came from a list.
+    fn next_candidate_name_2552(&mut self, spawned: usize, name_index: usize) -> (String, bool) {
+        if spawned < 20 {
+            // The first few are usually overwritten by nation spawns.
+            return (self.random_elf(), false);
+        }
+        let names = community_bot_names();
+        let special_offset = names.community_full.len();
+        let prefix_offset = special_offset + names.special_full.len();
+        if name_index < special_offset {
+            return (names.community_full[name_index].clone(), true);
+        }
+        if name_index < prefix_offset {
+            return (
+                names.special_full[name_index - special_offset].clone(),
+                true,
+            );
+        }
+        if name_index < prefix_offset + names.community_prefixes.len() {
+            let prefix = &names.community_prefixes[name_index - prefix_offset];
+            return (format!("{prefix} the Elf"), true);
+        }
+        (self.random_elf(), false)
+    }
+
+    fn random_elf(&mut self) -> String {
+        let suffix = self.random.next_int(1.0, 10_001.0);
+        format!("Elf {suffix}")
     }
 
     fn spawn_tribe(&mut self, tribe_name: String) -> SpawnExecution {

@@ -3,7 +3,8 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::BfsGrid::Visit;
-use std::collections::{HashSet, VecDeque};
+use crate::Compat::OrderedMap::FxHashSet;
+use std::collections::VecDeque;
 use std::hash::Hash;
 
 /// Upstream `BFSAdapter<T>`.
@@ -33,7 +34,7 @@ impl<A> Bfs<A> {
     where
         A: BfsAdapter<T>,
     {
-        let mut visited: HashSet<T> = HashSet::new();
+        let mut visited: FxHashSet<T> = FxHashSet::default();
         let mut queue: VecDeque<(T, u32)> = VecDeque::new();
         for s in starts {
             visited.insert(s.clone());
