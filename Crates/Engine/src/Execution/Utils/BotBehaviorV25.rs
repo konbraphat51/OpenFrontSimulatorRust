@@ -5,10 +5,8 @@
 //! The v25 branch has no attack-chance, betrayal, reserve-ratio or weakest-player logic: enemies are set unconditionally,
 //! `assistAllies` sends one fixed emoji and `sendAttack` only refuses teammates. Players are small ids with `0` standing for terra nullius.
 
-use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
-use crate::Execution::AttackExecution::AttackExecution;
-use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Nation::SharedRandom;
+use crate::Execution::Utils::BotBehaviorShared::{BotBehaviorAlliances, BotBehaviorShared};
 use crate::Execution::Utils::EmojiIds::emoji_ids;
 use crate::Game::Game::{PlayerType, Relation, SmallId, Tick};
 use crate::Game::GameImpl::GameImpl;
@@ -28,6 +26,26 @@ pub struct BotBehaviorV25 {
     enemy_updated: Option<Tick>,
 }
 
+impl BotBehaviorShared for BotBehaviorV25 {
+    fn random(&self) -> &SharedRandom {
+        &self.random
+    }
+
+    fn player(&self) -> SmallId {
+        self.player
+    }
+
+    fn trigger_ratio(&self) -> f64 {
+        self.trigger_ratio
+    }
+
+    fn reserve_ratio(&self) -> f64 {
+        self.reserve_ratio
+    }
+}
+
+impl BotBehaviorAlliances for BotBehaviorV25 {}
+
 impl BotBehaviorV25 {
     /// `new BotBehavior(random, game, player, triggerRatio, reserveRatio, expandRatio)`.
     pub fn new(
@@ -46,76 +64,6 @@ impl BotBehaviorV25 {
             enemy: None,
             enemy_updated: None,
         }
-    }
-
-    fn chance(&self, odds: f64) -> bool {
-        self.random.borrow_mut().chance(odds)
-    }
-
-    fn is_friendly(&self, game: &GameImpl, other: SmallId) -> bool {
-        game.player(self.player).is_friendly(other, false)
-    }
-
-    /// `handleAllianceRequests()`: accept or reject every pending request.
-    pub fn handle_alliance_requests(&mut self, game: &mut GameImpl) {
-        for req in game.player(self.player).incoming_alliance_requests() {
-            let requestor = game.alliance_request(req).requestor();
-            if self.should_accept_alliance_request(game, requestor) {
-                game.accept_request(req);
-            } else {
-                game.reject_alliance_request(req);
-            }
-        }
-    }
-
-    /// `shouldAcceptAllianceRequest(player, request)`.
-    fn should_accept_alliance_request(&self, game: &GameImpl, requestor: SmallId) -> bool {
-        let me = game.player(self.player);
-        let them = game.player(requestor);
-        if me.relation(requestor) < Relation::Neutral {
-            return false; // Reject if hasMalice
-        }
-        if them.is_traitor() {
-            return false; // Reject if isTraitor
-        }
-        if them.num_tiles_owned() as f64 > me.num_tiles_owned() as f64 * 3.0 {
-            return true; // Accept if requestorIsMuchLarger
-        }
-        if them.alliances().len() >= 3 {
-            return false; // Reject if tooManyAlliances
-        }
-        true
-    }
-
-    /// `handleAllianceExtensionRequests()`.
-    pub fn handle_alliance_extension_requests(&mut self, game: &mut GameImpl) {
-        for alliance in game.player(self.player).alliances().to_vec() {
-            // Skip if no expiration yet, the ally did not ask, or we already agreed
-            if !game.alliance(alliance).only_one_agreed_to_extend() {
-                continue;
-            }
-            // A nation that is only neutral toward the human lets chance decide
-            let human = game.alliance(alliance).other(self.player);
-            if game.player(self.player).player_type() == PlayerType::Nation
-                && game.player(self.player).relation(human) == Relation::Neutral
-                && !self.chance(1.5)
-            {
-                continue;
-            }
-            let human_id = game.player(human).id().to_string();
-            game.add_execution(Box::new(AllianceExtensionExecution::new(
-                self.player,
-                human_id,
-            )));
-        }
-    }
-
-    fn emoji(&self, game: &mut GameImpl, player: SmallId, emoji: f64) {
-        if game.player(player).player_type() != PlayerType::Human {
-            return;
-        }
-        let id = game.player(player).id().to_string();
-        game.add_execution(Box::new(EmojiExecution::new(self.player, id, emoji)));
     }
 
     fn set_new_enemy(&mut self, game: &GameImpl, new_enemy: Option<SmallId>) {
@@ -305,17 +253,6 @@ impl BotBehaviorV25 {
             self.clear_enemy();
         }
         self.enemy
-    }
-
-    fn add_attack(&self, game: &mut GameImpl, troops: f64, target: SmallId) {
-        let target_id = (target != 0).then(|| game.player(target).id().to_string());
-        game.add_execution(Box::new(AttackExecution::new(
-            Some(troops),
-            self.player,
-            target_id,
-            None,
-            true,
-        )));
     }
 
     /// `sendAttack(target)`: a land attack that keeps the reserve (or expand) ratio; teammates are skipped.

@@ -50,3 +50,13 @@ pub fn emoji_donation_ok() -> Vec<f64> {
 pub fn emoji_donation_too_small() -> Vec<f64> {
     emoji_ids(&["\u{2753}", "\u{1f971}"])
 }
+
+/// `EMOJI_ASSIST_ACCEPT` of the tribe and fake human `BotBehavior` (with the boat emoji).
+pub fn emoji_bot_assist_accept() -> Vec<f64> {
+    emoji_ids(&["\u{1f44d}", "\u{26f5}", "\u{1f91d}", "\u{1f3af}"])
+}
+
+/// `EMOJI_HECKLE`: the emoji ids a fake human sends to a human enemy.
+pub fn emoji_heckle() -> Vec<f64> {
+    emoji_ids(&["\u{1f921}", "\u{1f621}"])
+}

@@ -7,6 +7,7 @@ use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
 use crate::Execution::Nation::SharedRandom;
+use crate::Execution::Utils::BotBehaviorShared::BotBehaviorAlliances;
 use crate::Execution::Utils::BotBehaviorV25::BotBehaviorV25;
 use crate::Game::Game::{SmallId, Tick};
 use crate::Game::GameImpl::GameImpl;

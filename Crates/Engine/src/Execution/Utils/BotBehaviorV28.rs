@@ -7,35 +7,17 @@
 
 use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
-use crate::Core::Util::{bounding_box_center, calculate_bounding_box_center};
-use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Nation::SharedRandom;
 use crate::Execution::TransportShipExecution::TransportShipExecution;
 use crate::Execution::Util::closest_two_tiles;
-use crate::Execution::Utils::EmojiIds::emoji_ids;
-use crate::Game::Game::{Cell, Difficulty, PlayerType, Relation, SmallId, Tick};
+use crate::Execution::Utils::BotBehaviorShared::BotBehaviorShared;
+use crate::Execution::Utils::EmojiIds::{
+    emoji_assist_relation_too_low, emoji_assist_target_ally, emoji_assist_target_me,
+    emoji_bot_assist_accept, emoji_heckle,
+};
+use crate::Game::Game::{Difficulty, PlayerType, Relation, SmallId, Tick};
 use crate::Game::GameImpl::GameImpl;
-
-fn emoji_assist_accept() -> Vec<f64> {
-    emoji_ids(&["\u{1f44d}", "\u{26f5}", "\u{1f91d}", "\u{1f3af}"])
-}
-
-fn emoji_relation_too_low() -> Vec<f64> {
-    emoji_ids(&["\u{1f971}", "\u{1f926}\u{200d}\u{2642}\u{fe0f}"])
-}
-
-fn emoji_target_me() -> Vec<f64> {
-    emoji_ids(&["\u{1f97a}", "\u{1f480}"])
-}
-
-fn emoji_target_ally() -> Vec<f64> {
-    emoji_ids(&["\u{1f54a}\u{fe0f}", "\u{1f44e}"])
-}
-
-fn emoji_heckle() -> Vec<f64> {
-    emoji_ids(&["\u{1f921}", "\u{1f621}"])
-}
 
 /// Attack decisions of one tribe or fake human.
 pub struct BotBehaviorV28 {
@@ -46,6 +28,24 @@ pub struct BotBehaviorV28 {
     expand_ratio: f64,
     bot_attack_troops_sent: f64,
     last_emoji_sent: OrderedMap<SmallId, Tick>,
+}
+
+impl BotBehaviorShared for BotBehaviorV28 {
+    fn random(&self) -> &SharedRandom {
+        &self.random
+    }
+
+    fn player(&self) -> SmallId {
+        self.player
+    }
+
+    fn trigger_ratio(&self) -> f64 {
+        self.trigger_ratio
+    }
+
+    fn reserve_ratio(&self) -> f64 {
+        self.reserve_ratio
+    }
 }
 
 impl BotBehaviorV28 {
@@ -68,26 +68,6 @@ impl BotBehaviorV28 {
         }
     }
 
-    fn chance(&self, odds: f64) -> bool {
-        self.random.borrow_mut().chance(odds)
-    }
-
-    fn rand_element(&self, list: &[f64]) -> f64 {
-        *self.random.borrow_mut().rand_element(list)
-    }
-
-    fn is_friendly(&self, game: &GameImpl, other: SmallId) -> bool {
-        game.player(self.player).is_friendly(other, false)
-    }
-
-    fn emoji(&self, game: &mut GameImpl, player: SmallId, emoji: f64) {
-        if game.player(player).player_type() != PlayerType::Human {
-            return;
-        }
-        let id = game.player(player).id().to_string();
-        game.add_execution(Box::new(EmojiExecution::new(self.player, id, emoji)));
-    }
-
     /// Prevents attacking humans on lower difficulties (or when we are a bot).
     fn should_attack(&self, game: &GameImpl, other: SmallId) -> bool {
         // Always attack terra nullius, non-humans and traitors
@@ -107,23 +87,6 @@ impl BotBehaviorV28 {
             return false;
         }
         true
-    }
-
-    fn betray(&self, game: &mut GameImpl, target: SmallId) {
-        let Some(alliance) = game.player(self.player).alliance_with(target) else {
-            return;
-        };
-        game.player_mut(self.player).break_alliance(alliance);
-    }
-
-    fn has_reserve_ratio_troops(&self, game: &GameImpl) -> bool {
-        let p = game.player(self.player);
-        p.troops() / p.max_troops() >= self.reserve_ratio
-    }
-
-    fn has_trigger_ratio_troops(&self, game: &GameImpl) -> bool {
-        let p = game.player(self.player);
-        p.troops() / p.max_troops() >= self.trigger_ratio
     }
 
     fn find_incoming_attack_player(&self, game: &GameImpl) -> Option<SmallId> {
@@ -168,25 +131,25 @@ impl BotBehaviorV28 {
                 continue;
             }
             if game.player(self.player).relation(ally) < Relation::Friendly {
-                let e = self.rand_element(&emoji_relation_too_low());
+                let e = self.rand_element(&emoji_assist_relation_too_low());
                 self.emoji(game, ally, e);
                 continue;
             }
             for target in game.player(ally).targets() {
                 if target == self.player {
-                    let e = self.rand_element(&emoji_target_me());
+                    let e = self.rand_element(&emoji_assist_target_me());
                     self.emoji(game, ally, e);
                     continue;
                 }
                 if self.is_friendly(game, target) {
-                    let e = self.rand_element(&emoji_target_ally());
+                    let e = self.rand_element(&emoji_assist_target_ally());
                     self.emoji(game, ally, e);
                     continue;
                 }
                 // All checks passed, assist them
                 game.player_mut(self.player).update_relation(ally, -20.0);
                 self.send_attack(game, target, false);
-                let e = self.rand_element(&emoji_assist_accept());
+                let e = self.rand_element(&emoji_bot_assist_accept());
                 self.emoji(game, ally, e);
                 return;
             }
@@ -335,15 +298,6 @@ impl BotBehaviorV28 {
         self.find_nearest_island_enemy(game)
     }
 
-    fn get_player_center(&self, game: &GameImpl, player: SmallId) -> Cell {
-        let p = game.player(player);
-        if let Some((min, max)) = p.largest_cluster_bounding_box {
-            return bounding_box_center(min, max);
-        }
-        calculate_bounding_box_center(&game.map, p.border_tiles().iter())
-            .expect("a player with a border has a center")
-    }
-
     /// `findNearestIslandEnemy()`: the nearest (or second nearest) player we do not border.
     pub fn find_nearest_island_enemy(&self, game: &GameImpl) -> Option<SmallId> {
         if game.player(self.player).border_tiles().is_empty() {
@@ -444,23 +398,6 @@ impl BotBehaviorV28 {
             }
         }
         false
-    }
-
-    /// `forceSendAttack(target)`: half our troops, whatever the reserve.
-    pub fn force_send_attack(&mut self, game: &mut GameImpl, target: SmallId) {
-        let troops = game.player(self.player).troops() / 2.0;
-        self.add_attack(game, troops, target);
-    }
-
-    fn add_attack(&self, game: &mut GameImpl, troops: f64, target: SmallId) {
-        let target_id = (target != 0).then(|| game.player(target).id().to_string());
-        game.add_execution(Box::new(AttackExecution::new(
-            Some(troops),
-            self.player,
-            target_id,
-            None,
-            true,
-        )));
     }
 
     /// `sendAttack(target, force)`: a land attack when we share a border, else a boat attack on a player.
