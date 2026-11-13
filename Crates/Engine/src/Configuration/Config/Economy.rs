@@ -31,6 +31,8 @@ impl Config {
             15.0
         } else if self.rules.has(Change::TrainSpawnRate25Beta2) {
             25.0
+        } else if self.rules.has(Change::TrainSpawnRate16V27_5) {
+            16.0
         } else {
             18.0
         };

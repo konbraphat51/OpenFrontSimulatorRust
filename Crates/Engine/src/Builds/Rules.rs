@@ -437,6 +437,8 @@ pub enum Change {
     NoUsernameSanitation2622,
     /// v0.27 and v0.28: the game runner returns a good name unchanged (the older `censorNameWithClanTag` rebuilt `[TAG] name`).
     CensorKeepsGoodNames27,
+    /// v0.27.5 to v0.27.8: trains spawn at (factories + 10) * 16 (v0.27.10: 18).
+    TrainSpawnRate16V27_5,
 }
 }
 
