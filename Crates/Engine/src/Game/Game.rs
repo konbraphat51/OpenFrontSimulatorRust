@@ -126,6 +126,7 @@ string_enum! {
         MIRVWarhead = "MIRV Warhead",
         Train = "Train",
         Factory = "Factory",
+        Construction = "Construction",
     }
 }
 
@@ -232,7 +233,7 @@ impl UnitType {
 }
 
 /// Number of unit types.
-pub const NUM_UNIT_TYPES: usize = 16;
+pub const NUM_UNIT_TYPES: usize = 17;
 
 /// Port of `TrajectoryTile`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

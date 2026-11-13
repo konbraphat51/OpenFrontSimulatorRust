@@ -4,14 +4,17 @@
 
 use crate::Execution::Execution::Execution;
 use crate::Execution::TrainStationExecution::TrainStationExecution;
-use crate::Game::Game::{Tick, UnitId, UnitType};
+use crate::Game::Game::{SmallId, Tick, UnitId, UnitParams, UnitType};
 use crate::Game::GameImpl::GameImpl;
+use crate::Game::GameMap::TileRef;
 
 /// Creates the factory's own train-spawning station once and lives while the factory does.
 pub struct FactoryExecution {
     active: bool,
     station_created: bool,
     factory: UnitId,
+    /// Owner and tile of a structure that is built on the first tick (before PR 2378).
+    pending: Option<(SmallId, TileRef)>,
 }
 
 impl FactoryExecution {
@@ -21,7 +24,15 @@ impl FactoryExecution {
             active: true,
             station_created: false,
             factory,
+            pending: None,
         }
+    }
+
+    /// `new FactoryExecution(player, tile)`: the structure is built on the first tick.
+    pub fn from_tile(player: SmallId, tile: TileRef) -> Self {
+        let mut e = Self::new(0);
+        e.pending = Some((player, tile));
+        e
     }
 
     fn create_station(&self, game: &mut GameImpl) {
@@ -49,6 +60,17 @@ impl Execution for FactoryExecution {
     fn init(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
 
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if let Some((player, tile)) = self.pending.take() {
+            let Some(spawn) = game.player(player).can_build(UnitType::Factory, tile, None) else {
+                self.active = false;
+                return;
+            };
+            self.factory =
+                game.player_mut(player)
+                    .build_unit(UnitType::Factory, spawn, UnitParams::default());
+            self.create_station(game);
+            self.station_created = true;
+        }
         if !self.station_created {
             self.create_station(game);
             self.station_created = true;

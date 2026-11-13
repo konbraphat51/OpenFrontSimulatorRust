@@ -390,6 +390,14 @@ impl<'a> PlayerRef<'a> {
                 } else {
                     total += unit.level as i64;
                 }
+                continue;
+            }
+            // Before PR 2378 a `Construction` unit stands in for the structure being built.
+            if unit.unit_type == UnitType::Construction
+                && unit.construction_type == Some(t)
+                && !self.game.has(Change::NoConstructionUnit2378)
+            {
+                total += 1;
             }
         }
         total
@@ -442,6 +450,17 @@ impl<'a> PlayerRef<'a> {
     /// `unitsConstructed(type)`; before PR 4320 buildings under construction count twice.
     pub fn units_constructed(&self, t: UnitType) -> i64 {
         let built = self.num_units_constructed[t.index()];
+        if !self.game.has(Change::NoConstructionUnit2378) {
+            let constructing = self
+                .units
+                .iter()
+                .filter(|&&u| {
+                    let unit = self.game.unit_any(u);
+                    unit.unit_type == UnitType::Construction && unit.construction_type == Some(t)
+                })
+                .count() as i64;
+            return built + constructing;
+        }
         if self.game.has(Change::UnitsConstructedOnce4320) {
             return built;
         }
@@ -1042,7 +1061,8 @@ impl<'a> PlayerRef<'a> {
             | UnitType::DefensePost
             | UnitType::SAMLauncher
             | UnitType::City
-            | UnitType::Factory => self.land_based_structure_spawn(target_tile, valid_tiles),
+            | UnitType::Factory
+            | UnitType::Construction => self.land_based_structure_spawn(target_tile, valid_tiles),
         }
     }
 
@@ -1195,7 +1215,14 @@ impl<'a> PlayerRef<'a> {
         }
         let search_radius = 15.0f64;
         let search_radius_squared = search_radius * search_radius;
-        let nearby_units = mg.nearby_units(tile, search_radius * 2.0, STRUCTURES, None, true);
+        let nearby_units = if mg.has(Change::NoConstructionUnit2378) {
+            mg.nearby_units(tile, search_radius * 2.0, STRUCTURES, None, true)
+        } else {
+            // `Construction` units are territory bound too.
+            let mut types = STRUCTURES.to_vec();
+            types.push(UnitType::Construction);
+            mg.nearby_units(tile, search_radius * 2.0, &types, None, true)
+        };
         let map = &mg.map;
         let w = map.width() as i64;
         let cx = tile as i64 % w;

@@ -74,7 +74,8 @@ impl Config {
             0.0
         };
         let base_gold = match rel {
-            TrainRelation::Ally => 35_000.0,
+            TrainRelation::Ally if self.rules.has(Change::TrainAllyGold35kMeta) => 35_000.0,
+            TrainRelation::Ally => 50_000.0,
             TrainRelation::Team | TrainRelation::Other => 25_000.0,
             TrainRelation::Self_ => 10_000.0,
         };

@@ -421,6 +421,14 @@ pub enum Change {
     ClusterLinearScan2614,
     /// v0.28: tribes and fake humans pick attacks statelessly and fake humans answer alliances in `AllianceBehavior` (older: a stateful enemy in `BotBehavior`, alliance replies there).
     BotBehaviorStateless28,
+    /// PR 2378: no `Construction` unit; a structure is built at once and flagged under construction (older: a `Construction` unit stands in until the structure is built).
+    NoConstructionUnit2378,
+    /// PR 2665: SAM launchers always hit (older: a per-launcher PRNG draw against the hit chance, 0.8 and 0.5 for MIRV warheads).
+    SamNoRng2665,
+    /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
+    MirvCostScales2621,
+    /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
+    TrainAllyGold35kMeta,
 }
 }
 
@@ -506,6 +514,10 @@ fn edge_of(class: &str) -> Option<&'static Edge> {
 const ROOT_CHANGES: &[Change] = &[
     Change::ClusterLinearScan2614,
     Change::BotBehaviorStateless28,
+    Change::NoConstructionUnit2378,
+    Change::SamNoRng2665,
+    Change::MirvCostScales2621,
+    Change::TrainAllyGold35kMeta,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

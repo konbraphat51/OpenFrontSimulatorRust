@@ -774,7 +774,10 @@ impl Execution for PlayerExecution {
         let units: Vec<_> = game.player(player).units().to_vec();
         for u in units {
             let t = game.unit_any(u).unit_type();
-            if !STRUCTURES.contains(&t) {
+            // A `Construction` unit counts as a structure until PR 2378.
+            let construction =
+                t == UnitType::Construction && !game.has(Change::NoConstructionUnit2378);
+            if !STRUCTURES.contains(&t) && !construction {
                 continue;
             }
             let owner = game.owner_id(game.unit_any(u).tile());

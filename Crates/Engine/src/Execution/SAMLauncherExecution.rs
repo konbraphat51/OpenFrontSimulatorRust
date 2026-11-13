@@ -544,6 +544,8 @@ pub struct SAMLauncherExecution {
     player: SmallId,
     tile: Option<TileRef>,
     sam: Option<UnitId>,
+    /// Hit chance draws of this launcher (before PR 2665), seeded by the unit id.
+    pseudo_random: Option<crate::Core::PseudoRandom::PseudoRandom>,
 }
 
 impl SAMLauncherExecution {
@@ -556,6 +558,7 @@ impl SAMLauncherExecution {
             player,
             tile,
             sam,
+            pseudo_random: None,
         }
     }
 }
@@ -613,6 +616,29 @@ impl SAMLauncherExecution {
             return;
         }
         game.unit_mut(sam).launch();
+        if !game.has(Change::SamNoRng2665) {
+            // Before PR 2665 every shot draws against the hit chance (nukes: always, warheads 0.5, others 0.8).
+            let hit_type = if warheads.is_empty() {
+                target.as_ref().map(|t| game.unit_any(t.unit).unit_type())
+            } else {
+                Some(UnitType::MIRVWarhead)
+            };
+            let rules = game.config().rules().clone();
+            let random = self
+                .pseudo_random
+                .get_or_insert_with(|| {
+                    crate::Core::PseudoRandom::PseudoRandom::for_rules(&rules, sam as f64)
+                })
+                .next();
+            let hit = match hit_type {
+                Some(UnitType::AtomBomb) => true,
+                Some(UnitType::MIRVWarhead) => random < 0.5,
+                _ => random < 0.8,
+            };
+            if !hit {
+                return;
+            }
+        }
         if !warheads.is_empty() {
             for warhead in warheads {
                 game.unit_mut(warhead).delete(None, None);

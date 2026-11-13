@@ -43,6 +43,7 @@ pub struct UnitImpl {
     pub(crate) destroyer: Option<SmallId>,
     pub(crate) last_set_safe_from_pirates: f64,
     pub(crate) under_construction: bool,
+    pub(crate) construction_type: Option<UnitType>,
     pub(crate) troops: f64,
     /// Ticks of missiles in cooldown, oldest first.
     pub(crate) missile_timer_queue: Vec<f64>,
@@ -109,6 +110,7 @@ impl UnitImpl {
             destroyer: None,
             last_set_safe_from_pirates: params.last_set_safe_from_pirates.unwrap_or(0.0),
             under_construction: false,
+            construction_type: None,
             troops: params.troops.unwrap_or(0.0),
             missile_timer_queue: Vec::new(),
             has_train_station: false,
@@ -510,6 +512,16 @@ impl UnitMut<'_> {
         if let Some(v) = wait_ticks {
             s.wait_ticks = v;
         }
+    }
+
+    /// `constructionType()`: what a `Construction` unit turns into.
+    pub fn construction_type(&self) -> Option<UnitType> {
+        self.construction_type
+    }
+
+    /// `setConstructionType(type)`.
+    pub fn set_construction_type(&mut self, unit_type: UnitType) {
+        self.u().construction_type = Some(unit_type);
     }
 
     /// `setUnderConstruction`.
