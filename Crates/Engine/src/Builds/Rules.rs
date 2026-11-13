@@ -415,6 +415,12 @@ pub enum Change {
     RelationPenalties28,
     /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
     WarshipLegacy28,
+    /// v0.27.10: nation start troops 2,500 / 5,000 / 20,000 / 50,000, cap 0.5 / 1 / 1.5 / 2 and growth 0.9 / 1 / 1.1 / 1.2 by difficulty.
+    NationDifficultyEconomy27,
+    /// PR 2539 and 2614: cluster removal finds the largest cluster by a linear scan over DFS clusters (older: a stable size sort over BFS clusters).
+    ClusterLinearScan2614,
+    /// v0.28: tribes and fake humans pick attacks statelessly and fake humans answer alliances in `AllianceBehavior` (older: a stateful enemy in `BotBehavior`, alliance replies there).
+    BotBehaviorStateless28,
 }
 }
 
@@ -498,6 +504,8 @@ fn edge_of(class: &str) -> Option<&'static Edge> {
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[
+    Change::ClusterLinearScan2614,
+    Change::BotBehaviorStateless28,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

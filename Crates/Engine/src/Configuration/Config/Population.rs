@@ -11,6 +11,15 @@ impl Config {
             return 10_000.0;
         }
         if player_type == PlayerType::Nation {
+            if self.rules.has(Change::NationDifficultyEconomy27) {
+                // Nations are built without a manifest strength here, so the multiplier is 1.
+                return match self.game_config.difficulty {
+                    Difficulty::Easy => 2_500.0,
+                    Difficulty::Medium => 5_000.0,
+                    Difficulty::Hard => 20_000.0,
+                    Difficulty::Impossible => 50_000.0,
+                };
+            }
             if self.rules.has(Change::NationDifficultyEconomy28) {
                 return match self.game_config.difficulty {
                     Difficulty::Easy => 18_750.0,
@@ -71,6 +80,14 @@ impl Config {
         if p.player_type == PlayerType::Human {
             return max_troops;
         }
+        if self.rules.has(Change::NationDifficultyEconomy27) {
+            return match self.game_config.difficulty {
+                Difficulty::Easy => max_troops * 0.5,
+                Difficulty::Medium => max_troops * 1.0,
+                Difficulty::Hard => max_troops * 1.5,
+                Difficulty::Impossible => max_troops * 2.0,
+            };
+        }
         if self.rules.has(Change::NationDifficultyEconomy28) {
             return match self.game_config.difficulty {
                 Difficulty::Easy => max_troops * 0.75,
@@ -104,7 +121,16 @@ impl Config {
                 0.6
             };
         }
-        if p.player_type == PlayerType::Nation && self.rules.has(Change::NationDifficultyEconomy28)
+        if p.player_type == PlayerType::Nation && self.rules.has(Change::NationDifficultyEconomy27)
+        {
+            match self.game_config.difficulty {
+                Difficulty::Easy => to_add *= 0.9,
+                Difficulty::Medium => to_add *= 1.0,
+                Difficulty::Hard => to_add *= 1.1,
+                Difficulty::Impossible => to_add *= 1.2,
+            }
+        } else if p.player_type == PlayerType::Nation
+            && self.rules.has(Change::NationDifficultyEconomy28)
         {
             match self.game_config.difficulty {
                 Difficulty::Easy => to_add *= 0.95,

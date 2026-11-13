@@ -37,6 +37,10 @@ impl PlayerExecution {
     }
 
     fn remove_clusters(&mut self, game: &mut GameImpl) {
+        if !game.has(Change::ClusterLinearScan2614) {
+            self.remove_clusters_v27(game);
+            return;
+        }
         if game.has(Change::PlayerClusterRewrite36) {
             self.remove_clusters_v36(game);
             return;
@@ -338,7 +342,7 @@ impl PlayerExecution {
         next_territory_id
     }
 
-    fn surrounded_by_same_player(
+    pub(super) fn surrounded_by_same_player(
         &self,
         game: &GameImpl,
         cluster: &[TileRef],
@@ -414,7 +418,7 @@ impl PlayerExecution {
         None
     }
 
-    fn is_surrounded(
+    pub(super) fn is_surrounded(
         &self,
         game: &GameImpl,
         cluster: &[TileRef],
@@ -548,6 +552,49 @@ impl PlayerExecution {
         let mut nbuf = [0; 4];
         for &t in cluster {
             let n_neighbors = map.neighbors4(t, &mut nbuf);
+            for &n in &nbuf[..n_neighbors] {
+                let owner_id = map.owner_id(n);
+                if owner_id == 0 || owner_id == my_small_id {
+                    continue;
+                }
+                if !game.player(owner_id).is_friendly(my_small_id, false) {
+                    let prev = neighbors.get(&owner_id).copied().unwrap_or(0.0);
+                    neighbors.insert(owner_id, prev + 1.0);
+                }
+            }
+        }
+        if neighbors.is_empty() {
+            return None;
+        }
+        let mut largest_neighbor_attack: Option<SmallId> = None;
+        let mut largest_troop_count = 0.0;
+        for &neighbor in neighbors.keys() {
+            for &attack in game.player(neighbor).outgoing_attacks() {
+                let a = &game.attacks[attack as usize];
+                if a.target == my_small_id && a.troops > largest_troop_count {
+                    largest_troop_count = a.troops;
+                    largest_neighbor_attack = Some(neighbor);
+                }
+            }
+        }
+        if largest_neighbor_attack.is_some() {
+            return largest_neighbor_attack;
+        }
+        get_mode(&neighbors)
+    }
+
+    /// `getCapturingPlayer` with `neighbors()` in N, S, W, E order (cluster removal of v0.27.10).
+    pub(super) fn get_capturing_player_nswe(
+        &self,
+        game: &GameImpl,
+        cluster: &[TileRef],
+    ) -> Option<SmallId> {
+        let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
+        let map = &game.map;
+        let my_small_id = self.player;
+        let mut nbuf = [0; 4];
+        for &t in cluster {
+            let n_neighbors = map.neighbors4_nswe(t, &mut nbuf);
             for &n in &nbuf[..n_neighbors] {
                 let owner_id = map.owner_id(n);
                 if owner_id == 0 || owner_id == my_small_id {
