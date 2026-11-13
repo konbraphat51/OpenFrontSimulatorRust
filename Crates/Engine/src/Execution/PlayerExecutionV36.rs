@@ -184,15 +184,30 @@ impl PlayerExecution {
         scratch.stack.clear();
         scratch.stack.push(start);
         let mut size = 0;
-        let mut nbuf = [0; 4];
-        while let Some(cur) = scratch.stack.pop() {
+        // Only the component size is used, so the visiting order of the neighbours is free.
+        let (w, south_limit) = (map.width(), (map.height() - 1) * map.width());
+        let state = map.tile_state_buffer();
+        let (visited, stack) = (&mut scratch.visited, &mut scratch.stack);
+        let mut take = |n: TileRef, stack: &mut Vec<TileRef>| {
+            if visited[n as usize] < area_gen && state[n as usize] & 0xfff == my {
+                visited[n as usize] = t_gen;
+                stack.push(n);
+            }
+        };
+        while let Some(cur) = stack.pop() {
             size += 1;
-            let n_neighbors = map.neighbors4(cur, &mut nbuf);
-            for &n in &nbuf[..n_neighbors] {
-                if scratch.visited[n as usize] < area_gen && map.owner_id(n) == my {
-                    scratch.visited[n as usize] = t_gen;
-                    scratch.stack.push(n);
-                }
+            let x = map.x(cur);
+            if cur >= w {
+                take(cur - w, stack);
+            }
+            if cur < south_limit {
+                take(cur + w, stack);
+            }
+            if x != 0 {
+                take(cur - 1, stack);
+            }
+            if x != w - 1 {
+                take(cur + 1, stack);
             }
         }
         size
@@ -664,7 +679,7 @@ impl PlayerExecution {
             current_gen,
             &[start],
             false,
-            &|_, t| map.owner_id(t) == player,
+            |_, t| map.owner_id(t) == player,
             None,
         )
     }
