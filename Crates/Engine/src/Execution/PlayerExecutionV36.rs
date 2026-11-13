@@ -180,34 +180,50 @@ impl PlayerExecution {
         let map = &game.map;
         let my = self.player;
         let scratch = &mut game.scratch;
-        scratch.visited[start as usize] = t_gen;
-        scratch.stack.clear();
-        scratch.stack.push(start);
-        let mut size = 0;
-        // Only the component size is used, so the visiting order of the neighbours is free.
-        let (w, south_limit) = (map.width(), (map.height() - 1) * map.width());
-        let state = map.tile_state_buffer();
         let (visited, stack) = (&mut scratch.visited, &mut scratch.stack);
-        let mut take = |n: TileRef, stack: &mut Vec<TileRef>| {
-            if visited[n as usize] < area_gen && state[n as usize] & 0xfff == my {
-                visited[n as usize] = t_gen;
-                stack.push(n);
-            }
+        let state = map.tile_state_buffer();
+        let (w, south_limit) = (map.width(), (map.height() - 1) * map.width());
+        // Scanline fill: only the component size and the stamps matter, so the visiting order is free.
+        // Every tile is stamped (and counted) exactly once; seeds are the first tiles of runs in a row.
+        let eligible = |visited: &[u32], n: u32| {
+            visited[n as usize] < area_gen && state[n as usize] & 0xfff == my
         };
-        while let Some(cur) = stack.pop() {
-            size += 1;
-            let x = map.x(cur);
-            if cur >= w {
-                take(cur - w, stack);
+        visited[start as usize] = t_gen;
+        stack.clear();
+        stack.push(start);
+        let mut size = 1;
+        while let Some(seed) = stack.pop() {
+            let x = map.x(seed);
+            let row = seed - x;
+            let mut left = x;
+            while left > 0 && eligible(visited, row + left - 1) {
+                left -= 1;
+                visited[(row + left) as usize] = t_gen;
+                size += 1;
             }
-            if cur < south_limit {
-                take(cur + w, stack);
+            let mut right = x;
+            while right < w - 1 && eligible(visited, row + right + 1) {
+                right += 1;
+                visited[(row + right) as usize] = t_gen;
+                size += 1;
             }
-            if x != 0 {
-                take(cur - 1, stack);
-            }
-            if x != w - 1 {
-                take(cur + 1, stack);
+            for (exists, base) in [
+                (row >= w, row.wrapping_sub(w)),
+                (row < south_limit, row.wrapping_add(w)),
+            ] {
+                if !exists {
+                    continue;
+                }
+                let mut previous_eligible = false;
+                for n in (base + left)..=(base + right) {
+                    let is_eligible = eligible(visited, n);
+                    if is_eligible && !previous_eligible {
+                        visited[n as usize] = t_gen;
+                        size += 1;
+                        stack.push(n);
+                    }
+                    previous_eligible = is_eligible;
+                }
             }
         }
         size
