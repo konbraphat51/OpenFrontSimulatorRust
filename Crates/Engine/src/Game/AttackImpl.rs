@@ -141,6 +141,9 @@ impl GameImpl {
         self.player_impl_mut(attacker)
             .outgoing_attacks
             .retain(|&a| a != id);
-        self.attacks[id as usize].is_active = false;
+        let attack = &mut self.attacks[id as usize];
+        attack.is_active = false;
+        // The handle stays valid, but nothing reads the border of a deleted attack: free its tile set.
+        attack.border = OrderedSet::new();
     }
 }
