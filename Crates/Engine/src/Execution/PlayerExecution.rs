@@ -16,8 +16,6 @@ use crate::Game::GameMap::{GameMapImpl, TileRef};
 
 const TICKS_PER_CLUSTER_CALC: f64 = 20.0;
 
-/// Include predicate of a flood fill: gets the visited array and the candidate tile.
-
 /// Upkeep of one player: relations decay, structure capture, troops and gold, alliances, clusters.
 pub struct PlayerExecution {
     pub(super) player: SmallId,
