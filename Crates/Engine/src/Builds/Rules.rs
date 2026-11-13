@@ -433,6 +433,16 @@ pub enum Change {
     NoConstructionUnit2378,
     /// PR 2665: SAM launchers always hit (older: a per-launcher PRNG draw against the hit chance, 0.8 and 0.5 for MIRV warheads).
     SamNoRng2665,
+    /// v0.27: a SAM's range grows with its level and detection scales with the maximum (v0.26.14: one fixed range of 70).
+    SamRangeByLevel27,
+    /// v0.27: a retreating transport ship loses 25% of its troops (v0.26.14: none).
+    TransportRetreatMalus27,
+    /// v0.27: a retreating attack with a source tile keeps the troop correction only when it has none (v0.26.14: always corrects).
+    AttackRetreatSourceTile27,
+    /// v0.27: `maxTimerValue` ends a game with the leader as winner (v0.26.14: no timer win).
+    WinMaxTimer27,
+    /// v0.26.14: `PathFinder.nextTile` keeps its path when the goal is within range (v0.27 clears it).
+    PathFinderKeepsPath26,
     /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
     MirvCostScales2621,
     /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
@@ -538,6 +548,10 @@ const ROOT_CHANGES: &[Change] = &[
     Change::BotBehaviorStateless28,
     Change::NoConstructionUnit2378,
     Change::SamNoRng2665,
+    Change::SamRangeByLevel27,
+    Change::TransportRetreatMalus27,
+    Change::AttackRetreatSourceTile27,
+    Change::WinMaxTimer27,
     Change::MirvCostScales2621,
     Change::TrainAllyGold35kMeta,
     Change::AllianceReplyInit28,

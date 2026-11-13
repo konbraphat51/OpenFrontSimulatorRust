@@ -119,7 +119,8 @@ impl WinCheckExecution {
 
     fn has_won(&self, game: &GameImpl, tiles_owned: f64) -> bool {
         let time_elapsed = game.elapsed_game_seconds();
-        if let Some(max_timer) = game.config().game_config().max_timer_value
+        if game.has(Change::WinMaxTimer27)
+            && let Some(max_timer) = game.config().game_config().max_timer_value
             && time_elapsed >= max_timer as f64 * 60.0
         {
             return true;

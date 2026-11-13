@@ -95,7 +95,9 @@ impl AttackExecution {
     fn retreat(&mut self, game: &mut GameImpl, malus_percent: f64) {
         let attack = self.attack_id();
         let deaths = game.attack(attack).troops() * (malus_percent / 100.0);
-        if !self.remove_troops && self.source_tile.is_none() {
+        if !self.remove_troops
+            && (self.source_tile.is_none() || !game.has(Change::AttackRetreatSourceTile27))
+        {
             let troops = game.attack(attack).troops() - self.start_troops.unwrap_or(0.0);
             game.set_attack_troops(attack, troops);
         }

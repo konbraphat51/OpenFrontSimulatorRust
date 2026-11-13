@@ -110,6 +110,7 @@ Class ids, parents and builds are in [BuildPlan.md](BuildPlan.md) (status column
 | C066 | v0.27.2, v0.27.3 | no engine change (server config only) | 56 of 56 (34 long public) |
 | C067 | v0.27.0, v0.27.1 | `EmojiTableFactoryRow2522` removed (55 emojis, other order; thread-local table of the replayed game), `SanitizeThenFixProfane27_0` (the game runner replaces a profane name whole after `sanitize`; no sampled record exercises it) | 56 of 56 (38 long public) |
 | C068 | v0.27.0-beta2 | no engine change (Yenisei map only) | 3 of 3 usable (short; the two team games without players throw `Too few teams` upstream too) |
+| C069 | v0.26.14 | `PreRewriteNationAi26` (side-by-side `BotBehaviorV26`, `FakeHumanExecutionV26`, `BotExecutionV26`: no MIRV or retaliation AI, no `AllianceBehavior`, plain land attacks, older boat targets), `PathFinderKeepsPath26`; removes `SamRangeByLevel27`, `TransportRetreatMalus27`, `AttackRetreatSourceTile27`, `WinMaxTimer27` | 20 of 24 (20 long public; the other 4, three Singleplayer and one Public, also fail in the upstream engine: ours matches its trace tick for tick) |
 
 Note on C060 to C063: the class tree runs backwards in release time (f4ed v0.28.0 -> a810 v0.28.1 -> 671c v0.28.2 -> C059 v0.28.4 reverts #2552). Also fixed a base bug found there: `censorNameWithClanTag` returns the username unchanged when neither tag nor name is profane (the cluster timing offset hashes the name), which broke 3 C060 records with a clan tag and no space.
 

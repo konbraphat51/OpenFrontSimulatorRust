@@ -1,0 +1,3 @@
+# Changes class C069 adds to / removes from its parent (parent: BuildClasses.toml).
+add = ["PreRewriteNationAi26", "PathFinderKeepsPath26"]
+remove = ["SamRangeByLevel27", "TransportRetreatMalus27", "AttackRetreatSourceTile27", "WinMaxTimer27"]

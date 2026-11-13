@@ -117,7 +117,10 @@ impl Execution for TransportShipExecution {
         game.transport_ship_stagger += 1;
         self.path_finder = Some(WaterPathFinder::new(&game.water_manager, stagger));
         if game.has(Change::LegacyAStar28) {
-            self.legacy_path_finder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
+            self.legacy_path_finder = Some(
+                LegacyPathFinder::mini(10_000.0, true, 100.0)
+                    .with_keep_path_on_arrival(game.has(Change::PathFinderKeepsPath26)),
+            );
         }
 
         let boat_max = game.config().boat_max_number() as i64;
@@ -312,7 +315,11 @@ impl Execution for TransportShipExecution {
             PathResult::Complete(_) => {
                 let boat_troops = game.unit_any(boat).troops();
                 if game.owner_id(dst) == self.attacker {
-                    let deaths = boat_troops * (MALUS_FOR_RETREAT / 100.0);
+                    let deaths = if game.has(Change::TransportRetreatMalus27) {
+                        boat_troops * (MALUS_FOR_RETREAT / 100.0)
+                    } else {
+                        0.0
+                    };
                     let survivors = boat_troops - deaths;
                     game.player_mut(self.attacker).add_troops(survivors);
                     game.unit_mut(boat).delete(Some(false), None);
