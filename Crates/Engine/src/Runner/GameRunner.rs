@@ -475,11 +475,6 @@ impl GameRunner {
         self.turns.push(turn);
     }
 
-    /// Number of turns queued and not yet executed.
-    pub fn pending_turns(&self) -> usize {
-        self.turns.len() - self.curr_turn
-    }
-
     /// `executeNextTick()`: runs the next queued turn. Returns `None` when no turn is queued,
     /// otherwise the hash the game computed this tick (`Some(None)` when it computes none).
     pub fn execute_next_tick(&mut self) -> Option<Option<f64>> {

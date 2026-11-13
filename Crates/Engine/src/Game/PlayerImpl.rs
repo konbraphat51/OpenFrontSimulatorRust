@@ -15,7 +15,7 @@ use super::Game::{
     Relation, STRUCTURES, SmallId, Team, Tick, UnitId, UnitParams, UnitType,
 };
 use super::GameImpl::GameImpl;
-use super::GameMap::{GameMapImpl, TileRef, manhattan_dist_fn};
+use super::GameMap::{TileRef, manhattan_dist_fn};
 use super::TileSet::TileSet;
 use super::TransportShipUtils::{best_shore_deployment_source, can_build_transport_ship};
 use crate::Builds::Rules::Change;
@@ -25,9 +25,6 @@ use crate::Configuration::Config::{CostContext, TroopInput};
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::{find_closest_by, simple_hash, to_int, within};
 use std::ops::{Deref, DerefMut};
-
-/// Ticks a decay cue stays lit after the last rot.
-const DECAY_CUE_GRACE_TICKS: f64 = 30.0;
 
 /// A `targets_` entry.
 #[derive(Clone, Copy, Debug)]
@@ -249,10 +246,6 @@ impl PlayerImpl {
     pub fn outgoing_attacks(&self) -> &[AttackId] {
         &self.outgoing_attacks
     }
-    /// The raw incoming list (`incomingAttacks()` also filters dead attackers, see [`PlayerRef`]).
-    pub fn incoming_attacks_raw(&self) -> &[AttackId] {
-        &self.incoming_attacks
-    }
     /// `_outgoingLandAttacks`.
     pub fn outgoing_land_attacks(&self) -> &[AttackId] {
         &self.outgoing_land_attacks
@@ -309,10 +302,6 @@ impl PlayerImpl {
     /// `_myUnitsVersion` (bumped on every unit list change).
     pub fn my_units_version(&self) -> u32 {
         self.my_units_version
-    }
-    /// `playerInfo.id` hashed: `simpleHash(id)`.
-    pub fn id_hash(&self) -> u32 {
-        simple_hash(&self.info.id)
     }
 }
 
@@ -705,14 +694,6 @@ impl<'a> PlayerRef<'a> {
         }
     }
 
-    /// `isDecaying`.
-    pub fn is_decaying(&self) -> bool {
-        if !self.in_doomsday_clock() || self.rotted_at_tick < 0.0 {
-            return false;
-        }
-        self.game.ticks() as f64 - self.rotted_at_tick <= DECAY_CUE_GRACE_TICKS
-    }
-
     /// `relation(other)`; panics for self like upstream throws.
     pub fn relation(&self, other: SmallId) -> Relation {
         assert!(other != self.id, "cannot get relation with self");
@@ -777,22 +758,6 @@ impl<'a> PlayerRef<'a> {
             })
             .map(|t| t.target)
             .collect()
-    }
-
-    /// `transitiveTargets()`: allies' targets then own, de-duplicated by first occurrence.
-    pub fn transitive_targets(&self) -> Vec<SmallId> {
-        let mut ts: Vec<SmallId> = Vec::new();
-        for ally in self.allies() {
-            ts.extend(self.game.player(ally).targets());
-        }
-        ts.extend(self.targets());
-        let mut out: Vec<SmallId> = Vec::new();
-        for t in ts {
-            if !out.contains(&t) {
-                out.push(t);
-            }
-        }
-        out
     }
 
     /// `outgoingEmojis()`: emojis still on display, newest first.
@@ -955,15 +920,6 @@ impl<'a> PlayerRef<'a> {
         !embargo && other != self.id
     }
 
-    /// `tradingPartners()`.
-    pub fn trading_partners(&self) -> Vec<SmallId> {
-        self.game
-            .players()
-            .into_iter()
-            .filter(|&o| o != self.id && self.can_trade(o))
-            .collect()
-    }
-
     /// `isOnSameTeam(other)`.
     pub fn is_on_same_team(&self, other: SmallId) -> bool {
         if other == self.id {
@@ -992,26 +948,6 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         self.is_on_same_team(other) || self.is_allied_with(other)
-    }
-
-    /// `findUnitToUpgrade(type, targetTile)`.
-    pub fn find_unit_to_upgrade(&self, t: UnitType, target_tile: TileRef) -> Option<UnitId> {
-        let unit = self.find_existing_unit_to_upgrade(t, target_tile)?;
-        if !self.can_upgrade_unit(unit) {
-            return None;
-        }
-        Some(unit)
-    }
-
-    fn find_existing_unit_to_upgrade(&self, t: UnitType, target_tile: TileRef) -> Option<UnitId> {
-        let nearby = self.game.nearby_units(
-            target_tile,
-            self.game.config().structure_min_dist(),
-            &[t],
-            None,
-            true,
-        );
-        find_closest_by(&nearby, |e| e.1, |_| true).map(|e| e.0)
     }
 
     fn can_build_unit_type(&self, unit_type: UnitType, known_cost: Option<Gold>) -> bool {
@@ -1355,50 +1291,6 @@ impl<'a> PlayerRef<'a> {
             return !self.is_friendly(player, treat_afk_friendly);
         }
         !self.game.player(player).is_immune() && !self.is_friendly(player, treat_afk_friendly)
-    }
-
-    /// `canAttack(tile)`.
-    pub fn can_attack(&self, tile: TileRef) -> bool {
-        let mg = self.game;
-        let owner = mg.owner_id(tile);
-        let by_config = mg.has(Change::ImmunityByConfig28);
-        if by_config
-            && mg.map.has_owner(tile)
-            && mg.config().num_spawn_phase_turns() + mg.config().spawn_immunity_duration()
-                > mg.ticks()
-        {
-            return false;
-        }
-        if owner == self.id {
-            return false;
-        }
-        if owner != 0
-            && if by_config {
-                self.is_friendly(owner, false)
-            } else {
-                !self.can_attack_player(owner, false)
-            }
-        {
-            return false;
-        }
-        if !mg.map.is_land(tile) || mg.map.is_impassable(tile) {
-            return false;
-        }
-        if mg.map.has_owner(tile) {
-            return self.shares_border_with(owner);
-        }
-        let filter = manhattan_dist_fn(tile, 200.0, false);
-        let found = mg.map.bfs(tile, |gm: &GameMapImpl, t| {
-            !gm.has_owner(t) && gm.is_land(t) && !gm.is_impassable(t) && filter(gm, t)
-        });
-        for t in found.iter() {
-            for n in mg.map.neighbors(*t) {
-                if mg.map.owner_id(n) == self.id {
-                    return true;
-                }
-            }
-        }
-        false
     }
 
     /// `bestTransportShipSpawn(targetTile)`.

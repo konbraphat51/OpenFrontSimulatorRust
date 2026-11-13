@@ -65,11 +65,6 @@ impl NukeExecution {
         }
     }
 
-    /// `getNuke()`: the launched unit, once launched.
-    pub fn get_nuke(&self) -> Option<UnitId> {
-        self.nuke
-    }
-
     /// `owner()`.
     pub fn owner(&self) -> SmallId {
         self.player

@@ -19,15 +19,13 @@ use crate::Pathfinding::PathFinder::{WaterPathFinder, WaterStepperEnv};
 use crate::Pathfinding::Types::PathResult;
 use std::collections::HashSet;
 
-/// What the execution was created from: params of a new warship, or an existing unit.
+/// What the execution was created from: the params of a new warship.
 enum Input {
     /// `UnitParams<Warship> & OwnerComp`.
     Params {
         owner: SmallId,
         patrol_tile: TileRef,
     },
-    /// An existing unit.
-    Unit(UnitId),
 }
 
 /// Drives one warship.
@@ -49,11 +47,6 @@ impl WarshipExecution {
     /// `new WarshipExecution({ owner, patrolTile })`: builds the warship at the owner's closest port on init.
     pub fn new(owner: SmallId, patrol_tile: TileRef) -> Self {
         Self::with_input(Input::Params { owner, patrol_tile })
-    }
-
-    /// `new WarshipExecution(unit)`: drives an existing warship.
-    pub fn from_unit(unit: UnitId) -> Self {
-        Self::with_input(Input::Unit(unit))
     }
 
     fn with_input(input: Input) -> Self {
@@ -95,11 +88,6 @@ impl WarshipExecution {
     /// Ends the execution (its warship is gone).
     pub(super) fn set_inactive(&mut self) {
         self.active = false;
-    }
-
-    /// `isDocked`.
-    pub fn is_docked(&self, game: &GameImpl) -> bool {
-        self.warship.is_some() && self.state(game) == WarshipMode::Docked
     }
 
     fn heal_warship(&mut self, game: &mut GameImpl) {
@@ -885,7 +873,6 @@ impl Execution for WarshipExecution {
         }
         self.random = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         match self.input {
-            Input::Unit(unit) => self.warship = Some(unit),
             Input::Params { owner, patrol_tile } => {
                 let Some(spawn) =
                     game.player(owner)

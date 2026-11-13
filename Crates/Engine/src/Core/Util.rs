@@ -13,7 +13,6 @@ use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::DetMath;
 use crate::Game::Game::{Cell, Gold};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
-use std::cmp::Ordering;
 use std::hash::Hash;
 
 /// Largest integer a JS double holds exactly.
@@ -30,29 +29,6 @@ pub fn manhattan_dist_wrapped(c1: Cell, c2: Cell, width: i32) -> i32 {
 /// `Math.min(Math.max(value, min), max)` on plain floats (callers never pass NaN).
 pub fn within(value: f64, min: f64, max: f64) -> f64 {
     crate::Compat::JsNumber::min(crate::Compat::JsNumber::max(value, min), max)
-}
-
-/// Comparator ordering tiles by Manhattan distance to `target` (`distSort`).
-pub fn dist_sort(
-    gm: &GameMapImpl,
-    target: TileRef,
-) -> impl Fn(&TileRef, &TileRef) -> Ordering + '_ {
-    move |a, b| {
-        gm.manhattan_dist(*a, target)
-            .cmp(&gm.manhattan_dist(*b, target))
-    }
-}
-
-/// Comparator ordering items by Manhattan distance of `tile_of(item)` to `target` (`distSortUnit`).
-pub fn dist_sort_by<'a, T>(
-    gm: &'a GameMapImpl,
-    target: TileRef,
-    tile_of: impl Fn(&T) -> TileRef + 'a,
-) -> impl Fn(&T, &T) -> Ordering + 'a {
-    move |a, b| {
-        gm.manhattan_dist(tile_of(a), target)
-            .cmp(&gm.manhattan_dist(tile_of(b), target))
-    }
 }
 
 /// First item with the strictly smallest score among candidates (`findMinimumBy`).
@@ -190,11 +166,6 @@ pub fn to_int(num: f64) -> Gold {
     }
     assert!(!num.is_nan(), "toInt(NaN): BigInt would throw");
     num.floor() as i64
-}
-
-/// `withinInt`: clamp an integer into [min, max].
-pub fn within_int(num: i64, min: i64, max: i64) -> i64 {
-    num.max(min).min(max)
 }
 
 /// Logistic function with DetMath `exp` (`sigmoid`).

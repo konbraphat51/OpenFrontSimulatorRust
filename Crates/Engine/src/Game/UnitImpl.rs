@@ -50,7 +50,6 @@ pub struct UnitImpl {
     pub(crate) has_train_station: bool,
     pub(crate) level: u32,
     pub(crate) targetable: bool,
-    pub(crate) loaded: Option<bool>,
     pub(crate) train_type: Option<TrainType>,
     pub(crate) deletion_at: Option<f64>,
     pub(crate) sam_launcher_state: Option<SamLauncherState>,
@@ -116,7 +115,6 @@ impl UnitImpl {
             has_train_station: false,
             level: 1,
             targetable: true,
-            loaded: params.loaded,
             train_type: params.train_type,
             deletion_at: None,
             sam_launcher_state: (unit_type == UnitType::SAMLauncher).then(|| SamLauncherState {
@@ -212,17 +210,9 @@ impl UnitImpl {
     pub fn train_type(&self) -> Option<TrainType> {
         self.train_type
     }
-    /// `isLoaded`.
-    pub fn is_loaded(&self) -> Option<bool> {
-        self.loaded
-    }
     /// `missileTimerQueue`.
     pub fn missile_timer_queue(&self) -> &[f64] {
         &self.missile_timer_queue
-    }
-    /// `ticksLeftInCooldown`: the oldest launch tick.
-    pub fn ticks_left_in_cooldown(&self) -> Option<f64> {
-        self.missile_timer_queue.first().copied()
     }
     /// `isInCooldown`.
     pub fn is_in_cooldown(&self) -> bool {
@@ -313,10 +303,6 @@ impl UnitRef<'_> {
     pub fn is_safe_from_pirates(&self) -> bool {
         self.game.ticks() as f64 - self.last_set_safe_from_pirates
             < self.game.config().safe_from_pirates_cooldown_max()
-    }
-    /// `isInCombat` at the game's current tick.
-    pub fn in_combat(&self) -> bool {
-        self.is_in_combat(self.game.ticks())
     }
 }
 
@@ -701,10 +687,5 @@ impl UnitMut<'_> {
         self.game.bump_units_version();
         let owner = self.owner;
         self.game.player_impl_mut(owner).my_units_version += 1;
-    }
-
-    /// `setLoaded`.
-    pub fn set_loaded(&mut self, loaded: bool) {
-        self.u().loaded = Some(loaded);
     }
 }

@@ -84,11 +84,6 @@ impl AllianceImpl {
     pub fn only_one_agreed_to_extend(&self) -> bool {
         self.extension_requested_requestor != self.extension_requested_recipient
     }
-    /// `agreedToExtend(player)`.
-    pub fn agreed_to_extend(&self, player: SmallId) -> bool {
-        (self.requestor == player && self.extension_requested_requestor)
-            || (self.recipient == player && self.extension_requested_recipient)
-    }
 }
 
 impl GameImpl {

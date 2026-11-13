@@ -18,7 +18,6 @@ pub struct TrainExecution {
     train: Option<UnitId>,
     /// Cars stored back to front.
     cars: Vec<UnitId>,
-    has_cargo: bool,
     current_tile: i64,
     usable_tiles: Vec<TileRef>,
     stations: Vec<StationId>,
@@ -51,7 +50,6 @@ impl TrainExecution {
             active: true,
             train: None,
             cars: Vec::new(),
-            has_cargo: false,
             current_tile: 0,
             usable_tiles: Vec::new(),
             stations: Vec::new(),
@@ -105,7 +103,6 @@ impl TrainExecution {
                 tile,
                 UnitParams {
                     train_type: Some(TrainType::Carriage),
-                    loaded: Some(self.has_cargo),
                     ..UnitParams::default()
                 },
             );

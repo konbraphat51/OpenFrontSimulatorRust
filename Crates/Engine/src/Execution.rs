@@ -35,7 +35,6 @@ pub mod MoveWarshipExecution;
 pub mod Nation;
 pub mod NationExecution;
 pub mod NoOpExecution;
-pub mod NotPorted;
 pub mod NukeAlliance;
 pub mod NukeExecution;
 pub mod PauseExecution;

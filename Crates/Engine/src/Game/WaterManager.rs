@@ -292,11 +292,6 @@ impl WaterManager {
         self.water_graph_version
     }
 
-    /// True when the HPA* finder exists (nav mesh enabled).
-    pub fn has_mini_water_hpa(&self) -> bool {
-        self.hierarchical_chain.is_some()
-    }
-
     /// The current abstract water graph.
     pub fn mini_water_graph(&self) -> Option<&Rc<AbstractGraph>> {
         self.mini_water_graph.as_ref()

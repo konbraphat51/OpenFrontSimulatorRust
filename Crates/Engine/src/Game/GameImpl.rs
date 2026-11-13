@@ -506,10 +506,6 @@ impl GameImpl {
     pub fn alliance_request(&self, id: AllianceRequestId) -> &AllianceRequestImpl {
         &self.alliance_requests[id as usize]
     }
-    /// The pending alliance requests in order (upstream `allianceRequests`).
-    pub fn pending_alliance_requests(&self) -> &[AllianceRequestId] {
-        &self.pending_requests
-    }
     /// `nextUnitID`.
     pub fn next_unit_id(&mut self) -> UnitId {
         let old = self.next_unit_id;

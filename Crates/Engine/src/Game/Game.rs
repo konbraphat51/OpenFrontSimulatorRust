@@ -19,8 +19,6 @@ pub type Gold = i64;
 pub type Team = String;
 /// Player small id (index + 1 into the players array; 0 is terra nullius).
 pub type SmallId = u16;
-/// Terra nullius pseudo small id.
-pub const TERRA_NULLIUS: SmallId = 0;
 /// Unit id (upstream `nextUnitID`, starts at 1).
 pub type UnitId = u32;
 /// Attack handle: index into the attack arena of the game.
@@ -198,21 +196,6 @@ pub const BUILD_MENUS: &[UnitType] = &[
     UnitType::Warship,
 ];
 
-/// `PlayerBuildable` group: build menus plus transport ships.
-pub const PLAYER_BUILDABLE: &[UnitType] = &[
-    UnitType::City,
-    UnitType::DefensePost,
-    UnitType::SAMLauncher,
-    UnitType::MissileSilo,
-    UnitType::Port,
-    UnitType::Factory,
-    UnitType::AtomBomb,
-    UnitType::HydrogenBomb,
-    UnitType::MIRV,
-    UnitType::Warship,
-    UnitType::TransportShip,
-];
-
 impl UnitType {
     /// True for members of [`NUKES`].
     pub fn is_nuke(self) -> bool {
@@ -313,8 +296,6 @@ pub struct UnitParams {
     pub last_set_safe_from_pirates: Option<f64>,
     /// Train car kind.
     pub train_type: Option<TrainType>,
-    /// Train loaded flag.
-    pub loaded: Option<bool>,
 }
 
 /// Port of `Embargo`.
@@ -365,13 +346,6 @@ pub struct EmojiMessage {
 
 /// Team spawn areas per team count, from the map manifest (scaled for compact maps).
 pub type TeamGameSpawnAreas = std::collections::BTreeMap<String, Vec<ofsim_map::SpawnArea>>;
-
-/// Largest bulk-purchase amount an intent may carry.
-pub const MAX_UPGRADE_AMOUNT: u32 = 50;
-/// Bulk steps for nukes.
-pub const NUKE_BULK_STEPS: [u32; 2] = [2, 5];
-/// Bulk steps for structures.
-pub const STRUCTURE_BULK_STEPS: [u32; 2] = [5, 10];
 
 /// Upstream `AllPlayers` marker.
 pub const ALL_PLAYERS: &str = "AllPlayers";

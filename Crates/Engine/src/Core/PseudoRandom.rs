@@ -197,11 +197,6 @@ impl PseudoRandom {
         (self.next() * (hi - lo)).floor() + lo
     }
 
-    /// Integer-typed convenience over [`Self::next_int`]; identical draw and arithmetic.
-    pub fn next_int_i64(&mut self, min: i64, max: i64) -> i64 {
-        self.next_int(min as f64, max as f64) as i64
-    }
-
     /// Random float in [min, max).
     pub fn next_float(&mut self, min: f64, max: f64) -> f64 {
         self.next() * (max - min) + min

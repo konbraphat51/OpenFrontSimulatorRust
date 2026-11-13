@@ -5,7 +5,6 @@
 //! Tile refs are `y * width + x`. Out-of-range refs panic (JS would read `undefined`); the engine
 //! only passes refs it derived from the map, and every neighbour helper guards the borders.
 
-use super::TileSet::TileSet;
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Game::Game::{Cell, TerrainType};
 
@@ -482,13 +481,6 @@ impl GameMapImpl {
         }
     }
 
-    /// Visits every tile in ref order.
-    pub fn for_each_tile(&self, mut f: impl FnMut(TileRef)) {
-        for t in 0..self.width * self.height {
-            f(t);
-        }
-    }
-
     /// |dx| + |dy|.
     pub fn manhattan_dist(&self, c1: TileRef, c2: TileRef) -> u32 {
         self.x(c1).abs_diff(self.x(c2)) + self.y(c1).abs_diff(self.y(c2))
@@ -638,15 +630,6 @@ impl GameMapImpl {
             }
         }
         seen
-    }
-
-    /// `bfs` returning a [`TileSet`].
-    pub fn bfs_tiles(
-        &self,
-        tile: TileRef,
-        filter: impl FnMut(&GameMapImpl, TileRef) -> bool,
-    ) -> TileSet {
-        TileSet::from_ordered(self.bfs(tile, filter))
     }
 
     /// Packed per-tile state (owner bits 0-11, fallout bit 13, defense bit 14).

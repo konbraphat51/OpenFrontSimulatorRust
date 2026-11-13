@@ -64,17 +64,6 @@ pub fn emoji_nuke() -> Vec<f64> {
     emoji_ids(&["\u{2622}\u{fe0f}", "\u{1f4a5}"])
 }
 
-/// `EMOJI_GOT_INSULTED` as emoji ids.
-pub fn emoji_got_insulted() -> Vec<f64> {
-    emoji_ids(&[
-        "\u{1f595}",
-        "\u{1f621}",
-        "\u{1f921}",
-        "\u{1f61e}",
-        "\u{1f62d}",
-    ])
-}
-
 /// `EMOJI_LOVE` as emoji ids.
 pub fn emoji_love() -> Vec<f64> {
     emoji_ids(&["\u{2764}\u{fe0f}", "\u{1f60a}", "\u{1f970}"])
