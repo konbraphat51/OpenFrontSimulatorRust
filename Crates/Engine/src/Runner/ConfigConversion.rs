@@ -17,8 +17,14 @@ fn difficulty(d: &RecordConfig::Difficulty) -> Result<Difficulty> {
 
 /// Converts a record config; unknown enum values are errors (a build this engine does not know).
 pub fn game_config_from_record(c: &RecordConfig::GameConfig) -> Result<GameConfig> {
+    // v0.27.x spelled the map "Baikal (Nuke Wars)".
+    let map_name = if c.game_map == "Baikal (Nuke Wars)" {
+        "Baikal Nuke Wars"
+    } else {
+        c.game_map.as_str()
+    };
     let game_map =
-        GameMapType::from_str(&c.game_map).ok_or_else(|| anyhow!("unknown map {}", c.game_map))?;
+        GameMapType::from_str(map_name).ok_or_else(|| anyhow!("unknown map {}", c.game_map))?;
     let ranked_type = match &c.ranked_type {
         None => None,
         Some(r) => Some(
