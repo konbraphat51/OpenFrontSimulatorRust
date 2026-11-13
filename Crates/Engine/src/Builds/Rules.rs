@@ -431,6 +431,8 @@ pub enum Change {
     TrainAllyGold35kMeta,
     /// v0.28: an alliance reply is answered in `init`, at the end of the tick it was added (older: on its first tick).
     AllianceReplyInit28,
+    /// v0.27.10: a nuke with a source tile launches from it without checking `canBuild` (MIRV warheads start at their MIRV).
+    NukeSrcFirst27,
 }
 }
 
