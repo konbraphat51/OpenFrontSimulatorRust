@@ -29,64 +29,22 @@ change_enum! {
 /// One upstream behaviour change, named after the upstream PR; more are added per build.
 ///
 /// Engine code branches on [`Rules::has`] at the exact place upstream changed; `has` is true
-/// when the build contains the changed (newer) behaviour.
+/// when the build contains the changed (newer) behaviour. Variants are grouped by area (section comments);
+/// the order is free because `Change` is only used as a bitset index and a sorted-set key.
 pub enum Change {
+    // ---- Random number generation and math ----
     /// PR 5191: deterministic `DetMath` replaces V8's `Math.exp/log/pow/atan2`.
     DetMath5191,
     /// PR 4233: `PseudoRandom` is sfc32 seeded by splitmix32 (older builds use another generator).
     Sfc32PseudoRandom4233,
-    /// PR 5823: an attack with nothing to conquer retreats in `init` instead of lingering.
-    AttackRetreatNoTargets5823,
-    /// PR 5587: trade ship (230 -> 330) and train (500 -> 560) saturation midpoints.
-    SaturationMidpoints5587,
-    /// PR 5545: `PlayerExecution` skips a hole cluster when picking the largest border cluster.
-    InternalBorderAnnexFix5545,
-    /// PR 5525: nukes credit no kill for units of friendly (ally, teammate) owners.
-    NukeFriendlyKillNoCredit5525,
-    /// PR 5462: train saturation midpoint 300 -> 500.
-    TrainSaturation500Pr5462,
-    /// PR 5436: team count of Duos/Trios/Quads is at least 2.
-    TeamCountMinTwo5436,
-    /// PR 5425: player-vs-player attack speed divisor 7.77 -> 8.55.
-    AttackSpeedDivisor5425,
+    /// v0.31: PseudoRandom.nextInt floors its bounds (older: it does not).
+    NextIntFloorsArgs31,
+    /// PR 2046: `shuffleArray` stops at index 1 (older builds also draw once for index 0).
+    ShuffleArrayStopsAtOne2046,
+
+    // ---- Nation, tribe and bot AI ----
     /// PR 5564: Channel Islands gets its custom tribes and the `western` tribe theme.
     ChannelIslandsTribes5564,
-    /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
-    NewMapThemes5547,
-    /// PR 5173 and siblings: `attackLogic` is pure with per-tile tick fractions (older builds use `attackTilesPerTick`).
-    AttackLogicRework5173,
-    /// PR 5111: an attack holds the troops actually deducted from its owner.
-    AttackTroopsDeducted5111,
-    /// PR 4890: `handleDeadDefender` converges over up to 100 passes (older builds do exactly 10).
-    AnnexConvergeLoop4890,
-    /// PR 5027: annexing needs an enclosed territory; impassable tiles count as map edge.
-    AnnexEnclosedOnly5027,
-    /// PR 4892: a donate-gold intent without an amount keeps its null gold.
-    DonateGoldKeepNull4892,
-    /// PR 4953: the Doomsday Clock execution goes inactive once a winner is set.
-    DoomsdayIdleOnWinner4953,
-    /// PR 4867: a client spawn intent is gated on the phase it was queued in.
-    SpawnIntentGate4867,
-    /// PR 4921: spawn retries beyond 750 ignore the minimum distance between players.
-    SpawnRelaxMinDist4921,
-    /// PR 5321: a failed spawn restores the player's previous tiles.
-    SpawnRollback5321,
-    /// PR 5347: multiplayer spawn phase 200 turns (older builds 300).
-    SpawnPhase20s5347,
-    /// PR 5200: a train re-resolves a split railroad instead of despawning.
-    TrainSplitResolve5200,
-    /// PR 5302: trade ship and train spawn rates are throttled by saturation curves.
-    TradeTrainSaturation5302,
-    /// PR 5223: the win bar is 80 percent in team games too and the win test is cross-multiplied.
-    WinThresholdSame5223,
-    /// PR 5054: an alliance cancels in-flight MIRVs and warheads too.
-    AllianceCancelMirv5054,
-    /// PR 5188 and 4927: fixed-point Bezier curve, normalised MIRV flight and staged warheads.
-    MirvNormalize5188,
-    /// PR 5197 and 5040: cached SAM interception states and dynamic range on upgrade.
-    SamTargeting5197,
-    /// PR 5332: no teammate aftergame nuking in singleplayer.
-    AftergameSingleplayer5332,
     /// PR 5330: smarter betrayal logic for Hard and Impossible nations.
     NationBetray5330,
     /// PR 5294: the juicy attack strategy of nations.
@@ -97,206 +55,46 @@ pub enum Change {
     NationCrowdedFirst5344,
     /// PR 5223: nation victory denial thresholds as whole percents (one ladder).
     NationVictoryDenialPercent5223,
-    /// PR 4758: duo/trio/quad team forming prefers the fullest team.
-    TeamAssignDuos4758,
-    /// PR 4903: rails cannot start on or cross impassable terrain.
-    RailNoImpassable4903,
-    /// PR 4979: one HPA finder swaps its graph on rebuild (older builds and v0.35.0 on create a new finder).
-    WaterHpaSharedFinder4979,
-    /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
-    WaterNukeMinimap4975,
-    /// PR 5096: a station set to its own cluster does not leave it first.
-    StationClusterSame5096,
-    /// PR 5062: overtime lowers the win bar late in a game.
-    Overtime5062,
-    /// PR 4640: build and upgrade intents carry an amount (stacked purchases).
-    BulkPurchase4640,
-    /// PR 5030: team modes climb a higher Doomsday Clock ladder.
-    DoomsdayTeamLevels5030,
-    /// PR 5052: rotted territory becomes fallout wasteland.
-    DoomsdayRotWasteland5052,
-    /// PR 5907: per-player spawn boost for small trade and rail economies replaces the fleet-size boost.
-    SmallEconomyBoost5907,
-    /// PR 5805 (package split): water graph edges are renumbered by node pair after the build.
-    WaterGraphEdgeSort5805,
-    /// PR 5955 and siblings: `PlayerExecution` judges clusters first and annexes severed land.
-    SeveredLandAnnex5955,
-    /// PR 5919: "stop trading with enemies" (embargo all) skips allies.
-    EmbargoAllSkipsAllies5919,
     /// PR 6087 (nation AI split): tribes may pick an allied traitor, alliance renewal does not count the renewed alliance.
     NationAiSplit6087,
-    /// PR 6089: an attack checks that it is still active before refunding a completed retreat.
-    AttackInactiveBeforeRetreat6089,
-    /// PR 6016: a water nuke turns a mini map land tile to water when any of its four tiles is water.
-    WaterNukeMiniTile6016,
-    /// PR 6204 and siblings: the onboarding tutorial mode (nations and tribes only grow into free land).
-    TutorialMode6204,
-    /// PR 6242: the tutorial's scripted silo, warship and collapse, smaller atom bombs.
-    TutorialSilo6242,
-    /// PR 6259 and siblings: friend groups are seated back to back in team assignment.
-    TeamFriendGroups6259,
-    /// PR 5719: a train reconciles a split of the railroad it is on.
-    TrainSplitReconcile5719,
     /// PR 5899: nations play more like winning humans (attack, nuke, structure, MIRV and warship behaviour, bot annexation).
     NationsLikeHumans5899,
-    /// v0.36.0: the game-state hash includes a digest of the rail network.
-    RailNetworkHash36,
-    /// v0.36.0: `GameMap.bfs` is a FIFO breadth-first search (tile order and filter call order change).
-    BfsFifoOrder36,
-    /// v0.36.0: `PlayerExecution` ranks clusters by 4-way territory area and has a pinch pass.
-    PlayerClusterRewrite36,
-    /// v0.36.0: a port spawns on the first shore tile of the valid structure tiles (no radius-20 search).
-    PortSpawnFirstShore36,
     /// v0.36.0: nations book troops they send this tick so later decisions see what is left at home.
     NationHomeTroops36,
     /// v0.36.0: a nation without a land front attacks the nearest bots across the water.
     NationOverseasBots36,
-    /// v0.36.0: the water graph edge search is bounded by the squared cluster size.
-    AbstractGraphWideSearch36,
-    /// v0.36.0: a train spawned off the rail starts one tile behind its first rail tile.
-    TrainSpawnOffRail36,
-    /// v0.36.0: MIRV warhead targets come from a clipped box with a spatial overlap grid and a saturation limit.
-    MirvTargetGrid36,
     /// v0.36.0: tribe themes and custom tribes of the maps added or edited since the baseline.
     TribeMapData36,
     /// v0.36.1: tribe themes of four more maps (Ottoman Empire, Turkiye, World Inverted, Zealandia).
     TribeMapData361,
     /// v0.36.0: nation warships keep nuke gold, invasions may dip into it, and the enemy fleet must outnumber ours.
     NationWarshipSpareGold36,
-    /// PR 5833: a human may send several emojis per window (nations still one).
-    EmojiBatch5833,
-    /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
-    ImpassableTerrain4340,
-    /// PR 4433: warships gain veterancy (more health and shell damage) from kills and captures.
-    WarshipVeterancy4433,
-    /// PR 4706: MIRV warheads are standard nukes (per-type speeds 15 and 22, real flight, SAM interception).
-    MirvWarheadsStandard4706,
-    /// PR 4707: launching a MIRV puts the silo on cooldown.
-    MirvSiloCooldown4707,
-    /// PR 4756: a nuke execution keeps a given launch tile (MIRV warheads start at the separation point).
-    NukeKeepSrcTile4756,
-    /// PR 4770: SAM targeting fixes (multi-target scoring, final-tick interception) and a SAM missile that moves on init.
-    SamTargetingFixes4770,
     /// PR 4429: nations skip ports on lakes below 3000 water tiles (not on Easy).
     NationSmallLakePorts4429,
-    /// PR 4654: trade ship motion plans reuse the stepper's cached path (older builds run a one-shot query).
-    TradeShipPathReuse4654,
-    /// PR 4577: transport ships only target shores on water reachable from their own shoreline.
-    ReachableShoreTransport4577,
     /// PR 4647: per-map tribe name themes and custom tribes.
     TribeNameThemes4647,
     /// PR 4458: pirating needs a port in the warship's water body.
     PirateReachablePort4458,
-    /// PR 4657: a spawn intent after the spawn phase is ignored for an already spawned player.
-    SpawnTeleportGuard4657,
-    /// PR 4426: the cluster recalculation offset is seeded from the player id (older builds: the name).
-    ClusterOffsetFromId4426,
-    /// PR 4428: random spawn ignores the requested tile in `SpawnExecution`.
-    RandomSpawnIgnoresTile4428,
-    /// PR 4422: `nearby()` skips unowned tiles with fallout.
-    NearbySkipsFallout4422,
-    /// PR 4406: the longest railroad is 1.4142 times the station range (older: the range itself).
-    RailroadMaxSizeDiagonal4406,
-    /// PR 4337: railroads longer than `railroadMaxSize` are not built.
-    RailroadMaxSizeLimit4337,
-    /// PR 4320: `unitsConstructed` does not count buildings under construction twice.
-    UnitsConstructedOnce4320,
     /// PR 4297: nation land and boat attacks share one troop calculation.
     AiBoatTroopsUnified4297,
-    /// PR 4469: the Doomsday Clock game mode exists (later builds only).
-    DoomsdayClock4469,
-    /// PR 4893: Doomsday Clock territory rot, decaying troop floor, 7-wave 35 percent ladder and idle-on-winner.
-    DoomsdayRotLadder4893,
-    /// PR 4479: water components use a wide land marker and the HPA node search walks water tiles.
-    WaterComponentMarkers4479,
     /// PR 4239 and 4278: Hard and Impossible nations cap the troops they send and skip attacks under 20 percent of the target's troops.
     AiTroopCap4239,
     /// PR 4282: nations are not blocked by PVP immunity (older: they respect it like humans).
     NationsIgnoreImmunity4282,
-    /// Meta update: atom and hydrogen bombs fly at speed 10 (older: 8).
-    NukeSpeed10Meta,
-    /// Meta update: the trade ship spawn sigmoid midpoint is 400 (older: 200).
-    TradeShipSigmoid400Meta,
-    /// PR 3199: the spawn phase ends through `SpawnTimerExecution` / `endSpawnPhase` (older: while `ticks <= numSpawnPhaseTurns`).
-    SpawnPhaseTimer3199,
     /// PR 4117: nations track their queued spawn and are created before the tribes (older: they retry every attack tick, after the tribes).
     NationSpawnRetry4117,
-    /// PR 1563 and 4016: a defense post on captured tiles is destroyed (older: its level drops and it changes hands).
-    DefensePostDestroyed1563,
-    /// PR 4014: self attacks, self donations and `isFriendly(self)` are guarded.
-    SelfActionGuards4014,
-    /// PR 3997: a missile silo execution ends once its silo is gone.
-    SiloInactiveGuard3997,
-    /// PR 4151: a move-warship intent skips warships outside the new patrol tile's water body.
-    WarshipPatrolComponent4151,
-    /// PR 3820: attacks walk neighbours with `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
-    AttackForEachNeighbor3820,
-    /// PR 4079: train stations reach 110 tiles and railroads follow the station range (older: 100 and 120).
-    TrainRange110Pr4079,
-    /// PR 4149: the abstract graph A* uses a min-heap (older: a bucket queue that clamps priorities).
-    AbstractAStarMinHeap4149,
-    /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
-    NeighborOrderNswe4495,
-    /// v0.31: PseudoRandom.nextInt floors its bounds (older: it does not).
-    NextIntFloorsArgs31,
-    /// PR 2046: `shuffleArray` stops at index 1 (older builds also draw once for index 0).
-    ShuffleArrayStopsAtOne2046,
-    /// PR 2241: a fully surrounded main cluster of a disconnected player is annexed (`surroundedBy.isFriendly(player)`).
-    AnnexDisconnectedSurrounded2241,
     /// PR 2234: nations request alliances through an `AllianceRequestExecution` (older: `Player.createAllianceRequest` at once).
     NationAllianceRequestExecution2234,
-    /// PR 2202: `canSendAllianceRequest` refuses when either player is disconnected.
-    AllianceRequestDisconnectedGuard2202,
-    /// PR 2191: `getCapturingPlayer` falls back to the neighbour with the longest shared border when no attack targets the player.
-    CapturingPlayerBorderFallback2191,
     /// v0.26.0-beta3: nations and tribes use the `BotBehavior` with reserve ratio, emoji tables and betrayal inside it, `structureSpawnTileValue` as a module and hydrogen nukes (older: the beta1/2 AI).
     NationAiBeta3V26,
-    /// PR 2158: allies cannot annex a cluster; `getCapturingPlayer` skips friendly neighbours and has no mode fallback (older: the first neighbouring owner takes it).
-    AlliesCannotAnnexClusters2158,
-    /// PR 1957: a captured defense post loses a level (older: captured whole).
-    DefensePostDowngrade1957,
-    /// PR 2144: disconnected players are not friendly, a disconnected teammate can be attacked without troop loss and `AttackExecution` has no same-team guard.
-    AttackDisconnectedTeammates2144,
-    /// PR 2146: `canDonateGold` and `canDonateTroops` require both players alive.
-    DonateAliveChecks2146,
-    /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
-    SamCooldown90V31,
-    /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
-    SamCooldown120V30,
-    /// v0.31: missile silo cooldown 90 ticks (older 75).
-    SiloCooldown90V31,
-    /// v0.31: port construction takes 50 ticks (older 20).
-    PortBuild50V31,
     /// v0.31: attacks on bots lose 30 percent magnitude (older 20 percent).
     BotAttackMalus07V31,
-    /// v0.31: attacker troop loss blends 0.6 current and 0.4 alternative (older 0.7 and 0.3).
-    AttackerLoss6040V31,
-    /// v0.30.0-beta5: attacker troop loss blends 0.7 and 0.3 (older 0.5 and 0.5).
-    AttackerLoss7030V30,
     /// v0.31: bots grow troops at half rate (older 0.6).
     BotTroopGrowth05V31,
-    /// v0.31: atom and hydrogen bombs fly at speed 8 (older 6).
-    NukeSpeed8V31,
-    /// v0.31: conquering a human takes half its gold (older: all of it).
-    ConquerGoldHalfHuman31,
-    /// v0.31: cities under construction add no troop cap.
-    CityTroopsFinishedOnly31,
-    /// v0.31: an attack skips conquered tiles that are not land.
-    AttackSkipsWater31,
-    /// v0.31: a troop donation with nothing to give ends at init.
-    DonateTroopZeroInactive31,
     /// v0.31: nation attack choice reports whether it attacked, tries the next option, scans lakes and nearby players (older: first match ends the turn, ocean shores only).
     AiAttackRework31,
-    /// v0.31: an alliance cancels nukes whose blast would hit the new ally (older: only nukes aimed at its tiles).
-    AllianceNukeCancelBlast31,
-    /// v0.31: trade routes, captured trade ships, warship and port spawns respect water components and lakes (older: any port, ocean shores).
-    TradeWaterComponents31,
-    /// v0.31: a SAM that reloads may fire in the same tick (older: the reload ends its tick).
-    SamReloadThenFire31,
     /// v0.31: Easy nations react slower (65 to 100), team games embargo every outsider on Hard, ship tracking needs a port (older: none of these).
     NationExecutionTweaks31,
-    /// v0.31: incomingAttacks() leaves out attacks of dead attackers.
-    IncomingAttacksAliveOnly31,
     /// v0.31: nation structures (paced placement, defense posts on attack fronts, shared water ports, save-up changes) replace the plain build order with defense posts.
     NationStructureRework31,
     /// v0.31: nations check silos before choosing a nuke target, hunt dense targets, upgrade helpful silos and save for a MIRV differently in team games.
@@ -307,162 +105,226 @@ pub enum Change {
     NationBehaviorTweaks31,
     /// v0.31: the generated nation names draw from the larger name tables and special plurals (older: 114 templates and 66 nouns).
     NationNamesExpanded31,
-    /// v0.31: warships heal in ports, retreat to dock, fight enemy warships and keep their patrol after a lost path (older: the plain v0.30 warship).
-    WarshipDocking31,
-    /// v0.31: the clan tag comes from the clanTag field of a player (older: parsed from the [TAG] in the username).
-    ClanTagField31,
-    /// v0.30.10 (PR 3455): a surrounded cluster is judged against the box of the enemy tiles around it (older: the enemy border box).
-    ClusterLocalEnemyBox3455,
-    /// v0.30.10 (PR 3448): players under 100 tiles recompute clusters every tick and a change on the last calc tick counts.
-    ClusterCalcSmallPlayers3448,
-    /// v0.30.10 (PR 3437): nations do not donate troops in public games.
-    NoPublicDonation3437,
-    /// v0.30.10 (PR 3433): a random-spawn game has a 150 turn spawn phase (older: 300).
-    RandomSpawnShortPhase3433,
-    /// v0.30.0-beta5 (PR 3410): after a win teammates may nuke each other and SAMs shoot teammate nukes (older: never).
-    AftergameTeammateNukes3410,
-    /// v0.30.2: train spawn rate 15 and 9 free cities, trade ship sigmoid scale 75000 (older: 18, 5 cities, 50000).
-    TrainTradeRetune30,
-    /// v0.30.0-beta5: train gold falls with the cities visited and trains spawn at 18 (older: flat gold, rate 25).
-    TrainDistanceGold30Beta,
     /// v0.31: nations stop alliance behaviour when alliances are disabled (older: they only fail to send requests).
     NationDisabledAlliances31,
-    /// v0.30.0-beta5: the disableAlliances game option exists (older: alliances cannot be disabled).
-    DisableAlliancesOption30,
-    /// v0.30.22 only: one nuke in six bounces past its target and detonates half the distance beyond.
-    BouncingNukes30,
-    /// v0.30.0-beta2 only: trains spawn at (factories + 10) * 25 (beta1 and beta5: 18).
-    TrainSpawnRate25Beta2,
-    /// v0.30.0-beta2: a game ends at 170 minutes (beta1: no hard limit).
-    HardTimeLimit170Min30,
-    /// v0.30.0-beta2: nations reject alliance requests made during the spawn phase (beta1: they judge them).
-    AllianceSpawnReject30,
     /// v0.30.0-beta2: bots are spawned from their own seed (simpleHash + 2) (beta1: the game runner seed).
     BotSpawnerOwnSeed30,
     /// v0.30.0-beta2: nations follow the nations setting (count, default, disabled) (beta1: disableNations flag, compact maps everywhere).
     NationCreationConfigurable30,
-    /// v0.31: a transport ship order rejects the target's pending alliance request (older: only land attacks do).
-    TransportRejectsAlliances31,
-    /// PR 3227: attacker troop loss blends the current loss with an alternative (older: the plain current loss).
-    AttackerLossBlend3227,
     /// PR 3184: the Medium/Hard nation start troops, troop cap and growth tables moved one tier down.
     NationDifficultyRebalance3184,
     /// PR 3222: nations respect spawn immunity and the immunity test is strict (older: only humans, inclusive).
     NationSpawnImmunity3222,
-    /// PR 3232: trade ship gold has no port bonus and spawning uses a rejection pity timer (older: port count bonus and per-player rates).
-    TradeShipMeta3232,
-    /// PR 3020: conquering a human that never attacked yields no gold.
-    ConquerGoldSkipInactive3020,
-    /// PR 3206: a MIRV also lowers the launcher's relation to its target.
-    MirvRelationBoth3206,
-    /// PR 2954: an attack does not hand a captured tile to a neighbour allied with the target.
-    AttackFriendlyNeighbor2954,
-    /// PR 3176: nuke explosions deal troop losses per player in bulk, unit and attack troops clamp at zero.
-    NukeExplosionBulk3176,
     /// PR 2895: bots delete their structures, nations hit structure-owning bots first.
     BotStructureFarming2895,
-    /// PR 3168: a dead player silently drops all alliances.
-    AllianceRemovedOnDeath3168,
-    /// PR 3155: accepting an alliance cancels nukes between the allies; the reply intent is reject only.
-    AllianceRadialAccept3155,
-    /// PR 3092: a player with an incoming request may always answer it with a request of its own.
-    AllianceIncomingBypass3092,
-    /// PR 3105: team games forbid nukes that would hit a teammate's structures.
-    NukeTeammateStructureGuard3105,
-    /// PR 2912: a nuke angers every owner of a structure in range, and incoming requests of angered players are rejected.
-    NukeBreakAllyList2912,
-    /// PR 3003: railroads split where a new structure overlaps them, clusters are recomputed lazily.
-    RailSnapOverlap3003,
-    /// PR 3130: a station picks its train destination by reservoir sampling over cached trade stations.
-    TrainDestinationReservoir3130,
-    /// PR 3223: SAM targeting picks one best target and flags nukes already targeted.
-    SamTargetingFix3223,
-    /// PR 3009 and 3278: random spawn needs a fully valid spawn area and a respawn frees old tiles first.
-    SpawnValidation3009,
-    /// PR 3122: usernames arrive censored from the server (older: the game runner censors them).
-    ServerUsernameCensoring3122,
     /// v0.30.0-beta1: tribe names come from the revised `TribeNames` pools (older: the `BotNames.ts` lists, 180 prefixes and 71 suffixes).
     TribeNamesRevised30,
-    /// PR 3124: border tile updates walk `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
-    BorderUpdateForEach3124,
-    /// PR 3286: a retreating transport ship returns to the closest owned shore (older: to its launch tile).
-    TransportRetreatNearest3286,
-    /// PR 3167: a nuke blast does not destroy SAM missiles.
-    SamMissileImmunity3167,
     /// PR 3072: Easy nations start with 12,500 troops, cap at half and grow at 0.9 (older: 18,750, three quarters and 0.95).
     EasyNationsEasier3072,
     /// PR 2984: nations donate troops in team games, check the boat limit and tile share for winners (older: none of these).
     NationAiRework2984,
     /// PR 2971: nations reject team-game alliances 25, 50, 75 and 100 percent of the time (older: 0, 20, 40, 60).
     NationTeamRejectHarder2971,
-    /// PR 2959: the boat intent carries no target or source tile, smoothing keeps two magnitude passes, the short path search covers 260 tiles.
-    PathfindingRefinements2959,
-    /// PR 2937: shore endpoints coerce to the best connected water neighbour (older: the first one).
-    ShoreCoerceBestNeighbor2937,
-    /// PR 2958: with random spawn a player cannot re-roll its spawn tile.
-    RandomSpawnLock2958,
-    /// PR 2950: station ids start at 1 and the station graph allows 32 neighbours (older: 0 and 8).
-    RailPathfindingFix2950,
-    /// PR 3134: MIRV warheads separate even when the launcher died meanwhile.
-    MirvWarheadsWhenDead3134,
-    /// PR 2932: naval invasions search with a short bounded path, MinHeap queues, a final smoothing pass and a refined launch tile (older: none of these).
-    NavalInvasionPathing2932,
-    /// PR 2915: lobbies can set the starting gold and a gold multiplier.
-    LobbyGoldOptions2915,
     /// PR 2896: a bot expands into free land only when a land tile next to its border is unowned (older: any border tile next to terra nullius, water included).
     BotTerraNulliusLand2896,
-    /// PR 2878: a nuke also angers allies owning a structure in its blast (older: only the weighted tile count).
-    NukeBreakAlliedStructures2878,
-    /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
-    TeamSpawnAreas3263,
     /// PR 3152: nations use the structure behaviour class (older: an inline build order).
     NationStructureBehavior3152,
     /// PR 3246 and 3206: later nation AI behaviours (SAM overwhelm, home defence, greetings, MIRV cooldown, alliance limits).
     NationBehaviorUpdate3246,
-    /// v0.28.4: nations are `FakeHumanExecution` players placed on their manifest cell and tribes use `BotBehavior` (newer: `NationExecution`, `AiAttackBehavior`).
-    FakeHumanNations28,
-    /// v0.26.14: nations and tribes use the pre-rewrite `BotBehavior` (alliance answers inside it, no MIRV or retaliation AI, plain land attacks, older boat targets and attack chances; newer: `AllianceBehavior` split and the v0.28 AI).
-    PreRewriteNationAi26,
     /// v0.28.4: nation start troops, troop cap and growth follow the v0.28 difficulty table.
     NationDifficultyEconomy28,
-    /// v0.28.4: immunity is the spawn phase plus a fixed 5 seconds for everyone (newer: humans only, `canAttackPlayer`).
-    ImmunityByConfig28,
-    /// v0.28.4: spawn tiles are chosen when the executions are created (`SpawnExecution` always gets a tile; bots retry random land).
-    SpawnByTile28,
-    /// v0.28.4: boats, rails and shipping run on the bidirectional `MiniAStar` (newer: HPA water graph, stepper finders).
-    LegacyAStar28,
-    /// v0.28.4: shells and SAM missiles use one PRNG per finder, nukes and MIRVs a control-point Bezier; MIRVs scatter by `nextInt`.
-    LegacyProjectiles28,
-    /// v0.28.4: relation penalties of attacks, betrayals and insults, and `allRelationsSorted` keeps dead players.
-    RelationPenalties28,
-    /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
-    WarshipLegacy28,
-    /// v0.28.5 and v0.28.7 (aac3bb37e): trade ship distance bonus 100 -> 150 gold per tile (before PR 3232 formula).
-    TradeShipDistanceGold150,
-    /// PRs 2552 and 2609 (v0.28.0 to v0.28.3, reverted in v0.28.4): bots beyond the first 20 take names from the community lists.
-    CommunityBotNames2552,
     /// PR 2697 (v0.28.0 and v0.28.1, reverted in v0.28.4): bots may attack humans, and nothing attacks humans on Easy via random targets.
     BotsAttackHumans2697,
     /// v0.27.10: nation start troops 2,500 / 5,000 / 20,000 / 50,000, cap 0.5 / 1 / 1.5 / 2 and growth 0.9 / 1 / 1.1 / 1.2 by difficulty.
     NationDifficultyEconomy27,
-    /// PR 2539 and 2614: cluster removal finds the largest cluster by a linear scan over DFS clusters (older: a stable size sort over BFS clusters).
-    ClusterLinearScan2614,
     /// v0.28: tribes and fake humans pick attacks statelessly and fake humans answer alliances in `AllianceBehavior` (older: a stateful enemy in `BotBehavior`, alliance replies there).
     BotBehaviorStateless28,
-    /// PR 2378: no `Construction` unit; a structure is built at once and flagged under construction (older: a `Construction` unit stands in until the structure is built).
-    NoConstructionUnit2378,
+    /// v0.25.x (C079 and newer): nations and tribes use the v0.26 AI; older builds use `*V25` modules without attack chances, betrayal, structure values or reserve ratios.
+    NationAiV26Base25,
+
+    // ---- Alliances ----
+    /// PR 4892: a donate-gold intent without an amount keeps its null gold.
+    DonateGoldKeepNull4892,
+    /// PR 5054: an alliance cancels in-flight MIRVs and warheads too.
+    AllianceCancelMirv5054,
+    /// PR 2202: `canSendAllianceRequest` refuses when either player is disconnected.
+    AllianceRequestDisconnectedGuard2202,
+    /// PR 2146: `canDonateGold` and `canDonateTroops` require both players alive.
+    DonateAliveChecks2146,
+    /// v0.31: a troop donation with nothing to give ends at init.
+    DonateTroopZeroInactive31,
+    /// v0.31: an alliance cancels nukes whose blast would hit the new ally (older: only nukes aimed at its tiles).
+    AllianceNukeCancelBlast31,
+    /// v0.30.0-beta5: the disableAlliances game option exists (older: alliances cannot be disabled).
+    DisableAlliancesOption30,
+    /// v0.30.0-beta2: nations reject alliance requests made during the spawn phase (beta1: they judge them).
+    AllianceSpawnReject30,
+    /// v0.31: a transport ship order rejects the target's pending alliance request (older: only land attacks do).
+    TransportRejectsAlliances31,
+    /// PR 3168: a dead player silently drops all alliances.
+    AllianceRemovedOnDeath3168,
+    /// PR 3155: accepting an alliance cancels nukes between the allies; the reply intent is reject only.
+    AllianceRadialAccept3155,
+    /// PR 3092: a player with an incoming request may always answer it with a request of its own.
+    AllianceIncomingBypass3092,
+    /// v0.28: an alliance reply is answered in `init`, at the end of the tick it was added (older: on its first tick).
+    AllianceReplyInit28,
+    /// PR 1733: an attack rejects the target's pending alliance requests.
+    AttackRejectsAllianceRequests1733,
+    /// PR 2044: attacks on allies are refused in `init`; older attacks break the alliance on the first tick.
+    AttackAllianceBlocked2044,
+
+    // ---- Nukes, MIRVs, SAMs and silos ----
+    /// PR 5525: nukes credit no kill for units of friendly (ally, teammate) owners.
+    NukeFriendlyKillNoCredit5525,
+    /// PR 5188 and 4927: fixed-point Bezier curve, normalised MIRV flight and staged warheads.
+    MirvNormalize5188,
+    /// PR 5197 and 5040: cached SAM interception states and dynamic range on upgrade.
+    SamTargeting5197,
+    /// PR 4975: water nukes fix the minimap ocean bit and magnitudes.
+    WaterNukeMinimap4975,
+    /// PR 6016: a water nuke turns a mini map land tile to water when any of its four tiles is water.
+    WaterNukeMiniTile6016,
+    /// PR 6242: the tutorial's scripted silo, warship and collapse, smaller atom bombs.
+    TutorialSilo6242,
+    /// v0.36.0: MIRV warhead targets come from a clipped box with a spatial overlap grid and a saturation limit.
+    MirvTargetGrid36,
+    /// PR 4706: MIRV warheads are standard nukes (per-type speeds 15 and 22, real flight, SAM interception).
+    MirvWarheadsStandard4706,
+    /// PR 4707: launching a MIRV puts the silo on cooldown.
+    MirvSiloCooldown4707,
+    /// PR 4756: a nuke execution keeps a given launch tile (MIRV warheads start at the separation point).
+    NukeKeepSrcTile4756,
+    /// PR 4770: SAM targeting fixes (multi-target scoring, final-tick interception) and a SAM missile that moves on init.
+    SamTargetingFixes4770,
+    /// Meta update: atom and hydrogen bombs fly at speed 10 (older: 8).
+    NukeSpeed10Meta,
+    /// PR 1563 and 4016: a defense post on captured tiles is destroyed (older: its level drops and it changes hands).
+    DefensePostDestroyed1563,
+    /// PR 3997: a missile silo execution ends once its silo is gone.
+    SiloInactiveGuard3997,
+    /// PR 1957: a captured defense post loses a level (older: captured whole).
+    DefensePostDowngrade1957,
+    /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
+    SamCooldown90V31,
+    /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
+    SamCooldown120V30,
+    /// v0.31: missile silo cooldown 90 ticks (older 75).
+    SiloCooldown90V31,
+    /// v0.31: atom and hydrogen bombs fly at speed 8 (older 6).
+    NukeSpeed8V31,
+    /// v0.31: a SAM that reloads may fire in the same tick (older: the reload ends its tick).
+    SamReloadThenFire31,
+    /// v0.30.0-beta5 (PR 3410): after a win teammates may nuke each other and SAMs shoot teammate nukes (older: never).
+    AftergameTeammateNukes3410,
+    /// v0.30.22 only: one nuke in six bounces past its target and detonates half the distance beyond.
+    BouncingNukes30,
+    /// PR 3206: a MIRV also lowers the launcher's relation to its target.
+    MirvRelationBoth3206,
+    /// PR 3176: nuke explosions deal troop losses per player in bulk, unit and attack troops clamp at zero.
+    NukeExplosionBulk3176,
+    /// PR 3105: team games forbid nukes that would hit a teammate's structures.
+    NukeTeammateStructureGuard3105,
+    /// PR 2912: a nuke angers every owner of a structure in range, and incoming requests of angered players are rejected.
+    NukeBreakAllyList2912,
+    /// PR 3223: SAM targeting picks one best target and flags nukes already targeted.
+    SamTargetingFix3223,
+    /// PR 3167: a nuke blast does not destroy SAM missiles.
+    SamMissileImmunity3167,
+    /// PR 3134: MIRV warheads separate even when the launcher died meanwhile.
+    MirvWarheadsWhenDead3134,
+    /// PR 2878: a nuke also angers allies owning a structure in its blast (older: only the weighted tile count).
+    NukeBreakAlliedStructures2878,
     /// PR 2665: SAM launchers always hit (older: a per-launcher PRNG draw against the hit chance, 0.8 and 0.5 for MIRV warheads).
     SamNoRng2665,
     /// v0.27: a SAM's range grows with its level and detection scales with the maximum (v0.26.14: one fixed range of 70).
     SamRangeByLevel27,
+    /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
+    MirvCostScales2621,
+    /// v0.27.10: a nuke with a source tile launches from it without checking `canBuild` (MIRV warheads start at their MIRV).
+    NukeSrcFirst27,
+    /// PR 2101: a nuke rejects the target's pending alliance request.
+    NukeRevokesRequests2101,
+
+    // ---- Attacks, conquest and annexation ----
+    /// PR 5823: an attack with nothing to conquer retreats in `init` instead of lingering.
+    AttackRetreatNoTargets5823,
+    /// PR 5545: `PlayerExecution` skips a hole cluster when picking the largest border cluster.
+    InternalBorderAnnexFix5545,
+    /// PR 5425: player-vs-player attack speed divisor 7.77 -> 8.55.
+    AttackSpeedDivisor5425,
+    /// PR 5173 and siblings: `attackLogic` is pure with per-tile tick fractions (older builds use `attackTilesPerTick`).
+    AttackLogicRework5173,
+    /// PR 5111: an attack holds the troops actually deducted from its owner.
+    AttackTroopsDeducted5111,
+    /// PR 4890: `handleDeadDefender` converges over up to 100 passes (older builds do exactly 10).
+    AnnexConvergeLoop4890,
+    /// PR 5027: annexing needs an enclosed territory; impassable tiles count as map edge.
+    AnnexEnclosedOnly5027,
+    /// PR 5096: a station set to its own cluster does not leave it first.
+    StationClusterSame5096,
+    /// PR 5955 and siblings: `PlayerExecution` judges clusters first and annexes severed land.
+    SeveredLandAnnex5955,
+    /// PR 6089: an attack checks that it is still active before refunding a completed retreat.
+    AttackInactiveBeforeRetreat6089,
+    /// v0.36.0: `PlayerExecution` ranks clusters by 4-way territory area and has a pinch pass.
+    PlayerClusterRewrite36,
+    /// PR 4433: warships gain veterancy (more health and shell damage) from kills and captures.
+    WarshipVeterancy4433,
+    /// PR 4577: transport ships only target shores on water reachable from their own shoreline.
+    ReachableShoreTransport4577,
+    /// PR 4426: the cluster recalculation offset is seeded from the player id (older builds: the name).
+    ClusterOffsetFromId4426,
+    /// PR 4151: a move-warship intent skips warships outside the new patrol tile's water body.
+    WarshipPatrolComponent4151,
+    /// PR 3820: attacks walk neighbours with `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
+    AttackForEachNeighbor3820,
+    /// PR 4495: `neighbors4` and `forEachNeighbor` visit N, S, W, E (older builds W, E, N, S).
+    NeighborOrderNswe4495,
+    /// PR 2241: a fully surrounded main cluster of a disconnected player is annexed (`surroundedBy.isFriendly(player)`).
+    AnnexDisconnectedSurrounded2241,
+    /// PR 2191: `getCapturingPlayer` falls back to the neighbour with the longest shared border when no attack targets the player.
+    CapturingPlayerBorderFallback2191,
+    /// PR 2158: allies cannot annex a cluster; `getCapturingPlayer` skips friendly neighbours and has no mode fallback (older: the first neighbouring owner takes it).
+    AlliesCannotAnnexClusters2158,
+    /// PR 2144: disconnected players are not friendly, a disconnected teammate can be attacked without troop loss and `AttackExecution` has no same-team guard.
+    AttackDisconnectedTeammates2144,
+    /// v0.31: attacker troop loss blends 0.6 current and 0.4 alternative (older 0.7 and 0.3).
+    AttackerLoss6040V31,
+    /// v0.30.0-beta5: attacker troop loss blends 0.7 and 0.3 (older 0.5 and 0.5).
+    AttackerLoss7030V30,
+    /// v0.31: conquering a human takes half its gold (older: all of it).
+    ConquerGoldHalfHuman31,
+    /// v0.31: an attack skips conquered tiles that are not land.
+    AttackSkipsWater31,
+    /// v0.31: incomingAttacks() leaves out attacks of dead attackers.
+    IncomingAttacksAliveOnly31,
+    /// v0.31: warships heal in ports, retreat to dock, fight enemy warships and keep their patrol after a lost path (older: the plain v0.30 warship).
+    WarshipDocking31,
+    /// v0.30.10 (PR 3455): a surrounded cluster is judged against the box of the enemy tiles around it (older: the enemy border box).
+    ClusterLocalEnemyBox3455,
+    /// v0.30.10 (PR 3448): players under 100 tiles recompute clusters every tick and a change on the last calc tick counts.
+    ClusterCalcSmallPlayers3448,
+    /// PR 3227: attacker troop loss blends the current loss with an alternative (older: the plain current loss).
+    AttackerLossBlend3227,
+    /// PR 3020: conquering a human that never attacked yields no gold.
+    ConquerGoldSkipInactive3020,
+    /// PR 2954: an attack does not hand a captured tile to a neighbour allied with the target.
+    AttackFriendlyNeighbor2954,
+    /// PR 3124: border tile updates walk `forEachNeighbor` (older: `neighbors()` in N, S, W, E order).
+    BorderUpdateForEach3124,
+    /// PR 3286: a retreating transport ship returns to the closest owned shore (older: to its launch tile).
+    TransportRetreatNearest3286,
+    /// PR 2937: shore endpoints coerce to the best connected water neighbour (older: the first one).
+    ShoreCoerceBestNeighbor2937,
+    /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
+    WarshipLegacy28,
+    /// PR 2539 and 2614: cluster removal finds the largest cluster by a linear scan over DFS clusters (older: a stable size sort over BFS clusters).
+    ClusterLinearScan2614,
     /// v0.27: a retreating transport ship loses 25% of its troops (v0.26.14: none).
     TransportRetreatMalus27,
     /// v0.27: a retreating attack with a source tile keeps the troop correction only when it has none (v0.26.14: always corrects).
     AttackRetreatSourceTile27,
-    /// v0.27: `maxTimerValue` ends a game with the leader as winner (v0.26.14: no timer win).
-    WinMaxTimer27,
-    /// v0.26.14: `PathFinder.nextTile` keeps its path when the goal is within range (v0.27 clears it).
-    PathFinderKeepsPath26,
     /// PR 2203: a disconnected player's ships follow a teammate who conquers them (transport takeover and retreat source check, warships and transports captured in `conquerPlayer`).
     DisconnectedShipHandover2203,
     /// v0.26.14: a retreating attack that never removed its start troops subtracts them first (v0.26.15: it does not).
@@ -471,26 +333,194 @@ pub enum Change {
     WarshipAfkFriendly2203,
     /// v0.26.15: a warship of a disconnected player is deleted.
     WarshipDeleteDisconnected26,
-    /// v0.26.15: a deleted unit is marked and removed after `deletionMarkDuration`; the delete cooldown is 30 s (v0.26.13: deleted at once, cooldown 5 s).
-    UnitDeletionMark26,
-    /// v0.26.15: trade routes near a port get no bonus within `tradeShipShortRangeDebuff` (300) and the trade gold sigmoid uses it (v0.26.13: no debuff, sigmoid centre 200).
-    TradeShortRangeDebuff26,
-    /// v0.26.15: upgrading needs a valid unit (not under construction, not marked, owned) (v0.26.13: type, funds and the `upgradable` flag only).
-    UpgradeUnitValidity26,
+
+    // ---- Spawning ----
+    /// PR 4867: a client spawn intent is gated on the phase it was queued in.
+    SpawnIntentGate4867,
+    /// PR 4921: spawn retries beyond 750 ignore the minimum distance between players.
+    SpawnRelaxMinDist4921,
+    /// PR 5321: a failed spawn restores the player's previous tiles.
+    SpawnRollback5321,
+    /// PR 5347: multiplayer spawn phase 200 turns (older builds 300).
+    SpawnPhase20s5347,
+    /// v0.36.0: a port spawns on the first shore tile of the valid structure tiles (no radius-20 search).
+    PortSpawnFirstShore36,
+    /// v0.36.0: a train spawned off the rail starts one tile behind its first rail tile.
+    TrainSpawnOffRail36,
+    /// PR 4657: a spawn intent after the spawn phase is ignored for an already spawned player.
+    SpawnTeleportGuard4657,
+    /// PR 4428: random spawn ignores the requested tile in `SpawnExecution`.
+    RandomSpawnIgnoresTile4428,
+    /// PR 3199: the spawn phase ends through `SpawnTimerExecution` / `endSpawnPhase` (older: while `ticks <= numSpawnPhaseTurns`).
+    SpawnPhaseTimer3199,
+    /// v0.30.10 (PR 3433): a random-spawn game has a 150 turn spawn phase (older: 300).
+    RandomSpawnShortPhase3433,
+    /// v0.30.0-beta2 only: trains spawn at (factories + 10) * 25 (beta1 and beta5: 18).
+    TrainSpawnRate25Beta2,
+    /// PR 3009 and 3278: random spawn needs a fully valid spawn area and a respawn frees old tiles first.
+    SpawnValidation3009,
+    /// PR 2958: with random spawn a player cannot re-roll its spawn tile.
+    RandomSpawnLock2958,
+    /// PR 3263: team games have spawn areas; disabling transport ships also zeroes the boat limit.
+    TeamSpawnAreas3263,
+    /// v0.28.4: spawn tiles are chosen when the executions are created (`SpawnExecution` always gets a tile; bots retry random land).
+    SpawnByTile28,
     /// v0.26.11: train spawn rate `(factories + 10) * 20` (v0.26.13: 16).
     TrainSpawnRate20V26,
-    /// v0.26.9: the clan is a leading `[TAG]` of 2 to 5 letters in the written case (v0.26.11: the first `[TAG]` of letters or digits, upper-cased).
-    ClanTagLeading26,
+
+    // ---- Trade, trains and rails ----
+    /// PR 5587: trade ship (230 -> 330) and train (500 -> 560) saturation midpoints.
+    SaturationMidpoints5587,
+    /// PR 5462: train saturation midpoint 300 -> 500.
+    TrainSaturation500Pr5462,
+    /// PR 5200: a train re-resolves a split railroad instead of despawning.
+    TrainSplitResolve5200,
+    /// PR 5302: trade ship and train spawn rates are throttled by saturation curves.
+    TradeTrainSaturation5302,
+    /// PR 4903: rails cannot start on or cross impassable terrain.
+    RailNoImpassable4903,
+    /// PR 5719: a train reconciles a split of the railroad it is on.
+    TrainSplitReconcile5719,
+    /// v0.36.0: the game-state hash includes a digest of the rail network.
+    RailNetworkHash36,
+    /// PR 4654: trade ship motion plans reuse the stepper's cached path (older builds run a one-shot query).
+    TradeShipPathReuse4654,
+    /// PR 4406: the longest railroad is 1.4142 times the station range (older: the range itself).
+    RailroadMaxSizeDiagonal4406,
+    /// PR 4337: railroads longer than `railroadMaxSize` are not built.
+    RailroadMaxSizeLimit4337,
+    /// Meta update: the trade ship spawn sigmoid midpoint is 400 (older: 200).
+    TradeShipSigmoid400Meta,
+    /// PR 4079: train stations reach 110 tiles and railroads follow the station range (older: 100 and 120).
+    TrainRange110Pr4079,
+    /// v0.31: port construction takes 50 ticks (older 20).
+    PortBuild50V31,
+    /// v0.31: trade routes, captured trade ships, warship and port spawns respect water components and lakes (older: any port, ocean shores).
+    TradeWaterComponents31,
+    /// v0.30.2: train spawn rate 15 and 9 free cities, trade ship sigmoid scale 75000 (older: 18, 5 cities, 50000).
+    TrainTradeRetune30,
+    /// v0.30.0-beta5: train gold falls with the cities visited and trains spawn at 18 (older: flat gold, rate 25).
+    TrainDistanceGold30Beta,
+    /// PR 3232: trade ship gold has no port bonus and spawning uses a rejection pity timer (older: port count bonus and per-player rates).
+    TradeShipMeta3232,
+    /// PR 3003: railroads split where a new structure overlaps them, clusters are recomputed lazily.
+    RailSnapOverlap3003,
+    /// PR 3130: a station picks its train destination by reservoir sampling over cached trade stations.
+    TrainDestinationReservoir3130,
+    /// PR 2950: station ids start at 1 and the station graph allows 32 neighbours (older: 0 and 8).
+    RailPathfindingFix2950,
+    /// v0.28.5 and v0.28.7 (aac3bb37e): trade ship distance bonus 100 -> 150 gold per tile (before PR 3232 formula).
+    TradeShipDistanceGold150,
+    /// v0.26.15: trade routes near a port get no bonus within `tradeShipShortRangeDebuff` (300) and the trade gold sigmoid uses it (v0.26.13: no debuff, sigmoid centre 200).
+    TradeShortRangeDebuff26,
     /// v0.26.11: trade ship gold is the flat `floor(100000 + 100 * dist)` (v0.26.13: the sigmoid).
     TradeShipFlatGold26,
-    /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
-    MirvCostScales2621,
     /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
     TrainAllyGold35kMeta,
-    /// v0.28: an alliance reply is answered in `init`, at the end of the tick it was added (older: on its first tick).
-    AllianceReplyInit28,
-    /// v0.27.10: a nuke with a source tile launches from it without checking `canBuild` (MIRV warheads start at their MIRV).
-    NukeSrcFirst27,
+    /// PR 1961: land A* may cross water at shorelines at a penalty (rail bridges).
+    RailWaterBridges1961,
+
+    // ---- Pathfinding and water ----
+    /// PR 4979: one HPA finder swaps its graph on rebuild (older builds and v0.35.0 on create a new finder).
+    WaterHpaSharedFinder4979,
+    /// PR 5805 (package split): water graph edges are renumbered by node pair after the build.
+    WaterGraphEdgeSort5805,
+    /// PR 4340: impassable terrain (magnitude 31 land cannot be owned, attacked or nuked).
+    ImpassableTerrain4340,
+    /// PR 4479: water components use a wide land marker and the HPA node search walks water tiles.
+    WaterComponentMarkers4479,
+    /// PR 4149: the abstract graph A* uses a min-heap (older: a bucket queue that clamps priorities).
+    AbstractAStarMinHeap4149,
+    /// PR 2959: the boat intent carries no target or source tile, smoothing keeps two magnitude passes, the short path search covers 260 tiles.
+    PathfindingRefinements2959,
+    /// PR 2932: naval invasions search with a short bounded path, MinHeap queues, a final smoothing pass and a refined launch tile (older: none of these).
+    NavalInvasionPathing2932,
+    /// v0.28.4: boats, rails and shipping run on the bidirectional `MiniAStar` (newer: HPA water graph, stepper finders).
+    LegacyAStar28,
+    /// v0.26.14: `PathFinder.nextTile` keeps its path when the goal is within range (v0.27 clears it).
+    PathFinderKeepsPath26,
+
+    // ---- Win conditions, doomsday and game modes ----
+    /// PR 5436: team count of Duos/Trios/Quads is at least 2.
+    TeamCountMinTwo5436,
+    /// PR 4953: the Doomsday Clock execution goes inactive once a winner is set.
+    DoomsdayIdleOnWinner4953,
+    /// PR 5223: the win bar is 80 percent in team games too and the win test is cross-multiplied.
+    WinThresholdSame5223,
+    /// PR 5332: no teammate aftergame nuking in singleplayer.
+    AftergameSingleplayer5332,
+    /// PR 4758: duo/trio/quad team forming prefers the fullest team.
+    TeamAssignDuos4758,
+    /// PR 5062: overtime lowers the win bar late in a game.
+    Overtime5062,
+    /// PR 5030: team modes climb a higher Doomsday Clock ladder.
+    DoomsdayTeamLevels5030,
+    /// PR 5052: rotted territory becomes fallout wasteland.
+    DoomsdayRotWasteland5052,
+    /// PR 6259 and siblings: friend groups are seated back to back in team assignment.
+    TeamFriendGroups6259,
+    /// PR 4469: the Doomsday Clock game mode exists (later builds only).
+    DoomsdayClock4469,
+    /// PR 4893: Doomsday Clock territory rot, decaying troop floor, 7-wave 35 percent ladder and idle-on-winner.
+    DoomsdayRotLadder4893,
+    /// v0.30.0-beta2: a game ends at 170 minutes (beta1: no hard limit).
+    HardTimeLimit170Min30,
+    /// PR 2915: lobbies can set the starting gold and a gold multiplier.
+    LobbyGoldOptions2915,
+    /// v0.27: `maxTimerValue` ends a game with the leader as winner (v0.26.14: no timer win).
+    WinMaxTimer27,
+
+    // ---- Other ----
+    /// PR 5547 and sibling new-map PRs: tribe themes of Canary Islands, New Zealand, Pulicat Lake.
+    NewMapThemes5547,
+    /// PR 4640: build and upgrade intents carry an amount (stacked purchases).
+    BulkPurchase4640,
+    /// PR 5907: per-player spawn boost for small trade and rail economies replaces the fleet-size boost.
+    SmallEconomyBoost5907,
+    /// PR 5919: "stop trading with enemies" (embargo all) skips allies.
+    EmbargoAllSkipsAllies5919,
+    /// PR 6204 and siblings: the onboarding tutorial mode (nations and tribes only grow into free land).
+    TutorialMode6204,
+    /// v0.36.0: `GameMap.bfs` is a FIFO breadth-first search (tile order and filter call order change).
+    BfsFifoOrder36,
+    /// v0.36.0: the water graph edge search is bounded by the squared cluster size.
+    AbstractGraphWideSearch36,
+    /// PR 5833: a human may send several emojis per window (nations still one).
+    EmojiBatch5833,
+    /// PR 4422: `nearby()` skips unowned tiles with fallout.
+    NearbySkipsFallout4422,
+    /// PR 4320: `unitsConstructed` does not count buildings under construction twice.
+    UnitsConstructedOnce4320,
+    /// PR 4014: self attacks, self donations and `isFriendly(self)` are guarded.
+    SelfActionGuards4014,
+    /// v0.31: cities under construction add no troop cap.
+    CityTroopsFinishedOnly31,
+    /// v0.31: the clan tag comes from the clanTag field of a player (older: parsed from the [TAG] in the username).
+    ClanTagField31,
+    /// v0.30.10 (PR 3437): nations do not donate troops in public games.
+    NoPublicDonation3437,
+    /// PR 3122: usernames arrive censored from the server (older: the game runner censors them).
+    ServerUsernameCensoring3122,
+    /// v0.28.4: nations are `FakeHumanExecution` players placed on their manifest cell and tribes use `BotBehavior` (newer: `NationExecution`, `AiAttackBehavior`).
+    FakeHumanNations28,
+    /// v0.26.14: nations and tribes use the pre-rewrite `BotBehavior` (alliance answers inside it, no MIRV or retaliation AI, plain land attacks, older boat targets and attack chances; newer: `AllianceBehavior` split and the v0.28 AI).
+    PreRewriteNationAi26,
+    /// v0.28.4: immunity is the spawn phase plus a fixed 5 seconds for everyone (newer: humans only, `canAttackPlayer`).
+    ImmunityByConfig28,
+    /// v0.28.4: shells and SAM missiles use one PRNG per finder, nukes and MIRVs a control-point Bezier; MIRVs scatter by `nextInt`.
+    LegacyProjectiles28,
+    /// v0.28.4: relation penalties of attacks, betrayals and insults, and `allRelationsSorted` keeps dead players.
+    RelationPenalties28,
+    /// PRs 2552 and 2609 (v0.28.0 to v0.28.3, reverted in v0.28.4): bots beyond the first 20 take names from the community lists.
+    CommunityBotNames2552,
+    /// PR 2378: no `Construction` unit; a structure is built at once and flagged under construction (older: a `Construction` unit stands in until the structure is built).
+    NoConstructionUnit2378,
+    /// v0.26.15: a deleted unit is marked and removed after `deletionMarkDuration`; the delete cooldown is 30 s (v0.26.13: deleted at once, cooldown 5 s).
+    UnitDeletionMark26,
+    /// v0.26.15: upgrading needs a valid unit (not under construction, not marked, owned) (v0.26.13: type, funds and the `upgradable` flag only).
+    UpgradeUnitValidity26,
+    /// v0.26.9: the clan is a leading `[TAG]` of 2 to 5 letters in the written case (v0.26.11: the first `[TAG]` of letters or digits, upper-cased).
+    ClanTagLeading26,
     /// PR 2622: a player keeps the name it was given (older: `sanitizeUsername` strips other characters and pads to 3).
     NoUsernameSanitation2622,
     /// v0.27 and v0.28: the game runner returns a good name unchanged (the older `censorNameWithClanTag` rebuilt `[TAG] name`).
@@ -505,20 +535,10 @@ pub enum Change {
     // C079 (v0.25.20 to v0.25.23, the v25 branch): the newer behaviours the older builds lack.
     /// PR 1609: the `delete_unit` intent and its execution exist.
     DeleteUnitIntent1609,
-    /// PR 1733: an attack rejects the target's pending alliance requests.
-    AttackRejectsAllianceRequests1733,
     /// PR 1752: lobby toggles allow or forbid donations (older: no donations to humans in public FFA).
     DonationToggle1752,
     /// PR 1863: same-team players are exempt from the -40 relation penalty of a betrayal (and nations do not embargo them).
     AlliesNoEmbargo1863,
-    /// PR 1961: land A* may cross water at shorelines at a penalty (rail bridges).
-    RailWaterBridges1961,
-    /// PR 2044: attacks on allies are refused in `init`; older attacks break the alliance on the first tick.
-    AttackAllianceBlocked2044,
-    /// PR 2101: a nuke rejects the target's pending alliance request.
-    NukeRevokesRequests2101,
-    /// v0.25.x (C079 and newer): nations and tribes use the v0.26 AI; older builds use `*V25` modules without attack chances, betrayal, structure values or reserve ratios.
-    NationAiV26Base25,
 }
 }
 
@@ -976,233 +996,5 @@ pub fn is_ported(class: &str) -> bool {
 }
 
 #[cfg(test)]
-mod tests {
-    #[test]
-    fn every_edge_file_names_known_changes() {
-        for (class, _) in EDGE_FILES {
-            assert!(edge_of(class).is_some(), "{class}");
-        }
-    }
-
-    use super::*;
-
-    #[test]
-    fn baseline_and_unknown() {
-        let r = Rules::for_commit("4e837520e886").unwrap();
-        assert!(r.has(Change::DetMath5191) && r.has(Change::Sfc32PseudoRandom4233));
-        assert_eq!(r.class_id(), "C000");
-        assert!(Rules::for_commit("4e837520e886deadbeef").is_ok());
-        for commit in BASELINE_CLASS_COMMITS {
-            assert_eq!(Rules::for_commit(commit).unwrap().class_id(), "C000");
-        }
-        assert!(matches!(
-            Rules::for_commit("abc"),
-            Err(RulesError::UnknownBuild { .. })
-        ));
-        assert!(matches!(
-            Rules::for_commit("4e837520e885"),
-            Err(RulesError::UnknownBuild { .. })
-        ));
-    }
-
-    #[test]
-    fn every_build_resolves_to_its_class() {
-        let table = class_table();
-        assert_eq!(table.builds.len(), 159);
-        for (build, class) in known_builds() {
-            assert!(table.parents.contains_key(class), "{build} -> {class}");
-            match Rules::for_commit(build) {
-                Ok(r) => assert_eq!(r.class_id(), class),
-                Err(RulesError::NotPorted { class: c, .. }) => assert_eq!(c, class),
-                Err(e) => panic!("{build}: {e}"),
-            }
-        }
-        assert!(Rules::for_commit("115da0327634").is_err());
-    }
-
-    #[test]
-    fn unported_class_errors_with_class() {
-        let e = Rules::for_commit("115da0327634").unwrap_err();
-        assert_eq!(
-            e.to_string(),
-            "build 115da0327634 (class C080) not ported yet"
-        );
-    }
-
-    #[test]
-    fn builds_doc_lists_resolve() {
-        // Every 12-hex commit mentioned in Docs/Builds.md is a known build.
-        let docs = include_str!("../../../../Docs/Builds.md");
-        let table = class_table();
-        let mut seen = 0;
-        for word in docs.split(|c: char| !c.is_ascii_hexdigit()) {
-            if word.len() == 12 && table.builds.contains_key(word) {
-                seen += 1;
-            }
-        }
-        assert!(seen >= 100, "only {seen} builds found in Builds.md");
-    }
-
-    #[test]
-    fn era_d_classes_are_ported_with_the_expected_changes() {
-        for n in 0..=12 {
-            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
-        }
-        assert!(is_ported("C040"));
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        assert!(rules("3f5633b92c95").has(Change::AttackRetreatNoTargets5823));
-        assert!(!rules("824d1412be58").has(Change::AttackRetreatNoTargets5823));
-        let c006 = rules("7c27263390d8");
-        assert!(!c006.has(Change::ChannelIslandsTribes5564));
-        assert!(c006.has(Change::InternalBorderAnnexFix5545));
-        let c007 = rules("82e5fce9502b");
-        assert!(!c007.has(Change::InternalBorderAnnexFix5545));
-        assert!(!c007.has(Change::SaturationMidpoints5587));
-        assert!(c007.has(Change::TrainSaturation500Pr5462));
-        assert!(!rules("ece79bfd3348").has(Change::NukeFriendlyKillNoCredit5525));
-        assert!(!rules("222e4078982e").has(Change::TrainSaturation500Pr5462));
-        let c011 = rules("1e973bb534b8");
-        assert!(
-            !c011.has(Change::TeamCountMinTwo5436) && !c011.has(Change::AttackSpeedDivisor5425)
-        );
-        let c012 = rules("e910d727d2dd");
-        assert!(c012.has(Change::NewMapThemes5547) && c012.has(Change::ChannelIslandsTribes5564));
-        assert!(!rules("4e837520e886").has(Change::NewMapThemes5547));
-    }
-
-    #[test]
-    fn era_f_classes_are_ported_without_detmath() {
-        for n in 13..=22 {
-            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
-        }
-        assert!(!is_ported("C080"));
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        let c013 = rules("8b45be57542f");
-        assert!(!c013.has(Change::DetMath5191) && c013.has(Change::Sfc32PseudoRandom4233));
-        assert!(!c013.has(Change::AttackLogicRework5173) && !c013.has(Change::SpawnPhase20s5347));
-        assert!(c013.has(Change::StationClusterSame5096) && c013.has(Change::Overtime5062));
-        assert!(!rules("0cb90ccb7478").has(Change::StationClusterSame5096));
-        assert!(!rules("2d5baafdd0cc").has(Change::Overtime5062));
-        assert!(!rules("e9e10703e818").has(Change::BulkPurchase4640));
-        assert!(rules("20c813f06a40").has(Change::BulkPurchase4640));
-    }
-
-    #[test]
-    fn v35_classes_are_ported_up_to_c087() {
-        for n in 81..=87 {
-            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
-        }
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        let c081 = rules("dfd420fd7836");
-        assert!(c081.has(Change::NationsLikeHumans5899) && c081.has(Change::SeveredLandAnnex5955));
-        assert!(!c081.has(Change::NationAiSplit6087));
-        let c083 = rules("a2d20f8e5f32");
-        assert!(c083.has(Change::NationAiSplit6087) && c083.has(Change::NationsLikeHumans5899));
-        assert!(!rules("4e837520e886").has(Change::NationsLikeHumans5899));
-        assert!(rules("7ee96860c717").has(Change::TutorialSilo6242));
-        assert!(!rules("c144d134d150").has(Change::TutorialSilo6242));
-        assert!(rules("80bff198b68f").has(Change::TeamFriendGroups6259));
-    }
-
-    #[test]
-    fn v36_classes_add_their_changes() {
-        assert!(is_ported("C088") && is_ported("C089"));
-        let c087 = Rules::for_commit("09aa423bceb9").unwrap();
-        assert!(!c087.has(Change::PlayerClusterRewrite36) && !c087.has(Change::RailNetworkHash36));
-        let c088 = Rules::for_commit("0211f17b71ef").unwrap();
-        assert!(c088.has(Change::PlayerClusterRewrite36) && c088.has(Change::MirvTargetGrid36));
-        assert!(!c088.has(Change::TribeMapData361));
-        let c089 = Rules::for_commit("bc3e3334c573").unwrap();
-        assert!(c089.has(Change::PlayerClusterRewrite36) && c089.has(Change::TribeMapData361));
-    }
-
-    #[test]
-    fn era_s_head_classes_switch_the_generator_and_drop_meta_changes() {
-        for c in ["C036", "C037", "C038", "C039"] {
-            assert!(is_ported(c), "{c}");
-        }
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        let c036 = rules("26d8a314aec4");
-        assert!(!c036.has(Change::Sfc32PseudoRandom4233) && !c036.has(Change::AiTroopCap4239));
-        assert!(
-            !c036.has(Change::TradeShipSigmoid400Meta) && c036.has(Change::SpawnPhaseTimer3199)
-        );
-        let c039 = rules("f17ca9bd6551");
-        assert!(
-            c039.has(Change::TradeShipSigmoid400Meta) && !c039.has(Change::Sfc32PseudoRandom4233)
-        );
-        let c037 = rules("aeb8d60224e3");
-        assert!(
-            !c037.has(Change::SpawnPhaseTimer3199) && !c037.has(Change::AttackForEachNeighbor3820)
-        );
-        assert!(
-            !c037.has(Change::TradeShipSigmoid400Meta)
-                && !c037.has(Change::AbstractAStarMinHeap4149)
-        );
-        assert!(!rules("5d6c48ebf23f").has(Change::SpawnPhaseTimer3199));
-    }
-
-    #[test]
-    fn era_f_tail_classes_remove_their_changes() {
-        for n in 23..=35 {
-            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
-        }
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        let c022 = rules("7a7ca5be8ff8");
-        assert!(
-            c022.has(Change::ImpassableTerrain4340) && !c022.has(Change::DoomsdayRotLadder4893)
-        );
-        let c023 = rules("dd1277e245b5");
-        assert!(
-            !c023.has(Change::ImpassableTerrain4340) && !c023.has(Change::NeighborOrderNswe4495)
-        );
-        assert!(
-            !c023.has(Change::SamTargetingFixes4770) && !c023.has(Change::WarshipVeterancy4433)
-        );
-        assert!(c023.has(Change::SpawnTeleportGuard4657));
-        assert!(!rules("b716adb7e2f1").has(Change::SpawnTeleportGuard4657));
-        assert!(!rules("580460c9692a").has(Change::DoomsdayClock4469));
-        assert!(rules("53e1a5b03e35").has(Change::DoomsdayClock4469));
-        let c029 = rules("0c4c7d7993c9");
-        assert!(
-            !c029.has(Change::ClusterOffsetFromId4426) && !c029.has(Change::NearbySkipsFallout4422)
-        );
-        assert!(rules("d7b781f155dc").has(Change::RailroadMaxSizeLimit4337));
-        assert!(!rules("d7b781f155dc").has(Change::RailroadMaxSizeDiagonal4406));
-        assert!(!rules("bb2f2f01ee88").has(Change::RailroadMaxSizeLimit4337));
-        assert!(rules("661d96ba280f").has(Change::RailroadMaxSizeLimit4337));
-        assert!(!rules("305534cc6579").has(Change::UnitsConstructedOnce4320));
-        assert!(!rules("5be72db060fc").has(Change::AiBoatTroopsUnified4297));
-        assert!(is_ported("C040"));
-    }
-
-    #[test]
-    fn v30_classes_drop_v31_changes_and_their_own_betas() {
-        for n in 40..=48 {
-            assert!(is_ported(&format!("C{n:03}")), "C{n:03}");
-        }
-        let rules = |commit: &str| Rules::for_commit(commit).unwrap();
-        let c040 = rules("d809c25d1cdd");
-        assert!(
-            !c040.has(Change::NextIntFloorsArgs31) && !c040.has(Change::NationStructureRework31)
-        );
-        assert!(!c040.has(Change::WarshipDocking31) && !c040.has(Change::NukeSpeed8V31));
-        assert!(c040.has(Change::SamCooldown120V30) && c040.has(Change::TrainTradeRetune30));
-        assert!(
-            !c040.has(Change::BouncingNukes30)
-                && rules("f2507c38979c").has(Change::BouncingNukes30)
-        );
-        assert!(rules("3e7088cb2a2b").has(Change::ClusterLocalEnemyBox3455));
-        assert!(!rules("dd2c239aa166").has(Change::ClusterLocalEnemyBox3455));
-        assert!(!rules("5fb7f75f3d5b").has(Change::NoPublicDonation3437));
-        assert!(!rules("ebe7f76cd312").has(Change::TrainTradeRetune30));
-        assert!(!rules("741a38c62b29").has(Change::AftergameTeammateNukes3410));
-        let c047 = rules("df5fad1a1f6d");
-        assert!(!c047.has(Change::SamCooldown120V30) && c047.has(Change::TrainSpawnRate25Beta2));
-        let c048 = rules("339ace0bd677");
-        assert!(
-            !c048.has(Change::TrainSpawnRate25Beta2)
-                && !c048.has(Change::NationCreationConfigurable30)
-        );
-    }
-}
+#[path = "Rules/Tests.rs"]
+mod tests;
