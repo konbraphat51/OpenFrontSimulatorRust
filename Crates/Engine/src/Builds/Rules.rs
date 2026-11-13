@@ -433,6 +433,8 @@ pub enum Change {
     AllianceReplyInit28,
     /// v0.27.10: a nuke with a source tile launches from it without checking `canBuild` (MIRV warheads start at their MIRV).
     NukeSrcFirst27,
+    /// PR 2622: a player keeps the name it was given (older: `sanitizeUsername` strips other characters and pads to 3).
+    NoUsernameSanitation2622,
 }
 }
 
@@ -523,6 +525,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::MirvCostScales2621,
     Change::TrainAllyGold35kMeta,
     Change::AllianceReplyInit28,
+    Change::NoUsernameSanitation2622,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

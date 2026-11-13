@@ -101,6 +101,11 @@ impl PlayerImpl {
         start_troops: f64,
         team: Option<Team>,
     ) -> Self {
+        let mut info = info;
+        if !game.has(Change::NoUsernameSanitation2622) {
+            info.name = crate::Core::Util::sanitize_username(&info.name);
+            info.display_name = info.name.clone();
+        }
         let gold = game
             .config()
             .starting_gold(info.player_type, info.is_lobby_creator);

@@ -339,3 +339,30 @@ mod tests {
         assert_eq!(FLATTENED_EMOJI_TABLE[0], "😀");
     }
 }
+
+/// `sanitizeUsername(str)` of v0.27.10: keeps `[a-zA-Z0-9_[\] 🐈🍀üÜ]`, cuts to 27 UTF-16 units and pads to 3 with `x`.
+pub fn sanitize_username(name: &str) -> String {
+    let kept: String = name
+        .chars()
+        .filter(|c| {
+            c.is_ascii_alphanumeric()
+                || matches!(c, '_' | '[' | ']' | ' ' | '🐈' | '🍀' | 'ü' | 'Ü')
+        })
+        .collect();
+    let mut out = String::new();
+    let mut units = 0usize;
+    for c in kept.chars() {
+        let width = c.len_utf16();
+        if units + width > 27 {
+            // `slice(0, 27)` may cut a surrogate pair in half; a lone surrogate is not valid UTF-8, so drop it.
+            break;
+        }
+        units += width;
+        out.push(c);
+    }
+    while units < 3 {
+        out.push('x');
+        units += 1;
+    }
+    out
+}
