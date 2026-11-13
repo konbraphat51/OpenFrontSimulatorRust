@@ -99,6 +99,8 @@ pub struct PseudoRandom {
     arc4: Option<Box<Arc4>>,
     /// `nextInt` floors its bounds first (builds since v0.31).
     floors_args: bool,
+    /// `shuffleArray` skips the index-0 draw (PR 2046 on; older builds loop to `i >= 0`).
+    shuffle_skips_zero: bool,
     /// Debug log state of an era S stream: first value and draws so far.
     arc4_log: (Option<f64>, u64),
 }
@@ -112,6 +114,7 @@ impl PseudoRandom {
             Self::new_seedrandom(seed)
         };
         random.floors_args = rules.has(Change::NextIntFloorsArgs31);
+        random.shuffle_skips_zero = rules.has(Change::ShuffleArrayStopsAtOne2046);
         random
     }
 
@@ -124,6 +127,7 @@ impl PseudoRandom {
             s3: 0,
             arc4: Some(Box::new(Arc4::new(seed))),
             floors_args: true,
+            shuffle_skips_zero: true,
             arc4_log: (None, 0),
         }
     }
@@ -150,6 +154,7 @@ impl PseudoRandom {
             s3,
             arc4: None,
             floors_args: true,
+            shuffle_skips_zero: true,
             arc4_log: (None, 0),
         };
         for _ in 0..12 {
@@ -238,7 +243,8 @@ impl PseudoRandom {
     pub fn shuffle_array<T: Clone>(&mut self, array: &[T]) -> Vec<T> {
         let mut result = array.to_vec();
         let mut i = result.len();
-        while i > 1 {
+        let stop = if self.shuffle_skips_zero { 1 } else { 0 };
+        while i > stop {
             i -= 1;
             let j = self.next_int(0.0, (i + 1) as f64) as usize;
             result.swap(i, j);
@@ -354,5 +360,17 @@ mod tests {
             }
             assert_eq!(got, strs(&case["mixed"]), "mixed {ctx}");
         }
+    }
+
+    #[test]
+    fn shuffle_before_pr_2046_draws_once_more() {
+        // Older builds loop to index 0 and consume one extra draw per shuffle.
+        let mut old = PseudoRandom::new_seedrandom(7.0);
+        old.shuffle_skips_zero = false;
+        let mut new = PseudoRandom::new_seedrandom(7.0);
+        old.shuffle_array(&[1, 2, 3]);
+        new.shuffle_array(&[1, 2, 3]);
+        assert_ne!(old.next(), new.next());
+        assert!(old.shuffle_array::<i64>(&[]).is_empty());
     }
 }

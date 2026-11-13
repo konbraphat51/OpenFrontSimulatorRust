@@ -239,6 +239,8 @@ pub enum Change {
     NeighborOrderNswe4495,
     /// v0.31: PseudoRandom.nextInt floors its bounds (older: it does not).
     NextIntFloorsArgs31,
+    /// PR 2046: `shuffleArray` stops at index 1 (older builds also draw once for index 0).
+    ShuffleArrayStopsAtOne2046,
     /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
     SamCooldown90V31,
     /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
@@ -575,6 +577,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::WaterComponentMarkers4479,
     Change::TradeShipPathReuse4654,
     Change::NextIntFloorsArgs31,
+    Change::ShuffleArrayStopsAtOne2046,
     Change::SamCooldown90V31,
     Change::SamCooldown120V30,
     Change::SiloCooldown90V31,
