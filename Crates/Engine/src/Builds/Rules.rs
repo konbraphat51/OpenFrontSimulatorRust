@@ -435,6 +435,8 @@ pub enum Change {
     NukeSrcFirst27,
     /// PR 2622: a player keeps the name it was given (older: `sanitizeUsername` strips other characters and pads to 3).
     NoUsernameSanitation2622,
+    /// v0.27 and v0.28: the game runner returns a good name unchanged (the older `censorNameWithClanTag` rebuilt `[TAG] name`).
+    CensorKeepsGoodNames27,
 }
 }
 

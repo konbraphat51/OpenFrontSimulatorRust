@@ -67,7 +67,7 @@ impl PlayerExecution {
             return;
         }
         // `Array.prototype.sort` is stable, like `sort_by`.
-        clusters.sort_by(|a, b| b.len().cmp(&a.len()));
+        clusters.sort_by_key(|c| std::cmp::Reverse(c.len()));
         let main = clusters.remove(0);
         let (a, b, c, d) = bounding_box(game, &main);
         game.player_impl_mut(player).largest_cluster_bounding_box =

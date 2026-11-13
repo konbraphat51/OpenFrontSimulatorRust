@@ -851,9 +851,6 @@ impl GameImpl {
 
     /// `conquer(owner, tile)`.
     pub fn conquer(&mut self, owner: SmallId, tile: TileRef) {
-        if std::env::var("OFSIM_DBGCQ").is_ok_and(|v| v.parse::<u32>().ok() == Some(self.ticks())) {
-            eprintln!("CQ {} {} {}", self.ticks(), owner, tile);
-        }
         assert!(self.map.is_land(tile), "cannot conquer water");
         assert!(
             !self.map.is_impassable(tile),
