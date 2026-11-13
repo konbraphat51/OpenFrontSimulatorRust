@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use crate::Builds::Rules::Change;
+use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
 use crate::Execution::SAMMissileExecution::SAMMissileExecution;
 use crate::Game::Game::{GameType, SmallId, Tick, UnitId, UnitParams, UnitType};
@@ -544,6 +545,7 @@ pub struct SAMLauncherExecution {
     player: SmallId,
     tile: Option<TileRef>,
     sam: Option<UnitId>,
+    pseudo_random: Option<PseudoRandom>,
 }
 
 impl SAMLauncherExecution {
@@ -556,6 +558,7 @@ impl SAMLauncherExecution {
             player,
             tile,
             sam,
+            pseudo_random: None,
         }
     }
 }
@@ -613,6 +616,26 @@ impl SAMLauncherExecution {
             return;
         }
         game.unit_mut(sam).launch();
+        if game.has(Change::SamHittingChance2665) {
+            let unit_type = if warheads.is_empty() {
+                game.unit_any(target.as_ref().expect("a target or warheads").unit)
+                    .unit_type()
+            } else {
+                UnitType::MIRVWarhead
+            };
+            let rng = self
+                .pseudo_random
+                .get_or_insert_with(|| PseudoRandom::for_rules(game.config().rules(), sam as f64));
+            let random = rng.next();
+            let hit = match unit_type {
+                UnitType::AtomBomb => true,
+                UnitType::MIRVWarhead => random < game.config().sam_warhead_hitting_chance(),
+                _ => random < game.config().sam_hitting_chance(),
+            };
+            if !hit {
+                return;
+            }
+        }
         if !warheads.is_empty() {
             for warhead in warheads {
                 game.unit_mut(warhead).delete(None, None);

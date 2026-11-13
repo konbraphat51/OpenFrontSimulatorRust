@@ -5,6 +5,7 @@
 //! Players are small ids with `0` standing for terra nullius. The `PseudoRandom` is shared with the
 //! owning execution (upstream passes one instance), hence the `Rc`.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Core::Util::{bounding_box_center, calculate_bounding_box_center};
 use crate::Execution::AttackExecution::AttackExecution;
@@ -93,7 +94,8 @@ impl BotBehaviorV28 {
         if other == 0
             || game.player(other).player_type() != PlayerType::Human
             || game.player(other).is_traitor()
-            || game.player(self.player).player_type() == PlayerType::Bot
+            || (!game.has(Change::BotsAttackHumans2697)
+                && game.player(self.player).player_type() == PlayerType::Bot)
         {
             return true;
         }
@@ -409,6 +411,8 @@ impl BotBehaviorV28 {
             return;
         }
         // Choose a new enemy randomly
+        let easy_skips_humans = game.has(Change::BotsAttackHumans2697)
+            && game.config().game_config().difficulty == Difficulty::Easy;
         let neighbors = game.player(self.player).nearby();
         let shuffled = self.random.borrow_mut().shuffle_array(&neighbors);
         for neighbor in shuffled {
@@ -420,7 +424,7 @@ impl BotBehaviorV28 {
             }
             let neighbor_type = game.player(neighbor).player_type();
             if (neighbor_type == PlayerType::Nation || neighbor_type == PlayerType::Human)
-                && self.chance(2.0)
+                && (self.chance(2.0) || easy_skips_humans)
             {
                 continue;
             }

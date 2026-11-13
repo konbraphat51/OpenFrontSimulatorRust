@@ -419,6 +419,10 @@ pub enum Change {
     TradeShipDistanceGold150,
     /// PRs 2552 and 2609 (v0.28.0 to v0.28.3, reverted in v0.28.4): bots beyond the first 20 take names from the community lists.
     CommunityBotNames2552,
+    /// PR 2697 (v0.28.0 and v0.28.1, reverted in v0.28.4): bots may attack humans, and nothing attacks humans on Easy via random targets.
+    BotsAttackHumans2697,
+    /// PR 2665 (v0.28.0, removed in v0.28.1): a SAM launch hits with probability 0.8 (MIRV warheads 0.5; atom bombs always).
+    SamHittingChance2665,
 }
 }
 
