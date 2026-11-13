@@ -110,16 +110,14 @@ impl AttackImpl {
     }
     /// `addBorderTile`.
     pub fn add_border_tile(&mut self, tile: TileRef) {
-        if !self.border.contains(&tile) {
+        if self.border.insert(tile) {
             self.border_size += 1.0;
-            self.border.insert(tile);
         }
     }
     /// `removeBorderTile`.
     pub fn remove_border_tile(&mut self, tile: TileRef) {
-        if self.border.contains(&tile) {
+        if self.border.remove(&tile) {
             self.border_size -= 1.0;
-            self.border.remove(&tile);
         }
     }
     /// The border tiles in insertion order.
