@@ -429,6 +429,8 @@ pub enum Change {
     MirvCostScales2621,
     /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
     TrainAllyGold35kMeta,
+    /// v0.28: an alliance reply is answered in `init`, at the end of the tick it was added (older: on its first tick).
+    AllianceReplyInit28,
 }
 }
 
@@ -518,6 +520,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::SamNoRng2665,
     Change::MirvCostScales2621,
     Change::TrainAllyGold35kMeta,
+    Change::AllianceReplyInit28,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

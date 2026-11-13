@@ -2,6 +2,7 @@
 //! Port of src/core/execution/alliance/AllianceRequestReplyExecution.ts: accepts or rejects a pending request.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick};
 use crate::Game::GameImpl::GameImpl;
@@ -32,6 +33,30 @@ impl Execution for AllianceRequestReplyExecution {
             self.active = false;
             return;
         }
+        if !game.has(Change::AllianceReplyInit28) {
+            // Before v0.28 the answer is given on the first tick, after the older executions ticked.
+            return;
+        }
+        self.answer(game);
+    }
+
+    fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
+        if !game.has(Change::AllianceReplyInit28) && self.active {
+            self.answer(game);
+        }
+    }
+
+    fn is_active(&self) -> bool {
+        self.active
+    }
+
+    fn active_during_spawn_phase(&self) -> bool {
+        false
+    }
+}
+
+impl AllianceRequestReplyExecution {
+    fn answer(&mut self, game: &mut GameImpl) {
         let requestor = game.player_id(&self.requestor_id);
         if !game.player(requestor).is_friendly(self.recipient, false) {
             let request = game
@@ -52,15 +77,5 @@ impl Execution for AllianceRequestReplyExecution {
             }
         }
         self.active = false;
-    }
-
-    fn tick(&mut self, _game: &mut GameImpl, _ticks: Tick) {}
-
-    fn is_active(&self) -> bool {
-        self.active
-    }
-
-    fn active_during_spawn_phase(&self) -> bool {
-        false
     }
 }
