@@ -639,7 +639,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let o = self.game.player(other);
-        if self.is_disconnected || o.is_disconnected {
+        if (self.is_disconnected || o.is_disconnected)
+            && self.game.has(Change::AllianceRequestDisconnectedGuard2202)
+        {
             return false;
         }
         if self.is_friendly(other, false) || !self.is_alive() {

@@ -245,6 +245,10 @@ pub enum Change {
     AnnexDisconnectedSurrounded2241,
     /// PR 2234: nations request alliances through an `AllianceRequestExecution` (older: `Player.createAllianceRequest` at once).
     NationAllianceRequestExecution2234,
+    /// PR 2202: `canSendAllianceRequest` refuses when either player is disconnected.
+    AllianceRequestDisconnectedGuard2202,
+    /// PR 2191: `getCapturingPlayer` falls back to the neighbour with the longest shared border when no attack targets the player.
+    CapturingPlayerBorderFallback2191,
     /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
     SamCooldown90V31,
     /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
@@ -669,6 +673,8 @@ const ROOT_CHANGES: &[Change] = &[
     Change::ShuffleArrayStopsAtOne2046,
     Change::AnnexDisconnectedSurrounded2241,
     Change::NationAllianceRequestExecution2234,
+    Change::AllianceRequestDisconnectedGuard2202,
+    Change::CapturingPlayerBorderFallback2191,
     Change::SamCooldown90V31,
     Change::SamCooldown120V30,
     Change::SiloCooldown90V31,

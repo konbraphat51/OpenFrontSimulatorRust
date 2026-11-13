@@ -592,6 +592,9 @@ impl PlayerExecution {
         if largest_neighbor_attack.is_some() {
             return largest_neighbor_attack;
         }
+        if !game.has(Change::CapturingPlayerBorderFallback2191) {
+            return None;
+        }
         get_mode(&neighbors)
     }
 
@@ -634,6 +637,9 @@ impl PlayerExecution {
         }
         if largest_neighbor_attack.is_some() {
             return largest_neighbor_attack;
+        }
+        if !game.has(Change::CapturingPlayerBorderFallback2191) {
+            return None;
         }
         get_mode(&neighbors)
     }

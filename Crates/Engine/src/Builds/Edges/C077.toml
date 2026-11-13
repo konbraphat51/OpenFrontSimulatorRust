@@ -1,0 +1,6 @@
+# Changes class C077 adds to / removes from its parent (parent: BuildClasses.toml).
+# v0.26.0-beta3 predates PR 2191 (encirclement fix: border-length fallback in getCapturingPlayer).
+# The candidate-ID set of the older code iterates in the same first-seen order as the later map. RailroadExecution
+# and `lastDeleteUnitTick` only affect views.
+add = []
+remove = ["CapturingPlayerBorderFallback2191"]
