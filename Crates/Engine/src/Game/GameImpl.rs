@@ -22,6 +22,7 @@ use super::PlayerImpl::{PlayerImpl, PlayerMut, PlayerRef};
 use super::RailNetwork::RailNetwork;
 use super::StatsImpl::StatsImpl;
 use super::TeamAssignment::{assign_teams, resolve_teams_list};
+use super::TileSet::{TilePositions, new_tile_positions};
 use super::UnitGrid::{UnitGrid, UnitPredicate};
 use super::UnitImpl::{UnitImpl, UnitMut, UnitRef};
 use super::WaterManager::WaterManager;
@@ -117,6 +118,10 @@ pub struct GameImpl {
     territory_version: u32,
     /// Per tile: the player whose `border_tiles` hold it (0 = none), so unchanged border status skips set operations.
     border_owner: Vec<SmallId>,
+    /// Slot of every tile in its owner's `tiles` set (shared by all players).
+    pub(crate) tile_positions: TilePositions,
+    /// Slot of every tile in its owner's `border_tiles` set (shared by all players).
+    pub(crate) border_positions: TilePositions,
     /// Shared tile traversal scratch.
     pub scratch: TileTraversalScratch,
     /// Shore queries for boats (upstream builds one per call; its caches are pure).
@@ -202,6 +207,8 @@ impl GameImpl {
             unit_count_memo: std::cell::RefCell::new([None; NUM_UNIT_TYPES]),
             territory_version: 0,
             border_owner: vec![0; tiles],
+            tile_positions: new_tile_positions(tiles),
+            border_positions: new_tile_positions(tiles),
             scratch: TileTraversalScratch {
                 visited: vec![0; tiles],
                 stack: Vec::new(),

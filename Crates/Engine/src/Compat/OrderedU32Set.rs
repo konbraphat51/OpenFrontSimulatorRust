@@ -3,15 +3,33 @@
 //!
 //! Same observable behaviour as [`OrderedSet`](super::OrderedSet::OrderedSet) (delete + re-add
 //! moves to the end, additions during iteration are visited, deleted entries are skipped,
-//! compaction deferred while a cursor is pinned), but the index is an open-addressing table with
-//! backward-shift deletion instead of a `HashMap`, which halves the instructions per operation.
+//! compaction deferred while a cursor is pinned). The value-to-slot lookup is a [`SlotIndex`]:
+//! [`HashIndex`] is an open-addressing table with backward-shift deletion (about half the
+//! instructions of a `HashMap`); the tile sets of the players use a shared per-tile position array.
 //! `u32::MAX` is reserved as the empty marker and cannot be stored.
 
 use super::OrderedMap::Cursor;
 
-const EMPTY: u32 = u32::MAX;
+/// Marks a deleted slot; `u32::MAX` cannot be stored.
+pub const EMPTY: u32 = u32::MAX;
 
-/// Slot index and key of one live value, stored together so a probe never touches `slots`.
+/// Key lookup of an [`OrderedSlots`]: maps a value to its slot in the insertion-ordered slot vector.
+pub trait SlotIndex {
+    /// Compact once the dead slots exceed this multiple of the live values (and 32).
+    const COMPACT_FACTOR: usize;
+    /// Slot of `key`, if present.
+    fn find(&self, key: u32, slots: &[u32]) -> Option<u32>;
+    /// Registers `key` at `slot` (the next free one) unless present; true when it was added.
+    fn insert(&mut self, key: u32, slot: u32, slots: &[u32]) -> bool;
+    /// Unregisters `key` and returns its slot when present.
+    fn remove(&mut self, key: u32, slots: &[u32]) -> Option<u32>;
+    /// Re-registers every live value after the slots were compacted.
+    fn rebuild(&mut self, slots: &[u32]);
+    /// Forgets every value of `slots` (called before the slots are cleared).
+    fn clear(&mut self, slots: &[u32]);
+}
+
+/// Slot and key of one live value, stored together so a probe never touches `slots`.
 #[derive(Clone, Copy, Debug)]
 struct Entry {
     key: u32,
@@ -23,40 +41,19 @@ const VACANT: Entry = Entry {
     slot: 0,
 };
 
-/// Insertion-ordered set of `u32`.
-#[derive(Clone, Debug, Default)]
-pub struct OrderedU32Set {
-    /// Values in insertion order; `EMPTY` marks a deleted slot.
-    slots: Vec<u32>,
-    /// Open-addressing index (power-of-two length, load at most one half).
-    table: Vec<Entry>,
-    len: u32,
-    pins: u32,
-    epoch: u64,
-}
-
 #[inline]
 fn hash_of(key: u32) -> usize {
     (key.wrapping_mul(0x9E37_79B1) ^ (key >> 15)) as usize
 }
 
-impl OrderedU32Set {
-    /// Creates an empty set.
-    pub fn new() -> Self {
-        Self::default()
-    }
+/// Open-addressing table (power-of-two length, load at most one half) with backward-shift deletion.
+#[derive(Clone, Debug, Default)]
+pub struct HashIndex {
+    table: Vec<Entry>,
+    len: u32,
+}
 
-    /// Number of live values.
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.len as usize
-    }
-
-    /// True when empty.
-    pub fn is_empty(&self) -> bool {
-        self.len == 0
-    }
-
+impl HashIndex {
     /// Position in `table` of `key`, or of the vacant entry that ends its probe sequence.
     #[inline]
     fn probe(&self, key: u32) -> usize {
@@ -71,42 +68,64 @@ impl OrderedU32Set {
         }
     }
 
-    /// `Set.prototype.has`.
+    /// Re-inserts every live value of `slots` into a table of `cap` entries.
+    fn rebuild_with(&mut self, slots: &[u32], cap: usize) {
+        self.table.clear();
+        self.table.resize(cap, VACANT);
+        let mask = cap - 1;
+        for (slot, &key) in slots.iter().enumerate() {
+            if key == EMPTY {
+                continue;
+            }
+            let mut i = hash_of(key) & mask;
+            while self.table[i].key != EMPTY {
+                i = (i + 1) & mask;
+            }
+            self.table[i] = Entry {
+                key,
+                slot: slot as u32,
+            };
+        }
+    }
+}
+
+impl SlotIndex for HashIndex {
+    const COMPACT_FACTOR: usize = 2;
+
     #[inline]
-    pub fn contains(&self, key: u32) -> bool {
-        !self.table.is_empty() && self.table[self.probe(key)].key == key
+    fn find(&self, key: u32, _slots: &[u32]) -> Option<u32> {
+        if self.table.is_empty() {
+            return None;
+        }
+        let e = self.table[self.probe(key)];
+        (e.key == key).then_some(e.slot)
     }
 
-    /// `Set.prototype.add`; returns true when the value was new (existing values keep their position).
-    pub fn insert(&mut self, key: u32) -> bool {
+    fn insert(&mut self, key: u32, slot: u32, slots: &[u32]) -> bool {
         debug_assert!(key != EMPTY, "u32::MAX is reserved");
         if (self.len as usize + 1) * 2 > self.table.len() {
-            self.grow();
+            let cap = (self.table.len() * 2).max(16);
+            self.rebuild_with(slots, cap);
         }
         let i = self.probe(key);
         if self.table[i].key == key {
             return false;
         }
-        self.table[i] = Entry {
-            key,
-            slot: self.slots.len() as u32,
-        };
-        self.slots.push(key);
+        self.table[i] = Entry { key, slot };
         self.len += 1;
         true
     }
 
-    /// `Set.prototype.delete`; returns true when the value was present.
-    pub fn remove(&mut self, key: u32) -> bool {
+    fn remove(&mut self, key: u32, _slots: &[u32]) -> Option<u32> {
         if self.table.is_empty() {
-            return false;
+            return None;
         }
         let mask = self.table.len() - 1;
         let mut hole = self.probe(key);
         if self.table[hole].key != key {
-            return false;
+            return None;
         }
-        self.slots[self.table[hole].slot as usize] = EMPTY;
+        let slot = self.table[hole].slot;
         self.len -= 1;
         // Backward-shift deletion keeps every probe sequence unbroken without tombstones.
         let mut i = hole;
@@ -124,13 +143,96 @@ impl OrderedU32Set {
             }
         }
         self.table[hole] = VACANT;
+        Some(slot)
+    }
+
+    fn rebuild(&mut self, slots: &[u32]) {
+        let cap = self.table.len();
+        self.rebuild_with(slots, cap);
+    }
+
+    fn clear(&mut self, _slots: &[u32]) {
+        self.table.fill(VACANT);
+        self.len = 0;
+    }
+}
+
+/// Insertion-ordered set of `u32` over a [`SlotIndex`].
+#[derive(Clone, Debug, Default)]
+pub struct OrderedSlots<I> {
+    /// Values in insertion order; `EMPTY` marks a deleted slot.
+    slots: Vec<u32>,
+    index: I,
+    len: u32,
+    pins: u32,
+    epoch: u64,
+}
+
+/// Insertion-ordered set of `u32` with a hash index.
+pub type OrderedU32Set = OrderedSlots<HashIndex>;
+
+impl<I: SlotIndex + Default> OrderedSlots<I> {
+    /// Creates an empty set.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+
+impl<I: SlotIndex> OrderedSlots<I> {
+    /// Creates an empty set over the given index.
+    pub fn with_index(index: I) -> Self {
+        Self {
+            slots: Vec::new(),
+            index,
+            len: 0,
+            pins: 0,
+            epoch: 0,
+        }
+    }
+
+    /// Number of live values.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.len as usize
+    }
+
+    /// True when empty.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    /// `Set.prototype.has`.
+    #[inline]
+    pub fn contains(&self, key: u32) -> bool {
+        self.index.find(key, &self.slots).is_some()
+    }
+
+    /// `Set.prototype.add`; returns true when the value was new (existing values keep their position).
+    #[inline]
+    pub fn insert(&mut self, key: u32) -> bool {
+        if !self.index.insert(key, self.slots.len() as u32, &self.slots) {
+            return false;
+        }
+        self.slots.push(key);
+        self.len += 1;
+        true
+    }
+
+    /// `Set.prototype.delete`; returns true when the value was present.
+    #[inline]
+    pub fn remove(&mut self, key: u32) -> bool {
+        let Some(slot) = self.index.remove(key, &self.slots) else {
+            return false;
+        };
+        self.slots[slot as usize] = EMPTY;
+        self.len -= 1;
         self.maybe_compact();
         true
     }
 
     /// `Set.prototype.clear`. Slots are kept while a cursor is pinned so positions stay valid.
     pub fn clear(&mut self) {
-        self.table.fill(VACANT);
+        self.index.clear(&self.slots);
         self.len = 0;
         if self.pins == 0 {
             self.slots.clear();
@@ -188,39 +290,14 @@ impl OrderedU32Set {
         self.iter().nth(n).copied()
     }
 
-    fn grow(&mut self) {
-        let cap = (self.table.len() * 2).max(16);
-        self.rebuild_table(cap);
-    }
-
-    /// Reinserts every live value in slot order into a table of `cap` entries.
-    fn rebuild_table(&mut self, cap: usize) {
-        self.table.clear();
-        self.table.resize(cap, VACANT);
-        let mask = cap - 1;
-        for (slot, &key) in self.slots.iter().enumerate() {
-            if key == EMPTY {
-                continue;
-            }
-            let mut i = hash_of(key) & mask;
-            while self.table[i].key != EMPTY {
-                i = (i + 1) & mask;
-            }
-            self.table[i] = Entry {
-                key,
-                slot: slot as u32,
-            };
-        }
-    }
-
     fn maybe_compact(&mut self) {
         let dead = self.slots.len() - self.len as usize;
-        if self.pins != 0 || dead < 32 || dead <= self.len as usize {
+        if self.pins != 0 || dead < 32 || dead <= self.len as usize * I::COMPACT_FACTOR {
             return;
         }
         self.slots.retain(|&v| v != EMPTY);
         self.epoch += 1;
-        self.rebuild_table(self.table.len());
+        self.index.rebuild(&self.slots);
     }
 }
 
@@ -244,8 +321,8 @@ impl<'a> Iterator for Iter<'a> {
     }
 }
 
-impl FromIterator<u32> for OrderedU32Set {
-    fn from_iter<I: IntoIterator<Item = u32>>(iter: I) -> Self {
+impl<I: SlotIndex + Default> FromIterator<u32> for OrderedSlots<I> {
+    fn from_iter<T: IntoIterator<Item = u32>>(iter: T) -> Self {
         let mut s = Self::new();
         for v in iter {
             s.insert(v);
