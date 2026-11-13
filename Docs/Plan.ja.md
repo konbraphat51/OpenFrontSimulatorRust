@@ -118,6 +118,7 @@ P6-P (性能パス、ハッシュは不変): 7 世代のレコードでシング
 | C072 | v0.26.11 | `TrainSpawnRate20V26`、`TradeShipFlatGold26` を追加 | 抽出 19/19 件 (すべて長尺の公開戦) |
 | C073 | v0.26.9 | `ClanTagLeading26` を追加 (クランは先頭の英字 `[TAG]`、書かれたまま) | 抽出 19/19 件 (すべて長尺の公開戦) |
 | C074 | v0.26.7 | エンジンの変更なし (EmbargoAll インテント、Achiran マップ、絵文字表は状態ハッシュに届かない) | 抽出 23/23 件 (長尺の公開戦) |
+| C079 | v0.25.20 から v0.25.23 (v25 ブランチ) | フラグ `DeleteUnitIntent1609`、`AttackRejectsAllianceRequests1733`、`DonationToggle1752`、`AlliesNoEmbargo1863`、`RailWaterBridges1961`、`AttackAllianceBlocked2044` (旧: 味方への攻撃は最初の tick で同盟を破棄する)、`NukeRevokesRequests2101`、`ShuffleArrayStopsAtOne2046`、`NationAiV26Base25` (並置の `FakeHumanExecutionV25`、`BotExecutionV25`、`BotBehaviorV25`: 攻撃確率・裏切り・構造物評価関数なし、比率 60-90 など)。`mini_map.bin` (`map4x` なし) のマップを読み込める。ロビー人数表、Japan/Montreal、コンパクトサイズ、列車駅のリファクタはハッシュに届かない | 抽出 89/90 件 (残る `aUI84xqB` はアップストリームでも tick 0 で一致しない)。C078 の仮置きフラグ (`Builds/Rules.rs` の `// TEMP C078` ブロックの `TmpC078*`、C078 の移植側に属する) 上で検証 |
 
 C060〜C063 の注記: クラス木はリリース時間と逆向きに進む (f4ed v0.28.0 -> a810 v0.28.1 -> 671c v0.28.2 -> C059 v0.28.4 が #2552 を revert)。ここで基底のバグも修正した: `censorNameWithClanTag` はタグも名前も不適切でない場合に username をそのまま返す (クラスタ計算のオフセットは名前をハッシュする)。これにより、クランタグの後ろに空白がない C060 の 3 件が一致するようになった。
 
