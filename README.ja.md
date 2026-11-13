@@ -8,7 +8,7 @@ English version: [README.md](README.md)
 
 [OpenFront](https://github.com/openfrontio/OpenFrontIO) のゲームシミュレーションを Rust で再実装した、高速かつ決定的なシミュレーター。公開 OpenFront API のゲームレコードを受け取り、ゲームを tick ごとに再生して、そのゲームを実行したアップストリームのエンジンビルドと同一のゲーム状態を再現する。再現性はレコードに保存された状態ハッシュで検証される。研究やツール用途で、任意の tick の領土、兵力、ユニット、攻撃、同盟を復元できる。
 
-状態: 開発中。対応ビルド: ベースライン v0.34.19 から v0.34.23 (クラス C000) と、クラス C001 から C012 の v0.34 系ビルド (v0.34.0 から v0.34.18、v0.34.24、v0.34.25)。それ以外のビルドは `build <commit> (class Cnnn) not ported yet` で失敗する。クラス別の状況は [Docs/Plan.ja.md](Docs/Plan.ja.md) と [Docs/BuildPlan.ja.md](Docs/BuildPlan.ja.md) を参照。
+状態: C080 (`v0.34.0-test-release`、1 ビルド。意図的に対象外) を除くすべてのビルドクラスを移植済み。C080 のビルドは `build <commit> (class C080) not ported yet` で失敗する。既知の制限 (C025 から C027 の Doomsday Clock、C058 の水上経路探索の書き換え) は [Docs/Plan.ja.md](Docs/Plan.ja.md) に、クラス別の状況は [Docs/BuildPlan.ja.md](Docs/BuildPlan.ja.md) にある。
 
 ## セットアップ
 

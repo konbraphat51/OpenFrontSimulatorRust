@@ -8,7 +8,7 @@ Japanese version: [README.ja.md](README.ja.md)
 
 OfSimRust (binary: `ofsim`) is a fast, deterministic Rust re-implementation of the [OpenFront](https://github.com/openfrontio/OpenFrontIO) game simulation. Given a game record from the public OpenFront API, it replays the game tick by tick and reproduces the exact game state of the upstream engine build that played it, verified against the state hashes stored in the record. Use it to rebuild territory, troops, units, attacks and alliances at any tick for research or tooling.
 
-Status: under construction. Supported builds: the baseline v0.34.19 to v0.34.23 (class C000) and the v0.34 builds of classes C001 to C012 (v0.34.0 to v0.34.18, v0.34.24, v0.34.25); other builds fail with `build <commit> (class Cnnn) not ported yet`. See [Docs/Plan.md](Docs/Plan.md) and [Docs/BuildPlan.md](Docs/BuildPlan.md) for the per-class status.
+Status: every build class is ported except C080 (`v0.34.0-test-release`, one build, left out on purpose); a build of C080 fails with `build <commit> (class C080) not ported yet`. Known limits (Doomsday Clock of C025 to C027, the water pathfinding rewrite of C058) are listed in [Docs/Plan.md](Docs/Plan.md); [Docs/BuildPlan.md](Docs/BuildPlan.md) has the per-class status.
 
 ## Setup
 

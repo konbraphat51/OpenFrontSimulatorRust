@@ -12,11 +12,11 @@ English version: [Plan.md](Plan.md)
 | P1a | `Compat`、`Core` (PseudoRandom、DetMath、Util)、`GameMap`、`TileSet`、ベースラインの `Configuration` | 単体テストが node で計算した値と一致する | 完了 |
 | P1b | `ofsim-record`、`ofsim-map` | ベースラインのレコードとマップが読み込め、ターンが `decompressGameRecord` と同様に展開される | 完了 |
 | P1c | リファレンストレーサーとレコード取得ツール | アップストリームエンジンから書かれたベースラインレコードのトレースがある | 完了 |
-| P2 | ゲームコア: `GameImpl`、`PlayerImpl`、`UnitImpl`、攻撃、同盟、`Executor`、`GameRunner`、スポーン、部族、攻撃、兵力成長、勝利判定 | ベースラインのレコードでスポーンフェーズ終了までハッシュが一致し、その後最初のユニット建設まで一致する | コアは実装済み (ゲーム状態、スポーン、プレイヤーの維持処理、勝利判定、`ofsim verify`/`trace`)。攻撃・同盟・部族・国家は `NotPorted` のため、国家なしのゲームではスポーンフェーズまで一致する |
-| P3 | ユニット: 建設、構造物、港と交易船、輸送船、軍艦、鉄道と列車、核、MIRV、SAM、砲弾、水核、経路探索 | ネーションのないベースラインレコードがすべて `ofsim verify` を通る | |
-| P4 | ネーション AI (`NationExecution` と各 behaviour、`NationCreation`) | ベースラインレコードがすべて通る | `NationExecution`、emoji・alliance・warship の behaviour、`NationUtils` は移植済み (不活性トレース一致、乱数消費も一致)。structure・nuke・MIRV の behaviour (N2) と `AiAttackBehavior` (A2) は未了 |
+| P2 | ゲームコア: `GameImpl`、`PlayerImpl`、`UnitImpl`、攻撃、同盟、`Executor`、`GameRunner`、スポーン、部族、攻撃、兵力成長、勝利判定 | ベースラインのレコードでスポーンフェーズ終了までハッシュが一致し、その後最初のユニット建設まで一致する | 完了 (ゲーム状態、スポーン、プレイヤーの維持処理、攻撃、同盟、部族、勝利判定、`ofsim verify`/`trace`) |
+| P3 | ユニット: 建設、構造物、港と交易船、輸送船、軍艦、鉄道と列車、核、MIRV、SAM、砲弾、水核、経路探索 | ネーションのないベースラインレコードがすべて `ofsim verify` を通る | 完了 |
+| P4 | ネーション AI (`NationExecution` と各 behaviour、`NationCreation`) | ベースラインレコードがすべて通る | 完了: `NationExecution`、emoji・alliance・warship・structure・nuke・MIRV の各 behaviour、`AiAttackBehavior`、`NationUtils`。古いビルドのネーション AI バリアントは `V25` から `V28` のモジュール ([Architecture.ja.md](Architecture.ja.md) の「バリアントモジュールの命名」参照) |
 | P5 | `ofsim replay` のスナップショット、`batch`、プロファイリング | サンプルゲームでアップストリームのダンパーと出力が同一。スループットを計測済み | 完了 (3 レコードでバイト単位一致、[Output.ja.md](Output.ja.md) 参照。バッチは並列・再開可能。スループットは下表) |
-| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | 進行中: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`) と世代 D のクラス C001 から C012 は完了 (下記)。C013 以降は未着手。C081 から C089 (モノレポ構成、v0.35.x と v0.36.x) は完了 |
+| P6 | 2025-10-01 (v0.25.21) から最新までの全ビルドのビルドルール。我々のデータに沿って新しい方から、その後過去へ | 各ビルドがサンプルしたレコードで通る | C080 (`v0.34.0-test-release`、1 ビルド。意図的に対象外) を除く全クラスで完了: フレームワーク (`Builds/Rules.rs`、`Builds/Maps.rs`)、世代 D のクラス C001 から C012、古い世代の C013 から C079、モノレポ構成の C081 から C090 (v0.35.x と v0.36.x)。残る制限はクラスごとに下記に記載 |
 
 ## スループット (P5)
 
