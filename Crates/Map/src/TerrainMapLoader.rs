@@ -92,10 +92,15 @@ pub struct MapManifest {
     pub name: String,
     /// Metadata of `map.bin`.
     pub map: MapMetadata,
-    /// Metadata of `map4x.bin`.
-    pub map4x: MapMetadata,
-    /// Metadata of `map16x.bin`.
-    pub map16x: MapMetadata,
+    /// Metadata of `map4x.bin` (absent before the compact map option, v0.25.x: see `mini_map`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub map4x: Option<MapMetadata>,
+    /// Metadata of `map16x.bin` (absent before the compact map option).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub map16x: Option<MapMetadata>,
+    /// Metadata of `mini_map.bin`, the mini map of builds before the compact map option.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mini_map: Option<MapMetadata>,
     /// Nations with coordinates.
     pub nations: Vec<Nation>,
     /// Fallback nation names.
@@ -188,15 +193,26 @@ impl MapData {
         let manifest: MapManifest = serde_json::from_slice(&manifest_bytes)
             .with_context(|| format!("parsing manifest of {map}"))?;
 
-        let (game_map, mini_game_map) = match size {
-            MapSize::Normal => (
+        let missing = |name: &str| anyhow::anyhow!("manifest of {map} lacks {name}");
+        let (game_map, mini_game_map) = match (size, &manifest.map4x, &manifest.mini_map) {
+            (MapSize::Normal, Some(mini), _) => (
                 TerrainMap::from_bin(&manifest.map, read("map.bin")?)?,
-                TerrainMap::from_bin(&manifest.map4x, read("map4x.bin")?)?,
+                TerrainMap::from_bin(mini, read("map4x.bin")?)?,
             ),
-            MapSize::Compact => (
-                TerrainMap::from_bin(&manifest.map4x, read("map4x.bin")?)?,
-                TerrainMap::from_bin(&manifest.map16x, read("map16x.bin")?)?,
+            // Builds before the compact map option store the mini map as `mini_map.bin`.
+            (MapSize::Normal, None, Some(mini)) => (
+                TerrainMap::from_bin(&manifest.map, read("map.bin")?)?,
+                TerrainMap::from_bin(mini, read("mini_map.bin")?)?,
             ),
+            (MapSize::Normal, None, None) => return Err(missing("map4x")),
+            (MapSize::Compact, Some(map4x), _) => (
+                TerrainMap::from_bin(map4x, read("map4x.bin")?)?,
+                TerrainMap::from_bin(
+                    manifest.map16x.as_ref().ok_or_else(|| missing("map16x"))?,
+                    read("map16x.bin")?,
+                )?,
+            ),
+            (MapSize::Compact, None, _) => return Err(missing("map4x")),
         };
 
         let mut nations = manifest.nations;
