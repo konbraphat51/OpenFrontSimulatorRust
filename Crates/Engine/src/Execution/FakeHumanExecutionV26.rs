@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::SpawnExecution::SpawnExecution;
+use crate::Builds::Rules::Change;
 use crate::Builds::Rules::Rules;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Compat::OrderedSet::OrderedSet;
@@ -209,7 +210,11 @@ impl FakeHumanExecution {
             let to_ally = *self.random.borrow_mut().rand_element(&enemies);
             if game.player(player).can_send_alliance_request(to_ally) {
                 let id = game.player(to_ally).id().to_string();
-                game.add_execution(Box::new(AllianceRequestExecution::new(player, id)));
+                if game.has(Change::NationAllianceRequestExecution2234) {
+                    game.add_execution(Box::new(AllianceRequestExecution::new(player, id)));
+                } else {
+                    game.player_mut(player).create_alliance_request(to_ally);
+                }
             }
         }
 

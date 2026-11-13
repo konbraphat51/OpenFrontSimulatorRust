@@ -80,7 +80,7 @@ impl PlayerExecution {
         // Pass 0: the main body goes to a single enclosing enemy.
         let surrounded_by = self.surrounded_by_same_player_v36(game, largest_cluster, lb);
         if let Some(s) = surrounded_by
-            && !game.player(s).is_friendly(player, false)
+            && !self.surrounded_friendly(game, player, s)
             && self.remove_cluster_v36(
                 game,
                 largest_cluster,

@@ -26,6 +26,21 @@ pub struct PlayerExecution {
 }
 
 impl PlayerExecution {
+    /// Friendliness check of `removeClusters`: PR 2241 asks the surrounding player (`surroundedBy.isFriendly(player)`),
+    /// older builds ask the surrounded one (`player.isFriendly(surroundedBy)`), which differs when one side is disconnected.
+    pub(super) fn surrounded_friendly(
+        &self,
+        game: &GameImpl,
+        player: SmallId,
+        surrounded_by: SmallId,
+    ) -> bool {
+        if game.has(Change::AnnexDisconnectedSurrounded2241) {
+            game.player(surrounded_by).is_friendly(player, false)
+        } else {
+            game.player(player).is_friendly(surrounded_by, false)
+        }
+    }
+
     /// `new PlayerExecution(player)`.
     pub fn new(player: SmallId) -> Self {
         Self {
@@ -69,7 +84,7 @@ impl PlayerExecution {
                 None
             };
             if let Some(s) = surrounded_by
-                && !game.player(s).is_friendly(player, false)
+                && !self.surrounded_friendly(game, player, s)
             {
                 self.remove_cluster(game, &clusters[0]);
             }
@@ -245,7 +260,7 @@ impl PlayerExecution {
                 },
             );
             if let Some(s) = surrounded_by
-                && !game.player(s).is_friendly(player, false)
+                && !self.surrounded_friendly(game, player, s)
             {
                 self.remove_cluster(game, largest_cluster);
             }
@@ -260,7 +275,7 @@ impl PlayerExecution {
             return;
         }
         if let Some(s) = surrounded_by
-            && !game.player(s).is_friendly(player, false)
+            && !self.surrounded_friendly(game, player, s)
         {
             self.remove_cluster(game, largest_cluster);
         }

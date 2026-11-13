@@ -241,6 +241,10 @@ pub enum Change {
     NextIntFloorsArgs31,
     /// PR 2046: `shuffleArray` stops at index 1 (older builds also draw once for index 0).
     ShuffleArrayStopsAtOne2046,
+    /// PR 2241: a fully surrounded main cluster of a disconnected player is annexed (`surroundedBy.isFriendly(player)`).
+    AnnexDisconnectedSurrounded2241,
+    /// PR 2234: nations request alliances through an `AllianceRequestExecution` (older: `Player.createAllianceRequest` at once).
+    NationAllianceRequestExecution2234,
     /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
     SamCooldown90V31,
     /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
@@ -663,6 +667,8 @@ const ROOT_CHANGES: &[Change] = &[
     Change::TradeShipPathReuse4654,
     Change::NextIntFloorsArgs31,
     Change::ShuffleArrayStopsAtOne2046,
+    Change::AnnexDisconnectedSurrounded2241,
+    Change::NationAllianceRequestExecution2234,
     Change::SamCooldown90V31,
     Change::SamCooldown120V30,
     Change::SiloCooldown90V31,

@@ -74,7 +74,7 @@ impl PlayerExecution {
             Some((Cell::new(a, b), Cell::new(c, d)));
         let surrounded_by = self.surrounded_by_same_player(game, &main, a, b, c, d);
         if let Some(s) = surrounded_by
-            && !game.player(s).is_friendly(player, false)
+            && !self.surrounded_friendly(game, player, s)
         {
             self.remove_cluster_v27(game, &main);
         }
