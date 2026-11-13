@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::PriorityQueue::{BucketQueue, MinHeap, OpenQueue, PriorityQueue};
+use crate::Compat::JsNumber::floor;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 
@@ -182,7 +183,7 @@ impl AStarWaterBounded {
             let dx_n = nx - goal_xf;
             let dy_n = ny - goal_yf;
             let cross = (dx_goal * dy_n - dy_goal * dx_n).abs();
-            ((cross * (COST_SCALE - 1.0)) / cross_norm / cross_norm).floor()
+            floor((cross * (COST_SCALE - 1.0)) / cross_norm / cross_norm)
         };
 
         for &s in starts {
@@ -221,8 +222,13 @@ impl AStarWaterBounded {
 
             let current_g = self.g_score[cl];
             // Same values as splitting `to_global(current_local)` by the map width, with one division.
-            let current_x = current_local % bounds_width + min_x;
-            let current_y = current_local / bounds_width + min_y;
+            // 32-bit division: local indices are below `max_search_area`, far from `u32::MAX`.
+            let (local_y, local_x) = (
+                (cl as u32 / bounds_width as u32) as i64,
+                (cl as u32 % bounds_width as u32) as i64,
+            );
+            let current_x = local_x + min_x;
+            let current_y = local_y + min_y;
             let current = (current_y * map_width + current_x) as TileRef;
 
             // North, south, west, east

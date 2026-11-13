@@ -81,7 +81,7 @@ impl AStarAdapter for RailAdapter<'_> {
 
     fn neighbors(&self, node: u32, buffer: &mut [u32]) -> usize {
         let mut count = 0;
-        let x = node % self.width;
+        let x = self.map.x(node);
         let from_shoreline = self.map.is_shoreline(node);
         let is_impassable = self.map.is_impassable(node);
 
@@ -131,10 +131,10 @@ impl AStarAdapter for RailAdapter<'_> {
     }
 
     fn heuristic(&self, node: u32, goal: u32) -> f64 {
-        let nx = (node % self.width) as f64;
-        let ny = (node / self.width) as f64;
-        let gx = (goal % self.width) as f64;
-        let gy = (goal / self.width) as f64;
+        let nx = self.map.x(node) as f64;
+        let ny = self.map.y(node) as f64;
+        let gx = self.map.x(goal) as f64;
+        let gy = self.map.y(goal) as f64;
         HEURISTIC_WEIGHT * ((nx - gx).abs() + (ny - gy).abs())
     }
 }
