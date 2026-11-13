@@ -10,16 +10,19 @@ use crate::Game::GameMap::{GameMapImpl, TileRef};
 pub struct GameMapAdapter<'a> {
     game_map: &'a GameMapImpl,
     water_path: bool,
+    /// PR 1961: land paths may cross water at shorelines (at a penalty).
+    water_bridges: bool,
 }
 
 const WATER_PENALTY: f64 = 3.0;
 
 impl<'a> GameMapAdapter<'a> {
     /// Adapter over `game_map`; `water_path` limits the search to water.
-    pub fn new(game_map: &'a GameMapImpl, water_path: bool) -> Self {
+    pub fn new(game_map: &'a GameMapImpl, water_path: bool, water_bridges: bool) -> Self {
         Self {
             game_map,
             water_path,
+            water_bridges,
         }
     }
 }
@@ -32,7 +35,7 @@ impl GraphAdapter for GameMapAdapter<'_> {
     fn cost(&self, node: u32) -> f64 {
         let mut base = self.game_map.cost(node) as f64;
         // Avoid crossing water when possible
-        if !self.water_path && self.game_map.is_water(node) {
+        if self.water_bridges && !self.water_path && self.game_map.is_water(node) {
             base += WATER_PENALTY;
         }
         base
@@ -46,6 +49,9 @@ impl GraphAdapter for GameMapAdapter<'_> {
         let to_water = self.game_map.is_water(to);
         if self.water_path {
             return to_water;
+        }
+        if !self.water_bridges {
+            return !to_water;
         }
         // Allow water access from/to shore
         let from_shore = self.game_map.is_shoreline(from);
@@ -61,6 +67,7 @@ type Cell = (i32, i32);
 pub struct MiniAStar {
     a_star: SerialAStar,
     water_path: bool,
+    water_bridges: bool,
     src: Vec<TileRef>,
     src_is_array: bool,
     dst: TileRef,
@@ -84,6 +91,7 @@ impl MiniAStar {
         max_tries: f64,
         water_path: bool,
         direction_change_penalty: f64,
+        water_bridges: bool,
     ) -> Self {
         let mini_src: Vec<u32> = src.iter().map(|&s| mini_tile(map, mini_map, s)).collect();
         let mini_dst = mini_tile(map, mini_map, dst);
@@ -92,12 +100,13 @@ impl MiniAStar {
             mini_dst,
             iterations,
             max_tries,
-            &GameMapAdapter::new(mini_map, water_path),
+            &GameMapAdapter::new(mini_map, water_path, water_bridges),
             direction_change_penalty,
         );
         Self {
             a_star,
             water_path,
+            water_bridges,
             src: src.to_vec(),
             src_is_array,
             dst,
@@ -106,8 +115,11 @@ impl MiniAStar {
 
     /// `compute()`.
     pub fn compute(&mut self, mini_map: &GameMapImpl) -> PathFindResultType {
-        self.a_star
-            .compute(&GameMapAdapter::new(mini_map, self.water_path))
+        self.a_star.compute(&GameMapAdapter::new(
+            mini_map,
+            self.water_path,
+            self.water_bridges,
+        ))
     }
 
     /// `reconstructPath()`: the full-map tiles of the path.

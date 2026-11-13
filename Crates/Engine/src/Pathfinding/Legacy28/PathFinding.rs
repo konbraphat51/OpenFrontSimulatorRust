@@ -208,6 +208,7 @@ impl PathFinder {
                     self.max_tries,
                     self.water_path,
                     0.0,
+                    true,
                 ));
                 self.compute_finished = false;
                 return self.next_tile(map, mini_map, curr, dst, 1);

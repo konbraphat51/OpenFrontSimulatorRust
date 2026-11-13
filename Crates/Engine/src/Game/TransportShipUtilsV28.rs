@@ -128,7 +128,18 @@ pub fn best_shore_deployment_source(
     }
     let map = &game.map;
     let mini = game.water_manager.mini_map();
-    let mut a_star = MiniAStar::new(map, mini, &candidates, true, t, 1_000_000.0, 1.0, true, 0.0);
+    let mut a_star = MiniAStar::new(
+        map,
+        mini,
+        &candidates,
+        true,
+        t,
+        1_000_000.0,
+        1.0,
+        true,
+        0.0,
+        true,
+    );
     if a_star.compute(mini) != PathFindResultType::Completed {
         return None;
     }

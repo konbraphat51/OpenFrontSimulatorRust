@@ -185,13 +185,15 @@ impl NukeExecution {
         let entries: Vec<(SmallId, f64)> = attacked.iter().map(|(&p, &n)| (p, n)).collect();
         for (attacked_player, tiles_destroyed) in entries {
             if tiles_destroyed > threshold && nuke_type != UnitType::MIRVWarhead {
-                let pending = game
-                    .player(attacked_player)
-                    .incoming_alliance_requests()
-                    .into_iter()
-                    .find(|&ar| game.alliance_request(ar).requestor() == self.player);
-                if let Some(request) = pending {
-                    game.reject_alliance_request(request);
+                if game.has(Change::NukeRevokesRequests2101) {
+                    let pending = game
+                        .player(attacked_player)
+                        .incoming_alliance_requests()
+                        .into_iter()
+                        .find(|&ar| game.alliance_request(ar).requestor() == self.player);
+                    if let Some(request) = pending {
+                        game.reject_alliance_request(request);
+                    }
                 }
                 if let Some(alliance) = game.player(self.player).alliance_with(attacked_player) {
                     game.player_mut(self.player).break_alliance(alliance);

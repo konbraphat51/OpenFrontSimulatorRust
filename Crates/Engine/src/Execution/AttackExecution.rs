@@ -31,6 +31,10 @@ pub struct AttackExecution {
     target_id: Option<String>,
     source_tile: Option<TileRef>,
     remove_troops: bool,
+    /// Pre-PR 2044: the alliance with the target is broken on the first tick.
+    break_alliance: bool,
+    /// Pre-PR 2044: whether the owner was allied to the target at `init`.
+    was_allied_at_init: bool,
 }
 
 impl AttackExecution {
@@ -54,6 +58,8 @@ impl AttackExecution {
             target_id,
             source_tile,
             remove_troops,
+            break_alliance: false,
+            was_allied_at_init: false,
         }
     }
 
@@ -267,7 +273,10 @@ impl Execution for AttackExecution {
             return;
         }
 
-        if self.target != 0 && game.player(self.owner).is_friendly(self.target, false) {
+        if self.target != 0
+            && game.has(Change::AttackAllianceBlocked2044)
+            && game.player(self.owner).is_friendly(self.target, false)
+        {
             self.active = false;
             return;
         }
@@ -278,7 +287,9 @@ impl Execution for AttackExecution {
             if target_type != PlayerType::Bot && owner_type != PlayerType::Bot {
                 // Bots do not embargo since they cannot trade anyway.
                 game.player_mut(self.target).add_embargo(self.owner, true);
-                self.reject_incoming_alliance_requests(game, self.target);
+                if game.has(Change::AttackRejectsAllianceRequests1733) {
+                    self.reject_incoming_alliance_requests(game, self.target);
+                }
             }
         }
 
@@ -294,6 +305,13 @@ impl Execution for AttackExecution {
             && !game
                 .player(self.owner)
                 .can_attack_player(self.target, false)
+        {
+            self.active = false;
+            return;
+        }
+        if self.target != 0
+            && !game.has(Change::AttackAllianceBlocked2044)
+            && game.player(self.owner).is_on_same_team(self.target)
         {
             self.active = false;
             return;
@@ -367,6 +385,14 @@ impl Execution for AttackExecution {
             return;
         }
 
+        if self.target != 0 && !game.has(Change::AttackAllianceBlocked2044) {
+            // Remember the alliance so the first tick breaks it (the attacker becomes a traitor).
+            self.was_allied_at_init = game.player(self.owner).is_allied_with(self.target);
+            if self.was_allied_at_init {
+                self.break_alliance = true;
+            }
+        }
+
         if self.target != 0 {
             let difficulty = game.config().game_config().difficulty;
             // Hitting back at whoever just attacked us does not anger them, except on Easy.
@@ -416,10 +442,25 @@ impl Execution for AttackExecution {
             self.active = false;
             return;
         }
-        if target_is_player && game.player(self.owner).is_friendly(self.target, false) {
-            // An alliance was created after the attack started.
-            self.retreat(game, 0.0);
-            return;
+        if game.has(Change::AttackAllianceBlocked2044) {
+            if target_is_player && game.player(self.owner).is_friendly(self.target, false) {
+                // An alliance was created after the attack started.
+                self.retreat(game, 0.0);
+                return;
+            }
+        } else if target_is_player {
+            let alliance = game.player(self.owner).alliance_with(self.target);
+            if self.break_alliance
+                && let Some(alliance) = alliance
+            {
+                self.break_alliance = false;
+                game.player_mut(self.owner).break_alliance(alliance);
+            }
+            if game.player(self.owner).is_allied_with(self.target) && !self.was_allied_at_init {
+                // A new alliance appeared after the attack started: retreat, not betray.
+                self.retreat(game, 0.0);
+                return;
+            }
         }
 
         let border_size = game.attack(attack).border_size() + self.random.next_int(0.0, 5.0);

@@ -162,7 +162,10 @@ impl Executor {
                 *unit_id,
                 amount.filter(|_| game.has(Change::BulkPurchase4640)),
             )),
-            Intent::DeleteUnit { unit_id } => Box::new(DeleteUnitExecution::new(player, *unit_id)),
+            Intent::DeleteUnit { unit_id } if game.has(Change::DeleteUnitIntent1609) => {
+                Box::new(DeleteUnitExecution::new(player, *unit_id))
+            }
+            Intent::DeleteUnit { .. } => Box::new(NoOpExecution),
             Intent::QuickChat { recipient, .. } => {
                 Box::new(QuickChatExecution::new(player, recipient.clone()))
             }

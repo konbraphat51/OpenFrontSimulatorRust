@@ -1,0 +1,17 @@
+# Changes class C079 adds to / removes from its parent (parent: BuildClasses.toml).
+# v0.25.20 to v0.25.23 are the v25 branch: they lack main's PRs 1609 (delete unit), 1733 (attack rejects alliance requests),
+# 1752 (donation toggles), 1863 (teammates keep relations when a betrayal happens), 1961 (rail bridges over water),
+# 2044 (attacks on allies refused in init), 2101 (nukes reject alliance requests) and draw once more in shuffleArray (PR 2046).
+# Lobby size tables, Japan/Montreal, the compact map size, train station refactor (1925), target tile (2025) and
+# playerKilled stats (2102) do not affect state hashes.
+add = []
+remove = [
+  "ShuffleArrayStopsAtOne2046",
+  "DeleteUnitIntent1609",
+  "AttackRejectsAllianceRequests1733",
+  "DonationToggle1752",
+  "AlliesNoEmbargo1863",
+  "RailWaterBridges1961",
+  "AttackAllianceBlocked2044",
+  "NukeRevokesRequests2101",
+]

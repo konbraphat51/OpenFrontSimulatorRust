@@ -91,6 +91,7 @@ fn legacy28_pathfinding_matches_upstream() {
                 q["maxTries"].as_f64().unwrap(),
                 true,
                 0.0,
+                true,
             );
             let mut seq = Vec::new();
             let mut calls = 0;
@@ -118,7 +119,18 @@ fn legacy28_pathfinding_matches_upstream() {
 
         for q in want["land"].as_array().unwrap() {
             let (src, dst) = (u(&q["src"]), u(&q["dst"]));
-            let mut a = MiniAStar::new(&map, &mini, &[src], false, dst, 5000.0, 20.0, false, 3.0);
+            let mut a = MiniAStar::new(
+                &map,
+                &mini,
+                &[src],
+                false,
+                dst,
+                5000.0,
+                20.0,
+                false,
+                3.0,
+                true,
+            );
             let mut calls = 0;
             let mut r;
             loop {
@@ -143,7 +155,18 @@ fn legacy28_pathfinding_matches_upstream() {
         for q in want["multi"].as_array().unwrap() {
             let srcs: Vec<u32> = q["srcs"].as_array().unwrap().iter().map(u).collect();
             let dst = u(&q["dst"]);
-            let mut a = MiniAStar::new(&map, &mini, &srcs, true, dst, 1_000_000.0, 1.0, true, 0.0);
+            let mut a = MiniAStar::new(
+                &map,
+                &mini,
+                &srcs,
+                true,
+                dst,
+                1_000_000.0,
+                1.0,
+                true,
+                0.0,
+                true,
+            );
             let r = a.compute(&mini);
             let p = if r == PathFindResultType::Completed {
                 a.reconstruct_path(&map, &mini)

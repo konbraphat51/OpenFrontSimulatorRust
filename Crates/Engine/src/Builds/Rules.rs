@@ -491,6 +491,22 @@ pub enum Change {
     EmojiTableFactoryRow2522,
     /// v0.27.0 and v0.27.1: the game runner replaces a profane name whole after `sanitize` (v0.27.2 and later: `censorNameWithClanTag`).
     SanitizeThenFixProfane27_0,
+
+    // C079 (v0.25.20 to v0.25.23, the v25 branch): the newer behaviours the older builds lack.
+    /// PR 1609: the `delete_unit` intent and its execution exist.
+    DeleteUnitIntent1609,
+    /// PR 1733: an attack rejects the target's pending alliance requests.
+    AttackRejectsAllianceRequests1733,
+    /// PR 1752: lobby toggles allow or forbid donations (older: no donations to humans in public FFA).
+    DonationToggle1752,
+    /// PR 1863: same-team players are exempt from the -40 relation penalty of a betrayal (and nations do not embargo them).
+    AlliesNoEmbargo1863,
+    /// PR 1961: land A* may cross water at shorelines at a penalty (rail bridges).
+    RailWaterBridges1961,
+    /// PR 2044: attacks on allies are refused in `init`; older attacks break the alliance on the first tick.
+    AttackAllianceBlocked2044,
+    /// PR 2101: a nuke rejects the target's pending alliance request.
+    NukeRevokesRequests2101,
 }
 }
 
@@ -593,6 +609,13 @@ const ROOT_CHANGES: &[Change] = &[
     Change::AllianceReplyInit28,
     Change::NoUsernameSanitation2622,
     Change::EmojiTableFactoryRow2522,
+    Change::DeleteUnitIntent1609,
+    Change::AttackRejectsAllianceRequests1733,
+    Change::DonationToggle1752,
+    Change::AlliesNoEmbargo1863,
+    Change::RailWaterBridges1961,
+    Change::AttackAllianceBlocked2044,
+    Change::NukeRevokesRequests2101,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

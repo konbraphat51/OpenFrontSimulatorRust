@@ -292,6 +292,7 @@ impl RailNetwork {
                 20.0,
                 false,
                 3.0,
+                game.has(Change::RailWaterBridges1961),
             );
             return if a_star.compute(mini) == PathFindResultType::Completed {
                 a_star.reconstruct_path(&game.map, mini)

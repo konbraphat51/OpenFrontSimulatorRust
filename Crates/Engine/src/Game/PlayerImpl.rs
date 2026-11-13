@@ -870,6 +870,15 @@ impl<'a> PlayerRef<'a> {
         true
     }
 
+    /// Whether donating to a human is allowed: the lobby toggle (PR 1752) or, before it, no donations in public FFA.
+    fn donation_allowed(&self, toggle: bool) -> bool {
+        if self.game.has(Change::DonationToggle1752) {
+            return toggle;
+        }
+        let config = self.game.config().game_config();
+        !(config.game_mode == GameMode::FFA && config.game_type == GameType::Public)
+    }
+
     /// `canDonateGold(recipient)`.
     pub fn can_donate_gold(&self, recipient: SmallId) -> bool {
         if recipient == self.id && self.game.has(Change::SelfActionGuards4014) {
@@ -879,7 +888,9 @@ impl<'a> PlayerRef<'a> {
         if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
             return false;
         }
-        if r.player_type() == PlayerType::Human && !self.game.config().donate_gold() {
+        if r.player_type() == PlayerType::Human
+            && !self.donation_allowed(self.game.config().donate_gold())
+        {
             return false;
         }
         self.donation_gate(recipient)
@@ -894,7 +905,9 @@ impl<'a> PlayerRef<'a> {
         if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
             return false;
         }
-        if r.player_type() == PlayerType::Human && !self.game.config().donate_troops() {
+        if r.player_type() == PlayerType::Human
+            && !self.donation_allowed(self.game.config().donate_troops())
+        {
             return false;
         }
         self.donation_gate(recipient)

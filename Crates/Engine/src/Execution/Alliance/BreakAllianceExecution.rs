@@ -46,7 +46,8 @@ impl Execution for BreakAllianceExecution {
                     .update_relation(self.requestor, -200.0);
                 for player in game.players() {
                     if player != self.requestor
-                        && !game.player(player).is_on_same_team(self.requestor)
+                        && !(game.has(Change::AlliesNoEmbargo1863)
+                            && game.player(player).is_on_same_team(self.requestor))
                     {
                         game.player_mut(player)
                             .update_relation(self.requestor, -40.0);
