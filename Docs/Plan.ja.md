@@ -101,6 +101,12 @@ English version: [Plan.md](Plan.md)
 | C057 | v0.29.0-beta2 | 国境タイルが未所有地(水含む)に接するとBotが拡張 | 1/1 (短尺) |
 | C058 | v0.29.0-beta1 | 部分: 水上経路探索の書き換えは未移植 | 2/2 (短尺) |
 | C059 | v0.28.4 | `FakeHumanNations28` (国家はマニフェストのセルに置く `FakeHumanExecution`、部族は `BotBehaviorV28` 上の `BotExecutionV28`、同盟は `AllianceBehaviorV28`、`NationCreation` なし)、`NationDifficultyEconomy28` (難易度ごとの初期兵力・上限・増加)、`ImmunityByConfig28` (全プレイヤーにスポーン期間 + 5 秒の免疫、`canAttackPlayer` なしの `canAttack`)、`SpawnByTile28` (Execution 作成時にスポーンタイルを抽選、ボットは 30 離れた陸地を再試行)、`LegacyAStar28` (`Pathfinding/Legacy28/`: ボート・交易船・軍艦・鉄道・駅にミニマップ上の双方向 `SerialAStar`、`TransportShipUtilsV28`、水グラフなし)、`LegacyProjectiles28` (砲弾と SAM ミサイルはファインダーごとに 1 つの PRNG、核と MIRV は制御点ベジェ、爆風タイルは発射時に確定、タイル数による同盟破棄、MIRV は `nextInt` で散布)、`RelationPenalties28` (攻撃 -80、裏切り -200 と -40、中指、寄付に絵文字返信なし)、`WarshipLegacy28` | 20/20 (公開 12 件、最大 7,200 ターン) |
+| C060 | v0.28.5, v0.28.7 | `TradeShipDistanceGold150` (PR 3232 以前の交易船ゴールドが 1 タイルあたり 100 でなく 150) | 29/30 (`91a14WVp` はアップストリームでも tick 1050 で不一致) |
+| C061 | v0.28.2, v0.28.3 | `CommunityBotNames2552` (最初の 20 体以降のボットは `COMMUNITY_FULL_ELF_NAMES`、`SPECIAL_FULL_ELF_NAMES`、`COMMUNITY_PREFIXES the Elf` の順、それ以外は `Elf <n>`。`data/BotNamesCommunity28.json`) | 30/30 |
+| C062 | v0.28.1 | `BotsAttackHumans2697` (ボットが人間を攻撃可能、Easy のランダム標的は `chance(2)` 抽選後に人間をスキップ) | 15/15 |
+| C063 | v0.28.0 | `SamHittingChance2665` (発射ごとに `PseudoRandom(samId)` を 1 回抽選、命中率 0.8、MIRV 弾頭 0.5、原爆は常に命中) | 20/20 |
+
+C060〜C063 の注記: クラス木はリリース時間と逆向きに進む (f4ed v0.28.0 -> a810 v0.28.1 -> 671c v0.28.2 -> C059 v0.28.4 が #2552 を revert)。ここで基底のバグも修正した: `censorNameWithClanTag` はタグも名前も不適切でない場合に username をそのまま返す (クラスタ計算のオフセットは名前をハッシュする)。これにより、クランタグの後ろに空白がない C060 の 3 件が一致するようになった。
 
 世代 F の数学: PR 5191 より前のビルドはホストの `Math.exp/log/pow/atan2` を呼ぶ。`Compat/HostMath.rs` は `exp`、`log`、`atan2` に V8 の fdlibm 移植を使い、`Math.pow` は V8 の fdlibm 移植とプラットフォームの `powf` から `Config` が選ぶ (`OFSIM_POW=fdlibm|platform`、既定はプラットフォーム)。C013 から C022 のサンプルは pow がどちらでも全て一致するため、レコードでは区別できない。既定は [BuildPlan.ja.md](BuildPlan.ja.md) の V8 13.3 以降の `std::pow` の調査に従う。ネーション (Hard、Impossible)、大きな初期ゴールド、水核、Duos/Quads チームを有効にするよう書き換えたレコードをアップストリームのエンジン (Node 22、fdlibm pow) と照合した差分実行 (1,500 から 3,700 tick を約 25 回) は tick 単位で完全一致。ただし C013 での初期ゴールド 9 億と水核のストレス実行は tick 2224 で分岐した。原因は水域探索器の世代管理 (下記) で、修正済み。`OFSIM_TOGGLE=<Change>,...` は全ルールセットの指定した変更を反転し、二分探索に使う。C080 (C013 とベースラインの間のテストリリース) は未移植: 唯一のサンプルにハッシュがない。C025 から C027 の Doomsday Clock の各版は未移植 (クロックが有効だと panic し、サンプルに有効なものはない)。
 
