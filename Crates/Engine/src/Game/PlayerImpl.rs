@@ -885,7 +885,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
+        let dead =
+            (!self.is_alive() || !r.is_alive()) && !self.game.has(Change::TmpC078DonateWhenDead);
+        if dead || !self.is_friendly(recipient, false) {
             return false;
         }
         if r.player_type() == PlayerType::Human
@@ -902,7 +904,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
+        let dead =
+            (!self.is_alive() || !r.is_alive()) && !self.game.has(Change::TmpC078DonateWhenDead);
+        if dead || !self.is_friendly(recipient, false) {
             return false;
         }
         if r.player_type() == PlayerType::Human

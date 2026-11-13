@@ -517,6 +517,8 @@ pub enum Change {
     TmpC078DefensePostCaptured,
     /// C078: `isFriendly` has no disconnected rule.
     TmpC078FriendlyIgnoresAfk,
+    /// C078: `canDonateGold` and `canDonateTroops` have no alive checks.
+    TmpC078DonateWhenDead,
 }
 }
 

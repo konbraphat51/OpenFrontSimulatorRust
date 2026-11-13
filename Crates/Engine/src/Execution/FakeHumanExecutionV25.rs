@@ -18,7 +18,8 @@ use crate::Execution::Util::closest_two_tiles;
 use crate::Execution::Utils::BotBehaviorV25::BotBehaviorV25;
 use crate::Execution::Utils::BotBehaviorV26::emoji_heckle;
 use crate::Game::Game::{
-    Cell, Difficulty, Gold, Nation, PlayerType, Relation, SmallId, TerrainType, Tick, UnitId, UnitType,
+    Cell, Difficulty, Gold, Nation, PlayerType, Relation, SmallId, TerrainType, Tick, UnitId,
+    UnitType,
 };
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::{TileRef, eucl_dist_fn, manhattan_dist_fn};
@@ -359,7 +360,10 @@ impl FakeHumanExecutionV25 {
                     continue 'outer;
                 }
             }
-            if !truthy(game.player(player).can_build(UnitType::AtomBomb, tile, None)) {
+            if !truthy(
+                game.player(player)
+                    .can_build(UnitType::AtomBomb, tile, None),
+            ) {
                 continue;
             }
             let value = self.nuke_tile_score(game, tile, &silos, &structures);
