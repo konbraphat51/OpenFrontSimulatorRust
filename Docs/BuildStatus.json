@@ -69,7 +69,12 @@
     "C056": "ported; 1/1 (short, 279 turns)",
     "C057": "ported; 1/1 (short, 279 turns)",
     "C058": "partial; 2/2 short records pass, the water pathfinding rewrite (Bounded A*, hierarchical finder, Bresenham smoother) is NOT ported",
-    "C059": "ported; 20/20 sampled records pass (8 singleplayer, 12 public up to 7,200 turns)"
+    "C059": "ported; 20/20 sampled records pass (8 singleplayer, 12 public up to 7,200 turns)",
+    "C064": "ported; 28 of 28 (18 long public)",
+    "C065": "ported; 82 of 82 (41 long public)",
+    "C066": "ported; 56 of 56 (34 long public)",
+    "C067": "ported; 56 of 56 (38 long public)",
+    "C068": "ported; 3 of 3 usable (short; the two team games without players throw `Too few teams` upstream too)"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -141,6 +146,11 @@
     "C056": "移植済み; 1/1 (短尺 279 ターン)",
     "C057": "移植済み; 1/1 (短尺 279 ターン)",
     "C058": "部分; 短尺2/2一致、水上経路探索の書き換え (Bounded A*、階層探索、Bresenham平滑化) は未移植",
-    "C059": "移植済み; 20/20 件のサンプルが一致 (シングルプレイ 8 件、公開 12 件、最大 7,200 ターン)"
+    "C059": "移植済み; 20/20 件のサンプルが一致 (シングルプレイ 8 件、公開 12 件、最大 7,200 ターン)",
+    "C064": "移植済み; 28/28 件 (長尺の公開戦 18 件)",
+    "C065": "移植済み; 82/82 件 (長尺の公開戦 41 件)",
+    "C066": "移植済み; 56/56 件 (長尺の公開戦 34 件)",
+    "C067": "移植済み; 56/56 件 (長尺の公開戦 38 件)",
+    "C068": "移植済み; 使える 3/3 件 (短尺。プレイヤー 0 人のチーム戦 2 件はアップストリームも `Too few teams` で例外)"
   }
 }
