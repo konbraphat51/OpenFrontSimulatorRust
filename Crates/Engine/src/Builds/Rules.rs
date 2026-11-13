@@ -417,6 +417,40 @@ pub enum Change {
     RelationPenalties28,
     /// v0.28.4: warships treat friendly owners as untargetable, patrol anywhere and drop a lost target tile.
     WarshipLegacy28,
+    /// v0.28.5 and v0.28.7 (aac3bb37e): trade ship distance bonus 100 -> 150 gold per tile (before PR 3232 formula).
+    TradeShipDistanceGold150,
+    /// PRs 2552 and 2609 (v0.28.0 to v0.28.3, reverted in v0.28.4): bots beyond the first 20 take names from the community lists.
+    CommunityBotNames2552,
+    /// PR 2697 (v0.28.0 and v0.28.1, reverted in v0.28.4): bots may attack humans, and nothing attacks humans on Easy via random targets.
+    BotsAttackHumans2697,
+    /// v0.27.10: nation start troops 2,500 / 5,000 / 20,000 / 50,000, cap 0.5 / 1 / 1.5 / 2 and growth 0.9 / 1 / 1.1 / 1.2 by difficulty.
+    NationDifficultyEconomy27,
+    /// PR 2539 and 2614: cluster removal finds the largest cluster by a linear scan over DFS clusters (older: a stable size sort over BFS clusters).
+    ClusterLinearScan2614,
+    /// v0.28: tribes and fake humans pick attacks statelessly and fake humans answer alliances in `AllianceBehavior` (older: a stateful enemy in `BotBehavior`, alliance replies there).
+    BotBehaviorStateless28,
+    /// PR 2378: no `Construction` unit; a structure is built at once and flagged under construction (older: a `Construction` unit stands in until the structure is built).
+    NoConstructionUnit2378,
+    /// PR 2665: SAM launchers always hit (older: a per-launcher PRNG draw against the hit chance, 0.8 and 0.5 for MIRV warheads).
+    SamNoRng2665,
+    /// PR 2621: a MIRV costs 25M plus 15M per MIRV launched (older: a flat 35M).
+    MirvCostScales2621,
+    /// Meta change: a train between allies pays 35,000 gold (older: 50,000).
+    TrainAllyGold35kMeta,
+    /// v0.28: an alliance reply is answered in `init`, at the end of the tick it was added (older: on its first tick).
+    AllianceReplyInit28,
+    /// v0.27.10: a nuke with a source tile launches from it without checking `canBuild` (MIRV warheads start at their MIRV).
+    NukeSrcFirst27,
+    /// PR 2622: a player keeps the name it was given (older: `sanitizeUsername` strips other characters and pads to 3).
+    NoUsernameSanitation2622,
+    /// v0.27 and v0.28: the game runner returns a good name unchanged (the older `censorNameWithClanTag` rebuilt `[TAG] name`).
+    CensorKeepsGoodNames27,
+    /// v0.27.5 to v0.27.8: trains spawn at (factories + 10) * 16 (v0.27.10: 18).
+    TrainSpawnRate16V27_5,
+    /// PR 2522: the emoji table has a factory and train row and another order (v0.27.0 and v0.27.1: 55 emojis).
+    EmojiTableFactoryRow2522,
+    /// v0.27.0 and v0.27.1: the game runner replaces a profane name whole after `sanitize` (v0.27.2 and later: `censorNameWithClanTag`).
+    SanitizeThenFixProfane27_0,
 }
 }
 
@@ -500,6 +534,15 @@ fn edge_of(class: &str) -> Option<&'static Edge> {
 
 /// Changes of the baseline class C000.
 const ROOT_CHANGES: &[Change] = &[
+    Change::ClusterLinearScan2614,
+    Change::BotBehaviorStateless28,
+    Change::NoConstructionUnit2378,
+    Change::SamNoRng2665,
+    Change::MirvCostScales2621,
+    Change::TrainAllyGold35kMeta,
+    Change::AllianceReplyInit28,
+    Change::NoUsernameSanitation2622,
+    Change::EmojiTableFactoryRow2522,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

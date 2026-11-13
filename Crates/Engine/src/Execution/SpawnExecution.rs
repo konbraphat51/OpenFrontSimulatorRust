@@ -3,6 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::BotExecutionV26::BotExecutionV26;
+use super::BotExecutionV27::BotExecutionV27;
 use super::BotExecutionV28::BotExecutionV28;
 use super::PlayerExecution::PlayerExecution;
 use super::TribeExecution::TribeExecution;
@@ -198,8 +199,10 @@ impl SpawnExecution {
                 let rules = game.config().rules();
                 let bot: Box<dyn Execution> = if game.has(Change::PreRewriteNationAi26) {
                     Box::new(BotExecutionV26::new(player, &tribe_id, rules))
-                } else {
+                } else if game.has(Change::BotBehaviorStateless28) {
                     Box::new(BotExecutionV28::new(player, &tribe_id, rules))
+                } else {
+                    Box::new(BotExecutionV27::new(player, &tribe_id, rules))
                 };
                 game.add_execution(bot);
             }

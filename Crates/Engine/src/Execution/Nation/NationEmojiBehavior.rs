@@ -4,7 +4,7 @@
 
 use crate::Builds::Rules::Change;
 use crate::Core::PseudoRandom::PseudoRandom;
-use crate::Core::Util::FLATTENED_EMOJI_TABLE;
+use crate::Core::Util::emoji_table;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Nation::SharedRandom;
 use crate::Game::Game::{
@@ -16,7 +16,7 @@ use std::collections::HashMap;
 fn emoji_ids(list: &[&str]) -> Vec<f64> {
     list.iter()
         .map(|e| {
-            FLATTENED_EMOJI_TABLE
+            emoji_table()
                 .iter()
                 .position(|x| x == e)
                 .map_or(-1.0, |i| i as f64)

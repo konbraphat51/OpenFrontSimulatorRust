@@ -86,6 +86,16 @@ impl Config {
         100
     }
 
+    /// Chance that a SAM launch intercepts a nuke (`samHittingChance`, builds without `SamNoRng2665`).
+    pub fn sam_hitting_chance(&self) -> f64 {
+        0.8
+    }
+
+    /// Chance that a SAM launch intercepts MIRV warheads (`samWarheadHittingChance`).
+    pub fn sam_warhead_hitting_chance(&self) -> f64 {
+        0.5
+    }
+
     /// SAM launcher cooldown in ticks.
     pub fn sam_cooldown(&self) -> u32 {
         if self.rules.has(Change::SamCooldown90V31) {

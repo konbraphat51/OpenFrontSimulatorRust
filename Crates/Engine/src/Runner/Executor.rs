@@ -22,6 +22,7 @@ use crate::Execution::EmbargoExecution::EmbargoExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::FakeHumanExecutionV26::FakeHumanExecution as FakeHumanExecutionV26;
+use crate::Execution::FakeHumanExecutionV27::FakeHumanExecution as FakeHumanExecutionV27;
 use crate::Execution::FakeHumanExecutionV28::FakeHumanExecution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
 use crate::Execution::MoveWarshipExecution::MoveWarshipExecution;
@@ -199,6 +200,19 @@ impl Executor {
                 .iter()
                 .map(|n| {
                     Box::new(FakeHumanExecutionV26::new(
+                        &self.game_id,
+                        n.clone(),
+                        game.config().rules(),
+                    )) as Box<dyn Execution>
+                })
+                .collect();
+        }
+        if game.has(Change::FakeHumanNations28) && !game.has(Change::BotBehaviorStateless28) {
+            return game
+                .nations()
+                .iter()
+                .map(|n| {
+                    Box::new(FakeHumanExecutionV27::new(
                         &self.game_id,
                         n.clone(),
                         game.config().rules(),
