@@ -26,6 +26,13 @@ pub fn pow2(n: f64) -> f64 {
     f64::from_bits((hi as u32 as u64) << 32)
 }
 
+/// `x.floor()` for |x| < 2^52 without the libm call (the zero sign is irrelevant to the caller).
+#[inline]
+fn floor_small(x: f64) -> f64 {
+    let t = x as i64 as f64;
+    if t > x { t - 1.0 } else { t }
+}
+
 /// e ** x.
 pub fn exp(x: f64) -> f64 {
     if x > 709.0 {
@@ -34,7 +41,7 @@ pub fn exp(x: f64) -> f64 {
     if x < -708.0 {
         return 0.0;
     }
-    let n = (x * LOG2E + 0.5).floor();
+    let n = floor_small(x * LOG2E + 0.5);
     let r = x - n * LN2;
     let p = 1.0
         + r * (1.0
@@ -142,6 +149,18 @@ mod tests {
 
     fn same(got: f64, want: f64) -> bool {
         got.to_bits() == want.to_bits() || (got.is_nan() && want.is_nan())
+    }
+
+    #[test]
+    fn floor_small_matches_floor() {
+        let mut x = -1030.0;
+        while x < 1030.0 {
+            assert_eq!(floor_small(x), x.floor(), "{x}");
+            x += 0.37;
+        }
+        for x in [-0.5, -1.0, -1e-300, 0.0, 0.999_999_999_999, 4.0e15, -4.0e15] {
+            assert_eq!(floor_small(x), x.floor(), "{x}");
+        }
     }
 
     #[test]
