@@ -23,6 +23,8 @@ pub struct UnitGrid {
     grid: Vec<TypeSets>,
     cols: usize,
     rows: usize,
+    /// Units per type over the whole grid, so queries for an absent type return without scanning cells.
+    counts: [u32; NUM_UNIT_TYPES],
 }
 
 /// Inclusive cell range of a query.
@@ -45,7 +47,12 @@ impl UnitGrid {
         let grid = (0..rows * cols)
             .map(|_| (0..NUM_UNIT_TYPES).map(|_| OrderedSet::new()).collect())
             .collect();
-        Self { grid, cols, rows }
+        Self {
+            grid,
+            cols,
+            rows,
+            counts: [0; NUM_UNIT_TYPES],
+        }
     }
 
     fn coords(map: &GameMapImpl, tile: TileRef) -> (i64, i64) {
@@ -66,8 +73,8 @@ impl UnitGrid {
     /// `addUnit`.
     pub fn add_unit(&mut self, map: &GameMapImpl, id: UnitId, t: UnitType, tile: TileRef) {
         let (gx, gy) = Self::coords(map, tile);
-        if self.is_valid_cell(gx, gy) {
-            self.cell_mut(gx, gy, t).insert(id);
+        if self.is_valid_cell(gx, gy) && self.cell_mut(gx, gy, t).insert(id) {
+            self.counts[t.index()] += 1;
         }
     }
 
@@ -85,8 +92,8 @@ impl UnitGrid {
         tile: TileRef,
     ) {
         let (gx, gy) = Self::coords(map, tile);
-        if self.is_valid_cell(gx, gy) {
-            self.cell_mut(gx, gy, t).remove(&id);
+        if self.is_valid_cell(gx, gy) && self.cell_mut(gx, gy, t).remove(&id) {
+            self.counts[t.index()] -= 1;
         }
     }
 
@@ -174,6 +181,9 @@ impl UnitGrid {
             while cx <= r.end_x {
                 let cell = &self.grid[cy as usize * self.cols + cx as usize];
                 for t in types {
+                    if self.counts[t.index()] == 0 {
+                        continue;
+                    }
                     for &id in cell[t.index()].iter() {
                         let unit = &units[id as usize - 1];
                         if !unit.is_active() {
@@ -215,6 +225,9 @@ impl UnitGrid {
         player: Option<super::Game::SmallId>,
         include_under_construction: bool,
     ) -> bool {
+        if self.counts[t.index()] == 0 {
+            return false;
+        }
         let r = self.cells_in_range(map, tile, search_range);
         let range_squared = search_range * search_range;
         let mut cy = r.start_y as i64;
@@ -262,6 +275,9 @@ impl UnitGrid {
             while cx <= r.end_x {
                 let cell = &self.grid[cy as usize * self.cols + cx as usize];
                 for t in types {
+                    if self.counts[t.index()] == 0 {
+                        continue;
+                    }
                     for &id in cell[t.index()].iter() {
                         let unit = &units[id as usize - 1];
                         if !Self::unit_is_in_range(
