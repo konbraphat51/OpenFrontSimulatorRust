@@ -1,0 +1,3 @@
+# Changes class C071 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = ["UnitDeletionMark26", "TradeShortRangeDebuff26", "UpgradeUnitValidity26"]

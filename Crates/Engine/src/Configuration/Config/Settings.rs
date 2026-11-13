@@ -257,6 +257,9 @@ impl Config {
 
     /// Cooldown between unit deletions.
     pub fn delete_unit_cooldown(&self) -> Tick {
+        if !self.rules.has(Change::UnitDeletionMark26) {
+            return 5 * 10;
+        }
         30 * 10
     }
 

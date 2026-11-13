@@ -339,11 +339,20 @@ impl SamTargetingSystem {
     /// Pre-PR-4770 `getSingleTarget`: at most one target, hydrogen bombs preferred.
     fn get_single_target(&mut self, game: &GameImpl, ticks: f64) -> Option<Target> {
         let sam_tile = game.unit_any(self.sam).tile();
-        let range = game
-            .config()
-            .sam_range(game.unit_any(self.sam).level() as f64);
+        // v0.26.14 has one fixed range; later builds grow it with the level
+        let (range, detection_range) = if game.has(Change::SamRangeByLevel27) {
+            (
+                game.config()
+                    .sam_range(game.unit_any(self.sam).level() as f64),
+                game.config().max_sam_range() * 2.0,
+            )
+        } else {
+            (
+                game.config().default_sam_range(),
+                game.config().default_sam_range() * 2.0,
+            )
+        };
         let range_squared = range * range;
-        let detection_range = game.config().max_sam_range() * 2.0;
         let nukes = game.nearby_units(
             sam_tile,
             detection_range,

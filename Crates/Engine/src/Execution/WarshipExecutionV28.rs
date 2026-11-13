@@ -4,6 +4,7 @@
 
 use super::WarshipExecution::WarshipExecution;
 use super::WarshipExecutionV30::{find_target_unit, shoot_target};
+use crate::Builds::Rules::Change;
 use crate::Game::Game::UnitType;
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
@@ -80,6 +81,10 @@ pub fn tick_v28(exec: &mut WarshipExecution, game: &mut GameImpl) {
         return;
     }
     let owner = exec.owner(game);
+    if game.has(Change::WarshipDeleteDisconnected26) && game.player(owner).is_disconnected() {
+        game.unit_mut(ship).delete(None, None);
+        return;
+    }
     if game.player(owner).unit_count(UnitType::Port) > 0 {
         game.unit_mut(ship).modify_health(1.0, None);
     }

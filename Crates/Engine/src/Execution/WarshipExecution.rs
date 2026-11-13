@@ -878,7 +878,10 @@ impl Execution for WarshipExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.pathfinder = Some(WaterPathFinder::new(&game.water_manager, 0));
         if game.has(Change::WarshipLegacy28) {
-            self.legacy_pathfinder = Some(LegacyPathFinder::mini(10_000.0, true, 100.0));
+            self.legacy_pathfinder = Some(
+                LegacyPathFinder::mini(10_000.0, true, 100.0)
+                    .with_keep_path_on_arrival(game.has(Change::PathFinderKeepsPath26)),
+            );
         }
         self.random = PseudoRandom::for_rules(game.config().rules(), game.ticks() as f64);
         match self.input {

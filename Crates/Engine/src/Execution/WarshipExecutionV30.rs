@@ -39,7 +39,8 @@ pub(super) fn find_target_unit(
         if unit.owner_id() == owner
             || unit_id == warship
             || if game.has(Change::WarshipLegacy28) {
-                game.player(unit.owner_id()).is_friendly(owner, true)
+                game.player(unit.owner_id())
+                    .is_friendly(owner, game.has(Change::WarshipAfkFriendly2203))
             } else {
                 !game.player(owner).can_attack_player(unit.owner_id(), true)
             }

@@ -151,6 +151,7 @@ pub struct PathFinder {
     iterations: f64,
     water_path: bool,
     max_tries: f64,
+    keep_path_on_arrival: bool,
 }
 
 impl PathFinder {
@@ -166,7 +167,14 @@ impl PathFinder {
             iterations,
             water_path,
             max_tries,
+            keep_path_on_arrival: false,
         }
+    }
+
+    /// v0.26.14 does not drop the path when the goal is within `dist` (later builds set `path = null`).
+    pub fn with_keep_path_on_arrival(mut self, keep: bool) -> Self {
+        self.keep_path_on_arrival = keep;
+        self
     }
 
     /// `nextTile(curr, dst, dist)` with upstream's recursion (the recursive calls use the default `dist` of 1).
@@ -179,7 +187,9 @@ impl PathFinder {
         dist: u32,
     ) -> StepResult {
         if map.manhattan_dist(curr, dst) < dist {
-            self.path = None;
+            if !self.keep_path_on_arrival {
+                self.path = None;
+            }
             return StepResult::Completed(curr);
         }
         if self.compute_finished {
