@@ -211,11 +211,13 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
 
     let dx = (x1 - x0).abs();
     let dy = (y1 - y0).abs();
-    let sx = if x0 < x1 { 1 } else { -1 };
-    let sy = if y0 < y1 { 1 } else { -1 };
+    // The walk tracks the tile index only: a step in x or y moves it by `step_x` or `step_y`.
+    let step_x = if x0 < x1 { 1 } else { -1 };
+    let step_y = if y0 < y1 { w } else { -w };
     let mut err = dx - dy;
 
-    let (mut x, mut y) = (x0, y0);
+    let mut tile = from as i64;
+    let end = to as i64;
     let mut iterations = 0;
 
     // Traversable and deep enough
@@ -229,11 +231,11 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
         }
 
         // Traversable, and not shallow water
-        if !ok(y * w + x) {
+        if !ok(tile) {
             return false;
         }
 
-        if x == x1 && y == y1 {
+        if tile == end {
             return true;
         }
 
@@ -242,36 +244,19 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
         let should_move_y = e2 < dx;
 
         if should_move_x && should_move_y {
-            // Diagonal move: check the intermediate tile
-            x += sx;
-            err -= dy;
-
-            let intermediate = y * w + x;
-            if !ok(intermediate) {
-                // Try the alternative route
-                x -= sx;
-                err += dy;
-                y += sy;
-                err += dx;
-
-                let alt = y * w + x;
-                if !ok(alt) {
-                    return false;
-                }
-
-                x += sx;
-                err -= dy;
-            } else {
-                y += sy;
-                err += dx;
+            // Diagonal move: check the intermediate tile, then the alternative route
+            if !ok(tile + step_x) && !ok(tile + step_y) {
+                return false;
             }
+            tile += step_x + step_y;
+            err += dx - dy;
         } else {
             if should_move_x {
-                x += sx;
+                tile += step_x;
                 err -= dy;
             }
             if should_move_y {
-                y += sy;
+                tile += step_y;
                 err += dx;
             }
         }
@@ -281,20 +266,19 @@ fn can_see(map: &GameMapImpl, from: TileRef, to: TileRef, min_magnitude: u8) -> 
 /// The tiles of the Bresenham line between two tiles, or `None` if it leaves the water.
 fn trace_path(map: &GameMapImpl, from: TileRef, to: TileRef) -> Option<Vec<TileRef>> {
     let w = map.width() as i64;
-    let x0 = from as i64 % w;
-    let y0 = from as i64 / w;
-    let x1 = to as i64 % w;
-    let y1 = to as i64 / w;
+    let (x0, y0) = (map.x(from) as i64, map.y(from) as i64);
+    let (x1, y1) = (map.x(to) as i64, map.y(to) as i64);
 
     let mut tiles: Vec<TileRef> = Vec::new();
 
     let dx = (x1 - x0).abs();
     let dy = (y1 - y0).abs();
-    let sx = if x0 < x1 { 1 } else { -1 };
-    let sy = if y0 < y1 { 1 } else { -1 };
+    let step_x = if x0 < x1 { 1 } else { -1 };
+    let step_y = if y0 < y1 { w } else { -w };
     let mut err = dx - dy;
 
-    let (mut x, mut y) = (x0, y0);
+    let mut tile = from as i64;
+    let end = to as i64;
     let mut iterations = 0;
 
     loop {
@@ -304,13 +288,12 @@ fn trace_path(map: &GameMapImpl, from: TileRef, to: TileRef) -> Option<Vec<TileR
             return None;
         }
 
-        let tile = (y * w + x) as TileRef;
-        if !map.is_water(tile) {
+        if !map.is_water(tile as TileRef) {
             return None;
         }
-        tiles.push(tile);
+        tiles.push(tile as TileRef);
 
-        if x == x1 && y == y1 {
+        if tile == end {
             break;
         }
 
@@ -319,36 +302,25 @@ fn trace_path(map: &GameMapImpl, from: TileRef, to: TileRef) -> Option<Vec<TileR
         let should_move_y = e2 < dx;
 
         if should_move_x && should_move_y {
-            x += sx;
-            err -= dy;
-
-            let intermediate = (y * w + x) as TileRef;
-            if !map.is_water(intermediate) {
-                x -= sx;
-                err += dy;
-                y += sy;
-                err += dx;
-
-                let alt = (y * w + x) as TileRef;
-                if !map.is_water(alt) {
+            let intermediate = tile + step_x;
+            if map.is_water(intermediate as TileRef) {
+                tiles.push(intermediate as TileRef);
+            } else {
+                let alt = tile + step_y;
+                if !map.is_water(alt as TileRef) {
                     return None;
                 }
-                tiles.push(alt);
-
-                x += sx;
-                err -= dy;
-            } else {
-                tiles.push(intermediate);
-                y += sy;
-                err += dx;
+                tiles.push(alt as TileRef);
             }
+            tile += step_x + step_y;
+            err += dx - dy;
         } else {
             if should_move_x {
-                x += sx;
+                tile += step_x;
                 err -= dy;
             }
             if should_move_y {
-                y += sy;
+                tile += step_y;
                 err += dx;
             }
         }
