@@ -10,11 +10,12 @@
 use super::GameMap::TileRef;
 use crate::Compat::OrderedMap::Cursor;
 use crate::Compat::OrderedSet::OrderedSet;
+use crate::Compat::OrderedU32Set::OrderedU32Set;
 
 /// Insertion-ordered set of [`TileRef`] values.
 #[derive(Clone, Debug, Default)]
 pub struct TileSet {
-    set: OrderedSet<TileRef>,
+    set: OrderedU32Set,
 }
 
 impl TileSet {
@@ -25,7 +26,9 @@ impl TileSet {
 
     /// Wraps an existing ordered set.
     pub fn from_ordered(set: OrderedSet<TileRef>) -> Self {
-        Self { set }
+        Self {
+            set: set.iter().copied().collect(),
+        }
     }
 
     /// `size`.
@@ -40,7 +43,7 @@ impl TileSet {
 
     /// `has`.
     pub fn has(&self, tile: TileRef) -> bool {
-        self.set.contains(&tile)
+        self.set.contains(tile)
     }
 
     /// `add`; existing tiles keep their position.
@@ -50,7 +53,7 @@ impl TileSet {
 
     /// `delete`; true when the tile was present.
     pub fn delete(&mut self, tile: TileRef) -> bool {
-        self.set.remove(&tile)
+        self.set.remove(tile)
     }
 
     /// `clear`.
@@ -87,12 +90,7 @@ impl TileSet {
 
     /// The n-th tile in insertion order (O(n)).
     pub fn nth(&self, n: usize) -> Option<TileRef> {
-        self.set.nth(n).copied()
-    }
-
-    /// Borrow as the underlying ordered set (for `randFromSet`).
-    pub fn as_ordered(&self) -> &OrderedSet<TileRef> {
-        &self.set
+        self.set.nth(n)
     }
 }
 

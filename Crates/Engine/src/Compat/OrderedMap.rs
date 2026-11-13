@@ -75,6 +75,25 @@ pub struct Cursor {
     epoch: u64,
 }
 
+impl Cursor {
+    /// Cursor at slot `pos` of the storage generation `epoch`.
+    pub(crate) fn new(pos: usize, epoch: u64) -> Self {
+        Self { pos, epoch }
+    }
+
+    pub(crate) fn pos(&self) -> usize {
+        self.pos
+    }
+
+    pub(crate) fn epoch(&self) -> u64 {
+        self.epoch
+    }
+
+    pub(crate) fn advance(&mut self) {
+        self.pos += 1;
+    }
+}
+
 /// Insertion-ordered map with JS `Map` iteration semantics.
 #[derive(Clone, Debug)]
 pub struct OrderedMap<K, V, S = FxBuildHasher> {

@@ -10,6 +10,7 @@ use super::Game::{AttackId, SmallId};
 use super::GameImpl::GameImpl;
 use super::GameMap::TileRef;
 use crate::Compat::OrderedSet::OrderedSet;
+use crate::Compat::OrderedU32Set::OrderedU32Set;
 
 /// State of an attack.
 #[derive(Clone, Debug)]
@@ -19,7 +20,7 @@ pub struct AttackImpl {
     pub(crate) attacker: SmallId,
     pub(crate) troops: f64,
     pub(crate) source_tile: Option<TileRef>,
-    pub(crate) border: OrderedSet<TileRef>,
+    pub(crate) border: OrderedU32Set,
     pub(crate) is_active: bool,
     pub(crate) border_size: f64,
     pub(crate) retreating: bool,
@@ -43,7 +44,7 @@ impl AttackImpl {
             attacker,
             troops,
             source_tile,
-            border,
+            border: border.iter().copied().collect(),
             is_active: true,
             border_size: 0.0,
             retreating: false,
@@ -116,12 +117,12 @@ impl AttackImpl {
     }
     /// `removeBorderTile`.
     pub fn remove_border_tile(&mut self, tile: TileRef) {
-        if self.border.remove(&tile) {
+        if self.border.remove(tile) {
             self.border_size -= 1.0;
         }
     }
     /// The border tiles in insertion order.
-    pub fn border(&self) -> &OrderedSet<TileRef> {
+    pub fn border(&self) -> &OrderedU32Set {
         &self.border
     }
 }
@@ -144,6 +145,6 @@ impl GameImpl {
         let attack = &mut self.attacks[id as usize];
         attack.is_active = false;
         // The handle stays valid, but nothing reads the border of a deleted attack: free its tile set.
-        attack.border = OrderedSet::new();
+        attack.border = OrderedU32Set::new();
     }
 }
