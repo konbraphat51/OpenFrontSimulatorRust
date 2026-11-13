@@ -49,6 +49,7 @@ export class FileSystemMapLoader implements GameMapLoader {
       new Uint8Array(fs.readFileSync(path.join(directory, name)));
     return {
       mapBin: readBinary("map.bin"),
+      miniMapBin: readBinary("mini_map.bin"),
       map4xBin: readBinary("map4x.bin"),
       map16xBin: readBinary("map16x.bin"),
       manifest: async () =>

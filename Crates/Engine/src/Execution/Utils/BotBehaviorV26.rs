@@ -5,6 +5,7 @@
 //! This build predates the `AllianceBehavior` split: alliance answers live here, and `sendAttack` always
 //! sends a plain land attack. Players are small ids with `0` standing for terra nullius.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Alliance::AllianceExtensionExecution::AllianceExtensionExecution;
 use crate::Execution::AttackExecution::AttackExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
@@ -423,8 +424,14 @@ impl BotBehaviorV26 {
 
     /// `sendAttack(target)`: a land attack that keeps the reserve (or expand) ratio.
     pub fn send_attack(&mut self, game: &mut GameImpl, target: SmallId) {
-        // Skip friendly targets; breaking alliances is the caller's decision
-        if target != 0 && self.is_friendly(game, target) {
+        // Skip friendly targets (PR 2044; older: only teammates); breaking alliances is the caller's decision
+        if target != 0
+            && if game.has(Change::AttackAllianceBlocked2044) {
+                self.is_friendly(game, target)
+            } else {
+                game.player(self.player).is_on_same_team(target)
+            }
+        {
             return;
         }
         let max_troops = game.player(self.player).max_troops();
