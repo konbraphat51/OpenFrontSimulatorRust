@@ -77,8 +77,8 @@ pub struct GameEndInfo {
     /// Game id.
     #[serde(rename = "gameID")]
     pub game_id: String,
-    /// Lobby creation time (ms).
-    #[serde(rename = "lobbyCreatedAt")]
+    /// Lobby creation time (ms; absent, so 0, in older builds).
+    #[serde(default, rename = "lobbyCreatedAt")]
     pub lobby_created_at: f64,
     /// Time the lobby became visible (ms).
     #[serde(default, rename = "visibleAt", skip_serializing_if = "Option::is_none")]
@@ -104,8 +104,8 @@ pub struct GameEndInfo {
     /// Winner tuple (`["player", id, ...]`, `["team", name, ...]`, `["nation", name, ...]`).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub winner: Option<Vec<String>>,
-    /// Lobby fill time (ms).
-    #[serde(rename = "lobbyFillTime")]
+    /// Lobby fill time (ms; absent, so 0, in older builds).
+    #[serde(default, rename = "lobbyFillTime")]
     pub lobby_fill_time: f64,
     /// Master-scheduled lobby slot.
     #[serde(

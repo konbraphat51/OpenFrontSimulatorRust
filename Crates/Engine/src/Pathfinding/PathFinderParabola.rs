@@ -3,7 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::Line::{DistanceBasedBezierCurve, Point};
-use super::LineLegacy::LegacyBezierCurve;
+use super::LineV33::LegacyBezierCurve;
 use super::Types::PathResult;
 use crate::Core::Util::within;
 use crate::Game::GameMap::{GameMapImpl, TileRef};

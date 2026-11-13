@@ -179,12 +179,7 @@ impl TrainExecution {
                 .map_or(0, |r| r.tiles().len());
             self.stations.remove(0);
             let mut rail_road = oriented_railroad(game, self.stations[0], self.stations[1]);
-            if rail_road.is_none()
-                && game
-                    .config()
-                    .rules()
-                    .has(crate::Builds::Rules::Change::TrainSplitResolve5200)
-            {
+            if rail_road.is_none() && game.has(Change::TrainSplitResolve5200) {
                 rail_road = self.resolve_split_railroad(game);
             }
             if let Some(rail_road) = rail_road {
@@ -399,7 +394,7 @@ impl Execution for TrainExecution {
         if path_tiles.is_empty() || path_tiles[0] != start_tile {
             path_tiles.insert(0, start_tile);
             self.path_index = 1;
-            if game.config().rules().has(Change::TrainSpawnOffRail36) {
+            if game.has(Change::TrainSpawnOffRail36) {
                 self.current_tile = -1;
             }
         }
@@ -409,7 +404,7 @@ impl Execution for TrainExecution {
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         let train = self.train.expect("Not initialized");
 
-        if game.config().rules().has(Change::TrainSplitReconcile5719) {
+        if game.has(Change::TrainSplitReconcile5719) {
             if !game.unit_any(train).is_active() {
                 self.delete_train(game);
                 return;

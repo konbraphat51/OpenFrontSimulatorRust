@@ -36,11 +36,22 @@ impl PortExecution {
         let port_owner = game.unit_any(self.port).owner_id();
         let port_levels = game.player(port_owner).unit_count(UnitType::Port);
         let random = self.random.as_mut().expect("initialised");
+        if !game.has(Change::TradeShipMeta3232) {
+            let player_ships = game.player(port_owner).unit_count(UnitType::TradeShip);
+            let spawn_rate = game.config().trade_ship_spawn_rate_per_player(
+                num_trade_ships as f64,
+                port_levels as f64,
+                player_ships as f64,
+            );
+            for _ in 0..game.unit_any(self.port).level() {
+                if random.chance(spawn_rate) {
+                    return true;
+                }
+            }
+            return false;
+        }
         // Before PR 5302 the rate was computed once for all port levels.
-        let per_level = game
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::TradeTrainSaturation5302);
+        let per_level = game.has(Change::TradeTrainSaturation5302);
         let mut spawn_rate = game.config().trade_ship_spawn_rate(
             self.trade_ship_spawn_rejections,
             num_trade_ships as f64,
@@ -102,7 +113,7 @@ impl PortExecution {
             }
             for port in game.player(p).units_of(UnitType::Port) {
                 let tile = game.unit_any(port).tile();
-                if !game.config().rules().has(Change::TradeWaterComponents31)
+                if !game.has(Change::TradeWaterComponents31)
                     || source_components.iter().any(|&comp| {
                         game.water_manager
                             .has_water_component(&game.map, tile, comp)

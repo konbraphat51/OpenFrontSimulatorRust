@@ -2,6 +2,7 @@
 //! Port of src/core/execution/SpawnExecution.ts: places a player on the map.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use super::BotExecutionV28::BotExecutionV28;
 use super::PlayerExecution::PlayerExecution;
 use super::TribeExecution::TribeExecution;
 use super::Util::get_spawn_tiles;
@@ -54,7 +55,7 @@ impl SpawnExecution {
     }
 
     fn get_spawn(&mut self, game: &GameImpl, center: Option<TileRef>) -> Option<Spawn> {
-        let fifo = game.config().rules().has(Change::BfsFifoOrder36);
+        let fifo = game.has(Change::BfsFifoOrder36);
         if let Some(center) = center {
             let tiles = get_spawn_tiles(&game.map, center, false, fifo).unwrap_or_default();
             if tiles.is_empty() {
@@ -70,9 +71,7 @@ impl SpawnExecution {
             if !game.is_land(center) || game.has_owner(center) || game.map.is_border(center) {
                 continue;
             }
-            if tries <= RELAX_MIN_DIST_AT
-                || !game.config().rules().has(Change::SpawnRelaxMinDist4921)
-            {
+            if tries <= RELAX_MIN_DIST_AT || !game.has(Change::SpawnRelaxMinDist4921) {
                 let min_dist = game.config().min_distance_between_players();
                 let near = game
                     .all_players()
@@ -111,6 +110,101 @@ impl SpawnExecution {
     }
 }
 
+impl SpawnExecution {
+    /// The spawn of builds before PR 3009: the tile is picked first and only free land is claimed.
+    fn spawn_unchecked(&mut self, game: &mut GameImpl, player: SmallId) {
+        if self.tile.is_none() {
+            self.tile = self.random_spawn_land(game);
+        }
+        let Some(tile) = self.tile else {
+            return;
+        };
+        let prev_tiles: Vec<TileRef> = game.player(player).tiles().iter().collect();
+        for &t in &prev_tiles {
+            game.player_mut(player).relinquish(t);
+        }
+        let fifo = game.has(Change::BfsFifoOrder36);
+        for t in get_spawn_tiles(&game.map, tile, false, fifo).unwrap_or_default() {
+            game.player_mut(player).conquer(t);
+        }
+        if !game.player(player).has_spawned() {
+            game.add_execution(Box::new(PlayerExecution::new(player)));
+            if game.player(player).player_type() == PlayerType::Bot {
+                let tribe_id = game.player(player).id().to_string();
+                game.add_execution(Box::new(TribeExecution::new(
+                    player,
+                    &tribe_id,
+                    game.config().rules(),
+                )));
+            }
+        }
+        game.player_mut(player).set_spawn_tile(tile);
+        if game.config().game_config().game_type == GameType::Singleplayer
+            && self.player_info.player_type == PlayerType::Human
+        {
+            game.end_spawn_phase();
+        }
+    }
+
+    fn random_spawn_land(&mut self, game: &GameImpl) -> Option<TileRef> {
+        let mut tries = 0;
+        while tries < MAX_SPAWN_TRIES {
+            tries += 1;
+            let tile = self.rand_tile(game, None);
+            if !game.is_land(tile) || game.has_owner(tile) || game.map.is_border(tile) {
+                continue;
+            }
+            let min_dist = game.config().min_distance_between_players();
+            let near = game
+                .all_players()
+                .into_iter()
+                .filter(|&p| game.player(p).id() != self.player_info.id)
+                .any(|p| match game.player(p).spawn_tile() {
+                    None => false,
+                    Some(st) => (game.manhattan_dist(st, tile) as f64) < min_dist,
+                });
+            if near {
+                continue;
+            }
+            return Some(tile);
+        }
+        None
+    }
+}
+
+impl SpawnExecution {
+    /// `tick` of v0.28.4: the tile is always given and a spawn never fails or rolls back.
+    fn tick_v28(&mut self, game: &mut GameImpl) {
+        let tile = self.tile.expect("SpawnExecution always has a tile");
+        if !game.is_valid_ref(tile) || !game.in_spawn_phase() {
+            return;
+        }
+        let player = match game.find_player(&self.player_info.id) {
+            Some(p) => p,
+            None => game.add_player(self.player_info.clone(), None),
+        };
+        let prev_tiles: Vec<TileRef> = game.player(player).tiles().iter().collect();
+        for &t in &prev_tiles {
+            game.player_mut(player).relinquish(t);
+        }
+        for t in get_spawn_tiles(&game.map, tile, false, false).unwrap_or_default() {
+            game.player_mut(player).conquer(t);
+        }
+        if !game.player(player).has_spawned() {
+            game.add_execution(Box::new(PlayerExecution::new(player)));
+            if game.player(player).player_type() == PlayerType::Bot {
+                let tribe_id = game.player(player).id().to_string();
+                game.add_execution(Box::new(BotExecutionV28::new(
+                    player,
+                    &tribe_id,
+                    game.config().rules(),
+                )));
+            }
+        }
+        game.player_mut(player).set_spawn_tile(tile);
+    }
+}
+
 impl Execution for SpawnExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.queued_during_spawn_phase = game.in_spawn_phase();
@@ -119,7 +213,12 @@ impl Execution for SpawnExecution {
     fn tick(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.active = false;
 
-        if !game.config().rules().has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
+        if game.has(Change::SpawnByTile28) {
+            self.tick_v28(game);
+            return;
+        }
+
+        if !game.has(Change::SpawnPhaseTimer3199) && !game.in_spawn_phase() {
             return;
         }
 
@@ -134,18 +233,26 @@ impl Execution for SpawnExecution {
             None => game.add_player(self.player_info.clone(), None),
         };
 
-        if game.config().rules().has(Change::SpawnIntentGate4867) {
+        if game.has(Change::SpawnIntentGate4867) {
             if self.from_intent && !self.queued_during_spawn_phase {
                 return;
             }
-        } else if game.config().rules().has(Change::SpawnTeleportGuard4657)
+        } else if game.has(Change::SpawnTeleportGuard4657)
             && !game.in_spawn_phase()
             && game.player(player).has_spawned()
         {
             return;
         }
 
-        if game.config().is_random_spawn() && game.player(player).has_spawned() {
+        if game.has(Change::RandomSpawnLock2958)
+            && game.config().is_random_spawn()
+            && game.player(player).has_spawned()
+        {
+            return;
+        }
+
+        if !game.has(Change::SpawnValidation3009) {
+            self.spawn_unchecked(game, player);
             return;
         }
 
@@ -153,20 +260,16 @@ impl Execution for SpawnExecution {
         for &t in &prev_tiles {
             game.player_mut(player).relinquish(t);
         }
-        let requested = if game.config().is_random_spawn()
-            && game
-                .config()
-                .rules()
-                .has(Change::RandomSpawnIgnoresTile4428)
-        {
-            None
-        } else {
-            self.tile
-        };
+        let requested =
+            if game.config().is_random_spawn() && game.has(Change::RandomSpawnIgnoresTile4428) {
+                None
+            } else {
+                self.tile
+            };
         let spawn = self.get_spawn(game, requested);
 
         let Some(spawn) = spawn else {
-            if game.config().rules().has(Change::SpawnRollback5321) {
+            if game.has(Change::SpawnRollback5321) {
                 for &t in &prev_tiles {
                     game.player_mut(player).conquer(t);
                 }

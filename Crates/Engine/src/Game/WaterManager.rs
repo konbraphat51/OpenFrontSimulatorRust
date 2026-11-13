@@ -13,8 +13,8 @@ use crate::Pathfinding::Algorithms::AbstractGraph::{AbstractGraph, AbstractGraph
 use crate::Pathfinding::Algorithms::BfsGrid::BfsGrid;
 use crate::Pathfinding::Algorithms::ConnectedComponents::ConnectedComponents;
 use crate::Pathfinding::PathFinder::{
-    ChainRef, SharedWaterChain, SimpleWaterChain, build_hierarchical_chain, build_simple_chain,
-    set_chain_graph,
+    ChainRef, SharedWaterChain, SimpleWaterChain, WaterTweaks, build_hierarchical_chain,
+    build_simple_chain, set_chain_graph,
 };
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 use std::cell::RefCell;
@@ -95,12 +95,21 @@ pub struct WaterManager {
     dirty_mini_tiles: OrderedSet<TileRef>,
     full_scratch: MagnitudeScratch,
     mini_scratch: MagnitudeScratch,
+    tweaks: WaterTweaks,
 }
 
 impl WaterManager {
     /// Creates the manager; with the nav mesh enabled it builds the initial graph and HPA* finder.
     pub fn new(mini_map: GameMapImpl, disable_nav_mesh: bool) -> Self {
-        Self::new_with(mini_map, disable_nav_mesh, false, false, false, false)
+        Self::new_with(
+            mini_map,
+            disable_nav_mesh,
+            false,
+            false,
+            false,
+            false,
+            WaterTweaks::default(),
+        )
     }
 
     /// Like [`Self::new`]; `sort_edges` renumbers graph edges by node pair (v0.35.0 on), `old_markers`
@@ -112,8 +121,10 @@ impl WaterManager {
         old_markers: bool,
         wide_search: bool,
         bucket_queue: bool,
+        tweaks: WaterTweaks,
     ) -> Self {
         let mut manager = Self {
+            tweaks,
             sort_edges,
             wide_search,
             mini_tile_any_water: false,
@@ -165,6 +176,7 @@ impl WaterManager {
                     mini,
                     hpa,
                     Rc::clone(&graph),
+                    manager.tweaks,
                 ))),
             }));
             manager.mini_water_cc = Some(cc);
@@ -263,6 +275,7 @@ impl WaterManager {
                             &self.mini_map,
                             hpa,
                             Rc::clone(&graph),
+                            self.tweaks,
                         ))),
                     }));
                 }
@@ -344,9 +357,12 @@ impl WaterManager {
             mini_map: &self.mini_map,
         };
         let mini = &self.mini_map;
+        let tweaks = self.tweaks;
         self.simple_chain
             .borrow_mut()
-            .get_or_insert_with(|| build_simple_chain(AStarWater::new(mini, None, None)))
+            .get_or_insert_with(|| {
+                build_simple_chain(AStarWater::new(mini, None, None), mini, tweaks)
+            })
             .find_path(&ctx, from, to)
     }
 

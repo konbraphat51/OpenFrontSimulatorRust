@@ -7,7 +7,7 @@ BuildClasses.toml, diffs upstream between them (engine roots only, whitespace ig
 files that cannot change the simulation dropped), groups hunks by file and enclosing
 function, and maps every file to the Rust file that ports it (`//! Port of src/core/..`).
 Also lists PR numbers between the commits and the Change flags already in the class's
-EDGES entry of Rules.rs.
+Edges/<class>.toml file.
 
 Usage: ClassDigest.py <class> [--upstream DIR] [--files-only] [--max-lines N] [--verbose]
 Env: OFSIM_UPSTREAM overrides the upstream clone (default <Cache>/OpenFrontIO); OFSIM_CACHE overrides Cache/.
@@ -27,7 +27,7 @@ from BuildPlanGen import CLASS_RE, METHOD_RE, ROOTS, STRIP_RE  # noqa: E402
 # Cache/ of the checkout; a worktree under Cache/Wt/<name> shares the main checkout's Cache/.
 CACHE = Path(os.environ.get("OFSIM_CACHE") or (ROOT.parent.parent if ROOT.parent.name == "Wt" else ROOT / "Cache"))
 TOML = ROOT / "Crates/Engine/src/Builds/BuildClasses.toml"
-RULES = ROOT / "Crates/Engine/src/Builds/Rules.rs"
+EDGES_DIR = ROOT / "Crates/Engine/src/Builds/Edges"
 # Paths that cannot change simulation state: tests, wire schemas, stats, display, i18n, map loaders, docs.
 EXCLUDE_RE = re.compile(
     r"(^|/)(tests?|__tests__|lang|i18n|wire)/|\.(test|spec)\.ts$|\.(json|md|txt|d\.ts)$"
@@ -56,11 +56,12 @@ def class_info(toml, cls):
 
 def edge_flags(cls):
     """Change flags already in the EDGES entry of the class: (add, remove) or None."""
-    m = re.search(r'class:\s*"%s",\s*add:\s*&\[(.*?)\],\s*remove:\s*&\[(.*?)\]' % cls, RULES.read_text(), re.S)
-    if not m:
+    f = EDGES_DIR / f"{cls}.toml"
+    if not f.exists():
         return None
-    pick = lambda s: re.findall(r"Change::(\w+)", s)
-    return pick(m.group(1)), pick(m.group(2))
+    text = f.read_text()
+    pick = lambda k: re.findall(r'"(\w+)"', (re.search(r"^%s = \[(.*?)\]" % k, text, re.M | re.S) or [None, ""])[1])
+    return pick("add"), pick("remove")
 
 
 def rust_index():
@@ -125,9 +126,9 @@ def main():
                 seen.add(n)
                 prs.append((n, s))
     edge = edge_flags(a.cls)
-    flags = "none (class not in EDGES)" if edge is None else f"+{','.join(edge[0]) or '-'} -{','.join(edge[1]) or '-'}"
+    flags = "none (no Edges file)" if edge is None else f"+{','.join(edge[0]) or '-'} -{','.join(edge[1]) or '-'}"
     print(f"{a.cls} {new} <- {parent} {old} | commits {len(log)} | PRs {' '.join('#' + n for n, _ in prs[:40]) or '-'}{f' +{len(prs) - 40} more (--verbose)' if len(prs) > 40 and not a.verbose else ''}")
-    print(f"flags in EDGES: {flags}")
+    print(f"flags in Edges: {flags}")
     if a.verbose:
         for n, s in prs:
             print(f"  #{n} {s[:100]}")

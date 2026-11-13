@@ -2,7 +2,7 @@
 //! Port of src/core/pathfinding/algorithms/AStar.Water.ts: whole-map water A* with a shore-distance cost and a cross-product tie-breaker.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use super::PriorityQueue::{MinHeap, PriorityQueue};
+use super::PriorityQueue::{BucketQueue, MinHeap, OpenQueue, PriorityQueue};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
 
@@ -31,7 +31,7 @@ pub struct AStarWater {
     g_score_stamp: Vec<u32>,
     g_score: Vec<u32>,
     came_from: Vec<i32>,
-    queue: MinHeap,
+    queue: OpenQueue,
     width: u32,
     num_nodes: u32,
     heuristic_weight: f64,
@@ -53,12 +53,20 @@ impl AStarWater {
             g_score_stamp: vec![0; n],
             g_score: vec![0; n],
             came_from: vec![0; n],
-            queue: MinHeap::new(n),
+            queue: OpenQueue::Heap(MinHeap::new(n)),
             width: map.width(),
             num_nodes,
             heuristic_weight: heuristic_weight.unwrap_or(5.0),
             max_iterations: max_iterations.unwrap_or(1_000_000),
         }
+    }
+
+    /// Builds before PR 2932 queue with a bucket queue sized for the scaled costs.
+    pub fn use_bucket_queue(&mut self, map: &GameMapImpl) {
+        let max_dim = (map.width() + map.height()) as f64;
+        let max_f =
+            (self.heuristic_weight + 1.0) * BASE_COST as f64 * max_dim + COST_SCALE * max_dim;
+        self.queue = OpenQueue::Bucket(BucketQueue::new(max_f as usize));
     }
 
     /// Path from the first reachable of `starts` to `goal` over `map`'s current terrain.

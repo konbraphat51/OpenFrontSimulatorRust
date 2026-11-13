@@ -418,17 +418,15 @@ impl SamTargetingSystem {
         unit: &crate::Game::UnitImpl::UnitImpl,
     ) -> bool {
         let sam_owner = game.unit_any(self.sam).owner_id();
-        if unit.targeted_by_sam() || unit.owner_id() == sam_owner {
+        let skips_targeted = game.has(Change::SamTargetingFix3223);
+        if (skips_targeted && unit.targeted_by_sam()) || unit.owner_id() == sam_owner {
             return false;
         }
         let nuke_owner = unit.owner_id();
         if game.player(sam_owner).is_friendly(nuke_owner, false) {
-            let game_over = game
-                .config()
-                .rules()
-                .has(Change::AftergameTeammateNukes3410)
+            let game_over = game.has(Change::AftergameTeammateNukes3410)
                 && game.winner().is_some()
-                && (!game.config().rules().has(Change::AftergameSingleplayer5332)
+                && (!game.has(Change::AftergameSingleplayer5332)
                     || game.config().game_config().game_type != GameType::Singleplayer);
             return game_over && game.player(sam_owner).is_on_same_team(nuke_owner);
         }
@@ -582,10 +580,7 @@ impl SAMLauncherExecution {
                     if game.player(player).is_friendly(nuke_owner, false)
                         && (game.winner().is_none()
                             || !game.player(player).is_on_same_team(nuke_owner)
-                            || !game
-                                .config()
-                                .rules()
-                                .has(Change::AftergameTeammateNukes3410))
+                            || !game.has(Change::AftergameTeammateNukes3410))
                     {
                         return false;
                     }
@@ -608,6 +603,13 @@ impl SAMLauncherExecution {
             None
         };
         if target.is_none() && warheads.is_empty() {
+            return;
+        }
+        // Before PR 3223 the best target may already be flagged, and then nothing is shot.
+        let target_flagged = target
+            .as_ref()
+            .is_some_and(|t| game.unit_any(t.unit).targeted_by_sam());
+        if warheads.is_empty() && target_flagged {
             return;
         }
         game.unit_mut(sam).launch();
@@ -660,7 +662,7 @@ impl Execution for SAMLauncherExecution {
             self.targeting_system = Some(SamTargetingSystem::new(game, sam));
         }
 
-        let modern = game.config().rules().has(Change::SamTargeting5197);
+        let modern = game.has(Change::SamTargeting5197);
         let level = game.unit_any(sam).level();
         if modern && self.last_level != level {
             self.last_level = level;
@@ -685,7 +687,7 @@ impl Execution for SAMLauncherExecution {
         }
 
         let was_in_cooldown = game.unit_any(sam).is_in_cooldown();
-        let reload_first = game.config().rules().has(Change::SamReloadThenFire31);
+        let reload_first = game.has(Change::SamReloadThenFire31);
         // Before v0.31 missiles only reload while every slot is in cooldown.
         while (reload_first || was_in_cooldown)
             && let Some(&front_time) = game.unit_any(sam).missile_timer_queue().first()
@@ -700,12 +702,12 @@ impl Execution for SAMLauncherExecution {
             }
         }
         if game.unit_any(sam).is_in_cooldown()
-            || (was_in_cooldown && !game.config().rules().has(Change::SamReloadThenFire31))
+            || (was_in_cooldown && !game.has(Change::SamReloadThenFire31))
         {
             return;
         }
 
-        if !game.config().rules().has(Change::SamTargetingFixes4770) {
+        if !game.has(Change::SamTargetingFixes4770) {
             self.tick_single_target(game, ticks, sam);
             return;
         }

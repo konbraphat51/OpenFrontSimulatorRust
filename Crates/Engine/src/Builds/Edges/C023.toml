@@ -1,0 +1,17 @@
+# Changes class C023 adds to / removes from its parent (parent: BuildClasses.toml).
+add = []
+remove = [
+  "ImpassableTerrain4340",
+  "NeighborOrderNswe4495",
+  "WarshipVeterancy4433",
+  "MirvWarheadsStandard4706",
+  "MirvSiloCooldown4707",
+  "NukeKeepSrcTile4756",
+  "SamTargetingFixes4770",
+  "NationSmallLakePorts4429",
+  "ReachableShoreTransport4577",
+  "TribeNameThemes4647",
+  "PirateReachablePort4458",
+  "WaterComponentMarkers4479",
+  "TradeShipPathReuse4654",
+]

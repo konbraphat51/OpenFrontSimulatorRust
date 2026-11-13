@@ -2,6 +2,7 @@
 //! Port of src/core/execution/ShellExecution.ts: a shell flying from a warship or defense post to its target.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::JsNumber::round;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Execution::Execution::Execution;
@@ -9,6 +10,7 @@ use crate::Game::Game::UnitParams;
 use crate::Game::Game::{SmallId, Tick, UnitId, UnitType};
 use crate::Game::GameImpl::GameImpl;
 use crate::Game::GameMap::TileRef;
+use crate::Pathfinding::Legacy28::PathFinding::AirPathFinder as LegacyAirPathFinder;
 use crate::Pathfinding::PathFinder::AirStepperEnv;
 use crate::Pathfinding::PathFinderAir::AirPathFinder;
 use crate::Pathfinding::PathFinderStepper::PathFinderStepper;
@@ -18,6 +20,7 @@ use crate::Pathfinding::Types::PathResult;
 pub struct ShellExecution {
     active: bool,
     path_finder: Option<AirPathFinder>,
+    legacy_air: Option<LegacyAirPathFinder>,
     stepper: PathFinderStepper<TileRef>,
     shell: Option<UnitId>,
     destroy_at_tick: i64,
@@ -34,6 +37,7 @@ impl ShellExecution {
         Self {
             active: true,
             path_finder: None,
+            legacy_air: None,
             stepper: PathFinderStepper::new(),
             shell: None,
             destroy_at_tick: -1,
@@ -74,6 +78,12 @@ impl ShellExecution {
 impl Execution for ShellExecution {
     fn init(&mut self, game: &mut GameImpl, _ticks: Tick) {
         self.path_finder = Some(AirPathFinder::new_for(game.ticks(), game.config().rules()));
+        if game.has(Change::LegacyProjectiles28) {
+            self.legacy_air = Some(LegacyAirPathFinder::new(PseudoRandom::for_rules(
+                game.config().rules(),
+                game.ticks() as f64,
+            )));
+        }
         self.random = Some(PseudoRandom::for_rules(
             game.config().rules(),
             game.ticks() as f64,
@@ -115,16 +125,23 @@ impl Execution for ShellExecution {
         for _ in 0..3 {
             let from = game.unit_any(shell).tile();
             let to = game.unit_any(self.target).tile();
-            let finder = self.path_finder.as_ref().expect("initialised");
-            let result = self.stepper.next(
-                &mut AirStepperEnv {
-                    finder,
-                    map: &game.map,
-                },
-                from,
-                to,
-                None,
-            );
+            let result = if let Some(air) = self.legacy_air.as_mut() {
+                match air.next_tile(&game.map, from, to) {
+                    None => PathResult::Complete(from),
+                    Some(t) => PathResult::Next(t),
+                }
+            } else {
+                let finder = self.path_finder.as_ref().expect("initialised");
+                self.stepper.next(
+                    &mut AirStepperEnv {
+                        finder,
+                        map: &game.map,
+                    },
+                    from,
+                    to,
+                    None,
+                )
+            };
             match result {
                 PathResult::Complete(_) => {
                     self.active = false;

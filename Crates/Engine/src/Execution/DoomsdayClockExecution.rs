@@ -2,6 +2,7 @@
 //! Port of src/core/execution/DoomsdayClockExecution.ts: anti-stall clock that doomes sides below a rising territory bar.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Compat::OrderedMap::OrderedMap;
 use crate::Execution::Execution::Execution;
 use crate::Game::DoomsdayClock::{
@@ -235,11 +236,7 @@ impl DoomsdayClockExecution {
             return false;
         }
         game.player_mut(player).relinquish(tile);
-        if game
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::DoomsdayRotWasteland5052)
-        {
+        if game.has(Change::DoomsdayRotWasteland5052) {
             game.set_fallout(tile, true);
         }
         game.player_mut(player).mark_rotted();
@@ -265,10 +262,7 @@ impl Execution for DoomsdayClockExecution {
         if !cfg.enabled {
             return;
         }
-        let rot_era = game
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::DoomsdayRotLadder4893);
+        let rot_era = game.has(Change::DoomsdayRotLadder4893);
         assert!(
             !matches!(game.config().rules().class_id(), "C025" | "C026" | "C027"),
             "not ported: Doomsday Clock of class {}",
@@ -300,10 +294,7 @@ impl Execution for DoomsdayClockExecution {
         let ffa = game.config().game_config().game_mode == GameMode::FFA;
         let sides = Self::sides(game, &contenders, ffa);
 
-        let winner_idle = game
-            .config()
-            .rules()
-            .has(crate::Builds::Rules::Change::DoomsdayIdleOnWinner4953);
+        let winner_idle = game.has(Change::DoomsdayIdleOnWinner4953);
         if (winner_idle && game.winner().is_some()) || sides.len() < 2 {
             for &p in &contenders {
                 game.player_mut(p).clear_doomsday_clock();
@@ -319,11 +310,7 @@ impl Execution for DoomsdayClockExecution {
             &DoomsdayClockProfile {
                 six_waves: !rot_era,
                 speed: cfg.speed,
-                team_game: !ffa
-                    && game
-                        .config()
-                        .rules()
-                        .has(crate::Builds::Rules::Change::DoomsdayTeamLevels5030),
+                team_game: !ffa && game.has(Change::DoomsdayTeamLevels5030),
             },
             land,
             elapsed,

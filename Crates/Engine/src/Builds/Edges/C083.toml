@@ -1,0 +1,7 @@
+# Changes class C083 adds to / removes from its parent (parent: BuildClasses.toml).
+add = [
+  "NationAiSplit6087",
+  "AttackInactiveBeforeRetreat6089",
+  "WaterNukeMiniTile6016",
+]
+remove = []
