@@ -30,6 +30,8 @@ Single thread, release build, `ofsim verify` on a 4-core machine shared with oth
 
 Speed changes to engine code (behaviour-preserving, 40 of 41 baseline records still pass, `c6dYiNx281` still stops at 3810): the rail A* reuses its stamped buffers between queries instead of allocating 10 MB per query; `RailNetwork::find_station` uses a per-unit index.
 
+P6-P (performance pass, no hash changes): another 1.2x to 1.6x single-threaded on records from seven eras (387 to 506 ticks/s over the benchmark set, peak RSS down about 30 percent), faster `replay` with dense snapshots and a longest-first `batch`. The benchmark table, how to run it (`Tools/Bench.py`), the change list and the ranked remaining hot spots are in [Performance.md](Performance.md).
+
 ## P6 status by class
 
 Class ids, parents and builds are in [BuildPlan.md](BuildPlan.md) (status column) and `Crates/Engine/src/Builds/BuildClasses.toml`. A class is supported when `Rules.rs` has an edge for it and its ancestors; every other class fails with `build <commit> (class Cnnn) not ported yet`. "Pass" counts sampled records (`Cache/Records/<commit12>/`, up to 12,900 turns) replayed with every recorded hash matching.
