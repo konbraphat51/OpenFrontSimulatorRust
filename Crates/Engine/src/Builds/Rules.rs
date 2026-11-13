@@ -507,10 +507,8 @@ pub enum Change {
     AttackAllianceBlocked2044,
     /// PR 2101: a nuke rejects the target's pending alliance request.
     NukeRevokesRequests2101,
-
-    // TEMP C078: placeholders until the C078 port lands; move to the C078 edge or drop at merge.
-    /// C078 (v0.26.0-beta1/2) bots roll trigger 60-90 and reserve 20-30 ratios (v0.26.5+: 50-60 and 30-40).
-    TmpC078BotRatios,
+    /// v0.25.x (C079 and newer): nations and tribes use the v0.26 AI; older builds use `*V25` modules without attack chances, betrayal, structure values or reserve ratios.
+    NationAiV26Base25,
 }
 }
 
@@ -620,6 +618,7 @@ const ROOT_CHANGES: &[Change] = &[
     Change::RailWaterBridges1961,
     Change::AttackAllianceBlocked2044,
     Change::NukeRevokesRequests2101,
+    Change::NationAiV26Base25,
     Change::SpawnPhaseTimer3199,
     Change::NationSpawnRetry4117,
     Change::DefensePostDestroyed1563,

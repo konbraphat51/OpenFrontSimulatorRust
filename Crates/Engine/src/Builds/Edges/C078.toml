@@ -1,4 +1,4 @@
 # TEMPORARY placeholder for C078 (v0.26.0-beta1/2), owned by the C078 port on origin/claude/port-c075.
 # Take the remote file at merge; C079 only needs the class to exist so that it counts as ported.
-add = ["TmpC078BotRatios"]
+add = []
 remove = []

@@ -2,7 +2,7 @@
 //! Port of src/core/execution/BotExecution.ts of v0.26.14: the AI of a tribe (bot) player on `BotBehavior`.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
-use crate::Builds::Rules::{Change, Rules};
+use crate::Builds::Rules::Rules;
 use crate::Core::PseudoRandom::PseudoRandom;
 use crate::Core::Util::simple_hash;
 use crate::Execution::Execution::Execution;
@@ -33,17 +33,8 @@ impl BotExecutionV26 {
         let mut random = PseudoRandom::for_rules(rules, simple_hash(bot_id) as f64);
         let attack_rate = random.next_int(40.0, 80.0);
         let attack_tick = random.next_int(0.0, attack_rate);
-        let (trigger_ratio, reserve_ratio) = if rules.has(Change::TmpC078BotRatios) {
-            (
-                random.next_int(60.0, 90.0) / 100.0,
-                random.next_int(20.0, 30.0) / 100.0,
-            )
-        } else {
-            (
-                random.next_int(50.0, 60.0) / 100.0,
-                random.next_int(30.0, 40.0) / 100.0,
-            )
-        };
+        let trigger_ratio = random.next_int(50.0, 60.0) / 100.0;
+        let reserve_ratio = random.next_int(30.0, 40.0) / 100.0;
         let expand_ratio = random.next_int(10.0, 20.0) / 100.0;
         Self {
             active: true,
@@ -69,9 +60,7 @@ impl BotExecutionV26 {
             };
             if self.random.borrow_mut().chance(odds) {
                 // Check and break the alliance before attacking if needed
-                if game.has(Change::AttackAllianceBlocked2044)
-                    && let Some(alliance) = game.player(self.bot).alliance_with(to_attack)
-                {
+                if let Some(alliance) = game.player(self.bot).alliance_with(to_attack) {
                     game.player_mut(self.bot).break_alliance(alliance);
                 }
                 behavior.send_attack(game, to_attack);
