@@ -553,11 +553,61 @@ impl PlayerExecution {
         true
     }
 
+    /// `getCapturingPlayer` before PR 2158: the largest attacker among the unfriendly neighbours, else
+    /// the first neighbouring owner (`getMode` of an id set), whoever it is.
+    fn get_capturing_player_first_owner(
+        &self,
+        game: &GameImpl,
+        cluster: &[TileRef],
+        nswe: bool,
+    ) -> Option<SmallId> {
+        let mut ids: crate::Compat::OrderedSet::OrderedSet<SmallId> =
+            crate::Compat::OrderedSet::OrderedSet::new();
+        let map = &game.map;
+        let mut nbuf = [0; 4];
+        for &t in cluster {
+            let n_neighbors = if nswe {
+                map.neighbors4_nswe(t, &mut nbuf)
+            } else {
+                map.neighbors4(t, &mut nbuf)
+            };
+            for &n in &nbuf[..n_neighbors] {
+                let owner_id = map.owner_id(n);
+                if owner_id != self.player {
+                    ids.insert(owner_id);
+                }
+            }
+        }
+        let mut largest_neighbor_attack: Option<SmallId> = None;
+        let mut largest_troop_count = 0.0;
+        for &id in ids.iter() {
+            if id == 0 || game.player(self.player).is_friendly(id, false) {
+                continue;
+            }
+            for &attack in game.player(id).outgoing_attacks() {
+                let a = &game.attacks[attack as usize];
+                if a.target == self.player && a.troops > largest_troop_count {
+                    largest_troop_count = a.troops;
+                    largest_neighbor_attack = Some(id);
+                }
+            }
+        }
+        if largest_neighbor_attack.is_some() {
+            return largest_neighbor_attack;
+        }
+        // Counts are all 1, so the mode is the first id (0 when the set is empty)
+        let mode = ids.iter().next().copied().unwrap_or(0);
+        (mode != 0).then_some(mode)
+    }
+
     pub(super) fn get_capturing_player(
         &self,
         game: &GameImpl,
         cluster: &[TileRef],
     ) -> Option<SmallId> {
+        if !game.has(Change::AlliesCannotAnnexClusters2158) {
+            return self.get_capturing_player_first_owner(game, cluster, false);
+        }
         let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
         let map = &game.map;
         let my_small_id = self.player;
@@ -604,6 +654,9 @@ impl PlayerExecution {
         game: &GameImpl,
         cluster: &[TileRef],
     ) -> Option<SmallId> {
+        if !game.has(Change::AlliesCannotAnnexClusters2158) {
+            return self.get_capturing_player_first_owner(game, cluster, true);
+        }
         let mut neighbors: OrderedMap<SmallId, f64> = OrderedMap::new();
         let map = &game.map;
         let my_small_id = self.player;
@@ -807,7 +860,7 @@ impl Execution for PlayerExecution {
                 continue;
             }
             let captor = owner;
-            if t == UnitType::DefensePost {
+            if t == UnitType::DefensePost && game.has(Change::DefensePostDowngrade1957) {
                 if game.has(Change::DefensePostDestroyed1563) {
                     game.unit_mut(u).delete(Some(true), Some(captor));
                 } else {

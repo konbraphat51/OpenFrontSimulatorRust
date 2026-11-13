@@ -876,7 +876,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
+        if (self.game.has(Change::DonateAliveChecks2146) && (!self.is_alive() || !r.is_alive()))
+            || !self.is_friendly(recipient, false)
+        {
             return false;
         }
         if r.player_type() == PlayerType::Human && !self.game.config().donate_gold() {
@@ -891,7 +893,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        if !self.is_alive() || !r.is_alive() || !self.is_friendly(recipient, false) {
+        if (self.game.has(Change::DonateAliveChecks2146) && (!self.is_alive() || !r.is_alive()))
+            || !self.is_friendly(recipient, false)
+        {
             return false;
         }
         if r.player_type() == PlayerType::Human && !self.game.config().donate_troops() {
@@ -968,7 +972,10 @@ impl<'a> PlayerRef<'a> {
         if other == self.id && self.game.has(Change::SelfActionGuards4014) {
             return true;
         }
-        if self.game.player(other).is_disconnected && !treat_afk_friendly {
+        if self.game.player(other).is_disconnected
+            && !treat_afk_friendly
+            && self.game.has(Change::AttackDisconnectedTeammates2144)
+        {
             return false;
         }
         self.is_on_same_team(other) || self.is_allied_with(other)
