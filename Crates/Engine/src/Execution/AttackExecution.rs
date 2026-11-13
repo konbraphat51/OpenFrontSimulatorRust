@@ -130,9 +130,10 @@ impl AttackExecution {
         let mut nbuf2 = [0; 4];
         let num_neighbors = Self::neighbors_of(game, tile, &mut nbuf);
         for &neighbor in &nbuf[..num_neighbors] {
-            if game.map.is_water(neighbor)
+            // The owner test comes first: it rejects most neighbours without touching the terrain array.
+            if game.map.owner_id(neighbor) != self.target
+                || game.map.is_water(neighbor)
                 || game.map.is_impassable(neighbor)
-                || game.map.owner_id(neighbor) != self.target
             {
                 continue;
             }
@@ -498,6 +499,9 @@ impl Execution for AttackExecution {
             let tile_to_conquer = self.to_conquer.dequeue();
             game.attack_mut(attack).remove_border_tile(tile_to_conquer);
 
+            if game.map.owner_id(tile_to_conquer) != self.target {
+                continue;
+            }
             let mut on_border = false;
             let mut nbuf = [0; 4];
             let num_neighbors = Self::neighbors_of(game, tile_to_conquer, &mut nbuf);
@@ -507,7 +511,7 @@ impl Execution for AttackExecution {
                     break;
                 }
             }
-            if game.map.owner_id(tile_to_conquer) != self.target || !on_border {
+            if !on_border {
                 continue;
             }
             if (!game.map.is_land(tile_to_conquer) && game.has(Change::AttackSkipsWater31))

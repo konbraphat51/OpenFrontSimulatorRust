@@ -902,25 +902,26 @@ impl GameImpl {
     }
 
     fn update_borders(&mut self, tile: TileRef) {
-        self.update_border_status(tile);
-        let mut nbuf = [0; 4];
         // Before PR 3124 the border update walked `neighbors()` (N, S, W, E) in every build.
-        let n = if self.config.has(Change::BorderUpdateForEach3124) {
-            self.map.neighbors4(tile, &mut nbuf)
+        let mut nbuf = [(0, 0); 4];
+        let (n, x) = if self.config.has(Change::BorderUpdateForEach3124) {
+            self.map.neighbors4_with_x(tile, &mut nbuf)
         } else {
-            self.map.neighbors4_nswe(tile, &mut nbuf)
+            self.map.neighbors4_nswe_with_x(tile, &mut nbuf)
         };
-        for &nb in &nbuf[..n] {
-            self.update_border_status(nb);
+        self.update_border_status(tile, x);
+        for &(nb, nb_x) in &nbuf[..n] {
+            self.update_border_status(nb, nb_x);
         }
     }
 
-    fn update_border_status(&mut self, t: TileRef) {
-        if !self.map.has_owner(t) {
+    /// Syncs the owner's border set with the tile's border status; `x` is the tile's column.
+    fn update_border_status(&mut self, t: TileRef, x: u32) {
+        let owner = self.map.owner_id(t);
+        if owner == 0 {
             return;
         }
-        let owner = self.map.owner_id(t);
-        let is_border = self.map.is_border(t);
+        let is_border = self.map.is_border_at(t, x);
         let in_set = self.border_owner[t as usize];
         if is_border {
             if in_set != owner {
