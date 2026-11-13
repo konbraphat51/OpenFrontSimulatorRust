@@ -196,6 +196,13 @@ impl GameMapImpl {
         self.terrain[tile as usize]
     }
 
+    /// Water whose magnitude is at least `min_magnitude` (one terrain byte read).
+    #[inline]
+    pub fn is_water_at_least(&self, tile: TileRef, min_magnitude: u8) -> bool {
+        let byte = self.terrain[tile as usize];
+        byte & (1 << IS_LAND_BIT) == 0 && (byte & MAGNITUDE_MASK) >= min_magnitude
+    }
+
     /// Bumped every time a land tile turns to water.
     pub fn water_version(&self) -> u32 {
         self.water_version
