@@ -2,9 +2,9 @@
 //! Port of src/core/pathfinding/transformers/ShoreCoercingTransformer.ts: coerces shore endpoints to adjacent water and restores them afterwards.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Compat::OrderedMap::FxHashMap;
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Types::{PathCtx, PathFinder, Source};
-use std::collections::HashMap;
 
 /// Wraps a finder so land (shore) endpoints path through their best water neighbour (on `ctx.mini_map`).
 pub struct ShoreCoercingTransformer<P> {
@@ -36,7 +36,7 @@ impl<P> ShoreCoercingTransformer<P> {
 impl<P: PathFinder> PathFinder for ShoreCoercingTransformer<P> {
     fn find_path(&mut self, ctx: &PathCtx, from: Source, to: TileRef) -> Option<Vec<TileRef>> {
         let map = ctx.mini_map;
-        let mut water_to_original: HashMap<TileRef, TileRef> = HashMap::new();
+        let mut water_to_original: FxHashMap<TileRef, TileRef> = FxHashMap::default();
         let mut water_from: Vec<TileRef> = Vec::new();
 
         for &f in from.as_slice() {

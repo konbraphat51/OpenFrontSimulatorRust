@@ -5,11 +5,11 @@
 //! Keep one `SpatialQuery` per game: it owns the traversal scratch, the bounded A* scratch and the
 //! per-player reachable-water cache (upstream keeps the cache in a module-level `WeakMap`).
 
+use crate::Compat::OrderedMap::{FxHashMap, FxHashSet};
 use crate::Game::GameMap::{GameMapImpl, TileRef};
 use crate::Pathfinding::Algorithms::AStarWaterBounded::{AStarWaterBounded, SearchBounds};
 use crate::Pathfinding::PathGameView::{PathGameView, SmallId};
 use crate::Pathfinding::Types::Source;
-use std::collections::{HashMap, HashSet};
 
 const REFINE_MAX_SEARCH_AREA: i64 = 100 * 100;
 
@@ -20,7 +20,7 @@ pub const DEFAULT_MAX_DIST: f64 = 50.0;
 struct ReachableCache {
     tile_version: u32,
     water_version: u32,
-    components: HashSet<u32>,
+    components: FxHashSet<u32>,
 }
 
 /// Closest shore queries for transport ships and landings.
@@ -30,7 +30,7 @@ pub struct SpatialQuery {
     visited: Vec<u32>,
     gen_counter: u32,
     stack: Vec<TileRef>,
-    reachable: HashMap<SmallId, ReachableCache>,
+    reachable: FxHashMap<SmallId, ReachableCache>,
     simple_start: bool,
 }
 
@@ -178,7 +178,7 @@ impl SpatialQuery {
         {
             return;
         }
-        let mut components: HashSet<u32> = HashSet::new();
+        let mut components: FxHashSet<u32> = FxHashSet::default();
         game.for_each_border_tile(attacker, &mut |t| {
             if !map.is_shore(t) || !map.is_land(t) {
                 return;
