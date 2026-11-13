@@ -7,11 +7,10 @@
 
 use crate::Game::GameMap::TileRef;
 
-/// Min-heap keyed by an `f32`-rounded priority.
+/// Min-heap keyed by an `f32`-rounded priority; (priority, tile) pairs share one array for locality.
 #[derive(Debug, Default)]
 pub struct FlatBinaryHeap {
-    pri: Vec<f32>,
-    tiles: Vec<TileRef>,
+    entries: Vec<(f32, TileRef)>,
 }
 
 impl FlatBinaryHeap {
@@ -22,40 +21,36 @@ impl FlatBinaryHeap {
 
     /// `clear`.
     pub fn clear(&mut self) {
-        self.pri.clear();
-        self.tiles.clear();
+        self.entries.clear();
     }
 
     /// `size`.
     pub fn size(&self) -> usize {
-        self.pri.len()
+        self.entries.len()
     }
 
     /// `enqueue(tile, priority)`.
     pub fn enqueue(&mut self, tile: TileRef, priority: f64) {
-        let mut i = self.pri.len();
-        self.pri.push(0.0);
-        self.tiles.push(0);
+        let mut i = self.entries.len();
+        self.entries.push((0.0, 0));
         while i > 0 {
             let parent = (i - 1) >> 1;
-            if priority >= self.pri[parent] as f64 {
+            let parent_entry = self.entries[parent];
+            if priority >= parent_entry.0 as f64 {
                 break;
             }
-            self.pri[i] = self.pri[parent];
-            self.tiles[i] = self.tiles[parent];
+            self.entries[i] = parent_entry;
             i = parent;
         }
-        self.pri[i] = priority as f32;
-        self.tiles[i] = tile;
+        self.entries[i] = (priority as f32, tile);
     }
 
     /// `dequeue()`: removes and returns the lowest-priority tile; panics when empty.
     pub fn dequeue(&mut self) -> TileRef {
-        assert!(!self.pri.is_empty(), "heap empty");
-        let top_tile = self.tiles[0];
-        let last_pri = self.pri.pop().expect("non-empty");
-        let last_tile = self.tiles.pop().expect("non-empty");
-        let len = self.pri.len();
+        assert!(!self.entries.is_empty(), "heap empty");
+        let top_tile = self.entries[0].1;
+        let last = self.entries.pop().expect("non-empty");
+        let len = self.entries.len();
         let mut i = 0;
         loop {
             let left = (i << 1) + 1;
@@ -63,21 +58,19 @@ impl FlatBinaryHeap {
                 break;
             }
             let right = left + 1;
-            let child = if right < len && self.pri[right] < self.pri[left] {
+            let child = if right < len && self.entries[right].0 < self.entries[left].0 {
                 right
             } else {
                 left
             };
-            if last_pri <= self.pri[child] {
+            if last.0 <= self.entries[child].0 {
                 break;
             }
-            self.pri[i] = self.pri[child];
-            self.tiles[i] = self.tiles[child];
+            self.entries[i] = self.entries[child];
             i = child;
         }
         if len > 0 {
-            self.pri[i] = last_pri;
-            self.tiles[i] = last_tile;
+            self.entries[i] = last;
         }
         top_tile
     }
