@@ -185,42 +185,52 @@ impl PlayerExecution {
         let (w, south_limit) = (map.width(), (map.height() - 1) * map.width());
         // Scanline fill: only the component size and the stamps matter, so the visiting order is free.
         // Every tile is stamped (and counted) exactly once; seeds are the first tiles of runs in a row.
-        let eligible = |visited: &[u32], n: u32| {
-            visited[n as usize] < area_gen && state[n as usize] & 0xfff == my
-        };
         visited[start as usize] = t_gen;
         stack.clear();
         stack.push(start);
         let mut size = 1;
+        let width = w as usize;
         while let Some(seed) = stack.pop() {
-            let x = map.x(seed);
-            let row = seed - x;
-            let mut left = x;
-            while left > 0 && eligible(visited, row + left - 1) {
-                left -= 1;
-                visited[(row + left) as usize] = t_gen;
-                size += 1;
-            }
-            let mut right = x;
-            while right < w - 1 && eligible(visited, row + right + 1) {
-                right += 1;
-                visited[(row + right) as usize] = t_gen;
-                size += 1;
+            let x = map.x(seed) as usize;
+            let row = seed as usize - x;
+            let (mut left, mut right) = (x, x);
+            {
+                let (row_visited, row_state) =
+                    (&mut visited[row..row + width], &state[row..row + width]);
+                while left > 0
+                    && row_visited[left - 1] < area_gen
+                    && row_state[left - 1] & 0xfff == my
+                {
+                    left -= 1;
+                    row_visited[left] = t_gen;
+                    size += 1;
+                }
+                while right + 1 < width
+                    && row_visited[right + 1] < area_gen
+                    && row_state[right + 1] & 0xfff == my
+                {
+                    right += 1;
+                    row_visited[right] = t_gen;
+                    size += 1;
+                }
             }
             for (exists, base) in [
-                (row >= w, row.wrapping_sub(w)),
-                (row < south_limit, row.wrapping_add(w)),
+                (row >= width, row.wrapping_sub(width)),
+                (row < south_limit as usize, row.wrapping_add(width)),
             ] {
                 if !exists {
                     continue;
                 }
+                let first = base + left;
+                let run_visited = &mut visited[first..=base + right];
+                let run_state = &state[first..=base + right];
                 let mut previous_eligible = false;
-                for n in (base + left)..=(base + right) {
-                    let is_eligible = eligible(visited, n);
+                for (i, (v, st)) in run_visited.iter_mut().zip(run_state).enumerate() {
+                    let is_eligible = *v < area_gen && *st & 0xfff == my;
                     if is_eligible && !previous_eligible {
-                        visited[n as usize] = t_gen;
+                        *v = t_gen;
                         size += 1;
-                        stack.push(n);
+                        stack.push((first + i) as u32);
                     }
                     previous_eligible = is_eligible;
                 }
