@@ -85,7 +85,7 @@
     "C072": "ported; 19 of 19 sampled (long public)",
     "C073": "ported; 19 of 19 sampled (long public)",
     "C074": "ported; 23 of 23 sampled (long public)",
-    "C079": "ported on temporary C078 placeholders; 89 of 90 sampled (the only miss fails in the upstream engine itself)"
+    "C079": "ported; 89 of 90 sampled (the only miss fails in the upstream engine itself)"
   },
   "ja": {
     "C000": "ベースライン; 41件中40件 (c6dYiNx281 未解決)",
@@ -173,6 +173,6 @@
     "C072": "移植済み; 抽出 19/19 件 (長尺の公開戦)",
     "C073": "移植済み; 抽出 19/19 件 (長尺の公開戦)",
     "C074": "移植済み; 抽出 23/23 件 (長尺の公開戦)",
-    "C079": "C078 の仮置きフラグ上で移植済み; 抽出 89/90 件 (残る 1 件はアップストリームでも一致しない)"
+    "C079": "移植済み; 抽出 89/90 件 (残る 1 件はアップストリームでも一致しない)"
   }
 }

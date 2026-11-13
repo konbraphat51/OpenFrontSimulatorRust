@@ -885,9 +885,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        let dead =
-            (!self.is_alive() || !r.is_alive()) && !self.game.has(Change::TmpC078DonateWhenDead);
-        if dead || !self.is_friendly(recipient, false) {
+        if (self.game.has(Change::DonateAliveChecks2146) && (!self.is_alive() || !r.is_alive()))
+            || !self.is_friendly(recipient, false)
+        {
             return false;
         }
         if r.player_type() == PlayerType::Human
@@ -904,9 +904,9 @@ impl<'a> PlayerRef<'a> {
             return false;
         }
         let r = self.game.player(recipient);
-        let dead =
-            (!self.is_alive() || !r.is_alive()) && !self.game.has(Change::TmpC078DonateWhenDead);
-        if dead || !self.is_friendly(recipient, false) {
+        if (self.game.has(Change::DonateAliveChecks2146) && (!self.is_alive() || !r.is_alive()))
+            || !self.is_friendly(recipient, false)
+        {
             return false;
         }
         if r.player_type() == PlayerType::Human
@@ -987,7 +987,7 @@ impl<'a> PlayerRef<'a> {
         }
         if self.game.player(other).is_disconnected
             && !treat_afk_friendly
-            && !self.game.has(Change::TmpC078FriendlyIgnoresAfk)
+            && self.game.has(Change::AttackDisconnectedTeammates2144)
         {
             return false;
         }

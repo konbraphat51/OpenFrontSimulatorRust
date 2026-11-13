@@ -249,6 +249,16 @@ pub enum Change {
     AllianceRequestDisconnectedGuard2202,
     /// PR 2191: `getCapturingPlayer` falls back to the neighbour with the longest shared border when no attack targets the player.
     CapturingPlayerBorderFallback2191,
+    /// v0.26.0-beta3: nations and tribes use the `BotBehavior` with reserve ratio, emoji tables and betrayal inside it, `structureSpawnTileValue` as a module and hydrogen nukes (older: the beta1/2 AI).
+    NationAiBeta3V26,
+    /// PR 2158: allies cannot annex a cluster; `getCapturingPlayer` skips friendly neighbours and has no mode fallback (older: the first neighbouring owner takes it).
+    AlliesCannotAnnexClusters2158,
+    /// PR 1957: a captured defense post loses a level (older: captured whole).
+    DefensePostDowngrade1957,
+    /// PR 2144: disconnected players are not friendly, a disconnected teammate can be attacked without troop loss and `AttackExecution` has no same-team guard.
+    AttackDisconnectedTeammates2144,
+    /// PR 2146: `canDonateGold` and `canDonateTroops` require both players alive.
+    DonateAliveChecks2146,
     /// v0.31: SAM cooldown 90 ticks (older 120, before v0.30.0-beta5 75).
     SamCooldown90V31,
     /// v0.30.0-beta5: SAM cooldown 120 ticks (older 75).
@@ -509,16 +519,6 @@ pub enum Change {
     NukeRevokesRequests2101,
     /// v0.25.x (C079 and newer): nations and tribes use the v0.26 AI; older builds use `*V25` modules without attack chances, betrayal, structure values or reserve ratios.
     NationAiV26Base25,
-
-    // TEMP C078: placeholders until the C078 port lands; drop or move to the C078 edge at merge.
-    /// C078: `getCapturingPlayer` collects ids in a set and falls back to `getMode` over it.
-    TmpC078CapturingModeSet,
-    /// C078: a captured defense post just changes hands (no `decreaseLevel`).
-    TmpC078DefensePostCaptured,
-    /// C078: `isFriendly` has no disconnected rule.
-    TmpC078FriendlyIgnoresAfk,
-    /// C078: `canDonateGold` and `canDonateTroops` have no alive checks.
-    TmpC078DonateWhenDead,
 }
 }
 
@@ -711,6 +711,11 @@ const ROOT_CHANGES: &[Change] = &[
     Change::NationAllianceRequestExecution2234,
     Change::AllianceRequestDisconnectedGuard2202,
     Change::CapturingPlayerBorderFallback2191,
+    Change::NationAiBeta3V26,
+    Change::AlliesCannotAnnexClusters2158,
+    Change::DefensePostDowngrade1957,
+    Change::AttackDisconnectedTeammates2144,
+    Change::DonateAliveChecks2146,
     Change::SamCooldown90V31,
     Change::SamCooldown120V30,
     Change::SiloCooldown90V31,

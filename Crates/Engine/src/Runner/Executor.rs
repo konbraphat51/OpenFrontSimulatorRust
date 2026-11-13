@@ -23,6 +23,7 @@ use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
 use crate::Execution::FakeHumanExecutionV25::FakeHumanExecutionV25;
 use crate::Execution::FakeHumanExecutionV26::FakeHumanExecution as FakeHumanExecutionV26;
+use crate::Execution::FakeHumanExecutionV26Beta::FakeHumanExecution as FakeHumanExecutionV26Beta;
 use crate::Execution::FakeHumanExecutionV27::FakeHumanExecution as FakeHumanExecutionV27;
 use crate::Execution::FakeHumanExecutionV28::FakeHumanExecution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
@@ -204,6 +205,22 @@ impl Executor {
                 .iter()
                 .map(|n| {
                     Box::new(FakeHumanExecutionV25::new(
+                        &self.game_id,
+                        n.clone(),
+                        game.config().rules(),
+                    )) as Box<dyn Execution>
+                })
+                .collect();
+        }
+        if game.has(Change::FakeHumanNations28)
+            && game.has(Change::PreRewriteNationAi26)
+            && !game.has(Change::NationAiBeta3V26)
+        {
+            return game
+                .nations()
+                .iter()
+                .map(|n| {
+                    Box::new(FakeHumanExecutionV26Beta::new(
                         &self.game_id,
                         n.clone(),
                         game.config().rules(),

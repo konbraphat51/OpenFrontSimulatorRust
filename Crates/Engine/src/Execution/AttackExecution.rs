@@ -186,7 +186,9 @@ impl AttackExecution {
                 num_tiles: d.num_tiles_owned() as f64,
                 troops: d.troops(),
                 is_traitor: d.is_traitor(),
-                is_disconnected_teammate: d.is_disconnected() && owner.is_on_same_team(self.target),
+                is_disconnected_teammate: d.is_disconnected()
+                    && owner.is_on_same_team(self.target)
+                    && game.has(Change::AttackDisconnectedTeammates2144),
             }),
             defender_has_defense_post,
             fallout_ratio: game
@@ -276,6 +278,13 @@ impl Execution for AttackExecution {
         if self.target != 0
             && game.has(Change::AttackAllianceBlocked2044)
             && game.player(self.owner).is_friendly(self.target, false)
+        {
+            self.active = false;
+            return;
+        }
+        if self.target != 0
+            && !game.has(Change::AttackDisconnectedTeammates2144)
+            && game.player(self.owner).is_on_same_team(self.target)
         {
             self.active = false;
             return;
