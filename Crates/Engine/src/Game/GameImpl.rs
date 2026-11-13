@@ -1068,7 +1068,8 @@ impl GameImpl {
 
     /// `conquerPlayer(conqueror, conquered)`.
     pub fn conquer_player(&mut self, conqueror: SmallId, conquered: SmallId) {
-        if self.player(conquered).is_disconnected()
+        if self.has(Change::DisconnectedShipHandover2203)
+            && self.player(conquered).is_disconnected()
             && self.player(conqueror).is_on_same_team(conquered)
         {
             let ships = self

@@ -96,6 +96,7 @@ impl AttackExecution {
         let attack = self.attack_id();
         let deaths = game.attack(attack).troops() * (malus_percent / 100.0);
         if !self.remove_troops
+            && game.has(Change::AttackRetreatStartTroops26)
             && (self.source_tile.is_none() || !game.has(Change::AttackRetreatSourceTile27))
         {
             let troops = game.attack(attack).troops() - self.start_troops.unwrap_or(0.0);

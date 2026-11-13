@@ -2,6 +2,7 @@
 //! Port of src/core/execution/DeleteUnitExecution.ts: marks a unit for deletion, deletes it later.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
+use crate::Builds::Rules::Change;
 use crate::Execution::Execution::Execution;
 use crate::Game::Game::{SmallId, Tick, UnitId};
 use crate::Game::GameImpl::GameImpl;
@@ -59,6 +60,13 @@ impl Execution for DeleteUnitExecution {
             return;
         }
         if !game.player(self.player).can_delete_unit() {
+            self.active = false;
+            return;
+        }
+        if !game.has(Change::UnitDeletionMark26) {
+            // v0.26.13 deletes the unit at once
+            game.unit_mut(self.unit_id).delete(Some(false), None);
+            game.player_mut(self.player).record_delete_unit();
             self.active = false;
             return;
         }

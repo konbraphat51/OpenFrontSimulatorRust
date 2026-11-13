@@ -221,7 +221,8 @@ impl Execution for TransportShipExecution {
 
         // A team mate who conquered a disconnected player now owns the ship: follow the owner
         let boat_owner = game.unit_any(boat).owner_id();
-        if game.player(self.original_owner).is_disconnected()
+        if game.has(Change::DisconnectedShipHandover2203)
+            && game.player(self.original_owner).is_disconnected()
             && boat_owner != self.original_owner
             && game.player(boat_owner).is_on_same_team(self.original_owner)
         {
@@ -238,7 +239,9 @@ impl Execution for TransportShipExecution {
             if game.unit_any(boat).transport_ship_state().is_retreating {
                 // The launch tile is water, so its owner never matches: the spawn is looked up again.
                 let src = self.src.expect("set in init");
-                if game.owner_id(src) != self.attacker {
+                if game.has(Change::DisconnectedShipHandover2203)
+                    && game.owner_id(src) != self.attacker
+                {
                     let dst = self.dst.expect("checked above");
                     self.src = game.player(self.attacker).best_transport_ship_spawn(dst);
                 }

@@ -29,6 +29,8 @@ impl Config {
     pub fn train_spawn_rate(&self, num_player_factories: f64, num_train_units: f64) -> f64 {
         let per_factory = if self.rules.has(Change::TrainTradeRetune30) {
             15.0
+        } else if self.rules.has(Change::TrainSpawnRate20V26) {
+            20.0
         } else if self.rules.has(Change::TrainSpawnRate25Beta2) {
             25.0
         } else if self.rules.has(Change::TrainSpawnRate16V27_5) {
@@ -138,13 +140,21 @@ impl Config {
         num_ports: f64,
         is_lobby_creator: bool,
     ) -> Gold {
-        let debuff = self.trade_ship_short_range_debuff();
+        let debuff = if self.rules.has(Change::TradeShortRangeDebuff26) {
+            self.trade_ship_short_range_debuff()
+        } else {
+            200.0
+        };
         let per_tile = if self.rules.has(Change::TradeShipDistanceGold150) {
             150.0
         } else {
             100.0
         };
-        let base_gold = 100_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + per_tile * dist;
+        let base_gold = if self.rules.has(Change::TradeShipFlatGold26) {
+            (100_000.0 + 100.0 * dist).floor()
+        } else {
+            100_000.0 / (1.0 + self.exp(-0.03 * (dist - debuff))) + per_tile * dist
+        };
         let num_port_bonus = num_ports - 1.0;
         // Hyperbolic decay, midpoint at 5 ports, 3x bonus max.
         let bonus = 1.0 + 2.0 * (num_port_bonus / (num_port_bonus + 5.0));

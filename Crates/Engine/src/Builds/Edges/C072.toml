@@ -1,0 +1,3 @@
+# Changes class C072 adds to / removes from its parent (parent: BuildClasses.toml).
+add = ["TrainSpawnRate20V26", "TradeShipFlatGold26"]
+remove = []
