@@ -18,7 +18,7 @@ Tools/Bench.py path/to/record.json.gz      # any record
 - Each measurement is one `ofsim batch --jobs 1` process on one record, so the numbers are single-thread ticks per second (engine plus record loading, about 0.1 s) and the peak RSS of that process. `replay` writes snapshots every 100 ticks (`--every`) into a temporary directory.
 - Env: `OFSIM_BIN` (default `target/release/ofsim`), `OFSIM_MAPS`, `OFSIM_UPSTREAM`, `OFSIM_RECORDS`, `OFSIM_CACHE`.
 - The machine is a shared VM: wall-clock times vary by about 5 to 10 percent between runs. For before/after comparisons of a change use instruction counts, which are deterministic: `valgrind --tool=callgrind --callgrind-out-file=cg.out target/release/ofsim verify --record R --maps M --until 3000`, then `callgrind_annotate cg.out` (self cost) or `--inclusive=yes`. The release profile keeps line tables, so `--auto=yes` shows the hot lines.
-- `Tools/BuildPgo.sh` builds a profile-guided binary into `target/pgo/release/ofsim` (needs `rustup component add llvm-tools`); about 5 to 7 percent faster on C081, hashes unaffected. `-C target-cpu=x86-64-v3` was measured and gives nothing (the code is branch and memory bound), so it is not used.
+- `Tools/BuildPgo.sh` builds a profile-guided binary into `target/pgo/release/ofsim` (needs `rustup component add llvm-tools`); 0 to 8 percent faster on C081 depending on the run (noisy VM), hashes unaffected. `-C target-cpu=x86-64-v3` was measured and gives nothing (the code is branch and memory bound), so it is not used.
 
 ## Benchmark (release profile, one thread, 4-core shared VM)
 

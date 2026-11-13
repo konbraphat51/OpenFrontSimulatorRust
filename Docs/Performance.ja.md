@@ -18,7 +18,7 @@ Tools/Bench.py path/to/record.json.gz      # 任意のレコード
 - 各測定はレコード 1 件につき `ofsim batch --jobs 1` を 1 プロセス実行するため、数値はシングルスレッドの tick/s (エンジンとレコード読み込み約 0.1 秒を含む) と、そのプロセスのピーク RSS。`replay` は 100 tick ごと (`--every`) のスナップショットを一時ディレクトリに書く。
 - 環境変数: `OFSIM_BIN` (既定 `target/release/ofsim`)、`OFSIM_MAPS`、`OFSIM_UPSTREAM`、`OFSIM_RECORDS`、`OFSIM_CACHE`。
 - 共有 VM のため実行時間は実行ごとに 5〜10% 変動する。変更の前後比較には決定的な命令数を使う: `valgrind --tool=callgrind --callgrind-out-file=cg.out target/release/ofsim verify --record R --maps M --until 3000` の後 `callgrind_annotate cg.out` (自己コスト) または `--inclusive=yes`。release プロファイルは行テーブルを残しているので `--auto=yes` で熱い行が見える。
-- `Tools/BuildPgo.sh` はプロファイル最適化ビルドを `target/pgo/release/ofsim` に作る (`rustup component add llvm-tools` が必要)。C081 で約 5〜7% 高速化し、ハッシュは変わらない。`-C target-cpu=x86-64-v3` は計測したが効果がなかった (分岐とメモリで律速) ため使わない。
+- `Tools/BuildPgo.sh` はプロファイル最適化ビルドを `target/pgo/release/ofsim` に作る (`rustup component add llvm-tools` が必要)。C081 で実行により 0〜8% 高速化 (VM が不安定)、ハッシュは変わらない。`-C target-cpu=x86-64-v3` は計測したが効果がなかった (分岐とメモリで律速) ため使わない。
 
 ## ベンチマーク (release プロファイル、1 スレッド、4 コア共有 VM)
 

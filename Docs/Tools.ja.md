@@ -10,7 +10,7 @@
 | `Tools/BatchSummary.py <ndjson...>` | このバッチ実行で何が起きたか |
 | `Tools/Triage.sh <record>` | このレコードはどこで最初に乖離し、どのフラグが影響するか |
 | `Tools/Bench.py` | 固定のベンチマークレコードで verify と replay はどれだけ速いか (tick/s、ピーク RSS)。[Performance.ja.md](Performance.ja.md) を参照 |
-| `Tools/BuildPgo.sh` | オプトインのプロファイル最適化バイナリ (`target/pgo/release/ofsim`)、約 5〜7% 高速 |
+| `Tools/BuildPgo.sh` | オプトインのプロファイル最適化バイナリ (`target/pgo/release/ofsim`)、0〜8% 高速 |
 
 ## ClassDigest
 
