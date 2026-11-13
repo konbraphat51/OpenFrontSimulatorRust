@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/configuration/Config.ts (part: units): unit infos, costs, structures and warship constants.
+//! Port of src/core/configuration/Config.ts and src/core/configuration/DefaultConfig.ts (part: units): unit infos, costs, structures and warship constants.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::*;

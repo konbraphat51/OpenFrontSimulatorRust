@@ -52,7 +52,9 @@ brief() {
   local l="$1" v t
   v="$(echo "$l" | awk '{print $2}')"
   t="$(echo "$l" | grep -o 'first_mismatch_tick=[0-9]*\|stop_tick=[0-9]*' | head -1)"
-  echo "$v $(echo "$l" | grep -o 'matched=[0-9/]*') ${t:-}" | cut -c1-120
+  local m; m="$(echo "$l" | grep -o 'matched=[0-9/]*')"
+  [ "$m" = "matched=0/0" ] && m="$m (record has no hashes, nothing was compared)"
+  echo "$v $m ${t:-}" | cut -c1-120
 }
 
 base="$(verify "")"

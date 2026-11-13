@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/configuration/Config.ts (the baseline `Config` class; part: core).
+//! Port of src/core/configuration/Config.ts and src/core/configuration/DefaultConfig.ts (the baseline `Config` class; part: core).
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 //!
 //! Methods that took a `Player`/`PlayerView` upstream take the few fields they read instead

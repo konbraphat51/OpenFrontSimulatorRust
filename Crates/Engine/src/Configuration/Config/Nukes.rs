@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/configuration/Config.ts (part: nukes): nuke magnitudes, speed, SAM range and death factor.
+//! Port of src/core/configuration/Config.ts and src/core/configuration/DefaultConfig.ts (part: nukes): nuke magnitudes, speed, SAM range and death factor.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::*;

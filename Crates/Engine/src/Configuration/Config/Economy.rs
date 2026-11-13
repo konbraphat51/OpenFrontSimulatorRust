@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-//! Port of src/core/configuration/Config.ts (part: economy): gold, trains, trade ships and economy formulas.
+//! Port of src/core/configuration/Config.ts and src/core/configuration/DefaultConfig.ts (part: economy): gold, trains, trade ships and economy formulas.
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use super::*;
