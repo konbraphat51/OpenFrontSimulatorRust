@@ -42,9 +42,35 @@ pub fn trunc(x: f64) -> f64 {
     x.trunc()
 }
 
-/// JS `Math.floor`.
+/// JS `Math.ceil`; avoids the libm call like [`floor`].
+#[inline]
+pub fn ceil(x: f64) -> f64 {
+    if x.is_nan() || x.abs() >= 4503599627370496.0 || x == 0.0 {
+        return x;
+    }
+    let truncated = x as i64 as f64;
+    if truncated < x {
+        truncated + 1.0
+    } else if truncated == 0.0 && x < 0.0 {
+        -0.0
+    } else {
+        truncated
+    }
+}
+
+/// JS `Math.floor`; avoids the libm call (the baseline x86-64 target has no `roundsd`) for the usual range.
+#[inline]
 pub fn floor(x: f64) -> f64 {
-    x.floor()
+    // NaN, infinities, signed zeros and values with no fraction bits are returned unchanged.
+    if x.is_nan() || x.abs() >= 4503599627370496.0 || x == 0.0 {
+        return x;
+    }
+    let truncated = x as i64 as f64;
+    if truncated > x {
+        truncated - 1.0
+    } else {
+        truncated
+    }
 }
 
 /// JS `Math.sign`: NaN and signed zeros are returned unchanged.
@@ -153,6 +179,40 @@ pub fn js_number_to_string(x: f64) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn floor_matches_std_bit_for_bit() {
+        let specials = [
+            0.0,
+            -0.0,
+            0.3,
+            -0.3,
+            -1.0,
+            1.0,
+            0.999_999_999_999_999_9,
+            -0.999_999_999_999_999_9,
+            4503599627370495.5,
+            -4503599627370495.5,
+            4503599627370496.0,
+            1e300,
+            -1e300,
+            f64::INFINITY,
+            f64::NEG_INFINITY,
+            f64::NAN,
+        ];
+        for x in specials {
+            assert_eq!(floor(x).to_bits(), x.floor().to_bits(), "{x}");
+        }
+        for x in specials {
+            assert_eq!(ceil(x).to_bits(), x.ceil().to_bits(), "{x}");
+        }
+        let mut x = -5000.0;
+        while x < 5000.0 {
+            assert_eq!(floor(x).to_bits(), x.floor().to_bits(), "{x}");
+            assert_eq!(ceil(x).to_bits(), x.ceil().to_bits(), "{x}");
+            x += 0.173;
+        }
+    }
 
     #[test]
     fn to_int32_matches_js() {
