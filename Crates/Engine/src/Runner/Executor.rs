@@ -21,6 +21,7 @@ use crate::Execution::EmbargoAllExecution::EmbargoAllExecution;
 use crate::Execution::EmbargoExecution::EmbargoExecution;
 use crate::Execution::EmojiExecution::EmojiExecution;
 use crate::Execution::Execution::Execution;
+use crate::Execution::FakeHumanExecutionV26::FakeHumanExecution as FakeHumanExecutionV26;
 use crate::Execution::FakeHumanExecutionV28::FakeHumanExecution;
 use crate::Execution::MarkDisconnectedExecution::MarkDisconnectedExecution;
 use crate::Execution::MoveWarshipExecution::MoveWarshipExecution;
@@ -192,6 +193,19 @@ impl Executor {
 
     /// `nationExecutions()`: one `NationExecution` per nation.
     pub fn nation_executions(&self, game: &GameImpl) -> Vec<Box<dyn Execution>> {
+        if game.has(Change::FakeHumanNations28) && game.has(Change::PreRewriteNationAi26) {
+            return game
+                .nations()
+                .iter()
+                .map(|n| {
+                    Box::new(FakeHumanExecutionV26::new(
+                        &self.game_id,
+                        n.clone(),
+                        game.config().rules(),
+                    )) as Box<dyn Execution>
+                })
+                .collect();
+        }
         if game.has(Change::FakeHumanNations28) {
             return game
                 .nations()

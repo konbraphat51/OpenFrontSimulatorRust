@@ -401,6 +401,8 @@ pub enum Change {
     NationBehaviorUpdate3246,
     /// v0.28.4: nations are `FakeHumanExecution` players placed on their manifest cell and tribes use `BotBehavior` (newer: `NationExecution`, `AiAttackBehavior`).
     FakeHumanNations28,
+    /// v0.26.14: nations and tribes use the pre-rewrite `BotBehavior` (alliance answers inside it, no MIRV or retaliation AI, plain land attacks, older boat targets and attack chances; newer: `AllianceBehavior` split and the v0.28 AI).
+    PreRewriteNationAi26,
     /// v0.28.4: nation start troops, troop cap and growth follow the v0.28 difficulty table.
     NationDifficultyEconomy28,
     /// v0.28.4: immunity is the spawn phase plus a fixed 5 seconds for everyone (newer: humans only, `canAttackPlayer`).
