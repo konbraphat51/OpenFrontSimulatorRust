@@ -12,10 +12,10 @@ Replay any public OpenFront game record from 2025-10-01 onward, tick by tick, wi
 
 | Crate | Path | Responsibility |
 | --- | --- | --- |
-| `openfront-record` | `Crates/OpenFrontRecord` | Record JSON schema (serde), gzip loading, expansion of sparse turns (`decompressGameRecord`), the start info the engine consumes (`toWireGameStartInfo`). No engine logic. |
-| `openfront-map` | `Crates/OpenFrontMap` | Reading a map directory (`map.bin`, `map4x.bin`, `map16x.bin`, `manifest.json`) into plain data, and the `GameMapType` name to directory table. No engine logic. |
-| `openfront-engine` | `Crates/OpenFrontEngine` | The deterministic simulation: game state, executions, pathfinding, AI, hashing, build rules. |
-| `openfront-sim` | `Crates/OpenFrontSim` | The `ofsim` CLI: `verify`, `replay` (snapshots), `trace`, `trace-diff`, `batch`. |
+| `ofsim-record` | `Crates/Record` | Record JSON schema (serde), gzip loading, expansion of sparse turns (`decompressGameRecord`), the start info the engine consumes (`toWireGameStartInfo`). No engine logic. |
+| `ofsim-map` | `Crates/Map` | Reading a map directory (`map.bin`, `map4x.bin`, `map16x.bin`, `manifest.json`) into plain data, and the `GameMapType` name to directory table. No engine logic. |
+| `ofsim-engine` | `Crates/Engine` | The deterministic simulation: game state, executions, pathfinding, AI, hashing, build rules. |
+| `ofsim` | `Crates/Cli` | The `ofsim` CLI: `verify`, `replay` (snapshots), `trace`, `trace-diff`, `batch`. |
 | reference tracer | `Reference/` | TypeScript scripts copied into an upstream worktree that emit the same trace as `ofsim trace`, for differential debugging. |
 
 ## Engine module map
@@ -23,10 +23,10 @@ Replay any public OpenFront game record from 2025-10-01 onward, tick by tick, wi
 Rust modules mirror upstream `src/core/` so that every Rust file has one upstream counterpart named in its header comment (`//! Port of src/core/game/PlayerImpl.ts`).
 
 ```
-Crates/OpenFrontEngine/src/
+Crates/Engine/src/
   Lib.rs
   Compat/        JS semantics: number helpers, insertion-ordered sets and maps, stable sort
-  Core/          PseudoRandom, DetMath, Util (simpleHash, toInt, ...)
+  Core/          PseudoRandom (sfc32 or seedrandom ARC4), DetMath, Util (simpleHash, toInt, ...)
   Configuration/ Config (DefaultConfig values of the build), unit infos
   Game/          GameMap, TileSet, Game (shared types and enums), GameImpl, PlayerImpl, UnitImpl,
                  AttackImpl, AllianceImpl, AllianceRequestImpl, UnitGrid, RailNetwork, TeamAssignment,
@@ -74,24 +74,47 @@ pub trait Execution {
 
 `GameImpl` stores `execs: Vec<Box<dyn Execution>>` and `un_init_execs`. `execute_next_tick` takes `execs` out with `std::mem::take` while ticking them, so executions may freely borrow the game mutably; executions added meanwhile go to `un_init_execs`, as upstream. The upstream order of operations in `GameImpl.executeNextTick` (tick active execs, init uninitialised ones, compact, append, player updates, hash every 10 ticks, water manager, `_ticks++`) is reproduced exactly, including its quirks (for example, executions added during an `init` call in the same loop are dropped because upstream reassigns `unInitExecs`). Never "fix" an upstream quirk: a fix is a desync.
 
+### Game and execution API (P2)
+
+- `GameImpl::new(humans, nations, map, mini_map, config, team_spawn_areas)`; `GameImpl::execute_next_tick() -> Option<f64>` runs one tick and returns the hash computed inside it every 10th tick (what the record stores). Everything is also reachable as public fields and accessors: `game.map` (the `GameMapImpl`), `game.config()`, `game.stats_mut()`, `game.ticks()`.
+- Players: `game.player(id) -> PlayerRef` (read) and `game.player_mut(id) -> PlayerMut` (write); both deref to `PlayerImpl` for plain getters. `id` is a small id; `0` is terra nullius. Units: `game.unit(id)` (None once removed), `game.unit_any(id)` (also deleted ones), `game.unit_mut(id) -> UnitMut`. Attacks, alliances and requests: `game.attack(id)`, `game.alliance(id)`, `game.alliance_request(id)` and their `_mut` forms; `PlayerMut::create_attack`, `GameImpl::delete_attack`.
+- Executions implement `Execution { init, tick, is_active, active_during_spawn_phase }` (all take `&mut GameImpl`) and are added with `game.add_execution(Box::new(..))`. `Runner/Executor.rs` maps intents to executions: add the execution to the arm of the intent, and the intent to `PORTED_INTENTS` in `Reference/InertPatch.ts`. `GameRunner::init` creates the executions every game starts with.
+- A rule set that needs code that is not ported fails loudly (`not ported: <what>` panic, for example the Doomsday Clock of C025 to C027); `ofsim verify` reports the tick and the message. The real `WaterManager`, the water executions (transport ship, boat retreat, trade ship, warship, move warship) and the rail network (stations, railroads, clusters and trains in `Game/RailNetwork.rs` and `Game/TrainStation.rs`) are ported; `Reference/NavalScenarioDump.ts` (`ofsim naval-scenario`) is the differential scenario of the water executions, run with `OFSIM_INERT_CLASSES=Attack,Shell` on the tracer side.
+- Client-only plumbing is not ported (updates, name placement, UI queries, most `stats()` calls); the simulation reads back only the attacks a human sent and the MIRVs launched, kept in `StatsImpl`.
+- Debugging: `Reference/RngLog.ts` plus `OFSIM_RNG_LOG=<file>` (every PRNG draw as `<counter word> <raw u32>`; compare per stream, not by global line, since stream creation order differs) and `OFSIM_RNG_STACK_AT=<n>` (stack of draw n), `Reference/RngLogArc4.ts` (the same for era S builds with the seedrandom generator: lines `A <first value> <draw index> <value>` plus `T <tick>` markers; `OFSIM_RNG_LOG` writes the format on the Rust side), `Reference/ExecLog.ts` (executions the upstream engine adds per tick; `OFSIM_EXEC_LOG=<from>,<to>` prints the executions ofsim adds), `OFSIM_UNIT_LOG=<smallId>` for `ofsim trace`, `Tools/VerifyAll.sh` (summary table), `Tools/TraceCompare.sh` (reference trace, `ofsim trace`, `TraceDiff`; `--inert` makes the not-ported executions inert on both sides), the seeded territory scenario (`ofsim scenario`, `Reference/ScenarioDump.ts`) and the seeded nuke, SAM and Doomsday Clock scenario (`ofsim nuke-scenario`, `Reference/NukeScenarioDump.ts`, `Tools/NukeScenarioCompare.sh`; it also compares fallout and water conversion through a per-tick tile-state digest). `Crates/Engine/tests/VerifyRecordsTest.rs` keeps the matched-hash counts of `tests/Golden/VerifyMinimums.json` from regressing.
+
 ## Determinism rules (the porting contract)
 
 1. **Numbers.** A JS `number` is an `f64`. Keep `f64` unless the value is provably an integer that fits the Rust type at every use, and convert exactly where upstream truncates (`Math.floor`, `Math.trunc`, `| 0`, `toInt`). Upstream `bigint` (troops, gold) becomes `i64` or `i128` as range requires. Reproduce bitwise operators with JS `ToInt32`/`ToUint32` semantics (`Compat::JsNumber`). `Math.round` is `floor(x + 0.5)`, not Rust `round`. Keep the upstream order of floating-point operations; `a * b / c` and `a * (b / c)` differ.
 2. **Transcendentals.** Builds with `DetMath` use the ported `Core::DetMath` bit for bit. Builds before it call V8's `Math.exp/log/pow/atan2/sin/cos`; those are ported from V8's fdlibm (`src/base/ieee754.cc`) in `Compat::V8Math`, never Rust `f64` methods (`sqrt` is exact in both and may use Rust).
 3. **Iteration order.** JS `Map` and `Set` iterate in insertion order, a delete plus re-add moves to the end, and entries added during iteration are visited. Use `Compat` ordered collections (or the ported `TileSet`), never `HashMap`/`HashSet` iteration where order can reach the state. `HashMap` is fine for pure lookups.
 4. **Sorting.** `Array.prototype.sort` is stable; use stable sorts with the same comparator. Where a comparator can be inconsistent (NaN, ties broken by nothing), port V8's TimSort (`Compat::JsSort`) instead of assuming equivalence.
-5. **Randomness.** Every `PseudoRandom` instance is seeded exactly as upstream (game, executor, player, tribe spawner, per execution with `mg.ticks()` and so on) and is drawn in the same order. A missed or extra draw desyncs everything after it.
+5. **Randomness.** Every `PseudoRandom` instance is seeded exactly as upstream (game, executor, player, tribe spawner, per execution with `mg.ticks()` and so on) and is drawn in the same order. A missed or extra draw desyncs everything after it. Builds before PR 4233 (era S, C036 and older) use npm `seedrandom` (ARC4, `Core/Arc4.rs`) seeded with `String(seed)`; every site creates its generator with `PseudoRandom::for_rules(rules, seed)`, and the `Change::Sfc32PseudoRandom4233` flag selects sfc32 or ARC4.
 6. **Strings.** Player ids, `simpleHash` inputs and `nextID()` output must be byte-identical (`toString(36)`, `padStart`). `simpleHash` iterates UTF-16 code units.
 7. **No client-only code.** Rendering, stats sent to the client, emojis and chat that never reach the state are not ported, unless simulation logic reads them (check before skipping: for example nation AI reads emojis and relations).
 8. **Errors.** Where upstream throws inside a tick, the runner reports the error for that tick; do not paper over it.
 
 ## Build rules (versions)
 
-Every record carries the upstream `gitCommit` of the server that played it. `Builds/Rules.rs` maps a commit to a `Rules` value: a set of named upstream changes (`Change::DetMath5191`, named after the upstream PR) that this build contains. Release branches receive cherry-picks, so membership is per build, not a linear version order; the table is generated from the upstream clone (`git merge-base --is-ancestor` plus patch-id matching for cherry-picks) into `Builds/Builds.toml`, which is checked in.
+Every record carries the upstream `gitCommit` of the server that played it. `Builds/Rules.rs` maps a commit to a `Rules` value: a set of named upstream changes (`Change::DetMath5191`, named after the upstream PR) that this build contains. Release branches receive cherry-picks, so membership is per build, not a linear version order.
 
-Engine code branches on `game.rules().has(Change::X)` at the exact place upstream changed. When a subsystem was rewritten wholesale (for example pathfinding), the old and new implementations live side by side (`AStarWaterV1.rs`, `AStarWaterV2.rs`) behind one trait. Configuration constants that change between builds live in `Configuration` and are selected by `Rules`. The baseline build is v0.34.22 (`4e837520e886`); other builds are added by diffing upstream `src/core` against it.
+The mapping has two layers. `Builds/BuildClasses.toml` (generated by `Tools/BuildPlanGen.py`, checked in, embedded with `include_str!` and parsed once) lists every known build (12-character commit prefix) with its class (builds with identical simulation code) and every class with its parent in the diff tree rooted at the baseline class C000. One file per ported class, `Builds/Edges/<class>.toml` (`add` and `remove` lists of `Change` names, embedded by `Crates/Engine/build.rs`), says which `Change`s the class adds to or removes from its parent, so parallel work on different classes never edits the same file; an unknown name panics at startup and fails `every_edge_file_names_known_changes`; a class's set is its parent's set plus the edge. A class without an edge, or whose ancestors lack one, is not ported: `Rules::for_commit` fails with `build <commit> (class Cnnn) not ported yet`; a commit absent from the table fails with `unsupported build <commit>` and names the known build sharing the longest prefix.
 
-Maps also change between builds. The engine reads the map files of the record's commit, which `ofsim` resolves from an upstream checkout.
+Engine code branches on `game.has(Change::X)` (`Config::has` where only the config is at hand) at the exact place upstream changed; `has` is true when the build contains the changed behaviour, so baseline (newest) code is the `true` branch and edges for older builds mostly remove changes. When a subsystem was rewritten wholesale (for example pathfinding), the old and new implementations live side by side (`AStarWaterV1.rs`, `AStarWaterV2.rs`) behind one trait. The v0.28.4 engine (class C059) lives in `Pathfinding/Legacy28/` (bidirectional `SerialAStar`, `MiniAStar`, the stepping finders), `Execution/FakeHumanExecutionV28.rs`, `Execution/BotExecutionV28.rs` and `Execution/Utils/*V28.rs`, each reached through one `V28` rule flag. Configuration constants that change between builds live in `Configuration` and are selected by `Rules`. The baseline build is v0.34.22 (`4e837520e886`); other builds are added by diffing upstream `src/core` against it.
+
+### Variant module naming
+
+A module that holds the behaviour of builds other than the baseline next to the baseline module is named `<Upstream name>V<NN>.rs`, where `<NN>` is the minor version of the build closest to the baseline that contains the variant: the last build of an older variant (`WarshipExecutionV30.rs`: v0.30 and older; `LineV33.rs`: v0.33.x) or the first build of a newer variant (`PlayerExecutionV36.rs`: v0.36.0 on). A variant that exists only in the pre-release builds of a minor (`v0.26.0-beta1/2`) takes the suffix `Beta` (`FakeHumanExecutionV26Beta.rs`), because the plain `V26` name belongs to the released v0.26.x variant; it sits between `V25` and `V26` in age. A whole subsystem of several files is a folder `Legacy<NN>/` with its module `Legacy<NN>.rs` (`Pathfinding/Legacy28/`). Never use `Legacy` or a bare number in a file name. The variant is selected by a `Change` flag, not by comparing versions.
+
+The nation and tribe AI exists in five variants (`V25`, `V26Beta`, `V26`, `V27`, `V28`; `FakeHumanExecution`, `BotExecution`, `Utils/BotBehavior`). Code that did not change between them lives once in `Utils/FakeHumanShared.rs`, `Utils/FakeHumanMirv.rs` and `Utils/BotBehaviorShared.rs` as traits with default methods over a few accessors (`random()`, `player()`, ...); a version module implements the traits it needs and keeps only what differs. New nation AI variants follow the same split: move a helper into a trait once two versions hold byte-identical code for it.
+
+### Large files
+
+A type with one large `impl` is split into child modules in a folder named like the file (`Configuration/Config.rs` and `Config/Economy.rs`, `Execution/Utils/AiAttackBehavior.rs` and `AiAttackBehavior/Bots.rs`). Each child starts with `use super::*;` and its own `impl`, and carries the same `//! Port of src/core/<path>.ts (part: <topic>): ...` header as the parent (`part: core`).
+
+Maps and name tables also change between builds. `Builds/Maps.rs` compares the git tree of `resources/maps/<map>` in the record's commit with the baseline's; when they differ, `ofsim verify/trace/replay` extract that map once from the upstream clone (`--upstream`, default `Cache/OpenFrontIO`) into `Cache/Maps/<commit12>/` and read it from there. Per-map tribe name data that differs between builds is selected by `Change` flags in `Execution/Utils/TribeNames.rs`.
+
+From v0.35.0 (C081 on) the upstream sources moved from `src/core/` to `packages/{engine,engine-lib,engine-api,shared}/src/` and are imported as `@openfront/<package>/...`. Port headers keep the baseline `src/core/...` path. The reference tooling bridges the layouts: `Reference/MakeCoreShim.mjs` writes `src/core/` re-export shims into such a worktree, `Reference/EngineSupport.ts` (`createRunnerFor`) passes loaded map files instead of a map loader, and `Tools/GenEngineData.mts` searches both layouts. Mapping: `Schemas` is `engine-api/Schemas`, `Util` splits into `engine-lib/Util` and `shared/SharedUtil`, `Game` into `engine/game/Game` and `engine-api/game/GameTypes`, `GameMap` into `engine-api/game/GameMap` and `engine-lib/game/GameMapImpl`, `Config` into `shared/configuration` and `engine/configuration/EngineConfig`; execution, pathfinding and game files keep their relative paths under `engine/src/`.
 
 ## Verification
 
@@ -106,4 +129,6 @@ Maps also change between builds. The engine reads the map files of the record's 
 
 ## Licensing
 
-The engine is a port of the AGPL-3.0 OpenFrontIO code, so the whole repository is AGPL-3.0-only. Map files and records are not redistributed here.
+The engine is a port of the AGPL-3.0 OpenFrontIO code, so the whole repository is AGPL-3.0-only. Map files and records are not redistributed here. See [Licensing.md](Licensing.md) and `NOTICE`.
+
+File header convention: every Rust and TypeScript source file starts with `// SPDX-License-Identifier: AGPL-3.0-only`, then the `//!` responsibility comment. In ported files that comment names the upstream path, for example `//! Port of src/core/game/PlayerImpl.ts (OpenFrontIO, © OpenFront and Contributors).` or a following `//! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.` line. `Tools/CheckHeaders.sh` fails when a `.rs`, `.ts`, `.mts` or `.mjs` file lacks the SPDX line.

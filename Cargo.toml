@@ -1,18 +1,18 @@
 [workspace]
 resolver = "3"
-members = ["Crates/OpenFrontRecord", "Crates/OpenFrontMap", "Crates/OpenFrontEngine", "Crates/OpenFrontSim"]
+members = ["Crates/Record", "Crates/Map", "Crates/Engine", "Crates/Cli"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "AGPL-3.0-only"
-repository = "https://github.com/konbraphat51/OpenFrontSimulatorRust"
+repository = "https://github.com/konbraphat51/OfSimRust"
 rust-version = "1.90"
 
 [workspace.dependencies]
-openfront-record = { path = "Crates/OpenFrontRecord" }
-openfront-map = { path = "Crates/OpenFrontMap" }
-openfront-engine = { path = "Crates/OpenFrontEngine" }
+ofsim-record = { path = "Crates/Record" }
+ofsim-map = { path = "Crates/Map" }
+ofsim-engine = { path = "Crates/Engine" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 flate2 = "1"
@@ -35,6 +35,13 @@ lto = "fat"
 codegen-units = 1
 panic = "unwind"
 debug = "line-tables-only"
+
+# Fast-building optimised profile for porting and verification loops (same float semantics as release).
+[profile.verify]
+inherits = "release"
+lto = false
+codegen-units = 16
+incremental = true
 
 [profile.dev]
 opt-level = 1

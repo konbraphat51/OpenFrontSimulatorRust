@@ -1,0 +1,4 @@
+# Changes class C074 adds to / removes from its parent (parent: BuildClasses.toml).
+# EmbargoAll (intent, cooldown, player action flag), Achiran and the emoji tables change without effect on state hashes.
+add = []
+remove = []

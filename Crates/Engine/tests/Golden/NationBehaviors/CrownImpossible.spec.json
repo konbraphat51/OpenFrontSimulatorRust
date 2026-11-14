@@ -1,0 +1,150 @@
+{
+ "gameID": "n2-crown-Impossible",
+ "config": {
+  "difficulty": "Impossible",
+  "gameMap": "Oceania"
+ },
+ "steps": [
+  {
+   "op": "addPlayer",
+   "id": "A",
+   "type": "NATION"
+  },
+  {
+   "op": "addPlayer",
+   "id": "B",
+   "type": "NATION"
+  },
+  {
+   "op": "addPlayer",
+   "id": "C",
+   "type": "NATION"
+  },
+  {
+   "op": "conquerSquare",
+   "player": "B",
+   "x": 550,
+   "y": 640,
+   "r": 150
+  },
+  {
+   "op": "conquerSquare",
+   "player": "A",
+   "x": 560,
+   "y": 450,
+   "r": 20
+  },
+  {
+   "op": "conquerSquare",
+   "player": "C",
+   "x": 1550,
+   "y": 120,
+   "r": 25
+  },
+  {
+   "op": "gold",
+   "player": "A",
+   "amount": "90000000"
+  },
+  {
+   "op": "build",
+   "player": "A",
+   "type": "Missile Silo",
+   "x": 559,
+   "y": 449,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 550,
+   "y": 640,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 590,
+   "y": 670,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 500,
+   "y": 620,
+   "level": 2
+  },
+  {
+   "op": "build",
+   "player": "B",
+   "type": "City",
+   "x": 580,
+   "y": 580,
+   "level": 2
+  },
+  {
+   "op": "nuke.new",
+   "id": "n",
+   "player": "A",
+   "seed": 5,
+   "incoming": null,
+   "shouldAttack": true
+  },
+  {
+   "op": "nuke.target",
+   "id": "n"
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  },
+  {
+   "op": "nuke.call",
+   "id": "n"
+  },
+  {
+   "op": "tick",
+   "n": 100
+  }
+ ]
+}

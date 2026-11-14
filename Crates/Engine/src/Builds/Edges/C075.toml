@@ -1,0 +1,5 @@
+# Changes class C075 adds to / removes from its parent (parent: BuildClasses.toml).
+# v0.26.5/6 predate PR 2234 (nation alliance requests) and PR 2241 (annex a disconnected surrounded player).
+# PR 2210 (Factory in isStructureType) only touches building redraws and does not affect state hashes.
+add = []
+remove = ["AnnexDisconnectedSurrounded2241", "NationAllianceRequestExecution2234"]

@@ -1,0 +1,24 @@
+[package]
+name = "ofsim-record"
+description = "OfSimRust: unofficial OpenFront game record schema, loading and turn expansion"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[lib]
+path = "src/Lib.rs"
+
+[dependencies]
+serde.workspace = true
+serde_json = { workspace = true, features = ["float_roundtrip"] }
+flate2.workspace = true
+anyhow.workspace = true
+
+[dev-dependencies]
+sha2 = "0.10"
+flate2.workspace = true
+ofsim-map.workspace = true
+
+[lints]
+workspace = true

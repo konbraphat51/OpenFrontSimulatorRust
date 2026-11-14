@@ -1,0 +1,11 @@
+# Changes class C047 adds to / removes from its parent (parent: BuildClasses.toml).
+add = [
+  "TrainSpawnRate25Beta2",
+]
+remove = [
+  "SamCooldown120V30",
+  "AttackerLoss7030V30",
+  "TrainDistanceGold30Beta",
+  "DisableAlliancesOption30",
+  "TribeNamesRevised30",
+]

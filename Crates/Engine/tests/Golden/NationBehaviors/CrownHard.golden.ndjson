@@ -1,0 +1,26 @@
+{"i":0,"op":"addPlayer","ret":null,"decisions":[],"hash":1625001}
+{"i":1,"op":"addPlayer","ret":null,"decisions":[],"hash":3275001}
+{"i":2,"op":"addPlayer","ret":null,"decisions":[],"hash":4950001}
+{"i":3,"op":"conquerSquare","ret":null,"decisions":[],"hash":9777835}
+{"i":4,"op":"conquerSquare","ret":null,"decisions":[],"hash":9806565}
+{"i":5,"op":"conquerSquare","ret":null,"decisions":[],"hash":9806565}
+{"i":6,"op":"gold","ret":null,"decisions":[],"hash":9806565}
+{"i":7,"op":"build","ret":1,"decisions":[],"hash":1431890151}
+{"i":8,"op":"build","ret":2,"decisions":[],"hash":1437156899}
+{"i":9,"op":"build","ret":3,"decisions":[],"hash":1444574226}
+{"i":10,"op":"build","ret":4,"decisions":[],"hash":1454008882}
+{"i":11,"op":"build","ret":5,"decisions":[],"hash":1465477677}
+{"i":12,"op":"nuke.new","ret":null,"decisions":[],"hash":1465477677}
+{"i":13,"op":"nuke.target","ret":"B","decisions":[],"hash":1465477677}
+{"i":14,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",965700,0]],"hash":1465477677}
+{"i":15,"op":"tick","ret":null,"decisions":[],"hash":1465477677}
+{"i":16,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",1032180,0]],"hash":1465477677}
+{"i":17,"op":"tick","ret":null,"decisions":[],"hash":1465477677}
+{"i":18,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",1115470,0]],"hash":1465477677}
+{"i":19,"op":"tick","ret":null,"decisions":[],"hash":1465477677}
+{"i":20,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",1037335,0]],"hash":1465477677}
+{"i":21,"op":"tick","ret":null,"decisions":[],"hash":1465477677}
+{"i":22,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",1223695,0]],"hash":1465477677}
+{"i":23,"op":"tick","ret":null,"decisions":[],"hash":1465477677}
+{"i":24,"op":"nuke.call","ret":null,"decisions":[["nuke","Hydrogen Bomb",826014,0]],"hash":1465477677}
+{"i":25,"op":"tick","ret":null,"decisions":[],"hash":1465477677}

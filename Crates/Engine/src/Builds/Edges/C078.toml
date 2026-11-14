@@ -1,0 +1,6 @@
+# Changes class C078 adds to / removes from its parent (parent: BuildClasses.toml).
+# v0.26.0-beta1/2: the beta1/2 nation AI (side-by-side V26Beta modules), and before PR 2158 (allies annex clusters),
+# PR 1957 (defense post downgrade), PR 2144 (disconnected players are not friendly, no same-team guard) and PR 2146 (alive checks on donations).
+# `isTraitor` is only reformulated, SAM range uses `** 2` and `generateID` is client-side: no state effect.
+add = []
+remove = ["NationAiBeta3V26", "AlliesCannotAnnexClusters2158", "DefensePostDowngrade1957", "AttackDisconnectedTeammates2144", "DonateAliveChecks2146"]

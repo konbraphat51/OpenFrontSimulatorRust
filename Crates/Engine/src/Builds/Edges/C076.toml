@@ -1,0 +1,5 @@
+# Changes class C076 adds to / removes from its parent (parent: BuildClasses.toml).
+# v0.26.0-beta4: no warship deletion for AFK owners, no disconnected guard in canSendAllianceRequest (PR 2202),
+# and a donate-gold intent keeps its nullable gold (the number schema with `toInt(goldNum ?? 0)` came later).
+add = ["DonateGoldKeepNull4892"]
+remove = ["WarshipDeleteDisconnected26", "AllianceRequestDisconnectedGuard2202"]
