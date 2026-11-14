@@ -542,8 +542,8 @@ struct StationAdapterV28<'a> {
 }
 
 impl GraphAdapter for StationAdapterV28<'_> {
-    fn neighbors(&self, node: u32) -> Vec<u32> {
-        self.network.station_neighbors(node)
+    fn neighbors(&self, node: u32, out: &mut Vec<u32>) {
+        out.extend(self.network.station_neighbors(node));
     }
 
     fn cost(&self, _node: u32) -> f64 {

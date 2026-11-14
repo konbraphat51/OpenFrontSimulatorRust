@@ -3,7 +3,7 @@
 //! Upstream: OpenFrontIO (© OpenFront and Contributors), translated to Rust.
 
 use crate::Builds::Rules::{Change, Rules};
-use crate::Compat::JsNumber::{pad_start, to_int32, to_string_radix36};
+use crate::Compat::JsNumber::{floor, pad_start, to_int32, to_string_radix36};
 use crate::Compat::OrderedSet::OrderedSet;
 use crate::Core::Arc4::Arc4;
 use std::hash::{BuildHasher, Hash};
@@ -190,11 +190,11 @@ impl PseudoRandom {
     /// Random integer in [min, max); arguments are floored first like upstream.
     pub fn next_int(&mut self, min: f64, max: f64) -> f64 {
         if !self.floors_args {
-            return (self.next() * (max - min)).floor() + min;
+            return floor(self.next() * (max - min)) + min;
         }
-        let lo = min.floor();
-        let hi = max.floor();
-        (self.next() * (hi - lo)).floor() + lo
+        let lo = floor(min);
+        let hi = floor(max);
+        floor(self.next() * (hi - lo)) + lo
     }
 
     /// Random float in [min, max).

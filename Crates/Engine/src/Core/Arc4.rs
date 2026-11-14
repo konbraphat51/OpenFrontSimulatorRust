@@ -48,8 +48,8 @@ fn mix_key(seed: &str) -> Vec<u8> {
 /// The ARC4 stream cipher state of seedrandom.
 #[derive(Clone, Debug)]
 pub struct Arc4 {
-    i: usize,
-    j: usize,
+    i: u8,
+    j: u8,
     s: [u8; WIDTH],
 }
 
@@ -70,23 +70,40 @@ impl Arc4 {
             s.swap(i, j);
         }
         let mut arc4 = Self { i: 0, j: 0, s };
-        arc4.generate(WIDTH);
+        arc4.skip(WIDTH);
         arc4
     }
 
-    /// seedrandom's `g(count)`: the next `count` bytes folded big-endian into one number.
-    fn generate(&mut self, count: usize) -> f64 {
-        let mut r = 0.0f64;
+    /// Advances the cipher one step and returns the output byte.
+    #[inline]
+    fn step(&mut self) -> u8 {
+        self.i = self.i.wrapping_add(1);
+        let t = self.s[self.i as usize];
+        self.j = self.j.wrapping_add(t);
+        self.s[self.i as usize] = self.s[self.j as usize];
+        self.s[self.j as usize] = t;
+        let k = self.s[self.i as usize].wrapping_add(self.s[self.j as usize]);
+        self.s[k as usize]
+    }
+
+    /// Drops the next `count` bytes.
+    fn skip(&mut self, count: usize) {
         for _ in 0..count {
-            self.i = (self.i + 1) & 255;
-            let t = self.s[self.i];
-            self.j = (self.j + t as usize) & 255;
-            self.s[self.i] = self.s[self.j];
-            self.s[self.j] = t;
-            let k = (self.s[self.i] as usize + self.s[self.j] as usize) & 255;
-            r = r * WIDTH as f64 + self.s[k] as f64;
+            self.step();
         }
-        r
+    }
+
+    /// seedrandom's `g(count)`: the next `count` (at most 6) bytes folded big-endian into one number.
+    ///
+    /// The fold stays below 2^48, so the integer accumulator is exactly the JS double.
+    #[inline]
+    fn generate(&mut self, count: usize) -> f64 {
+        debug_assert!(count <= CHUNKS);
+        let mut r = 0u64;
+        for _ in 0..count {
+            r = (r << 8) | u64::from(self.step());
+        }
+        r as f64
     }
 
     /// The next double in [0, 1) (the `prng()` closure of seedrandom).

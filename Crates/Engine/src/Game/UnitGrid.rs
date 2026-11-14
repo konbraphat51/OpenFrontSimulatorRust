@@ -8,6 +8,7 @@
 use super::Game::{NUM_UNIT_TYPES, UnitId, UnitType};
 use super::GameMap::{GameMapImpl, TileRef};
 use super::UnitImpl::UnitImpl;
+use crate::Compat::JsNumber::ceil;
 use crate::Compat::OrderedSet::OrderedSet;
 
 const CELL_SIZE: i64 = 100;
@@ -36,7 +37,7 @@ struct CellRange {
 }
 
 fn ceil_div(range: f64, cell: f64) -> f64 {
-    (range / cell).ceil()
+    ceil(range / cell)
 }
 
 impl UnitGrid {
@@ -118,14 +119,17 @@ impl UnitGrid {
     }
 
     fn cells_in_range(&self, map: &GameMapImpl, tile: TileRef, range: f64) -> CellRange {
-        let x = map.x(tile) as f64;
-        let y = map.y(tile) as f64;
         let cs = CELL_SIZE as f64;
+        // Tile coordinates are non-negative integers, so the JS `%` is an exact integer remainder.
+        let x_in_cell = (map.x(tile) % CELL_SIZE as u32) as f64;
+        let y_in_cell = (map.y(tile) % CELL_SIZE as u32) as f64;
         let (gx, gy) = Self::coords(map, tile);
-        let start_x = (gx as f64 - ceil_div(range - (x % cs), cs)).max(0.0);
-        let end_x = (self.cols as f64 - 1.0).min(gx as f64 + ceil_div(range - (cs - (x % cs)), cs));
-        let start_y = (gy as f64 - ceil_div(range - (y % cs), cs)).max(0.0);
-        let end_y = (self.rows as f64 - 1.0).min(gy as f64 + ceil_div(range - (cs - (y % cs)), cs));
+        let start_x = (gx as f64 - ceil_div(range - x_in_cell, cs)).max(0.0);
+        let end_x =
+            (self.cols as f64 - 1.0).min(gx as f64 + ceil_div(range - (cs - x_in_cell), cs));
+        let start_y = (gy as f64 - ceil_div(range - y_in_cell, cs)).max(0.0);
+        let end_y =
+            (self.rows as f64 - 1.0).min(gy as f64 + ceil_div(range - (cs - y_in_cell), cs));
         CellRange {
             start_x: start_x as usize,
             end_x: end_x as i64,

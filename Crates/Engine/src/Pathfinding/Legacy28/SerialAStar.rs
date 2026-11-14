@@ -6,6 +6,17 @@
 
 use super::FastPriorityQueue::{Entry, FastPriorityQueue};
 use crate::Compat::OrderedMap::FxHashMap;
+use std::collections::hash_map::Entry as MapEntry;
+
+/// `prev` of a search root (it has a g score but no `cameFrom`).
+const NO_PREV: u32 = u32::MAX;
+
+/// Best known cost to a node and the node before it (`gScore` and `cameFrom` of upstream, one map each way).
+#[derive(Clone, Copy, Debug)]
+struct Reached {
+    g_score: f64,
+    prev: u32,
+}
 
 /// Upstream `PathFindResultType`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -22,8 +33,8 @@ pub enum PathFindResultType {
 
 /// Upstream `GraphAdapter`: the graph the search runs on (nodes are tile refs or station ids).
 pub trait GraphAdapter {
-    /// Neighbours of a node, in upstream's order.
-    fn neighbors(&self, node: u32) -> Vec<u32>;
+    /// Appends the neighbours of a node to `out`, in upstream's order.
+    fn neighbors(&self, node: u32, out: &mut Vec<u32>);
     /// Cost of entering a node.
     fn cost(&self, node: u32) -> f64;
     /// Position used by the heuristic.
@@ -37,10 +48,9 @@ pub trait GraphAdapter {
 pub struct SerialAStar {
     fwd_open_set: FastPriorityQueue,
     bwd_open_set: FastPriorityQueue,
-    fwd_came_from: FxHashMap<u32, u32>,
-    bwd_came_from: FxHashMap<u32, u32>,
-    fwd_g_score: FxHashMap<u32, f64>,
-    bwd_g_score: FxHashMap<u32, f64>,
+    fwd_reached: FxHashMap<u32, Reached>,
+    bwd_reached: FxHashMap<u32, Reached>,
+    neighbor_buffer: Vec<u32>,
     meeting_point: Option<u32>,
     completed: bool,
     sources: Vec<u32>,
@@ -79,17 +89,29 @@ impl SerialAStar {
     ) -> Self {
         let closest_source = find_closest_source(graph, sources, dst);
         let mut fwd_open_set = FastPriorityQueue::new();
-        let mut fwd_g_score = FxHashMap::default();
+        let mut fwd_reached = FxHashMap::default();
         for &start in sources {
-            fwd_g_score.insert(start, 0.0);
+            fwd_reached.insert(
+                start,
+                Reached {
+                    g_score: 0.0,
+                    prev: NO_PREV,
+                },
+            );
             fwd_open_set.add(Entry {
                 tile: start,
                 f_score: heuristic(graph, start, dst),
             });
         }
         let mut bwd_open_set = FastPriorityQueue::new();
-        let mut bwd_g_score = FxHashMap::default();
-        bwd_g_score.insert(dst, 0.0);
+        let mut bwd_reached = FxHashMap::default();
+        bwd_reached.insert(
+            dst,
+            Reached {
+                g_score: 0.0,
+                prev: NO_PREV,
+            },
+        );
         bwd_open_set.add(Entry {
             tile: dst,
             f_score: heuristic(graph, dst, find_closest_source(graph, sources, dst)),
@@ -97,10 +119,9 @@ impl SerialAStar {
         Self {
             fwd_open_set,
             bwd_open_set,
-            fwd_came_from: FxHashMap::default(),
-            bwd_came_from: FxHashMap::default(),
-            fwd_g_score,
-            bwd_g_score,
+            fwd_reached,
+            bwd_reached,
+            neighbor_buffer: Vec::new(),
             meeting_point: None,
             completed: false,
             sources: sources.to_vec(),
@@ -128,7 +149,7 @@ impl SerialAStar {
                 return PathFindResultType::Pending;
             }
             let fwd_current = self.fwd_open_set.poll().expect("not empty").tile;
-            if self.bwd_g_score.contains_key(&fwd_current) {
+            if self.bwd_reached.contains_key(&fwd_current) {
                 self.meeting_point = Some(fwd_current);
                 self.completed = true;
                 return PathFindResultType::Completed;
@@ -136,7 +157,7 @@ impl SerialAStar {
             self.expand_node(graph, fwd_current, true);
 
             let bwd_current = self.bwd_open_set.poll().expect("not empty").tile;
-            if self.fwd_g_score.contains_key(&bwd_current) {
+            if self.fwd_reached.contains_key(&bwd_current) {
                 self.meeting_point = Some(bwd_current);
                 self.completed = true;
                 return PathFindResultType::Completed;
@@ -162,48 +183,51 @@ impl SerialAStar {
         } else {
             self.closest_source
         };
-        for neighbor in graph.neighbors(current) {
+        let (reached, open_set) = if is_forward {
+            (&mut self.fwd_reached, &mut self.fwd_open_set)
+        } else {
+            (&mut self.bwd_reached, &mut self.bwd_open_set)
+        };
+        // `current` is never its own neighbour, so its entry cannot change inside the loop.
+        let from = reached[&current];
+        let mut neighbors = std::mem::take(&mut self.neighbor_buffer);
+        neighbors.clear();
+        graph.neighbors(current, &mut neighbors);
+        for &neighbor in &neighbors {
             if neighbor != goal && !graph.is_traversable(current, neighbor) {
                 continue;
             }
-            let (g_score, open_set, came_from) = if is_forward {
-                (
-                    &mut self.fwd_g_score,
-                    &mut self.fwd_open_set,
-                    &mut self.fwd_came_from,
-                )
-            } else {
-                (
-                    &mut self.bwd_g_score,
-                    &mut self.bwd_open_set,
-                    &mut self.bwd_came_from,
-                )
-            };
-            let tentative = g_score[&current] + graph.cost(neighbor);
+            let tentative = from.g_score + graph.cost(neighbor);
             let mut penalty = 0.0;
-            if self.direction_change_penalty > 0.0 {
-                // `if (prev)` is falsy for tile 0
-                if let Some(&prev) = came_from.get(&current)
-                    && prev != 0
-                {
-                    let prev_dir = Self::direction(graph, prev, current);
-                    let new_dir = Self::direction(graph, current, neighbor);
-                    if prev_dir != new_dir {
-                        penalty = self.direction_change_penalty;
-                    }
+            // `if (prev)` is falsy for tile 0
+            if self.direction_change_penalty > 0.0 && from.prev != NO_PREV && from.prev != 0 {
+                let prev_dir = Self::direction(graph, from.prev, current);
+                let new_dir = Self::direction(graph, current, neighbor);
+                if prev_dir != new_dir {
+                    penalty = self.direction_change_penalty;
                 }
             }
             let total_g = tentative + penalty;
-            if g_score.get(&neighbor).is_none_or(|&g| total_g < g) {
-                came_from.insert(neighbor, current);
-                g_score.insert(neighbor, total_g);
-                let f_score = total_g + heuristic(graph, neighbor, goal);
-                open_set.add(Entry {
-                    tile: neighbor,
-                    f_score,
-                });
+            let node = Reached {
+                g_score: total_g,
+                prev: current,
+            };
+            match reached.entry(neighbor) {
+                MapEntry::Occupied(mut e) if total_g < e.get().g_score => {
+                    e.insert(node);
+                }
+                MapEntry::Occupied(_) => continue,
+                MapEntry::Vacant(e) => {
+                    e.insert(node);
+                }
             }
+            let f_score = total_g + heuristic(graph, neighbor, goal);
+            open_set.add(Entry {
+                tile: neighbor,
+                f_score,
+            });
         }
+        self.neighbor_buffer = neighbors;
     }
 
     /// `reconstructPath()`: sources to destination through the meeting point (empty before completion).
@@ -213,14 +237,18 @@ impl SerialAStar {
         };
         let mut path = vec![meeting];
         let mut current = meeting;
-        while let Some(&prev) = self.fwd_came_from.get(&current) {
+        while let Some(&Reached { prev, .. }) = self.fwd_reached.get(&current)
+            && prev != NO_PREV
+        {
             current = prev;
             path.push(current);
         }
         path.reverse();
         current = meeting;
-        while let Some(&next) = self.bwd_came_from.get(&current) {
-            current = next;
+        while let Some(&Reached { prev, .. }) = self.bwd_reached.get(&current)
+            && prev != NO_PREV
+        {
+            current = prev;
             path.push(current);
         }
         path

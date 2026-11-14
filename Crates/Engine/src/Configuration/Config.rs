@@ -15,6 +15,7 @@ use crate::Game::Game::{
     Difficulty, DoomsdayClockSpeed, GameMapSize, GameMapType, GameMode, GameType, Gold, PlayerType,
     RankedType, SamLauncherState, TeamCountConfig, TerrainType, Tick, UnitInfo, UnitType,
 };
+use std::cell::RefCell;
 
 mod Combat;
 mod Economy;
@@ -354,6 +355,8 @@ pub struct Config {
     is_replay: bool,
     rules: Rules,
     pow_kind: PowKind,
+    /// `sigmoid(log(tiles))` of the large-territory bonus by tile count (NaN = not computed yet).
+    territory_sigmoid: RefCell<Vec<f64>>,
 }
 
 impl Config {
@@ -364,6 +367,7 @@ impl Config {
             is_replay,
             rules,
             pow_kind: default_pow_kind(),
+            territory_sigmoid: RefCell::new(Vec::new()),
         }
     }
 
@@ -905,7 +909,10 @@ mod tests {
                     };
                     if want["err"].is_string() {
                         assert!(
-                            std::panic::catch_unwind(|| c.attack_logic(&input)).is_err(),
+                            std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+                                || c.attack_logic(&input)
+                            ))
+                            .is_err(),
                             "{ctx}"
                         );
                     } else {

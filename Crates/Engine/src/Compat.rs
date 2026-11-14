@@ -5,6 +5,7 @@ pub mod HostMath;
 pub mod JsNumber;
 pub mod OrderedMap;
 pub mod OrderedSet;
+pub mod OrderedU32Set;
 #[allow(
     clippy::excessive_precision,
     clippy::manual_range_contains,

@@ -4,14 +4,35 @@
 
 use super::*;
 
+/// Tile counts above this are not memoised.
+const TERRITORY_SIGMOID_CACHE_LIMIT: usize = 1 << 22;
+
 impl Config {
     pub(super) fn large_territory_bonus(&self, num_tiles: f64, depth: f64) -> f64 {
-        1.0 - depth
-            * self.sigmoid(
+        1.0 - depth * self.territory_sigmoid(num_tiles)
+    }
+
+    /// The depth-independent sigmoid of the bonus, memoised per tile count (the log and exp are costly).
+    fn territory_sigmoid(&self, num_tiles: f64) -> f64 {
+        let compute = || {
+            self.sigmoid(
                 self.log(num_tiles),
                 LARGE_TERRITORY_STEEPNESS,
                 self.log(LARGE_TERRITORY_MIDPOINT),
             )
+        };
+        let index = num_tiles as usize;
+        if index as f64 != num_tiles || index >= TERRITORY_SIGMOID_CACHE_LIMIT {
+            return compute();
+        }
+        let mut cache = self.territory_sigmoid.borrow_mut();
+        if cache.len() <= index {
+            cache.resize((index + 1).next_power_of_two(), f64::NAN);
+        }
+        if cache[index].is_nan() {
+            cache[index] = compute();
+        }
+        cache[index]
     }
 
     /// Per-tile attack outcome (`attackLogic`).

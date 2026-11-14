@@ -299,8 +299,13 @@ impl GameMapImpl {
 
     /// True when a cardinal neighbour has a different owner.
     pub fn is_border(&self, tile: TileRef) -> bool {
+        self.is_border_at(tile, self.col_of(tile))
+    }
+
+    /// [`Self::is_border`] for a tile whose column `x` the caller already knows.
+    #[inline]
+    pub fn is_border_at(&self, tile: TileRef, x: u32) -> bool {
         let w = self.width;
-        let x = self.col_of(tile);
         let owner = self.owner_id(tile);
         if x != 0 && self.owner_id(tile - 1) != owner {
             return true;
@@ -427,6 +432,63 @@ impl GameMapImpl {
             n += 1;
         });
         n
+    }
+
+    /// Cardinal neighbours N, S, W, E (the `neighbors()` order) with their columns, plus the column of `tile`.
+    #[inline]
+    pub fn neighbors4_nswe_with_x(
+        &self,
+        tile: TileRef,
+        out: &mut [(TileRef, u32); 4],
+    ) -> (usize, u32) {
+        let w = self.width;
+        let x = self.col_of(tile);
+        let mut n = 0;
+        if tile >= w {
+            out[n] = (tile - w, x);
+            n += 1;
+        }
+        if tile < (self.height - 1) * w {
+            out[n] = (tile + w, x);
+            n += 1;
+        }
+        if x != 0 {
+            out[n] = (tile - 1, x - 1);
+            n += 1;
+        }
+        if x != w - 1 {
+            out[n] = (tile + 1, x + 1);
+            n += 1;
+        }
+        (n, x)
+    }
+
+    /// Like [`Self::neighbors4_nswe_with_x`] in the order of `neighbors4` (W, E, N, S before PR 4495).
+    #[inline]
+    pub fn neighbors4_with_x(&self, tile: TileRef, out: &mut [(TileRef, u32); 4]) -> (usize, u32) {
+        if !self.legacy_neighbor_order {
+            return self.neighbors4_nswe_with_x(tile, out);
+        }
+        let w = self.width;
+        let x = self.col_of(tile);
+        let mut n = 0;
+        if x != 0 {
+            out[n] = (tile - 1, x - 1);
+            n += 1;
+        }
+        if x != w - 1 {
+            out[n] = (tile + 1, x + 1);
+            n += 1;
+        }
+        if tile >= w {
+            out[n] = (tile - w, x);
+            n += 1;
+        }
+        if tile < (self.height - 1) * w {
+            out[n] = (tile + w, x);
+            n += 1;
+        }
+        (n, x)
     }
 
     /// Writes cardinal neighbours (N, S, W, E; W, E, N, S before PR 4495) into `out` and returns the count.
