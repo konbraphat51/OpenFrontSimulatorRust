@@ -1,62 +1,24 @@
-# Handoff: porting classes C060 to C080
+# Handoff: OfSimRust state after PR #1
 
-Written 2026-11-12 for the session that continues the simulator after PR #1.
+Written 2026-11-14 for any later session that extends the simulator (new upstream releases, open items below). Continues issue konbraphat51/OpenFrontDs#4: every release since 2025-10-01, correctness verified by record hashes, general-purpose code.
 
-## Goal
+## State
 
-Make `ofsim` reproduce every recorded state hash for the builds of classes C060 to C079 (v0.25.20 to v0.28.7, era S), and C080 if a hashed record turns up. Work in a new PR. This continues issue konbraphat51/OpenFrontDs#4, whose requirements are:
-
-- every release since 2025-10-01;
-- correctness verified by record hashes;
-- general-purpose code, because the repository is public.
-
-## State at handoff
-
-- PR #1 (`claude/wizardly-shannon-9zmxvz` into `main`) covers C000 to C059 and C081 to C090. C060 to C079 were split off into a separate PR at the user's request.
-- At writing time, C000 to C048 and C081 to C090 were merged into the PR branch.
-  - Their 1,750 sampled records were replayed.
-  - 1,745 match every hash, 578,612 hashes in total.
-  - The 5 exceptions also fail in upstream, or are team games with 0 or 1 players that upstream rejects ("Too few teams").
-- C049 to C058 (agent S3) and C059 (agent S4, phase 1 done) were still in progress. **First check what PR #1 actually contains.** Read `Docs/Plan.md`, section "P6 status by class", and `Docs/BuildStatus.json`.
-- If PR #1 has been merged, restart `claude/wizardly-shannon-9zmxvz` from the latest `main` (or use the branch the user names) and open a new PR.
+- PR #1 (`claude/wizardly-shannon-9zmxvz` into `main`) covers every build class except C080: C000 to C079 (v0.25.20 to v0.34.x, eras S, F and D) and C081 to C090 (v0.35.x to v0.36.1).
+- Full `Tools/VerifyClass.sh` over all 90 ported classes (2026-11-14, `ee8a5d1`): 2,687 local records, 2,677 match every hash (773,262 hashes). The 10 others are unusable, not failures:
+  - upstream itself mismatches: `xQ449cAw` (C022), `XApT743N` (C026), `EsfbsR7h` (C044, tick 0), `aUI84xqB` (C079, tick 0);
+  - team games with 0 or 1 players that upstream rejects (`Too few teams`): `sAwSgnzN` (C036), `Tti9gRBW` (C045), `tFnwz6CW` (C068), `DpHztPui` and `X9p9eqbZ` (C074), `Hl8PC8LC` (C078).
+- Performance: about 600 to 1,300 verify ticks per CPU second single-threaded (`Docs/Performance.md`), roughly 5 to 6x upstream (upstream last measured before two optimisation passes); peak RSS 140 to 280 MB per job.
+- A new upstream release needs a class: run `Tools/BuildClassify.py` and `Tools/BuildPlanGen.py` (they regenerate `BuildClasses.toml` and `Docs/BuildPlan.md`), then follow the porting steps in `CLAUDE.md`.
 
 ## Read first
 
-1. `Docs/Architecture.md`: binding porting rules.
-2. `Docs/Plan.md`: phases and per-class status.
-3. `Docs/BuildPlan.md`: one row per class, with builds, parent, changed files, PRs and risk, plus an edge section for big file changes.
-4. `Crates/Engine/src/Builds/Rules.rs`: the `Change` flags; class edges are one file each in `Crates/Engine/src/Builds/Edges/<class>.toml`.
-5. `Crates/Engine/src/Builds/BuildClasses.toml`: maps each commit to a class and each class to its parent. It is generated, so do not edit it by hand.
-
-## Remaining classes
-
-Local record counts are given per commit in parentheses. Risk comes from `Docs/BuildPlan.md`.
-
-| Class | Parent | Commits (records) | Risk | Notes |
-| --- | --- | --- | --- | --- |
-| C060 | C059 | d93b71da9475 (112), e0ecad9cb83e (4) | low | `tradeShipGold` constant, Lisbon map |
-| C061 | C059 | 671c9ea4ac9d (24), ec694593a64f (4) | medium | bot names, BotSpawner |
-| C062 | C061 | a810e0ad346d (8) | medium | BotBehavior emoji and attack |
-| C063 | C062 | f4ed2a932fa0 (20) | low | SAM hit chance |
-| C064 | C059 | 2e52c0aa4193 (22) | **high** | 35 files: BotBehavior and AllianceBehavior rewrite, PlayerExecution cluster removal |
-| C065 | C064 | afa3e70b6231 (3), 50fe3581cc0a (9), dab04eddb465 (3) | low | `trainSpawnRate` |
-| C066 | C065 | 2b606f280b86 (13), cb4cf091ffd0 (3) | low | config and schemas |
-| C067 | C066 | 5fbdea3c3965 (12), d88a6ba88753 (39) | low | username validation, GameRunner |
-| C068 | C067 | 599342995c1c (3) | low | many map4x/16x files |
-| C069 | C068 | 822d08bb7cc4 (3) | **high** | FakeHumanExecution, PlayerSpawner, BotBehavior |
-| C070 | C069 | 1b113873d60c (10), 82ff4e43c1e1 (27), 824e1d61f5a4 (25) | low | transport ship, conquerPlayer |
-| C071 | C070 | 6fd1576d7b38 (20) | medium | unit upgrade, PortExecution, DeleteUnit |
-| C072 | C071 | 4f00c4a12cb7 (8) | low | constants |
-| C073 | C072 | 0a2b6ed9a6a9 (7) | low | PlayerInfo |
-| C074 | C073 | 4c9fcdedf448 (14) | medium | EmbargoAll removed, Achiran map |
-| C075 | C074 | 2ad9c6f302a2 (3), f552b006613c (60) | medium | small AI and cluster changes |
-| C076 | C075 | 69fc14f1fd4d (1) | low | donations, warships |
-| C077 | C076 | 136cfa1316dd (4) | low | `getCapturingPlayer`, rail redraw |
-| C078 | C077 | fa9259b1fc58 (1), fd6b0ee062e2 (9) | medium | FakeHuman, BotBehavior, structure spawn value |
-| C079 | C078 | a26585a47b17 (1), 30856341cdd0 (4), bc5f18dee882 (82), f016c3ee9d90 (3) | **high** | 25 files, many map files, `infiniteGold/Troops` |
-| C080 | C014 | 115da0327634 (1) | high | test release; its one record has no hashes, so leave it unported unless a hashed record appears |
-
-Recommended order: C060 to C063 first (one branch off C059), then C064 to C068, then C069 to C079. C064 and C069 both rewrite AI and cluster logic, and C079 touches the most maps. C075 (60 records) and C079 (82 records) carry the most data. Split the work between parallel agents only along independent subtrees: C060 to C063 and C064 onward both have parent C059.
+1. `Docs/Architecture.md`: binding porting rules, variant naming (`<Name>V<NN>.rs`, `V<NN>Beta` for pre-releases, shared traits for identical AI code).
+2. `Docs/Plan.md`: phases and per-class status. `Docs/BuildStatus.json`: one line per class.
+3. `Docs/BuildPlan.md`: one row per class (builds, parent, changed files, PRs, risk).
+4. `Crates/Engine/src/Builds/Rules.rs`: the `Change` flags in area sections; class edges in `Builds/Edges/<class>.toml`.
+5. `Crates/Engine/src/Builds/BuildClasses.toml`: commit to class and class to parent. Generated; do not edit by hand.
+6. `Docs/Performance.md`: benchmark method and ranked remaining hot spots.
 
 ## Method that worked
 
@@ -120,7 +82,7 @@ Recommended order: C060 to C063 first (one branch off C059), then C064 to C068, 
 
 ## Machine limits and agent lessons
 
-- **Resources:** 4 cores, about 15 GB RAM, and about 7 GB of free disk at handoff.
+- **Resources:** 4 cores, about 15 GB RAM, and about 6 GB of free disk at handoff.
   - Run 2 to 3 agents at most.
   - Build with `CARGO_BUILD_JOBS=2`.
   - Keep at most one extra upstream worktree per agent, and delete traces after use.
@@ -131,25 +93,18 @@ Recommended order: C060 to C063 first (one branch off C059), then C064 to C068, 
   - Write a shared brief.
   - Give each agent its own worktree under `Cache/Wt/<name>` and its own scratch folder.
   - Require a single final report under 400 words.
-  - After a merge, rerun a regression sample: at least C000, C009, C023, C038, C040, C044, C081 and C088.
+  - After a merge, run `Tools/QuickRegression.sh`; before publishing, `Tools/VerifyClass.sh` over every class.
+- **Remote sessions** (`create_session` with this repository, the integration branch as source and an outcome branch `claude/port-<class>`) worked for parallel porting; their pushes need the user's approval in each session.
 
-## Known open items (not C060+)
+## Known open items
 
-- **`c6dYiNx281` (C000):** mismatches at tick 3807.
-- **Records that upstream itself cannot reproduce:**
-  - `xQ449cAw` (C022)
-  - `XApT743N` (C026)
-  - `EsfbsR7h` (C044)
-- **C025 to C027:** Doomsday Clock variants are unported and panic when enabled.
+- **C080** (`115da0327634`, `v0.34.0-test-release`): not ported; its one record has no hashes.
+- **C025 to C027:** Doomsday Clock variants are unported and panic when enabled (no sampled record enables it).
+- **C058:** the v0.29.0-beta1 water pathfinding rewrite is unported; its two short records pass.
 - **Weakly verified:**
-  - Hard and Impossible nation play in FFA. C040 differential runs found a latent divergence.
+  - C076 and C077: records replay but carry no hashes. C078: one hash compared.
+  - Hard and Impossible nation play in FFA (C040 differential runs once found a latent divergence).
   - Classes without long records: C036, C039, C045, C047 and C048.
-- **v0.36.2 (`8b5d071eed95`)** is not in `BuildClasses.toml`. It differs from v0.36.1 only in `WireSchemas`.
-- **Performance target of 10x upstream:** throughput is about 3 to 10x now.
-
-## When done
-
-Update the PR table, then update the parent repository `konbraphat51/OpenFrontDs`:
-
-- the `Simulator` submodule pointer;
-- the CLAUDE.md notes, if anything changed.
+- **v0.36.2 (`8b5d071eed95`)** is not in `BuildClasses.toml`; it differs from v0.36.1 only in `WireSchemas`.
+- **Upstream tracer for v0.25 and v0.26 builds** needs `miniMapBin` served by `Reference/EngineSupport.ts` (old map layout `mini_map.bin`).
+- **Performance:** the 10x-upstream goal is not reached. Remaining hot spots (ranked in `Docs/Performance.md`): the attack conquest loop (about half the time), `PlayerExecution` clusters, water paths, Legacy28 A*.
